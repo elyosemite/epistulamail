@@ -1,0 +1,346 @@
+/* ==========================================================================
+   Epistula Design System · tokens.css · v1.0
+   Fundamentos inspirados no Atlassian Design System (ADS).
+   Use sempre o token semântico (--color-text-subtle), nunca o hex bruto.
+   Camadas: cor (por tema) · tipografia · espaço · forma · elevação · layout · movimento
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ---------- Cor · texto ---------- */
+  --color-text: #172B4D;
+  --color-text-subtle: #44546F;
+  --color-text-subtlest: #626F86;
+  --color-text-disabled: #091E424F;
+  --color-text-inverse: #FFFFFF;
+  --color-text-brand: #0C66E4;
+  --color-text-selected: #0055CC;
+  --color-text-danger: #AE2E24;
+  --color-text-warning: #A54800;
+  --color-text-warning-inverse: #172B4D;
+  --color-text-success: #216E4E;
+  --color-text-information: #0055CC;
+  --color-text-discovery: #5E4DB2;
+  --color-link: #0C66E4;
+  --color-link-pressed: #0055CC;
+
+  /* ---------- Cor · superfícies (elevação) ---------- */
+  --color-surface: #FFFFFF;
+  --color-surface-sunken: #F7F8F9;
+  --color-surface-raised: #FFFFFF;
+  --color-surface-overlay: #FFFFFF;
+  --color-blanket: #091E427D;
+  /* Fundo de papel para conteúdo de terceiros (corpo HTML de e-mail): claro nos dois temas. */
+  --color-surface-paper: #FFFFFF;
+
+  /* ---------- Cor · fundos de componente ---------- */
+  --color-bg-input: #FFFFFF;
+  --color-bg-input-hovered: #F7F8F9;
+  --color-bg-neutral: #091E420F;
+  --color-bg-neutral-hovered: #091E4224;
+  --color-bg-neutral-pressed: #091E424F;
+  --color-bg-neutral-subtle-hovered: #091E420F;
+  --color-bg-neutral-subtle-pressed: #091E4224;
+  --color-bg-neutral-bold: #44546F;
+  --color-bg-disabled: #091E4208;
+  --color-bg-selected: #E9F2FF;
+  --color-bg-selected-hovered: #CCE0FF;
+  --color-bg-brand-bold: #0C66E4;
+  --color-bg-brand-bold-hovered: #0055CC;
+  --color-bg-brand-bold-pressed: #09326C;
+  --color-bg-danger: #FFECEB;
+  --color-bg-danger-bold: #C9372C;
+  --color-bg-danger-bold-hovered: #AE2E24;
+  --color-bg-warning: #FFF7D6;
+  --color-bg-warning-bold: #F5CD47;
+  --color-bg-warning-bold-hovered: #E2B203;
+  --color-bg-success: #DCFFF1;
+  --color-bg-success-bold: #1F845A;
+  --color-bg-information: #E9F2FF;
+  --color-bg-information-bold: #0C66E4;
+  --color-bg-discovery: #F3F0FF;
+  --color-bg-discovery-bold: #6E5DC6;
+
+  /* ---------- Cor · bordas ---------- */
+  --color-border: #091E4224;
+  --color-border-bold: #758195;
+  --color-border-input: #8590A2;
+  --color-border-focused: #388BFF;
+  --color-border-selected: #0C66E4;
+  --color-border-danger: #E2483D;
+  --color-border-warning: #E56910;
+  --color-border-success: #22A06B;
+
+  /* ---------- Cor · ícones ---------- */
+  --color-icon: #44546F;
+  --color-icon-subtle: #626F86;
+  --color-icon-brand: #0C66E4;
+  --color-icon-danger: #C9372C;
+  --color-icon-warning: #E56910;
+  --color-icon-success: #22A06B;
+  --color-icon-discovery: #8270DB;
+  --color-icon-starred: #E56910;
+
+  /* ---------- Cor · etiquetas de e-mail (pares fundo/texto) ---------- */
+  --color-label-blue-bg: #E9F2FF;      --color-label-blue-text: #0055CC;
+  --color-label-teal-bg: #E7F9FF;      --color-label-teal-text: #206A83;
+  --color-label-green-bg: #DCFFF1;     --color-label-green-text: #216E4E;
+  --color-label-purple-bg: #F3F0FF;    --color-label-purple-text: #5E4DB2;
+  --color-label-magenta-bg: #FFECF8;   --color-label-magenta-text: #943D73;
+  --color-label-orange-bg: #FFF3EB;    --color-label-orange-text: #A54800;
+
+  /* ---------- Elevação · sombras ---------- */
+  --shadow-raised: 0 1px 1px #091E4240, 0 0 1px #091E424F;
+  --shadow-overlay: 0 8px 12px #091E4226, 0 0 1px #091E424F;
+
+  /* ---------- Tipografia · famílias ---------- */
+  --font-family-body: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-heading: var(--font-family-body);
+  --font-family-code: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* ---------- Tipografia · pesos ---------- */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ---------- Tipografia · escala (tamanho / altura de linha / tracking) ---------- */
+  --font-size-hero: 2rem;          --line-height-hero: 2.25rem;        --letter-spacing-hero: -0.02em;
+  --font-size-page-title: 1.5rem;  --line-height-page-title: 1.75rem;  --letter-spacing-page-title: -0.015em;
+  --font-size-section: 1.25rem;    --line-height-section: 1.5rem;      --letter-spacing-section: -0.01em;
+  --font-size-card: 1rem;          --line-height-card: 1.25rem;        --letter-spacing-card: -0.005em;
+  --font-size-body-large: 1rem;    --line-height-body-large: 1.5rem;
+  --font-size-body: 0.875rem;      --line-height-body: 1.25rem;
+  --font-size-body-small: 0.75rem; --line-height-body-small: 1rem;
+  --font-size-label: 0.6875rem;    --line-height-label: 1rem;          --letter-spacing-label: 0.04em;
+  --font-size-code: 0.8125rem;     --line-height-code: 1.25rem;
+
+  /* ---------- Tipografia · atalhos (shorthand `font`) ---------- */
+  --font-hero: var(--font-weight-bold) var(--font-size-hero)/var(--line-height-hero) var(--font-family-heading);
+  --font-page-title: var(--font-weight-semibold) var(--font-size-page-title)/var(--line-height-page-title) var(--font-family-heading);
+  --font-section: var(--font-weight-semibold) var(--font-size-section)/var(--line-height-section) var(--font-family-heading);
+  --font-card: var(--font-weight-semibold) var(--font-size-card)/var(--line-height-card) var(--font-family-heading);
+  --font-body-large: var(--font-weight-regular) var(--font-size-body-large)/var(--line-height-body-large) var(--font-family-body);
+  --font-body: var(--font-weight-regular) var(--font-size-body)/var(--line-height-body) var(--font-family-body);
+  --font-body-small: var(--font-weight-regular) var(--font-size-body-small)/var(--line-height-body-small) var(--font-family-body);
+  --font-label: var(--font-weight-semibold) var(--font-size-label)/var(--line-height-label) var(--font-family-body);
+  --font-code: var(--font-weight-regular) var(--font-size-code)/var(--line-height-code) var(--font-family-code);
+
+  /* ---------- Espaçamento (base 8, meios-passos de 2 e 4) ---------- */
+  --space-0: 0;
+  --space-025: 0.125rem;  /* 2px  */
+  --space-050: 0.25rem;   /* 4px  */
+  --space-075: 0.375rem;  /* 6px  */
+  --space-100: 0.5rem;    /* 8px  */
+  --space-150: 0.75rem;   /* 12px */
+  --space-200: 1rem;      /* 16px */
+  --space-250: 1.25rem;   /* 20px */
+  --space-300: 1.5rem;    /* 24px */
+  --space-400: 2rem;      /* 32px */
+  --space-500: 2.5rem;    /* 40px */
+  --space-600: 3rem;      /* 48px */
+  --space-800: 4rem;      /* 64px */
+  --space-1000: 5rem;     /* 80px */
+
+  /* ---------- Forma ---------- */
+  --radius-xsmall: 2px;   /* checkbox, badge interno */
+  --radius-small: 3px;    /* botões, inputs, lozenges, chips */
+  --radius-medium: 6px;   /* menus, toasts, cartões de anexo */
+  --radius-large: 8px;    /* modais, janela de composição */
+  --radius-round: 999px;  /* avatares, badges de contagem */
+  --border-width: 1px;
+  --border-width-focused: 2px;
+
+  /* ---------- Layout do cliente ---------- */
+  --layout-header-height: 3.5rem;      /* 56px */
+  --layout-sidebar-width: 15rem;       /* 240px */
+  --layout-sidebar-collapsed: 4rem;    /* 64px  */
+  --layout-list-width: 25rem;          /* 400px */
+  --layout-reading-measure: 42rem;     /* 672px ≈ 70 caracteres em Body Large */
+  --layout-compose-width: 35rem;       /* 560px */
+  --layout-modal-small: 25rem;         /* 400px */
+  --layout-modal-medium: 37.5rem;      /* 600px */
+  --row-height-compact: 2.25rem;       /* 36px · 1 linha */
+  --row-height-default: 4.75rem;       /* 76px · 3 linhas */
+  --control-height: 2rem;              /* 32px · botões */
+  --control-height-compact: 1.5rem;    /* 24px */
+  --input-height: 2.25rem;             /* 36px */
+
+  /* ---------- Camadas (z-index, escala ADS) ---------- */
+  --z-card: 100;
+  --z-navigation: 200;
+  --z-dialog: 300;
+  --z-layer: 400;
+  --z-blanket: 500;
+  --z-modal: 510;
+  --z-flag: 600;
+  --z-tooltip: 800;
+
+  /* ---------- Movimento ---------- */
+  --duration-fast: 100ms;
+  --duration-medium: 200ms;
+  --duration-slow: 350ms;
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --easing-exit: cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* ---------- Tema escuro: segue o sistema, a menos que o tema claro seja forçado ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-text: #B6C2CF;
+    --color-text-subtle: #9FADBC;
+    --color-text-subtlest: #8C9BAB;
+    --color-text-disabled: #BFDBF847;
+    --color-text-inverse: #1D2125;
+    --color-text-brand: #579DFF;
+    --color-text-selected: #579DFF;
+    --color-text-danger: #FD9891;
+    --color-text-warning: #F5CD47;
+    --color-text-warning-inverse: #1D2125;
+    --color-text-success: #7EE2B8;
+    --color-text-information: #85B8FF;
+    --color-text-discovery: #B8ACF6;
+    --color-link: #579DFF;
+    --color-link-pressed: #85B8FF;
+    --color-surface: #1D2125;
+    --color-surface-sunken: #161A1D;
+    --color-surface-raised: #22272B;
+    --color-surface-overlay: #282E33;
+    --color-blanket: #10121499;
+    --color-bg-input: #22272B;
+    --color-bg-input-hovered: #282E33;
+    --color-bg-neutral: #A1BDD914;
+    --color-bg-neutral-hovered: #A6C5E229;
+    --color-bg-neutral-pressed: #BFDBF847;
+    --color-bg-neutral-subtle-hovered: #A1BDD914;
+    --color-bg-neutral-subtle-pressed: #A6C5E229;
+    --color-bg-neutral-bold: #9FADBC;
+    --color-bg-disabled: #BCD6F00A;
+    --color-bg-selected: #1C2B41;
+    --color-bg-selected-hovered: #09326C;
+    --color-bg-brand-bold: #579DFF;
+    --color-bg-brand-bold-hovered: #85B8FF;
+    --color-bg-brand-bold-pressed: #CCE0FF;
+    --color-bg-danger: #42221F;
+    --color-bg-danger-bold: #F87168;
+    --color-bg-danger-bold-hovered: #FD9891;
+    --color-bg-warning: #533F04;
+    --color-bg-warning-bold: #F5CD47;
+    --color-bg-warning-bold-hovered: #E2B203;
+    --color-bg-success: #164B35;
+    --color-bg-success-bold: #4BCE97;
+    --color-bg-information: #092957;
+    --color-bg-information-bold: #579DFF;
+    --color-bg-discovery: #352C63;
+    --color-bg-discovery-bold: #9F8FEF;
+    --color-border: #A6C5E229;
+    --color-border-bold: #738496;
+    --color-border-input: #738496;
+    --color-border-focused: #85B8FF;
+    --color-border-selected: #579DFF;
+    --color-border-danger: #F87168;
+    --color-border-warning: #F38A3F;
+    --color-border-success: #2ABB7F;
+    --color-icon: #9FADBC;
+    --color-icon-subtle: #8C9BAB;
+    --color-icon-brand: #579DFF;
+    --color-icon-danger: #F15B50;
+    --color-icon-warning: #F38A3F;
+    --color-icon-success: #2ABB7F;
+    --color-icon-discovery: #8F7EE7;
+    --color-icon-starred: #FEA362;
+    --color-label-blue-bg: #09326C;    --color-label-blue-text: #CCE0FF;
+    --color-label-teal-bg: #164555;    --color-label-teal-text: #C6EDFB;
+    --color-label-green-bg: #164B35;   --color-label-green-text: #BAF3DB;
+    --color-label-purple-bg: #352C63;  --color-label-purple-text: #DFD8FD;
+    --color-label-magenta-bg: #50253F; --color-label-magenta-text: #FDD0EC;
+    --color-label-orange-bg: #5F3811;  --color-label-orange-text: #FEDEC8;
+    --shadow-raised: 0 1px 1px #03040480, 0 0 1px #03040480;
+    --shadow-overlay: 0 0 0 1px #BCD6F00A, 0 8px 12px #0304045C, 0 0 1px #03040480;
+  }
+}
+
+/* ---------- Tema escuro forçado (mesmos valores do bloco acima) ---------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-text: #B6C2CF;
+  --color-text-subtle: #9FADBC;
+  --color-text-subtlest: #8C9BAB;
+  --color-text-disabled: #BFDBF847;
+  --color-text-inverse: #1D2125;
+  --color-text-brand: #579DFF;
+  --color-text-selected: #579DFF;
+  --color-text-danger: #FD9891;
+  --color-text-warning: #F5CD47;
+  --color-text-warning-inverse: #1D2125;
+  --color-text-success: #7EE2B8;
+  --color-text-information: #85B8FF;
+  --color-text-discovery: #B8ACF6;
+  --color-link: #579DFF;
+  --color-link-pressed: #85B8FF;
+  --color-surface: #1D2125;
+  --color-surface-sunken: #161A1D;
+  --color-surface-raised: #22272B;
+  --color-surface-overlay: #282E33;
+  --color-blanket: #10121499;
+  --color-bg-input: #22272B;
+  --color-bg-input-hovered: #282E33;
+  --color-bg-neutral: #A1BDD914;
+  --color-bg-neutral-hovered: #A6C5E229;
+  --color-bg-neutral-pressed: #BFDBF847;
+  --color-bg-neutral-subtle-hovered: #A1BDD914;
+  --color-bg-neutral-subtle-pressed: #A6C5E229;
+  --color-bg-neutral-bold: #9FADBC;
+  --color-bg-disabled: #BCD6F00A;
+  --color-bg-selected: #1C2B41;
+  --color-bg-selected-hovered: #09326C;
+  --color-bg-brand-bold: #579DFF;
+  --color-bg-brand-bold-hovered: #85B8FF;
+  --color-bg-brand-bold-pressed: #CCE0FF;
+  --color-bg-danger: #42221F;
+  --color-bg-danger-bold: #F87168;
+  --color-bg-danger-bold-hovered: #FD9891;
+  --color-bg-warning: #533F04;
+  --color-bg-warning-bold: #F5CD47;
+  --color-bg-warning-bold-hovered: #E2B203;
+  --color-bg-success: #164B35;
+  --color-bg-success-bold: #4BCE97;
+  --color-bg-information: #092957;
+  --color-bg-information-bold: #579DFF;
+  --color-bg-discovery: #352C63;
+  --color-bg-discovery-bold: #9F8FEF;
+  --color-border: #A6C5E229;
+  --color-border-bold: #738496;
+  --color-border-input: #738496;
+  --color-border-focused: #85B8FF;
+  --color-border-selected: #579DFF;
+  --color-border-danger: #F87168;
+  --color-border-warning: #F38A3F;
+  --color-border-success: #2ABB7F;
+  --color-icon: #9FADBC;
+  --color-icon-subtle: #8C9BAB;
+  --color-icon-brand: #579DFF;
+  --color-icon-danger: #F15B50;
+  --color-icon-warning: #F38A3F;
+  --color-icon-success: #2ABB7F;
+  --color-icon-discovery: #8F7EE7;
+  --color-icon-starred: #FEA362;
+  --color-label-blue-bg: #09326C;    --color-label-blue-text: #CCE0FF;
+  --color-label-teal-bg: #164555;    --color-label-teal-text: #C6EDFB;
+  --color-label-green-bg: #164B35;   --color-label-green-text: #BAF3DB;
+  --color-label-purple-bg: #352C63;  --color-label-purple-text: #DFD8FD;
+  --color-label-magenta-bg: #50253F; --color-label-magenta-text: #FDD0EC;
+  --color-label-orange-bg: #5F3811;  --color-label-orange-text: #FEDEC8;
+  --shadow-raised: 0 1px 1px #03040480, 0 0 1px #03040480;
+  --shadow-overlay: 0 0 0 1px #BCD6F00A, 0 8px 12px #0304045C, 0 0 1px #03040480;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-medium: 0ms;
+    --duration-slow: 0ms;
+  }
+}

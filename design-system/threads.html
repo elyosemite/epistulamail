@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lista de threads · Epistula Design System</title>
+<meta name="description" content="Linhas, estados e ações em massa.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="threads">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="threads">
+        <div class="ds-head">
+          <p class="eyebrow">Específico do Epistula · composto de Checkbox, Button, Lozenge, Tag <code>.thread</code></p>
+          <h1>Lista de threads e ações em massa</h1>
+          <p class="lede">O componente mais usado do produto. Demonstração interativa: marque checkboxes para ver a barra de ações em massa, clique numa linha para abri-la, passe o mouse para ver as ações rápidas e use <kbd>J</kbd>/<kbd>K</kbd>, <kbd>X</kbd>, <kbd>S</kbd> e <kbd>E</kbd> com uma linha em foco.</p>
+        </div>
+        <div class="demo-bar">
+          <div class="segmented" role="group" aria-label="Densidade da lista">
+            <button class="btn btn--compact" type="button" aria-pressed="true" data-density="default">Confortável</button>
+            <button class="btn btn--compact" type="button" aria-pressed="false" data-density="compact">Compacta</button>
+          </div>
+          <button class="btn btn--subtle btn--compact" type="button" id="reset-list"><svg class="i"><use href="#i-refresh"/></svg>Restaurar exemplo</button>
+        </div>
+        <div class="stage stage--flush">
+          <div class="demo-client">
+            <div class="tabs" role="tablist" aria-label="Categorias" style="padding-inline:var(--space-150)">
+              <button class="tab" role="tab" aria-selected="true" type="button"><svg class="i"><use href="#i-inbox"/></svg>Principal <span class="badge badge--primary" id="unread-badge">3</span></button>
+              <button class="tab" role="tab" aria-selected="false" type="button"><svg class="i"><use href="#i-tag"/></svg>Promoções</button>
+              <button class="tab" role="tab" aria-selected="false" type="button"><svg class="i"><use href="#i-info"/></svg>Atualizações <span class="badge">8</span></button>
+            </div>
+            <div class="toolbar" id="toolbar">
+              <input type="checkbox" class="checkbox" id="master-check" aria-label="Selecionar todas as conversas">
+              <div class="tb-group" id="tb-default">
+                <button class="btn btn--subtle btn--icon" type="button" aria-label="Atualizar" data-tip="Atualizar"><svg class="i"><use href="#i-refresh"/></svg></button>
+                <button class="btn btn--subtle btn--icon" type="button" aria-label="Mais ações" data-tip="Mais"><svg class="i"><use href="#i-more"/></svg></button>
+              </div>
+              <div class="tb-group" id="tb-selection" hidden>
+                <span class="toolbar__count" id="tb-count" aria-live="polite"></span>
+                <button class="btn btn--subtle btn--icon" type="button" data-bulk="archive" aria-label="Arquivar" data-tip="Arquivar (E)"><svg class="i"><use href="#i-archive"/></svg></button>
+                <button class="btn btn--subtle btn--icon" type="button" data-bulk="spam" aria-label="Denunciar spam" data-tip="Spam (!)"><svg class="i"><use href="#i-spam"/></svg></button>
+                <button class="btn btn--subtle btn--icon" type="button" data-bulk="delete" aria-label="Excluir" data-tip="Excluir (#)"><svg class="i"><use href="#i-trash"/></svg></button>
+                <span class="toolbar__sep" aria-hidden="true"></span>
+                <button class="btn btn--subtle btn--icon" type="button" data-bulk="read" aria-label="Marcar como lida" data-tip="Marcar como lida"><svg class="i"><use href="#i-mail-open"/></svg></button>
+                <button class="btn btn--subtle btn--icon" type="button" data-bulk="snooze" aria-label="Adiar" data-tip="Adiar"><svg class="i"><use href="#i-clock"/></svg></button>
+                <button class="btn btn--subtle btn--icon" type="button" data-bulk="label" aria-label="Etiquetar" data-tip="Etiquetar"><svg class="i"><use href="#i-tag"/></svg></button>
+              </div>
+              <div class="toolbar__end"><span>1–50 de 1.284</span><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Página anterior" disabled><svg class="i"><use href="#i-chevron-left"/></svg></button><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Próxima página"><svg class="i"><use href="#i-chevron-right"/></svg></button></div>
+            </div>
+            <div class="thread-list" id="thread-list" aria-label="Conversas"></div>
+          </div>
+        </div>
+
+        <h3 class="sub">Estados da linha</h3>
+        <div class="stage stage--flush">
+          <div class="thread-list" id="thread-states"></div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Não lida</dt><dd>Remetente e assunto em 600, ponto azul de 6px à esquerda e data em azul. Ao abrir, os três sinais somem juntos.</dd></div>
+          <div><dt>Hover</dt><dd>A data dá lugar a quatro ações rápidas: arquivar, excluir, marcar como lida e adiar. O anexo continua visível.</dd></div>
+          <div><dt>Marcada x aberta</dt><dd>As duas usam o fundo selecionado. A conversa aberta ganha também uma barra azul de 2px à esquerda, para distinguir "estou lendo" de "vou agir em lote".</dd></div>
+          <div><dt>Truncamento</dt><dd>Remetente, assunto e prévia cortam com reticências numa única linha. A data nunca é cortada.</dd></div>
+        </dl>
+        <h3 class="sub">Só cabeçalho</h3>
+        <div class="stage stage--flush">
+          <div class="thread-list thread-list--headers" role="list" aria-label="Exemplo de lista só com cabeçalhos">
+            <div class="thread is-unread" role="listitem" tabindex="0" aria-label="Não lida, Marina Couto, Revisão do contrato: Fornecedor Lumen, 10:42">
+              <span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span>
+              <div class="thread__from"><span class="thread__from-name">Marina Couto</span></div>
+              <div class="thread__meta"><span class="thread__date">10:42</span></div>
+              <div class="thread__subject"><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span></div>
+            </div>
+            <div class="thread is-open" role="listitem" tabindex="0" aria-label="Com estrela, Paulo Henrique, Almoço de sexta?, 20 out">
+              <span class="star-btn thread__star" aria-hidden="true" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span>
+              <div class="thread__from"><span class="thread__from-name">Paulo Henrique</span></div>
+              <div class="thread__meta"><span class="thread__date">20 out</span></div>
+              <div class="thread__subject"><span class="thread__subject-text">Almoço de sexta?</span></div>
+            </div>
+            <div class="thread" role="listitem" tabindex="0" aria-label="Banco Atlântico, Seu extrato de outubro está disponível, 5 jan 2025">
+              <span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span>
+              <div class="thread__from"><span class="thread__from-name">Banco Atlântico</span></div>
+              <div class="thread__meta"><span class="thread__date">5 jan 2025</span></div>
+              <div class="thread__subject"><span class="thread__subject-text">Seu extrato de outubro está disponível</span></div>
+            </div>
+          </div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Só cabeçalho</dt><dd><code>.thread-list--headers</code> é para listas somente leitura, quando só os cabeçalhos estão disponíveis: sem checkbox, sem prévia e sem ações rápidas. A estrela continua como primeira coluna, mesmo apagada, para manter o alinhamento. A data não some no hover. Combina com <code>.thread-list--compact</code>.</dd></div>
+        </dl>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

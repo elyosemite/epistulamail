@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissões da janela principal. O navegador é aberto pelo backend, então o frontend não recebe permissões do opener.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

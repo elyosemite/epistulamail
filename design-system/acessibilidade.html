@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Acessibilidade · Epistula Design System</title>
+<meta name="description" content="Contraste medido ao vivo e atalhos de teclado.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="acessibilidade">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="acessibilidade">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Accessibility · WCAG 2.2</p>
+          <h1>Acessibilidade</h1>
+          <p class="lede">Cada par de cores abaixo é medido ao vivo no tema atual. Texto precisa de 4,5:1 (AA). Ícones, bordas de campo e o anel de foco precisam de 3:1. Troque o tema no topo da página para ver os valores do outro tema.</p>
+        </div>
+        <div class="stage scroll-x">
+          <table class="contrast-table">
+            <thead><tr><th>Amostra</th><th>Primeiro plano</th><th>Fundo</th><th>Razão</th><th>Mínimo</th><th>Resultado</th></tr></thead>
+            <tbody id="contrast-rows"></tbody>
+          </table>
+        </div>
+        <dl class="guidance">
+          <div><dt>Tamanho mínimo</dt><dd>12px para qualquer texto. 11px só em labels de caixa-alta com peso 600 ou mais.</dd></div>
+          <div><dt>Foco</dt><dd>Anel de 2px em <code>--color-border-focused</code> com 2px de afastamento, visível só na navegação por teclado (<code>:focus-visible</code>).</dd></div>
+          <div><dt>Área de toque</dt><dd>Controles de pelo menos 24 × 24px (WCAG 2.5.8). No toque, o padrão é 32px, e as ações rápidas passam a 44px.</dd></div>
+          <div><dt>Não só cor</dt><dd>Não lida combina peso 600, ponto azul e data em destaque. Destinatário inválido combina cor, borda tracejada e texto de ajuda.</dd></div>
+          <div><dt>Movimento</dt><dd>Com <code>prefers-reduced-motion</code>, as durações caem para 0 e o skeleton para de pulsar.</dd></div>
+          <div><dt>Leitores de tela</dt><dd>A lista anuncia "não lida", remetente, assunto e data, nessa ordem. Toasts entram numa região <code>aria-live="polite"</code>.</dd></div>
+        </dl>
+        <h3 class="sub">Atalhos de teclado</h3>
+        <dl class="shortcut-grid">
+          <div><dt>Próxima / anterior</dt><dd><kbd>J</kbd><kbd>K</kbd></dd></div>
+          <div><dt>Abrir conversa</dt><dd><kbd>Enter</kbd></dd></div>
+          <div><dt>Selecionar</dt><dd><kbd>X</kbd></dd></div>
+          <div><dt>Marcar com estrela</dt><dd><kbd>S</kbd></dd></div>
+          <div><dt>Arquivar</dt><dd><kbd>E</kbd></dd></div>
+          <div><dt>Excluir</dt><dd><kbd>#</kbd></dd></div>
+          <div><dt>Responder / a todos</dt><dd><kbd>R</kbd><kbd>A</kbd></dd></div>
+          <div><dt>Encaminhar</dt><dd><kbd>F</kbd></dd></div>
+          <div><dt>Escrever</dt><dd><kbd>C</kbd></dd></div>
+          <div><dt>Buscar</dt><dd><kbd>/</kbd></dd></div>
+          <div><dt>Marcar como lida</dt><dd><kbd>⇧</kbd><kbd>I</kbd></dd></div>
+          <div><dt>Desfazer</dt><dd><kbd>Z</kbd></dd></div>
+        </dl>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

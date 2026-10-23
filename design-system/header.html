@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Header e busca · Epistula Design System</title>
+<meta name="description" content="Barra global e busca com operadores.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="header">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="header">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Atlassian Navigation (adaptado) <code>.appbar</code></p>
+          <h1>Header e busca</h1>
+          <p class="lede">56px de altura. A busca é o elemento central e abre com <kbd>/</kbd>. As ações globais (ajuda, configurações e conta) ficam à direita, como botões de ícone sutis.</p>
+        </div>
+        <div class="stage stage--flush scroll-x">
+          <header class="appbar" style="min-width:36rem">
+            <button class="btn btn--subtle btn--icon" type="button" aria-label="Alternar aplicativos" data-tip="Aplicativos"><svg class="i"><use href="#i-grid"/></svg></button>
+            <span class="appbar__brand"><span class="wordmark wordmark--sm"><span class="wordmark__glyph" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</span></span>
+            <div class="appbar__search"><div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input id="appbar-search" placeholder="Buscar em todas as pastas" aria-label="Buscar e-mails"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Filtros de busca" data-tip="Filtros"><svg class="i"><use href="#i-sliders"/></svg></button></div></div>
+            <div class="appbar__actions">
+              <button class="btn btn--subtle btn--icon" type="button" aria-label="Ajuda" data-tip="Ajuda"><svg class="i"><use href="#i-help"/></svg></button>
+              <button class="btn btn--subtle btn--icon" type="button" aria-label="Configurações" data-tip="Configurações"><svg class="i"><use href="#i-sliders"/></svg></button>
+              <span class="avatar avatar--sm" title="Yuri Melo">YM</span>
+            </div>
+          </header>
+        </div>
+        <h3 class="sub">Conta conectada</h3>
+        <div class="stage stage--flush scroll-x">
+          <header class="appbar" style="min-width:36rem">
+            <span class="appbar__brand"><span class="wordmark wordmark--sm"><span class="wordmark__glyph" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</span></span>
+            <div class="appbar__actions">
+              <div class="appbar__account" role="status">
+                <span class="avatar avatar--sm avatar--purple" aria-hidden="true">YM</span>
+                <span class="appbar__account-text">Conectado como <span class="appbar__account-email">yuri.melo.fullstack@gmail.com</span></span>
+              </div>
+              <button class="btn btn--subtle btn--icon" type="button" aria-label="Configurações" data-tip="Configurações"><svg class="i"><use href="#i-sliders"/></svg></button>
+            </div>
+          </header>
+        </div>
+        <dl class="guidance">
+          <div><dt>Marca</dt><dd><code>.wordmark</code> junta o glyph azul (<code>.wordmark__glyph</code>, ícone <code>mail</code>) e o nome. No header use <code>.wordmark--sm</code> (glyph de 24px, texto em Card) dentro de <code>.appbar__brand</code>. O tamanho padrão, de 32px, é para capas e telas de boas-vindas. O glyph é decorativo: <code>aria-hidden="true"</code>, e o nome "Epistula" fica como texto.</dd></div>
+          <div><dt>Conta conectada</dt><dd><code>.appbar__account</code> fica dentro de <code>.appbar__actions</code>: avatar de 24px e "Conectado como" com o e-mail em 600. O e-mail corta com reticências a partir de 22rem e nunca quebra linha. Use <code>role="status"</code> para que a troca de conta seja anunciada.</dd></div>
+        </dl>
+        <div class="stage">
+          <div class="field" style="max-width:36rem">
+            <label class="field__label" for="search-focus">Busca com operadores (foco)</label>
+            <div class="input input--search is-focus"><svg class="i"><use href="#i-search"/></svg><span class="label label--blue">de: marina</span><span class="label">tem: anexo</span><input id="search-focus" value="contrato" aria-label="Termo de busca"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Limpar busca"><svg class="i"><use href="#i-x"/></svg></button></div>
+            <span class="field__help">Operadores reconhecidos viram etiquetas: <code>de:</code>, <code>para:</code>, <code>tem:anexo</code>, <code>antes:</code>, <code>etiqueta:</code>.</span>
+          </div>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

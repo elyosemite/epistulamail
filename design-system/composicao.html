@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Composição · Epistula Design System</title>
+<meta name="description" content="Janela de nova mensagem com desfazer envio.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="composicao">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="composicao">
+        <div class="ds-head">
+          <p class="eyebrow">Específico do Epistula · composto de Textfield, Tag, Button <code>.compose</code></p>
+          <h1>Composição</h1>
+          <p class="lede">Janela flutuante de 560px com elevação overlay. Os campos usam o estilo de linha, e o corpo usa Body large. "Enviar" segura a mensagem por 5 segundos, com opção de desfazer. Clique para ver o toast.</p>
+        </div>
+        <div class="stage stage--sunken">
+          <form class="compose" id="compose-demo" aria-label="Nova mensagem">
+            <div class="compose__bar">
+              <span class="compose__title">Nova mensagem</span>
+              <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Minimizar"><svg class="i"><use href="#i-minus"/></svg></button>
+              <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Tela cheia"><svg class="i"><use href="#i-expand"/></svg></button>
+              <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar e salvar rascunho"><svg class="i"><use href="#i-x"/></svg></button>
+            </div>
+            <div class="compose__fields">
+              <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--purple">MC</span><span class="chip__name">Marina Couto</span></span><span class="chip is-external"><span class="avatar avatar--orange">J</span><span class="chip__name">joao@lumen.com.br</span></span><input id="compose-to" aria-label="Adicionar destinatário"><button class="btn btn--link btn--compact" type="button">Cc Cco</button></div>
+              <label class="input input--line" for="compose-subject"><span class="input__prefix">Assunto</span><input id="compose-subject" value="Re: Revisão do contrato: Fornecedor Lumen"></label>
+            </div>
+            <div class="compose__body" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Corpo da mensagem" id="compose-body">Marina, aprovado da minha parte. Pode enviar à Lumen.<br><br>Yuri</div>
+            <div class="compose__format" role="toolbar" aria-label="Formatação">
+              <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Negrito" aria-pressed="false"><svg class="i"><use href="#i-bold"/></svg></button>
+              <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Itálico" aria-pressed="false"><svg class="i"><use href="#i-italic"/></svg></button>
+              <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Lista" aria-pressed="false"><svg class="i"><use href="#i-list"/></svg></button>
+              <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Inserir link"><svg class="i"><use href="#i-link"/></svg></button>
+            </div>
+            <div class="compose__foot">
+              <div class="btn-split"><button class="btn btn--primary" type="submit">Enviar</button><button class="btn btn--primary" type="button" aria-label="Agendar envio"><svg class="i"><use href="#i-chevron-down"/></svg></button></div>
+              <button class="btn btn--subtle btn--icon" type="button" aria-label="Anexar arquivo" data-tip="Anexar"><svg class="i"><use href="#i-clip"/></svg></button>
+              <span class="compose__status">Rascunho salvo às 10:44</span>
+              <button class="btn btn--subtle btn--icon" type="button" aria-label="Descartar rascunho" data-tip="Descartar"><svg class="i"><use href="#i-trash"/></svg></button>
+            </div>
+          </form>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

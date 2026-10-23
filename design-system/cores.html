@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cores · Epistula Design System</title>
+<meta name="description" content="Tokens semânticos de texto, superfície, borda e ícone.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="cores">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="cores">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Color tokens</p>
+          <h1>Cores</h1>
+          <p class="lede">Os componentes usam apenas tokens semânticos. O nome diz a função (<code>--color-text-subtle</code>), e o valor muda com o tema. Clique em qualquer amostra para copiar a variável. Os valores hex mostrados são os do tema atual.</p>
+        </div>
+        <div id="swatches"></div>
+
+        <h3 class="sub">Paleta base</h3>
+        <p class="demo-hint" style="max-width:68ch">As rampas de onde os tokens saem. Elas servem de referência e não devem ser usadas diretamente nos componentes.</p>
+        <div id="ramps"></div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

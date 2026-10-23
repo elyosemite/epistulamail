@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anexos · Epistula Design System</title>
+<meta name="description" content="Cartões de arquivo, envio e erro.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="anexos">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="anexos">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Media card (simplificado) <code>.attachment</code></p>
+          <h1>Anexos</h1>
+          <p class="lede">O ícone usa a cor do tipo de arquivo. No hover aparece o botão de download. Durante o envio, o cartão mostra o progresso, e uma falha mostra o motivo com a opção de tentar de novo.</p>
+        </div>
+        <div class="stage">
+          <div class="states">
+            <figure class="state"><button class="attachment" type="button"><span class="attachment__icon attachment__icon--pdf"><svg class="i i--lg"><use href="#i-file"/></svg></span><span style="min-width:0;display:grid"><span class="attachment__name">Contrato_Lumen_v3.pdf</span><span class="attachment__meta">PDF · 1,8 MB</span></span></button><figcaption><b>Padrão</b></figcaption></figure>
+            <figure class="state"><div class="attachment is-hover"><span class="attachment__icon attachment__icon--img"><svg class="i i--lg"><use href="#i-image"/></svg></span><span style="min-width:0;display:grid"><span class="attachment__name">fachada-loja.jpg</span><span class="attachment__meta">JPG · 3,2 MB</span></span><span class="attachment__action"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Baixar"><svg class="i"><use href="#i-download"/></svg></button></span></div><figcaption><b>Hover</b>ação de download</figcaption></figure>
+            <figure class="state"><div class="attachment is-focus"><span class="attachment__icon attachment__icon--doc"><svg class="i i--lg"><use href="#i-file"/></svg></span><span style="min-width:0;display:grid"><span class="attachment__name">Ata_reuniao.docx</span><span class="attachment__meta">Word · 88 KB</span></span></div><figcaption><b>Foco</b></figcaption></figure>
+            <figure class="state"><div class="attachment attachment--static"><span class="attachment__icon attachment__icon--pdf"><svg class="i i--lg"><use href="#i-file"/></svg></span><span style="min-width:0;display:grid"><span class="attachment__name">Contrato_Lumen_v3.pdf</span><span class="attachment__meta">PDF · 1,8 MB</span></span></div><figcaption><b>Somente informação</b>sem download nem abertura</figcaption></figure>
+            <figure class="state"><div class="attachment" style="cursor:progress"><span class="attachment__icon"><svg class="i i--lg"><use href="#i-file"/></svg></span><span style="min-width:0;display:grid"><span class="attachment__name">Planilha_Q4.xlsx</span><span class="attachment__meta">Enviando · 62%</span><span class="progress"><span style="width:62%"></span></span></span></div><figcaption><b>Enviando</b></figcaption></figure>
+            <figure class="state"><div class="attachment is-error"><span class="attachment__icon attachment__icon--pdf"><svg class="i i--lg"><use href="#i-error"/></svg></span><span style="min-width:0;display:grid"><span class="attachment__name">Video_demo.mov</span><span class="attachment__meta">Maior que 25 MB</span></span></div><figcaption><b>Erro</b><button class="btn btn--link btn--compact" type="button" style="padding:0;height:auto">Enviar como link</button></figcaption></figure>
+          </div>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

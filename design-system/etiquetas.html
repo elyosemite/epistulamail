@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Etiquetas · Epistula Design System</title>
+<meta name="description" content="As seis cores de etiqueta do usuário.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="etiquetas">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="etiquetas">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Tag (colored) <code>.label</code></p>
+          <h1>Etiquetas</h1>
+          <p class="lede">Etiquetas criadas pelo usuário. Seis cores, cada uma com um par de fundo e texto que passa em 4,5:1 nos dois temas. Vermelho e amarelo ficam de fora, reservados para erro e aviso.</p>
+        </div>
+        <div class="stage">
+          <div class="row">
+            <span class="label label--blue">Novidades</span>
+            <span class="label label--teal">Dev</span>
+            <span class="label label--green">Financeiro</span>
+            <span class="label label--purple">Jurídico</span>
+            <span class="label label--magenta">Pessoal</span>
+            <span class="label label--orange">Clientes</span>
+            <span class="label">Sem cor</span>
+            <span class="label label--purple">Jurídico<button class="chip__remove" type="button" aria-label="Remover etiqueta Jurídico"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+          </div>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

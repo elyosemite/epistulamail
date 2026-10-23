@@ -1,0 +1,37 @@
+<title>Epistula Design System</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Fundamentos, componentes e tokens CSS do cliente de e-mail Epistula, baseados no Atlassian Design System.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <header class="masthead">
+      <div class="masthead__top">
+        <span class="wordmark"><span class="wordmark__glyph"><svg class="i i--lg"><use href="#i-mail"/></svg></span>Epistula</span>
+        <span class="lozenge lozenge--inprogress">v1.0</span>
+        <button class="btn btn--subtle theme-toggle" id="theme-toggle" type="button" aria-label="Alternar tema">
+          <svg class="i"><use href="#i-moon"/></svg><span>Tema escuro</span>
+        </button>
+      </div>
+      <h1>Design System</h1>
+      <p>Fundamentos, componentes e tokens do cliente de e-mail Epistula. A base é o Atlassian Design System: estrutura azul nítida, superfícies neutras e tipografia pensada para telas densas, adaptadas a uma caixa de entrada que precisa ser lida rápido e respondida com um gesto.</p>
+      <ul class="facts">
+        <li><strong>Referência</strong> Atlassian Design System</li>
+        <li><strong>Conformidade</strong> WCAG 2.2 AA</li>
+        <li><strong>Temas</strong> claro e escuro</li>
+        <li><strong>Arquivos</strong> <code>tokens.css</code> · <code>components.css</code></li>
+        <li><strong>Atualizado</strong> 23 out 2026</li>
+      </ul>
+    </header>
+    <div id="overview-grid"></div>
+  </main>
+</div>
+
+<script src="docs.js"></script>

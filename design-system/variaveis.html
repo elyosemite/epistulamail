@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Variáveis CSS · Epistula Design System</title>
+<meta name="description" content="Todas as custom properties de tokens.css.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="variaveis">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="variaveis">
+        <div class="ds-head">
+          <p class="eyebrow">tokens.css</p>
+          <h1>Variáveis CSS</h1>
+          <p class="lede">Todas as custom properties do <code>:root</code>, incluindo os dois blocos do tema escuro. Importe <code>tokens.css</code> antes de <code>components.css</code>. O tema segue o sistema operacional, e <code>data-theme="light"</code> ou <code>data-theme="dark"</code> no <code>&lt;html&gt;</code> força um dos dois.</p>
+        </div>
+        <div class="code-block snippet">
+          <pre><code>&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"&gt;
+&lt;link rel="stylesheet" href="design-system/tokens.css"&gt;
+&lt;link rel="stylesheet" href="design-system/components.css"&gt;
+
+&lt;!-- Uso: sempre o token semântico --&gt;
+.thread-preview { color: var(--color-text-subtlest); font: var(--font-body); padding: var(--space-150) var(--space-200); }</code></pre>
+        </div>
+        <div class="code-block">
+          <button class="btn btn--compact" type="button" id="copy-tokens"><svg class="i"><use href="#i-copy"/></svg>Copiar</button>
+          <pre id="tokens-source" tabindex="0" aria-label="Conteúdo de tokens.css"><code>Carregando tokens.css…</code></pre>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

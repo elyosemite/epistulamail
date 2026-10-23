@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Princípios · Epistula Design System</title>
+<meta name="description" content="As quatro regras que orientam cada decisão.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="principios">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="principios">
+        <div class="ds-head">
+          <h1>Princípios</h1>
+          <p class="lede">Quatro regras orientam cada decisão. Quando dois componentes discordam, vence o que respeita mais princípios.</p>
+        </div>
+        <ul class="principles">
+          <li><svg class="i"><use href="#i-rows"/></svg><h3>Densidade com respiro</h3><p>A lista mostra muitas mensagens sem perder a leitura: corpo de 14px, linhas de 20px e duas densidades que o usuário escolhe.</p></li>
+          <li><svg class="i"><use href="#i-eye"/></svg><h3>Leitura em primeiro lugar</h3><p>O painel de leitura usa 16px com 24px de entrelinha e largura limitada a cerca de 70 caracteres por linha.</p></li>
+          <li><svg class="i"><use href="#i-send"/></svg><h3>Ação a um gesto</h3><p>Arquivar, excluir, adiar e responder ficam a um clique ou a uma tecla. Toda ação destrutiva oferece "Desfazer".</p></li>
+          <li><svg class="i"><use href="#i-info"/></svg><h3>Estado sempre visível</h3><p>Não lida, selecionada, enviando, com falha: cada estado muda forma e peso, além da cor.</p></li>
+        </ul>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

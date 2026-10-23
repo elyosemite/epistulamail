@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carregamento · Epistula Design System</title>
+<meta name="description" content="Skeleton, spinner e progresso.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="carregamento">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="carregamento">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Spinner, Skeleton</p>
+          <h1>Carregamento</h1>
+          <p class="lede">O skeleton é usado quando a forma do conteúdo é conhecida, como a lista e o painel de leitura. O spinner é usado em ações curtas sem forma definida, como enviar, sincronizar ou anexar.</p>
+        </div>
+        <div class="stage stage--flush">
+          <div class="thread-list" aria-busy="true" aria-label="Carregando conversas">
+            <div class="thread" style="cursor:default"><span class="skeleton skeleton--circle thread__check"></span><span class="skeleton skeleton--circle thread__star"></span><span class="skeleton thread__from" style="width:40%"></span><span class="skeleton thread__meta" style="width:2.5rem"></span><span class="skeleton thread__subject" style="width:70%"></span><span class="skeleton thread__snippet" style="width:90%"></span></div>
+            <div class="thread" style="cursor:default"><span class="skeleton skeleton--circle thread__check"></span><span class="skeleton skeleton--circle thread__star"></span><span class="skeleton thread__from" style="width:30%"></span><span class="skeleton thread__meta" style="width:2.5rem"></span><span class="skeleton thread__subject" style="width:55%"></span><span class="skeleton thread__snippet" style="width:80%"></span></div>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="states" style="align-items:center">
+            <figure class="state"><span class="spinner spinner--sm" style="color:var(--color-icon)" role="status" aria-label="Carregando"></span><figcaption><b>16px</b>dentro de botões</figcaption></figure>
+            <figure class="state"><span class="spinner" style="color:var(--color-icon)" role="status" aria-label="Carregando"></span><figcaption><b>24px</b>em linha</figcaption></figure>
+            <figure class="state"><span class="spinner spinner--lg" style="color:var(--color-icon-brand)" role="status" aria-label="Carregando"></span><figcaption><b>48px</b>carga do app</figcaption></figure>
+            <figure class="state"><div class="meter" style="width:14rem;padding:0"><div class="progress"><span style="width:38%"></span></div>Sincronizando 1.284 de 3.350 mensagens</div><figcaption><b>Progresso</b>quando a duração é conhecida</figcaption></figure>
+          </div>
+        </div>
+        <h3 class="sub">Painel de leitura</h3>
+        <div class="stage stage--flush">
+          <div class="reader" aria-busy="true" aria-label="Carregando mensagem">
+            <span class="skeleton skeleton--title" style="width:60%"></span>
+            <div class="message__head">
+              <span class="skeleton skeleton--avatar"></span>
+              <div style="display:grid;gap:var(--space-075);min-width:0"><span class="skeleton" style="width:12rem"></span><span class="skeleton" style="width:8rem"></span></div>
+              <span class="skeleton" style="width:4rem"></span>
+            </div>
+            <div style="display:grid;gap:var(--space-150);max-width:var(--layout-reading-measure)">
+              <span class="skeleton skeleton--line" style="width:95%"></span>
+              <span class="skeleton skeleton--line" style="width:88%"></span>
+              <span class="skeleton skeleton--line" style="width:92%"></span>
+              <span class="skeleton skeleton--line" style="width:55%"></span>
+            </div>
+          </div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Leitura</dt><dd>Mesma estrutura do <code>.reader</code>: título com <code>.skeleton--title</code>, avatar com <code>.skeleton--avatar</code> e quatro linhas de corpo com <code>.skeleton--line</code>, a última mais curta. Marque o contêiner com <code>aria-busy="true"</code>.</dd></div>
+        </dl>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

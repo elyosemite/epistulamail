@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Forma e elevação · Epistula Design System</title>
+<meta name="description" content="Raios e os quatro níveis de superfície.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="forma">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="forma">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Radius e Elevation</p>
+          <h1>Forma e elevação</h1>
+          <p class="lede">Os raios são pequenos, como no ADS. Quanto mais o elemento flutua acima da caixa de entrada, maior o raio e a sombra. A elevação é dada pela superfície e pela sombra juntas, e no tema escuro a superfície clareia em vez de a sombra escurecer.</p>
+        </div>
+        <div class="stage">
+          <div class="states">
+            <figure class="state"><div class="radius-demo" style="border-radius:var(--radius-xsmall)"></div><figcaption><b>--radius-xsmall</b>2px · checkbox</figcaption></figure>
+            <figure class="state"><div class="radius-demo" style="border-radius:var(--radius-small)"></div><figcaption><b>--radius-small</b>3px · botões, inputs</figcaption></figure>
+            <figure class="state"><div class="radius-demo" style="border-radius:var(--radius-medium)"></div><figcaption><b>--radius-medium</b>6px · menus, toasts</figcaption></figure>
+            <figure class="state"><div class="radius-demo" style="border-radius:var(--radius-large)"></div><figcaption><b>--radius-large</b>8px · modais, composição</figcaption></figure>
+            <figure class="state"><div class="radius-demo" style="border-radius:var(--radius-round);width:3rem"></div><figcaption><b>--radius-round</b>avatares, contagens</figcaption></figure>
+          </div>
+        </div>
+        <div class="stage stage--sunken">
+          <div class="states">
+            <div class="elev elev--sunken"><b>Sunken</b><code>--color-surface-sunken</code>Sidebar, fundo do app</div>
+            <div class="elev elev--default"><b>Default</b><code>--color-surface</code>Lista, leitura</div>
+            <div class="elev elev--raised"><b>Raised</b><code>--shadow-raised</code>Anexo em hover, cartões</div>
+            <div class="elev elev--overlay"><b>Overlay</b><code>--shadow-overlay</code>Menus, toasts, modais, composição</div>
+          </div>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

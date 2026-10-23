@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Espaçamento e layout · Epistula Design System</title>
+<meta name="description" content="Escala de 2 a 80px e o layout de três painéis.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="espacamento">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="espacamento">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Space tokens</p>
+          <h1>Espaçamento e layout</h1>
+          <p class="lede">A escala tem base 8, com meios-passos de 2, 4 e 6px para ajustes finos dentro de componentes. O nome do token é o múltiplo de 8px: <code>--space-150</code> = 1,5 × 8 = 12px.</p>
+        </div>
+        <div class="stage scroll-x">
+          <table class="space-table">
+            <thead><tr><th>Token</th><th>rem</th><th>px</th><th style="width:30%">Escala</th><th>Uso no cliente</th></tr></thead>
+            <tbody id="space-rows"></tbody>
+          </table>
+        </div>
+
+        <h3 class="sub">Layout de três painéis</h3>
+        <div class="stage scroll-x">
+          <div class="layout-map">
+            <div class="layout-map__frame" aria-label="Diagrama do layout: header, sidebar, lista e leitura">
+              <div class="lm-head"><b>Header</b> 56px · busca com até 720px</div>
+              <div class="lm-side"><b>Sidebar</b>240px · recolhe para 64px<div class="lm-line" style="width:70%"></div><div class="lm-line" style="width:55%"></div><div class="lm-line" style="width:62%"></div></div>
+              <div class="lm-list"><b>Lista</b>400px · redimensionável 320–560<div class="lm-line"></div><div class="lm-line" style="width:80%"></div><div class="lm-line"></div><div class="lm-line" style="width:70%"></div></div>
+              <div class="lm-read"><b>Leitura</b>flexível · texto limitado a 672px (≈70 caracteres)<div class="lm-line" style="width:90%"></div><div class="lm-line" style="width:84%"></div><div class="lm-line" style="width:88%"></div></div>
+            </div>
+            <div class="lm-scale"><span class="lm-measure">240</span><span class="lm-measure">400</span><span class="lm-measure">1fr</span></div>
+          </div>
+        </div>
+        <h3 class="sub">Casca do cliente <code>.app-shell</code></h3>
+        <div class="stage stage--flush scroll-x">
+          <div class="app-shell app-shell--embedded" style="min-width:60rem">
+            <header class="appbar app-shell__header">
+              <span class="appbar__brand"><span class="wordmark wordmark--sm"><span class="wordmark__glyph" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</span></span>
+              <div class="appbar__actions">
+                <div class="appbar__account" role="status"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">YM</span><span class="appbar__account-text">Conectado como <span class="appbar__account-email">yuri@gmail.com</span></span></div>
+              </div>
+            </header>
+            <nav class="sidebar app-shell__sidebar" aria-label="Pastas">
+              <div class="nav-group">
+                <a class="nav-item has-unread" href="#espacamento" aria-current="page" data-tip="Caixa de entrada"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">3</span></a>
+                <a class="nav-item" href="#espacamento" data-tip="Com estrela"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></a>
+                <a class="nav-item" href="#espacamento" data-tip="Enviados"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></a>
+                <a class="nav-item" href="#espacamento" data-tip="Lixeira"><svg class="i"><use href="#i-trash"/></svg><span class="nav-item__text">Lixeira</span></a>
+              </div>
+            </nav>
+            <section class="app-shell__list" aria-label="Caixa de entrada">
+              <div class="toolbar"><button class="btn btn--subtle btn--icon" type="button" aria-label="Atualizar" data-tip="Atualizar"><svg class="i"><use href="#i-refresh"/></svg></button><div class="toolbar__end"><span>1–3 de 3</span></div></div>
+              <div class="app-shell__list-body">
+                <div class="thread-list thread-list--headers" role="list" aria-label="Conversas">
+                  <div class="thread is-unread is-open" role="listitem" tabindex="0"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span></div></div>
+                  <div class="thread is-unread" role="listitem" tabindex="0"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Paulo Henrique</span></div><div class="thread__meta"><span class="thread__date">09:15</span></div><div class="thread__subject"><span class="thread__subject-text">Almoço de sexta?</span></div></div>
+                  <div class="thread" role="listitem" tabindex="0"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Banco Atlântico</span></div><div class="thread__meta"><span class="thread__date">21 out</span></div><div class="thread__subject"><span class="thread__subject-text">Seu extrato de outubro está disponível</span></div></div>
+                </div>
+              </div>
+            </section>
+            <section class="app-shell__reader" aria-label="Mensagem">
+              <article class="reader">
+                <div class="reader__head"><button class="btn btn--subtle btn--icon app-shell__back" type="button" aria-label="Voltar para a lista" data-tip="Voltar"><svg class="i"><use href="#i-chevron-left"/></svg></button><h3 class="reader__subject">Revisão do contrato: Fornecedor Lumen</h3></div>
+                <div class="message"><div class="message__head"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">MC</span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@epistula.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
+                <div class="message__body"><p>Segue a versão 3 do contrato com os ajustes da cláusula 7.2.</p></div></div>
+              </article>
+            </section>
+          </div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Estrutura</dt><dd><code>.app-shell</code> ocupa a janela inteira (<code>position: fixed</code>) e posiciona os filhos por área: <code>__header</code> (com <code>.appbar</code>), <code>__banner</code> opcional, <code>__sidebar</code> (com <code>.sidebar</code>), <code>__list</code> (toolbar + <code>__list-body</code> rolável) e <code>__reader</code>. Cada painel rola sozinho; a janela nunca rola.</dd></div>
+          <div><dt>Variações</dt><dd><code>--no-sidebar</code> para conta única sem pastas. <code>--embedded</code> ocupa o contêiner, para documentação e pré-visualizações. <code>__center</code> ocupa tudo abaixo do header, para boas-vindas, conexão de conta e carregamento do app.</dd></div>
+          <div><dt>Lista ajustável</dt><dd>A largura da lista vem de <code>--app-shell-list</code> (padrão <code>--layout-list-width</code>), limitada a 320–560px. O app grava a preferência do usuário nessa variável no <code>.app-shell</code>.</dd></div>
+          <div><dt>Telas estreitas</dt><dd>Com <code>.has-reader</code> no <code>.app-shell</code>, abaixo de 960px a leitura substitui a lista, e <code>.app-shell__back</code> aparece no cabeçalho da leitura. Na sidebar recolhida, todo <code>.nav-item</code> precisa de <code>data-tip</code>; fora da casca, use <code>.sidebar--collapsed</code>.</dd></div>
+        </dl>
+        <dl class="guidance">
+          <div><dt>Abaixo de 1280px</dt><dd>A sidebar recolhe para 64px, mostrando só os ícones com tooltip.</dd></div>
+          <div><dt>Abaixo de 960px</dt><dd>Dois painéis: a lista ocupa a tela, e a leitura entra por cima com o botão "Voltar".</dd></div>
+          <div><dt>Abaixo de 600px</dt><dd>A lista usa a densidade confortável, e as ações rápidas passam para o gesto de deslizar.</dd></div>
+          <div><dt>Densidade</dt><dd>Confortável: 76px, três linhas (remetente, assunto, prévia). Compacta: 36px, uma linha.</dd></div>
+        </dl>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

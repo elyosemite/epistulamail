@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Checkbox e toggle · Epistula Design System</title>
+<meta name="description" content="Seleção na lista e configurações imediatas.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="selecao">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="selecao">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Checkbox, Toggle</p>
+          <h1>Checkbox e toggle</h1>
+          <p class="lede">O checkbox seleciona conversas na lista e opções em formulários. O toggle liga e desliga uma configuração com efeito imediato, como a resposta automática.</p>
+        </div>
+        <div class="stage">
+          <div class="states">
+            <figure class="state"><input type="checkbox" class="checkbox" id="cb-1" aria-label="Desmarcado"><figcaption><b>Desmarcado</b></figcaption></figure>
+            <figure class="state"><input type="checkbox" class="checkbox is-hover" id="cb-2" aria-label="Hover"><figcaption><b>Hover</b></figcaption></figure>
+            <figure class="state"><input type="checkbox" class="checkbox" id="cb-3" checked aria-label="Marcado"><figcaption><b>Marcado</b></figcaption></figure>
+            <figure class="state"><input type="checkbox" class="checkbox" id="cb-4" data-indeterminate aria-label="Parcial"><figcaption><b>Parcial</b>seleção mista</figcaption></figure>
+            <figure class="state"><input type="checkbox" class="checkbox is-focus" id="cb-5" aria-label="Foco"><figcaption><b>Foco</b></figcaption></figure>
+            <figure class="state"><input type="checkbox" class="checkbox" id="cb-6" disabled aria-label="Desabilitado"><figcaption><b>Desabilitado</b></figcaption></figure>
+            <figure class="state"><input type="checkbox" class="checkbox is-invalid" id="cb-7" aria-label="Inválido"><figcaption><b>Inválido</b>aceite obrigatório</figcaption></figure>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="states">
+            <figure class="state"><label class="choice" for="tg-1"><input type="checkbox" class="toggle" id="tg-1">Resposta automática</label><figcaption><b>Desligado</b></figcaption></figure>
+            <figure class="state"><label class="choice" for="tg-2"><input type="checkbox" class="toggle" id="tg-2" checked>Agrupar por conversa</label><figcaption><b>Ligado</b>verde, como no ADS</figcaption></figure>
+            <figure class="state"><label class="choice" for="tg-3"><input type="checkbox" class="toggle is-focus" id="tg-3" checked>Notificações</label><figcaption><b>Foco</b></figcaption></figure>
+            <figure class="state"><label class="choice" for="tg-4" style="color:var(--color-text-disabled)"><input type="checkbox" class="toggle" id="tg-4" disabled>Criptografia S/MIME</label><figcaption><b>Desabilitado</b>requer certificado</figcaption></figure>
+          </div>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

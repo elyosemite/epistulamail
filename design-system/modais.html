@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Modais · Epistula Design System</title>
+<meta name="description" content="Decisões que não têm desfazer.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="modais">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="modais">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Modal Dialog <code>.modal</code></p>
+          <h1>Modais</h1>
+          <p class="lede">Reservados para decisões que não têm desfazer. O título é uma pergunta ou uma ação. O botão de confirmação repete o verbo, e o foco abre em "Cancelar". <kbd>Esc</kbd> fecha.</p>
+        </div>
+        <div class="row">
+          <button class="btn btn--danger" type="button" id="open-modal"><svg class="i"><use href="#i-trash"/></svg>Esvaziar lixeira</button>
+        </div>
+        <div class="stage stage--sunken">
+          <div class="modal" role="dialog" aria-labelledby="static-modal-title" style="margin-inline:auto">
+            <div class="modal__head"><svg class="i"><use href="#i-warning"/></svg><h3 class="modal__title" id="static-modal-title">Esvaziar a lixeira?</h3></div>
+            <div class="modal__body"><p>As 128 conversas da lixeira serão excluídas permanentemente. Essa ação não pode ser desfeita.</p></div>
+            <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--danger" type="button">Esvaziar lixeira</button></div>
+          </div>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

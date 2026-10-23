@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Banners e avisos · Epistula Design System</title>
+<meta name="description" content="Alertas do sistema e avisos em contexto.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="mensagens">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="mensagens">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Banner, Section Message</p>
+          <h1>Banners e avisos</h1>
+          <p class="lede">O banner ocupa a largura do app e trata do sistema todo: conexão, conta, manutenção. A section message fica dentro do conteúdo e fala de uma mensagem ou configuração específica.</p>
+        </div>
+        <div class="stage stage--flush">
+          <div class="banner banner--warning" role="status"><svg class="i"><use href="#i-warning"/></svg>Você está offline. As mensagens serão enviadas quando a conexão voltar.</div>
+          <div class="banner banner--error" role="alert"><svg class="i"><use href="#i-error"/></svg>Não foi possível sincronizar a conta yuri@epistula.com.br. <a href="#mensagens">Entrar de novo</a></div>
+          <div class="banner banner--announcement"><svg class="i"><use href="#i-info"/></svg>Manutenção programada no domingo, 26 out, das 02:00 às 04:00.</div>
+        </div>
+        <div class="stage">
+          <div class="stack">
+            <div class="section-message" role="note"><svg class="i"><use href="#i-info"/></svg><div><p class="section-message__title">Imagens externas bloqueadas</p><p>Para proteger sua privacidade, as imagens desta mensagem não foram carregadas.</p><div class="section-message__actions"><button type="button">Mostrar imagens</button><button type="button">Sempre mostrar de newsletter@lumen.com.br</button></div></div></div>
+            <div class="section-message section-message--warning" role="note"><svg class="i"><use href="#i-warning"/></svg><div><p class="section-message__title">Esta mensagem pode ser phishing</p><p>O remetente usa "epistu1a.com.br", parecido com o domínio da sua organização. Não clique em links nem informe senhas.</p><div class="section-message__actions"><button type="button">Denunciar phishing</button><button type="button">Parece seguro</button></div></div></div>
+            <div class="section-message section-message--error" role="alert"><svg class="i"><use href="#i-error"/></svg><div><p class="section-message__title">A mensagem não foi entregue</p><p>O endereço ana.lima@lumen.com não existe. O servidor retornou o erro 550 5.1.1.</p><div class="section-message__actions"><button type="button">Corrigir e reenviar</button></div></div></div>
+            <div class="section-message section-message--success" role="status"><svg class="i"><use href="#i-success"/></svg><div><p class="section-message__title">Resposta automática ativa</p><p>Quem escrever até sexta, 31 out, receberá sua mensagem de ausência.</p></div></div>
+            <div class="section-message section-message--discovery" role="note"><svg class="i"><use href="#i-sparkle"/></svg><div><p class="section-message__title">Novo: adiar conversas</p><p>Passe o mouse sobre uma conversa e clique no relógio para tirá-la da caixa até a hora escolhida.</p></div></div>
+          </div>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

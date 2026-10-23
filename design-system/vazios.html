@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Empty states · Epistula Design System</title>
+<meta name="description" content="Caixa zerada, busca sem resultado e erro.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="vazios">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="vazios">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Empty State <code>.empty</code></p>
+          <h1>Empty states</h1>
+          <p class="lede">Cada vazio diz por que está vazio e o que fazer a seguir. Uma caixa de entrada zerada é uma conquista, e um erro precisa de saída.</p>
+        </div>
+        <div class="two-col">
+          <div class="stage stage--flush"><div class="empty">
+            <svg class="empty__art" viewBox="0 0 96 96" fill="none" aria-hidden="true"><rect x="12" y="28" width="72" height="48" rx="6" stroke="currentColor" stroke-width="2.5"/><path d="M12 56h20l6 8h20l6-8h20" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="m38 40 7 7 13-14" stroke="var(--color-icon-success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <h3 class="empty__title">Tudo em dia</h3>
+            <p class="empty__desc">Você leu e organizou todas as mensagens da Caixa de entrada.</p>
+          </div></div>
+          <div class="stage stage--flush"><div class="empty">
+            <svg class="empty__art" viewBox="0 0 96 96" fill="none" aria-hidden="true"><circle cx="42" cy="42" r="22" stroke="currentColor" stroke-width="2.5"/><path d="m58 58 18 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M34 42h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            <h3 class="empty__title">Nenhum resultado para "contrato lumen 2025"</h3>
+            <p class="empty__desc">Confira a grafia ou busque em todas as pastas, incluindo Spam e Lixeira.</p>
+            <div class="empty__actions"><button class="btn" type="button">Buscar em todas as pastas</button><button class="btn btn--subtle" type="button">Limpar filtros</button></div>
+          </div></div>
+          <div class="stage stage--flush"><div class="empty">
+            <svg class="empty__art" viewBox="0 0 96 96" fill="none" aria-hidden="true"><path d="M20 30h56v40a6 6 0 0 1-6 6H26a6 6 0 0 1-6-6z" stroke="currentColor" stroke-width="2.5"/><path d="M20 30 48 50l28-20" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="72" cy="26" r="12" fill="var(--color-surface)" stroke="var(--color-icon-danger)" stroke-width="2.5"/><path d="M72 20v7M72 31v.5" stroke="var(--color-icon-danger)" stroke-width="2.5" stroke-linecap="round"/></svg>
+            <h3 class="empty__title">Não foi possível carregar a pasta</h3>
+            <p class="empty__desc">O servidor demorou demais para responder. Suas mensagens estão seguras.</p>
+            <div class="empty__actions"><button class="btn btn--primary" type="button">Tentar de novo</button></div>
+          </div></div>
+          <div class="stage stage--flush"><div class="empty">
+            <svg class="empty__art" viewBox="0 0 96 96" fill="none" aria-hidden="true"><path d="M22 18h36l16 16v44a4 4 0 0 1-4 4H22a4 4 0 0 1-4-4V22a4 4 0 0 1 4-4z" stroke="currentColor" stroke-width="2.5"/><path d="M58 18v16h16M32 52h32M32 62h20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            <h3 class="empty__title">Nenhum rascunho</h3>
+            <p class="empty__desc">Mensagens que você começar e não enviar ficam salvas aqui automaticamente.</p>
+            <div class="empty__actions"><button class="btn btn--primary" type="button"><svg class="i"><use href="#i-pencil"/></svg>Escrever</button></div>
+          </div></div>
+        </div>
+        <h3 class="sub">Aguardando ação fora do app</h3>
+        <div class="two-col">
+          <div class="stage stage--flush"><div class="empty" aria-live="polite">
+            <span class="spinner spinner--lg empty__spinner" role="status" aria-label="Aguardando autorização do Google"></span>
+            <h3 class="empty__title">Continue no navegador</h3>
+            <p class="empty__desc">Abrimos a página de login do Google. Autorize o acesso do Epistula ao Gmail e volte para cá.</p>
+            <div class="empty__actions"><button class="btn btn--subtle" type="button">Cancelar</button></div>
+          </div></div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Aguardando</dt><dd>Quando o próximo passo acontece fora do Epistula (login no navegador, confirmação por e-mail), o spinner de 48px substitui a ilustração com <code>.empty__spinner</code>. O título diz onde continuar, e a única ação é "Cancelar", no estilo sutil, que volta ao estado anterior sem mensagem de erro.</dd></div>
+        </dl>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sidebar · Epistula Design System</title>
+<meta name="description" content="Pastas, etiquetas e armazenamento.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="sidebar">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="sidebar">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Side Navigation <code>.sidebar .nav-item</code></p>
+          <h1>Sidebar</h1>
+          <p class="lede">Pastas do sistema no topo, etiquetas abaixo e o uso de armazenamento no rodapé. Pastas com mensagens não lidas ficam em negrito e mostram a contagem. A pasta atual usa o fundo selecionado.</p>
+        </div>
+        <div class="sidebar-demo">
+          <div class="stage stage--flush">
+            <nav class="sidebar" aria-label="Pastas" id="demo-sidebar">
+              <button class="btn btn--primary btn--block" type="button" id="sidebar-compose"><svg class="i"><use href="#i-pencil"/></svg>Escrever</button>
+              <div class="nav-group">
+                <a class="nav-item has-unread" href="#sidebar" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">24</span></a>
+                <a class="nav-item" href="#sidebar"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></a>
+                <a class="nav-item" href="#sidebar"><svg class="i"><use href="#i-clock"/></svg><span class="nav-item__text">Adiados</span><span class="nav-item__count">2</span></a>
+                <a class="nav-item" href="#sidebar"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></a>
+                <a class="nav-item has-unread" href="#sidebar"><svg class="i"><use href="#i-file"/></svg><span class="nav-item__text">Rascunhos</span><span class="nav-item__count">3</span></a>
+                <a class="nav-item" href="#sidebar"><svg class="i"><use href="#i-spam"/></svg><span class="nav-item__text">Spam</span></a>
+                <a class="nav-item" href="#sidebar"><svg class="i"><use href="#i-trash"/></svg><span class="nav-item__text">Lixeira</span></a>
+              </div>
+              <div class="nav-group">
+                <div class="nav-heading">Etiquetas</div>
+                <a class="nav-item" href="#sidebar"><span class="dot" style="--lb-fg:var(--color-label-purple-text)"></span><span class="nav-item__text">Jurídico</span><span class="nav-item__count">5</span></a>
+                <a class="nav-item" href="#sidebar"><span class="dot" style="--lb-fg:var(--color-label-teal-text)"></span><span class="nav-item__text">Dev</span></a>
+                <a class="nav-item" href="#sidebar"><span class="dot" style="--lb-fg:var(--color-label-green-text)"></span><span class="nav-item__text">Financeiro</span></a>
+              </div>
+              <div class="meter"><div class="progress"><span style="width:55%"></span></div>8,2 GB de 15 GB usados</div>
+            </nav>
+          </div>
+          <div class="stage">
+            <div class="nav-states">
+              <figure class="state" style="justify-items:stretch"><span class="nav-item"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span><figcaption><b>Padrão</b></figcaption></figure>
+              <figure class="state" style="justify-items:stretch"><span class="nav-item is-hover"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span><figcaption><b>Hover</b></figcaption></figure>
+              <figure class="state" style="justify-items:stretch"><span class="nav-item is-selected"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">24</span></span><figcaption><b>Selecionado</b>pasta atual</figcaption></figure>
+              <figure class="state" style="justify-items:stretch"><span class="nav-item has-unread"><svg class="i"><use href="#i-file"/></svg><span class="nav-item__text">Rascunhos</span><span class="nav-item__count">3</span></span><figcaption><b>Com não lidas</b>peso 600</figcaption></figure>
+              <figure class="state" style="justify-items:stretch"><span class="nav-item is-focus" tabindex="-1"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></span><figcaption><b>Foco</b></figcaption></figure>
+              <figure class="state" style="justify-items:stretch"><span class="nav-item is-disabled"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Arquivo 2019 (sincronizando)</span></span><figcaption><b>Desabilitado</b></figcaption></figure>
+            </div>
+          </div>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

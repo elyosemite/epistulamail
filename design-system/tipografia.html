@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tipografia · Epistula Design System</title>
+<meta name="description" content="Escala de Hero a Label, pesos e famílias.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="tipografia">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="tipografia">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Typography</p>
+          <h1>Tipografia</h1>
+          <p class="lede">Inter é a família de interface: aberturas largas, altura-x generosa e números tabulares, que deixam nomes, assuntos e datas legíveis a 12–14px em listas densas. JetBrains Mono cobre cabeçalhos técnicos e código. A escala segue a do ADS. Os títulos usam tracking negativo e os labels em caixa-alta usam tracking positivo.</p>
+        </div>
+        <div class="stage">
+          <div class="type-row">
+            <div class="type-meta"><b>Hero</b><code>--font-hero</code><span>32 / 36 · 700 · −0,02em</span><span>Onboarding e empty states grandes</span></div>
+            <p class="type-sample" style="font:var(--font-hero);letter-spacing:var(--letter-spacing-hero)">Caixa de entrada zerada</p>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><b>Page title</b><code>--font-page-title</code><span>24 / 28 · 600 · −0,015em</span><span>Assunto no painel de leitura</span></div>
+            <p class="type-sample" style="font:var(--font-page-title);letter-spacing:var(--letter-spacing-page-title)">Revisão do contrato: Fornecedor Lumen</p>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><b>Section</b><code>--font-section</code><span>20 / 24 · 600 · −0,01em</span><span>Títulos de modal e de configurações</span></div>
+            <p class="type-sample" style="font:var(--font-section);letter-spacing:var(--letter-spacing-section)">Assinatura e resposta automática</p>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><b>Card</b><code>--font-card</code><span>16 / 20 · 600 · −0,005em</span><span>Remetente, título de cartão</span></div>
+            <p class="type-sample" style="font:var(--font-card);letter-spacing:var(--letter-spacing-card)">Marina Couto</p>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><b>Body large</b><code>--font-body-large</code><span>16 / 24 · 400</span><span>Corpo da mensagem e da composição</span></div>
+            <p class="type-sample" style="font:var(--font-body-large);max-width:var(--layout-reading-measure)">Segue a versão 3 do contrato com os ajustes da cláusula 7.2. O prazo de pagamento passou para 45 dias, e a multa por rescisão agora é proporcional ao período restante.</p>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><b>Body</b><code>--font-body</code><span>14 / 20 · 400 · 500 · 600</span><span>Lista, menus, botões, interface</span></div>
+            <p class="type-sample" style="font:var(--font-body)"><span style="font-weight:600">Revisão do contrato</span> · Segue a versão 3 com os ajustes da cláusula 7.2</p>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><b>Body small</b><code>--font-body-small</code><span>12 / 16 · 400</span><span>Datas, metadados, ajuda. Tamanho mínimo.</span></div>
+            <p class="type-sample" style="font:var(--font-body-small);color:var(--color-text-subtle)">10:42 · 3 anexos · 2,4 MB · Rascunho salvo às 10:40</p>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><b>Label</b><code>--font-label</code><span>11 / 16 · 600 · +0,04em · caixa-alta</span><span>Só para rótulos curtos, nunca para frases</span></div>
+            <p class="type-sample" style="font:var(--font-label);letter-spacing:var(--letter-spacing-label);text-transform:uppercase;color:var(--color-text-subtlest)">Pastas · Etiquetas · Hoje</p>
+          </div>
+          <div class="type-row">
+            <div class="type-meta"><b>Code</b><code>--font-code</code><span>13 / 20 · 400 · JetBrains Mono</span><span>Cabeçalhos originais, endereços técnicos</span></div>
+            <p class="type-sample" style="font:var(--font-code);color:var(--color-text-subtle)">Message-ID: &lt;7f3a9c.2026102310@mail.epistula.com.br&gt;</p>
+          </div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Por que Inter</dt><dd>O ADS usa Atlassian Sans e Charlie, fontes proprietárias da Atlassian. Inter tem licença SIL OFL e métricas próximas, então pode ser embarcada no produto sem custo de licença.</dd></div>
+          <div><dt>Pesos</dt><dd>400 para leitura, 500 para controles, 600 para não lidas e títulos, 700 apenas no Hero. Não lida usa 600, nunca 700, para não "gritar" numa lista inteira de pendências.</dd></div>
+          <div><dt>Unidades</dt><dd>Tamanhos em rem, para respeitar o zoom e o tamanho de fonte escolhidos pelo usuário. Datas e contagens usam <code>tabular-nums</code>.</dd></div>
+        </dl>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

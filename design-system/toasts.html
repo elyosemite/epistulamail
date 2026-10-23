@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Toasts · Epistula Design System</title>
+<meta name="description" content="Confirmações com Desfazer.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="toasts">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="toasts">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Flag <code>.toast</code></p>
+          <h1>Toasts</h1>
+          <p class="lede">Confirmam uma ação que acabou de acontecer e oferecem "Desfazer". Aparecem no canto inferior esquerdo, longe do botão Enviar, e somem após 6 segundos. Erros ficam na tela até o usuário fechar.</p>
+        </div>
+        <div class="row">
+          <button class="btn" type="button" data-toast="archive"><svg class="i"><use href="#i-archive"/></svg>Arquivar conversa</button>
+          <button class="btn" type="button" data-toast="send"><svg class="i"><use href="#i-send"/></svg>Enviar com desfazer</button>
+          <button class="btn" type="button" data-toast="error"><svg class="i"><use href="#i-error"/></svg>Falha no envio</button>
+        </div>
+        <div class="stage stage--sunken">
+          <div class="states">
+            <div class="toast" role="status"><svg class="i"><use href="#i-success"/></svg><div><p class="toast__title">Conversa arquivada</p><div class="toast__actions"><button type="button">Desfazer</button></div></div><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></div>
+            <div class="toast toast--info" role="status"><svg class="i"><use href="#i-send"/></svg><div><p class="toast__title">Enviando em 5 s</p><p class="toast__desc">Para: Marina Couto, joao@lumen.com.br</p><div class="toast__actions"><button type="button">Desfazer</button></div></div><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button><div class="progress toast__timer"><span style="width:60%"></span></div></div>
+            <div class="toast toast--warning" role="status"><svg class="i"><use href="#i-warning"/></svg><div><p class="toast__title">Anexo mencionado, mas não incluído</p><p class="toast__desc">O texto diz "segue em anexo", mas a mensagem não tem anexos.</p><div class="toast__actions"><button type="button">Anexar arquivo</button><button type="button">Enviar assim mesmo</button></div></div><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></div>
+            <div class="toast toast--error" role="alert"><svg class="i"><use href="#i-error"/></svg><div><p class="toast__title">A mensagem não foi enviada</p><p class="toast__desc">O servidor SMTP não respondeu. Ela ficou na Caixa de saída.</p><div class="toast__actions"><button type="button">Tentar de novo</button></div></div><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></div>
+          </div>
+        </div>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

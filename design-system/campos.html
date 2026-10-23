@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campos de texto · Epistula Design System</title>
+<meta name="description" content="Caixa padrão, busca e linha de composição.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="campos">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="campos">
+        <div class="ds-head">
+          <p class="eyebrow">ADS · Textfield, Textarea <code>.input</code></p>
+          <h1>Campos de texto</h1>
+          <p class="lede">Três formas: a caixa padrão para formulários e configurações, a busca preenchida para o header e a linha usada nos campos Para, Cc e Assunto da composição.</p>
+        </div>
+        <div class="stage">
+          <div class="two-col">
+            <div class="field"><label class="field__label" for="f-default">Nome de exibição</label><div class="input"><input id="f-default" value="Yuri Melo"></div><span class="field__help">Aparece no campo "De" das suas mensagens.</span></div>
+            <div class="field"><label class="field__label" for="f-hover">Hover</label><div class="input is-hover"><input id="f-hover" value="Yuri Melo"></div></div>
+            <div class="field"><label class="field__label" for="f-focus">Foco</label><div class="input is-focus"><input id="f-focus" value="Yuri Mel"></div></div>
+            <div class="field"><label class="field__label" for="f-error">Encaminhar para <span class="req">*</span></label><div class="input is-invalid"><input id="f-error" value="yuri@epistula" aria-invalid="true" aria-describedby="f-error-msg"></div><span class="field__help field__help--error" id="f-error-msg"><svg class="i i--sm"><use href="#i-error"/></svg>Inclua o domínio completo, por exemplo yuri@epistula.com.br.</span></div>
+            <div class="field"><label class="field__label" for="f-disabled">Conta principal</label><div class="input is-disabled"><input id="f-disabled" value="yuri@epistula.com.br" disabled></div><span class="field__help">Definida pelo administrador da organização.</span></div>
+            <div class="field"><label class="field__label" for="f-search">Busca</label><div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input id="f-search" placeholder="Buscar e-mails"><kbd>/</kbd></div></div>
+            <div class="field"><label class="field__label" for="f-signature">Assinatura</label><div class="input input--textarea"><textarea id="f-signature" rows="3">Yuri Melo
+Engenharia · Epistula</textarea></div></div>
+            <div class="field"><span class="field__label">Linha de composição</span><label class="input input--line" for="f-subject"><span class="input__prefix">Assunto</span><input id="f-subject" value="Proposta Q4 para a diretoria"></label></div>
+          </div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Estados</dt><dd>Padrão, hover (fundo sutil), foco (borda azul de 2px), inválido (borda vermelha e mensagem com ícone), desabilitado (sem borda e texto esmaecido).</dd></div>
+          <div><dt>Erros</dt><dd>A mensagem diz o que corrigir, não só o que deu errado. Valide ao sair do campo, nunca a cada tecla.</dd></div>
+        </dl>
+      </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>
