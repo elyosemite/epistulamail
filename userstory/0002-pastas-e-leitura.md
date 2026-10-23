@@ -86,6 +86,13 @@ Todas as lacunas desta story foram resolvidas no DS em 23 out 2026:
 | L12 | Anexo sem download | `.attachment--static`, em `anexos.html` |
 | L13 | Destinatários expandidos | `.message__recipients` e chevron girado em `.message__to[aria-expanded="true"]`, em `leitura.html` |
 
+Encontradas durante a implementação:
+
+| # | Lacuna | Situação |
+|---|---|---|
+| L14 | `leitura.html` agrupa as ações do cabeçalho da leitura com `.row`, que só existe em `docs.css` | Aberta. O app usa `.toolbar__end` |
+| — | `.thread-list--headers` (L7) escondia as ações rápidas, mas a US2 precisa de "marcar como lida" no hover | Ajustado no DS: as ações são opcionais e, sem elas, a data continua visível no hover (`threads.html`) |
+
 A altura do `.message__frame` é definida pelo app depois de medir o conteúdo, e o mínimo é 8rem. Para medir, o iframe precisa de `allow-same-origin`, sempre **sem** `allow-scripts`: sem scripts, a mesma origem não dá ao conteúdo nenhum poder de execução. A alternativa é altura fixa com rolagem interna; decidir na implementação e cobrir no corpus do CA4.
 
 ### 5. Critérios de aceite
@@ -268,3 +275,27 @@ O prompt pede testes de integração reais, não só mocks. Não há servidor IM
 6. Telas usam as classes de L10–L13 publicadas no DS.
 7. Repositório git inicializado; nenhum segredo commitado.
 8. Decisão D1 registrada pelo dono do produto, mesmo que seja "seguir com A".
+
+### 13. Implementação (23 out 2026)
+
+**Decisões tomadas**
+
+- D1 seguiu a recomendação, opção A (cliente de provedores externos), sem confirmação explícita do dono do produto.
+- Quadro HTML: `sandbox="allow-same-origin"` sem `allow-scripts`. O app mede a altura e intercepta cliques em links pelo documento do iframe.
+- A primeira página usa números de sequência; as seguintes ancoram no UID do cursor (`UID FETCH` para achar a sequência; `UID SEARCH` se a âncora sumiu). Mensagens novas não deslocam páginas.
+- Imagens com URL relativa ao protocolo (`//host/x.png`) são sempre removidas e não entram na contagem de "Mostrar imagens".
+- Subscriber de log global no binário de teste: com escopo, o `tracing` perdia logs quando testes paralelos registravam os mesmos pontos.
+
+**Verificado**
+
+- 38 testes Rust: corpus de 27 ataques ao sanitizador, 768 casos de proptest (sanitizador e ids) e 256 de bytes arbitrários no parse MIME, redaction de logs, ids/cursores adulterados, UTF-7, classificação de pastas, links externos e comandos STORE. Estáveis em 5 execuções seguidas.
+- 19 testes de frontend: pilha de cursores, flags otimistas com rollback, contadores, formatação.
+- `cargo clippy --all-targets`: sem avisos. `tsc --noEmit` e build do Vite: ok.
+- `cargo deny check`: advisories, bans, licenses e sources ok. `cargo audit`: nenhuma vulnerabilidade; 8 avisos (sem manutenção/unsound) de crates transitivas usadas só no Linux, justificados em `deny.toml`.
+- Interface renderizada com backend simulado: tema claro e escuro e sidebar recolhida em 1100px. Abrir uma mensagem marca como lida e atualiza o contador, e o quadro HTML se ajusta à altura do conteúdo.
+
+**Pendente**
+
+- Teste manual contra o Gmail real (seção 10), incluindo o clique em links dentro do quadro HTML no WebView2 do Tauri.
+- Lacuna L14.
+

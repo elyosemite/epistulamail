@@ -19,6 +19,16 @@ pub enum AppError {
     ImapAuth,
     #[error("Não foi possível acessar o cofre de credenciais do sistema.")]
     Keyring,
+    #[error("A pasta mudou desde a última leitura. Recarregando a lista.")]
+    CursorExpired,
+    #[error("Esta mensagem não está mais nesta pasta.")]
+    MessageNotFound,
+    #[error("Esta mensagem é grande demais para abrir no Epistula (limite de 25 MB).")]
+    MessageTooLarge,
+    #[error("Referência inválida. Recarregue a lista.")]
+    InvalidId,
+    #[error("Este link não pode ser aberto.")]
+    UnsupportedLink,
     #[error("O Epistula não está configurado para este provedor.")]
     Config,
 }
@@ -33,6 +43,11 @@ impl AppError {
             AppError::ImapConnection => "ImapConnection",
             AppError::ImapAuth => "ImapAuth",
             AppError::Keyring => "Keyring",
+            AppError::CursorExpired => "CursorExpired",
+            AppError::MessageNotFound => "MessageNotFound",
+            AppError::MessageTooLarge => "MessageTooLarge",
+            AppError::InvalidId => "InvalidId",
+            AppError::UnsupportedLink => "UnsupportedLink",
             AppError::Config => "Config",
         }
     }

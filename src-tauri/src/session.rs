@@ -6,6 +6,7 @@ use serde::Serialize;
 use tokio::sync::{oneshot, Mutex};
 
 use crate::error::AppError;
+use crate::imap_client::{self, ImapSession};
 use crate::keyring_store::{self, StoredAccount};
 use crate::oauth::{self, Tokens};
 use crate::provider::Provider;
@@ -63,6 +64,8 @@ fn access_from(tokens: &Tokens) -> AccessToken {
 
 pub struct AppState {
     pub http: reqwest::Client,
+    /// Sessão IMAP reaproveitada entre comandos (US2, CA6). Só `imap_client::with_session` a usa.
+    pub imap: Mutex<Option<ImapSession>>,
     session: Mutex<Option<Session>>,
     pending_connect: std::sync::Mutex<Option<oneshot::Sender<()>>>,
 }
@@ -74,6 +77,7 @@ impl AppState {
                 .timeout(Duration::from_secs(20))
                 .build()
                 .expect("cliente HTTP"),
+            imap: Mutex::new(None),
             session: Mutex::new(None),
             pending_connect: std::sync::Mutex::new(None),
         }
@@ -110,6 +114,7 @@ impl AppState {
 
     async fn replace_session(&self, session: Session) -> Result<Account, AppError> {
         keyring_store::save(&session.to_stored())?;
+        imap_client::close_session(self).await;
         let account = session.account.clone();
         tracing::info!(provider = ?account.provider, "conta conectada e salva no keyring");
         *self.session.lock().await = Some(session);
@@ -132,6 +137,7 @@ impl AppState {
 
     /// Devolve a conta e um access token válido, renovando pelo refresh token quando necessário.
     /// `invalid_grant` apaga a conta do keyring e devolve `TokenExpired`.
+    /// É chamada por `imap_client::with_session` com o lock de `imap` tomado: não pode usar `imap`.
     pub async fn access(&self, force_refresh: bool) -> Result<(Account, String), AppError> {
         let mut guard = self.session.lock().await;
         if guard.is_none() {
@@ -165,6 +171,7 @@ impl AppState {
     }
 
     pub async fn disconnect(&self) -> Result<(), AppError> {
+        imap_client::close_session(self).await;
         *self.session.lock().await = None;
         keyring_store::delete()
     }
