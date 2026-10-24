@@ -17,10 +17,14 @@ export function MessageFrame({ html, title, onOpenLink }: MessageFrameProps) {
   const frame = useRef<HTMLIFrameElement>(null);
   const observer = useRef<ResizeObserver | null>(null);
 
+  // O quadro cresce até a altura do conteúdo e o documento do e-mail não rola na vertical
+  // (overflow-y: hidden no CSS do Rust): o único scroll vertical é o do painel de leitura.
+  // A diferença entre innerHeight e clientHeight é a barra horizontal de e-mails largos.
   const resize = useCallback(() => {
-    const doc = frame.current?.contentDocument;
-    if (frame.current && doc?.documentElement) {
-      frame.current.style.height = `${doc.documentElement.scrollHeight}px`;
+    const win = frame.current?.contentWindow;
+    const root = frame.current?.contentDocument?.documentElement;
+    if (frame.current && win && root) {
+      frame.current.style.height = `${root.scrollHeight + (win.innerHeight - root.clientHeight)}px`;
     }
   }, []);
 
@@ -31,6 +35,7 @@ export function MessageFrame({ html, title, onOpenLink }: MessageFrameProps) {
     observer.current?.disconnect();
     observer.current = new ResizeObserver(resize);
     observer.current.observe(doc.documentElement);
+    if (doc.body) observer.current.observe(doc.body);
     doc.addEventListener("click", (event) => {
       const target = event.target instanceof Element ? event.target.closest("a[href]") : null;
       event.preventDefault();

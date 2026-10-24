@@ -90,6 +90,165 @@
           <div><dt>Abaixo de 600px</dt><dd>A lista usa a densidade confortável, e as ações rápidas passam para o gesto de deslizar.</dd></div>
           <div><dt>Densidade</dt><dd>Confortável: 76px, três linhas (remetente, assunto, prévia). Compacta: 36px, uma linha.</dd></div>
         </dl>
+        <h3 class="sub">Com várias contas <code>.app-shell--with-rail</code></h3>
+        <p class="demo-hint">Clique nas contas da coluna para trocar; o header acompanha a conta ativa.</p>
+        <div class="stage stage--flush scroll-x">
+          <div class="app-shell app-shell--embedded app-shell--with-rail" style="min-width:64rem" data-rail-demo>
+            <header class="appbar app-shell__header">
+              <span class="appbar__brand"><span class="wordmark wordmark--sm"><span class="wordmark__glyph" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</span></span>
+              <div class="appbar__actions">
+                <div class="appbar__account" role="status" data-rail-account><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T</span><span class="appbar__account-text"><span class="appbar__account-name">Trabalho</span> · joao.silva.empresa@gmail.com</span></div>
+              </div>
+            </header>
+            <nav class="account-rail app-shell__rail" aria-label="Contas">
+              <div class="account-rail__list" role="list">
+                <div role="listitem"><button class="account-rail__item" type="button" data-account="Pessoal|joao.silva@gmail.com|blue|P" aria-label="Pessoal, joao.silva@gmail.com, 4 não lidas" data-tip="Pessoal · joao.silva@gmail.com (Ctrl+1)"><span class="avatar avatar--lg" aria-hidden="true">P</span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
+                <div role="listitem"><button class="account-rail__item" type="button" aria-current="true" data-account="Trabalho|joao.silva.empresa@gmail.com|purple|T" aria-label="Trabalho, joao.silva.empresa@gmail.com, 12 não lidas" data-tip="Trabalho · joao.silva.empresa@gmail.com (Ctrl+2)"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T</span><span class="badge badge--primary account-rail__badge" aria-hidden="true">12</span><span class="account-rail__name" aria-hidden="true">Trabalho</span></button></div>
+                <div role="listitem"><button class="account-rail__item" type="button" data-account="Família|silva.familia@gmail.com|green|F" aria-label="Família, silva.familia@gmail.com, mais de 99 não lidas" data-tip="Família · silva.familia@gmail.com (Ctrl+3)"><span class="avatar avatar--lg avatar--green" aria-hidden="true">F</span><span class="badge badge--primary account-rail__badge" aria-hidden="true">99+</span><span class="account-rail__name" aria-hidden="true">Família</span></button></div>
+              </div>
+              <div class="account-rail__sep" role="separator"></div>
+              <button class="account-rail__add" type="button" aria-label="Adicionar conta" data-tip="Adicionar conta"><svg class="i"><use href="#i-plus"/></svg></button>
+            </nav>
+            <nav class="sidebar app-shell__sidebar" aria-label="Pastas">
+              <button class="account-switcher" type="button" aria-haspopup="menu" data-tip="Trabalho · joao.silva.empresa@gmail.com"><span class="avatar avatar--purple" aria-hidden="true">T</span><span class="account-switcher__text"><span class="account-switcher__name">Trabalho</span><span class="account-switcher__email">joao.silva.empresa@gmail.com</span></span><svg class="i"><use href="#i-chevron-down"/></svg></button>
+              <div class="nav-group">
+                <a class="nav-item has-unread" href="#espacamento" aria-current="page" data-tip="Caixa de entrada"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></a>
+                <a class="nav-item" href="#espacamento" data-tip="Com estrela"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></a>
+                <a class="nav-item" href="#espacamento" data-tip="Enviados"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></a>
+                <a class="nav-item" href="#espacamento" data-tip="Lixeira"><svg class="i"><use href="#i-trash"/></svg><span class="nav-item__text">Lixeira</span></a>
+              </div>
+            </nav>
+            <section class="app-shell__list" aria-label="Caixa de entrada">
+              <div class="toolbar"><button class="btn btn--subtle btn--icon" type="button" aria-label="Atualizar" data-tip="Atualizar"><svg class="i"><use href="#i-refresh"/></svg></button><div class="toolbar__end"><span>1–50 de 2.000</span></div></div>
+              <div class="app-shell__list-body">
+                <div class="thread-list thread-list--headers" role="list" aria-label="Conversas">
+                  <div class="thread is-unread is-open" role="listitem" tabindex="0"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span></div></div>
+                  <div class="thread is-unread" role="listitem" tabindex="0"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Rafael Dias</span></div><div class="thread__meta"><span class="thread__date">09:15</span></div><div class="thread__subject"><span class="thread__subject-text">Planejamento do Q1</span></div></div>
+                  <div class="thread" role="listitem" tabindex="0"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">RH Empresa</span></div><div class="thread__meta"><span class="thread__date">21 out</span></div><div class="thread__subject"><span class="thread__subject-text">Holerite de outubro disponível</span></div></div>
+                </div>
+              </div>
+            </section>
+            <section class="app-shell__reader" aria-label="Mensagem">
+              <article class="reader">
+                <div class="reader__head"><h3 class="reader__subject">Revisão do contrato: Fornecedor Lumen</h3></div>
+                <div class="message"><div class="message__head"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">MC</span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
+                <div class="message__body"><p>Segue a versão 3 do contrato com os ajustes da cláusula 7.2.</p></div></div>
+              </article>
+            </section>
+          </div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Estrutura</dt><dd><code>--with-rail</code> acrescenta a área <code>__rail</code> (64px) com <code>.account-rail</code> à esquerda da sidebar. Use quando houver pelo menos uma conta conectada: é na coluna que fica o "+" para adicionar outra. <code>__center</code> (adicionar conta, login) ocupa o espaço à direita da coluna.</dd></div>
+          <div><dt>Abaixo de 1280px</dt><dd>A sidebar recolhe como sempre; a coluna continua visível.</dd></div>
+          <div><dt>Abaixo de 960px</dt><dd>A coluna sai e o <code>.account-switcher</code>, primeiro filho da sidebar, aparece (só o avatar, com <code>data-tip</code>). Ele abre o menu com a lista de contas.</dd></div>
+          <div><dt>Header</dt><dd><code>.appbar__account</code> mostra a conta ativa: avatar na cor da conta, <code>.appbar__account-name</code> e o e-mail.</dd></div>
+        </dl>
+      <h3 class="sub">Com comandos e divisor <code>.app-shell--commands</code></h3>
+      <p class="demo-hint">Arraste o divisor entre a lista e a leitura (ou dê foco nele com Tab e use as setas). A busca acompanha a largura da lista. Duplo clique volta ao padrão.</p>
+      <div class="stage stage--flush scroll-x">
+        <div class="app-shell app-shell--embedded app-shell--with-rail app-shell--commands" style="min-width:60rem;height:44rem" data-resize-demo>
+          <header class="appbar appbar--shell app-shell__header">
+            <span class="appbar__brand"><span class="wordmark wordmark--sm"><span class="wordmark__glyph" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</span></span>
+            <div class="appbar__search"><div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar" aria-label="Buscar e-mails"><kbd>/</kbd></div></div>
+            <div class="appbar__actions">
+              <div class="appbar__account" role="status"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T</span><span class="appbar__account-text"><span class="appbar__account-name">Trabalho</span> · joao.silva.empresa@gmail.com</span></div>
+            </div>
+          </header>
+          <div class="commandbar app-shell__commands" role="toolbar" aria-label="Ações da mensagem">
+            <button class="btn btn--primary" type="button" data-tip="Novo e-mail (N)"><svg class="i"><use href="#i-pencil"/></svg>Novo e-mail</button>
+            <span class="toolbar__sep" role="separator"></span>
+            <div class="commandbar__group">
+              <button class="btn btn--subtle" type="button" aria-label="Excluir" data-tip="Excluir (Delete)"><svg class="i"><use href="#i-trash"/></svg><span class="commandbar__label">Excluir</span></button>
+              <button class="btn btn--subtle" type="button" aria-label="Arquivar" data-tip="Arquivar (E)"><svg class="i"><use href="#i-archive"/></svg><span class="commandbar__label">Arquivar</span></button>
+              <button class="btn btn--subtle" type="button" aria-label="Mover para" aria-haspopup="menu" data-tip="Mover para (V)"><svg class="i"><use href="#i-folder-move"/></svg><span class="commandbar__label">Mover para</span><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button>
+              <div class="btn-split">
+                <button class="btn btn--subtle" type="button" aria-label="Responder a todos" data-tip="Responder a todos (Shift+R)"><svg class="i"><use href="#i-reply-all"/></svg><span class="commandbar__label">Responder a todos</span></button>
+                <button class="btn btn--subtle" type="button" aria-label="Mais opções de resposta" aria-haspopup="menu" data-tip="Responder, encaminhar"><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button>
+              </div>
+            </div>
+            <span class="toolbar__sep" role="separator"></span>
+            <div class="commandbar__group">
+              <button class="btn btn--subtle" type="button" aria-label="Marcar como não lida" data-tip="Marcar como não lida (Shift+U)"><svg class="i"><use href="#i-mail"/></svg><span class="commandbar__label">Não lida</span></button>
+              <div class="btn-split">
+                <button class="btn btn--subtle" type="button" aria-label="Sinalizar" data-tip="Sinalizar (Insert)"><svg class="i"><use href="#i-flag"/></svg><span class="commandbar__label">Sinalizar</span></button>
+                <button class="btn btn--subtle" type="button" aria-label="Prazos da sinalização" aria-haspopup="menu" data-tip="Prazo"><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <nav class="account-rail app-shell__rail" aria-label="Contas">
+            <div class="account-rail__list" role="list">
+              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Pessoal"><span class="avatar avatar--lg" aria-hidden="true">P</span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
+              <div role="listitem"><button class="account-rail__item" type="button" aria-current="true" aria-label="Trabalho"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T</span><span class="account-rail__name" aria-hidden="true">Trabalho</span></button></div>
+            </div>
+            <div class="account-rail__sep" role="separator"></div>
+            <button class="account-rail__add" type="button" aria-label="Adicionar conta"><svg class="i"><use href="#i-plus"/></svg></button>
+          </nav>
+          <nav class="sidebar app-shell__sidebar" aria-label="Pastas">
+            <div class="nav-group">
+              <a class="nav-item has-unread" href="#espacamento" aria-current="page" data-tip="Caixa de entrada"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></a>
+              <a class="nav-item" href="#espacamento" data-tip="Com estrela"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></a>
+              <a class="nav-item" href="#espacamento" data-tip="Enviados"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></a>
+              <a class="nav-item" href="#espacamento" data-tip="Lixeira"><svg class="i"><use href="#i-trash"/></svg><span class="nav-item__text">Lixeira</span></a>
+            </div>
+          </nav>
+          <section class="app-shell__list" aria-label="Caixa de entrada">
+            <div class="toolbar"><button class="btn btn--subtle btn--icon" type="button" aria-label="Atualizar" data-tip="Atualizar"><svg class="i"><use href="#i-refresh"/></svg></button><div class="toolbar__end"><span>1–50 de 2.000</span></div></div>
+            <div class="app-shell__list-body">
+              <div class="thread-list thread-list--headers" role="list" aria-label="Conversas">
+                <div class="thread is-open" role="listitem" tabindex="0"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="lozenge lozenge--moved">Hoje</span><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span></div></div>
+                <div class="thread is-unread" role="listitem" tabindex="0"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Rafael Dias</span></div><div class="thread__meta"><span class="thread__date">09:15</span></div><div class="thread__subject"><span class="thread__subject-text">Planejamento do Q1</span></div></div>
+                <div class="thread" role="listitem" tabindex="0"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">RH Empresa</span></div><div class="thread__meta"><span class="lozenge lozenge--overdue">Atrasada</span><span class="thread__date">21 out</span></div><div class="thread__subject"><span class="thread__subject-text">Holerite de outubro disponível</span></div></div>
+              </div>
+            </div>
+          </section>
+          <div class="app-shell__resizer" role="separator" aria-orientation="vertical" aria-label="Largura da lista de mensagens" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33" tabindex="0" data-resizer></div>
+          <section class="app-shell__reader" aria-label="Mensagem">
+            <article class="reader">
+              <div class="reader__head"><h3 class="reader__subject">Revisão do contrato: Fornecedor Lumen</h3></div>
+              <div class="message">
+                <div class="message__head"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">MC</span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
+                <div class="message__body"><p>Segue a versão 3 do contrato com os ajustes da cláusula 7.2. Preciso do retorno até sexta.</p></div>
+              </div>
+              <form class="compose compose--inline" aria-label="Responder a todos">
+                <div class="compose__bar"><span class="compose__title">Responder a todos</span><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Descartar resposta" data-tip="Descartar"><svg class="i"><use href="#i-trash"/></svg></button></div>
+                <div class="compose__fields">
+                  <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--magenta">MC</span><span class="chip__name">Marina Couto</span></span><span class="chip"><span class="avatar avatar--teal">RD</span><span class="chip__name">Rafael Dias</span></span><input aria-label="Adicionar destinatário"><button class="btn btn--subtle btn--compact compose__toggle" type="button" aria-expanded="true">Cc/Cco</button></div>
+                  <div class="input input--line chip-input"><span class="input__prefix">Cc</span><span class="chip is-external"><span class="avatar avatar--orange">J</span><span class="chip__name">joao@lumen.com.br</span></span><input aria-label="Adicionar em cópia"></div>
+                  <div class="input input--line chip-input"><span class="input__prefix">Cco</span><span class="chip is-invalid"><span class="chip__name">financeiro@empresa</span></span><input aria-label="Adicionar em cópia oculta"></div>
+                  <label class="input input--line"><span class="input__prefix">Assunto</span><input value="Re: Revisão do contrato: Fornecedor Lumen"></label>
+                </div>
+                <div class="compose__body"><textarea aria-label="Texto da resposta">Marina, aprovado da minha parte. Pode enviar à Lumen.</textarea></div>
+                <div class="compose__foot">
+                  <div class="btn-split" data-tip="O envio chega na próxima versão"><button class="btn btn--primary" type="button" disabled>Enviar</button><button class="btn btn--primary" type="button" disabled aria-label="Opções de envio"><svg class="i"><use href="#i-chevron-down"/></svg></button></div>
+                  <span class="compose__status">Rascunho salvo neste computador às 10:44</span>
+                  <button class="btn btn--subtle btn--icon" type="button" aria-label="Descartar" data-tip="Descartar"><svg class="i"><use href="#i-trash"/></svg></button>
+                </div>
+              </form>
+            </article>
+          </section>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Header</dt><dd><code>.appbar--shell</code> usa <code>subgrid</code>: herda as colunas da casca. Marca sobre a coluna de contas e as pastas, busca exatamente sobre a lista, conta sobre a leitura.</dd></div>
+        <div><dt>Comandos</dt><dd><code>.commandbar</code> numa linha própria, <code>__commands</code>, abaixo do header. "Novo e-mail" é o único botão principal; os grupos são separados por <code>.toolbar__sep</code>.</dd></div>
+        <div><dt>Divisor</dt><dd><code>.app-shell__resizer</code> grava a largura em <code>--app-shell-list</code> (20–35rem). Setas: 16px; Shift+setas: 64px; Home/End: limites; duplo clique: padrão.</dd></div>
+        <div><dt>Resposta</dt><dd><code>.compose--inline</code> abaixo da mensagem (responder) ou acima (encaminhar). "Enviar" desabilitado nesta versão; o rascunho fica no computador.</dd></div>
+      </dl>
+
+        <dl class="guidance">
+          <div><dt>Header</dt><dd><code>.appbar--shell</code> usa <code>subgrid</code> e herda as colunas da casca: marca sobre a coluna de contas e as pastas, <code>.appbar__search</code> exatamente sobre a lista, conta sobre a leitura.</dd></div>
+          <div><dt>Comandos</dt><dd><code>--commands</code> acrescenta a linha <code>__commands</code> com <code>.commandbar</code> abaixo do header.</dd></div>
+          <div><dt>Divisor</dt><dd><code>.app-shell__resizer</code> (<code>role="separator"</code>, focável) grava a largura em <code>--app-shell-list</code>, de 20 a 35rem. Setas: 16px; Shift+setas: 64px; Home/End: limites; duplo clique: padrão (25rem).</dd></div>
+        </dl>
+      <h3 class="sub">Divisor <code>.app-shell__resizer</code></h3>
+      <div class="stage">
+        <div class="states">
+          <figure class="state"><div style="position:relative;display:grid;grid-template-columns:6rem 6rem;height:5rem;border:1px solid var(--color-border)"><div style="grid-area:1/1;border-right:1px solid var(--color-border)"></div><div class="app-shell__resizer" style="grid-area:1/1"></div></div><figcaption><b>Padrão</b>só a borda da lista</figcaption></figure>
+          <figure class="state"><div style="position:relative;display:grid;grid-template-columns:6rem 6rem;height:5rem;border:1px solid var(--color-border)"><div style="grid-area:1/1;border-right:1px solid var(--color-border)"></div><div class="app-shell__resizer is-hover" style="grid-area:1/1"></div></div><figcaption><b>Hover</b>cursor de redimensionar</figcaption></figure>
+          <figure class="state"><div style="position:relative;display:grid;grid-template-columns:6rem 6rem;height:5rem;border:1px solid var(--color-border)"><div style="grid-area:1/1;border-right:1px solid var(--color-border)"></div><div class="app-shell__resizer is-focus" style="grid-area:1/1"></div></div><figcaption><b>Foco / arrastando</b>azul de foco</figcaption></figure>
+        </div>
+      </div>
+
       </section>
   </main>
 </div>

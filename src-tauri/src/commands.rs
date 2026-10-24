@@ -1,28 +1,61 @@
+use std::collections::BTreeMap;
+
 use futures::FutureExt;
 use reqwest::Url;
+use serde::Serialize;
 use tauri::{AppHandle, State};
 use tauri_plugin_opener::OpenerExt;
 
 use crate::error::AppError;
-use crate::imap_client::{self, FlagResult, MessagePage};
+use crate::imap_client;
 use crate::mailbox::Folder;
-use crate::message::{self, Cursor, MessageRef, MessageView};
+use crate::message::{self, Cursor, FolderKey, MessageFlags, MessageHeader, MessageKey, MessageView};
 use crate::oauth;
-use crate::provider::Provider;
-use crate::session::{Account, AppState};
+use crate::providers::{self, AuthKind, ProviderView};
+use crate::session::{AppState, Connected, Lane};
+use crate::compose::{self, Template};
+use crate::mailbox::{self, Role};
+use crate::store::{self, Account, AccountStatus, Draft, DraftContent, DraftKind, FolderRow, Followup, FollowupChange};
+use crate::sync;
 
 const MAX_FLAG_IDS: usize = 500;
 const MAX_URL_LEN: usize = 2048;
+pub const PAGE_SIZE: u32 = 50;
+
+fn account_id(id: &str) -> Result<String, AppError> {
+    if message::valid_account_id(id) {
+        Ok(id.to_owned())
+    } else {
+        Err(AppError::InvalidId)
+    }
+}
+
+/// Bloqueia ações que precisam do servidor quando o usuário saiu da conta ou ela perdeu o acesso.
+fn require_active(account: &Account) -> Result<(), AppError> {
+    match account.status {
+        AccountStatus::Active => Ok(()),
+        AccountStatus::SignedOut => Err(AppError::SignedOut),
+        AccountStatus::NeedsReauth => Err(AppError::TokenExpired),
+    }
+}
+
+// ---------------------------------------------------------------- contas
 
 #[tauri::command]
-pub async fn get_account(state: State<'_, AppState>) -> Result<Option<Account>, AppError> {
-    state.account().await
+pub async fn list_accounts(state: State<'_, AppState>) -> Result<Vec<Account>, AppError> {
+    state.db.call(|c| store::list_accounts(c)).await
 }
 
 #[tauri::command]
-pub async fn connect_account(app: AppHandle, state: State<'_, AppState>, provider: Provider) -> Result<Account, AppError> {
+pub fn list_providers() -> Vec<ProviderView> {
+    providers::views()
+}
+
+async fn connect(app: &AppHandle, state: &AppState, provider: &str) -> Result<Connected, AppError> {
+    let entry = providers::connectable(provider)?;
+    let AuthKind::OAuth2(oauth_provider) = entry.auth else { return Err(AppError::ProviderUnavailable) };
     let cancel = state.begin_connect();
-    let result = oauth::authorize(&state.http, provider, cancel, |url| {
+    let result = oauth::authorize(&state.http, oauth_provider, cancel, |url| {
         app.opener().open_url(url, None::<&str>).map_err(|e| {
             tracing::error!(error = %e, "não foi possível abrir o navegador do sistema");
             AppError::AuthFailed
@@ -31,7 +64,23 @@ pub async fn connect_account(app: AppHandle, state: State<'_, AppState>, provide
     .await;
     state.end_connect();
     let (tokens, email) = result?;
-    state.store_oauth_account(provider, email, tokens).await
+    let connected = state.store_oauth_account(entry.id, email, tokens).await?;
+    sync::spawn_account_sync(app, connected.account.id.clone());
+    Ok(connected)
+}
+
+#[tauri::command]
+pub async fn connect_account(app: AppHandle, state: State<'_, AppState>, provider: String) -> Result<Connected, AppError> {
+    connect(&app, &state, &provider).await
+}
+
+/// Refaz o login de uma conta que saiu ou perdeu o acesso. Se o provedor devolver outro e-mail,
+/// esse vira uma conta nova e a antiga fica como estava.
+#[tauri::command]
+pub async fn reconnect_account(app: AppHandle, state: State<'_, AppState>, account_id: String) -> Result<Connected, AppError> {
+    let id = self::account_id(&account_id)?;
+    let account = state.db.call(move |c| store::require_account(c, &id)).await?;
+    connect(&app, &state, &account.provider).await
 }
 
 #[tauri::command]
@@ -40,40 +89,716 @@ pub fn cancel_connect(state: State<'_, AppState>) {
 }
 
 #[tauri::command]
-pub async fn list_folders(state: State<'_, AppState>) -> Result<Vec<Folder>, AppError> {
-    imap_client::with_session(&state, |s| imap_client::list_folders(s).boxed()).await
+pub async fn update_account(
+    state: State<'_, AppState>,
+    account_id: String,
+    display_name: Option<String>,
+    color: Option<String>,
+) -> Result<Account, AppError> {
+    let id = self::account_id(&account_id)?;
+    let account = state.db.call(move |c| store::update_account(c, &id, display_name.as_deref(), color.as_deref())).await?;
+    state.emit_accounts_changed();
+    Ok(account)
 }
 
 #[tauri::command]
-pub async fn list_messages(state: State<'_, AppState>, folder_id: String, cursor: Option<String>) -> Result<MessagePage, AppError> {
-    let mailbox = message::decode_folder_id(&folder_id)?;
+pub async fn move_account(state: State<'_, AppState>, account_id: String, direction: i64) -> Result<Vec<Account>, AppError> {
+    let id = self::account_id(&account_id)?;
+    if direction != -1 && direction != 1 {
+        return Err(AppError::InvalidInput);
+    }
+    let accounts = state.db.call(move |c| store::move_account(c, &id, direction)).await?;
+    state.emit_accounts_changed();
+    Ok(accounts)
+}
+
+#[tauri::command]
+pub async fn sign_out_account(state: State<'_, AppState>, account_id: String) -> Result<Account, AppError> {
+    let id = self::account_id(&account_id)?;
+    state.sign_out(&id).await
+}
+
+#[tauri::command]
+pub async fn set_last_folder(state: State<'_, AppState>, folder_id: String) -> Result<(), AppError> {
+    let key = FolderKey::decode(&folder_id)?;
+    state
+        .db
+        .call(move |c| {
+            store::folder_of_account(c, &key.account, key.folder)?;
+            store::set_last_folder(c, &key.account, &key.encode())
+        })
+        .await
+}
+
+// ---------------------------------------------------------------- pastas e lista
+
+fn folder_view(f: &store::FolderRow) -> Folder {
+    Folder {
+        id: FolderKey { account: f.account_id.clone(), folder: f.id }.encode(),
+        role: f.role,
+        name: f.display_name.clone(),
+        unread: f.unread,
+        total: f.total,
+    }
+}
+
+/// Pastas do banco. Na primeira vez (banco sem pastas da conta), busca a lista no servidor.
+#[tauri::command]
+pub async fn list_folders(state: State<'_, AppState>, account_id: String) -> Result<Vec<Folder>, AppError> {
+    let id = self::account_id(&account_id)?;
+    let lookup = id.clone();
+    let (account, rows) = state.db.call(move |c| Ok((store::require_account(c, &lookup)?, store::list_folders(c, &lookup)?))).await?;
+    if !rows.is_empty() || account.status != AccountStatus::Active {
+        return Ok(rows.iter().map(folder_view).collect());
+    }
+    let handle = state.handle(&id).await?;
+    sync::sync_folder_list(&state, &handle).await?;
+    let rows = state.db.call(move |c| store::list_folders(c, &id)).await?;
+    Ok(rows.iter().map(folder_view).collect())
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MessagePage {
+    pub items: Vec<MessageHeader>,
+    pub next_cursor: Option<String>,
+    pub total: u32,
+    pub unread: Option<u32>,
+    /// Há uma sincronização desta pasta em andamento; o evento `mailbox-updated` avisa o fim.
+    pub syncing: bool,
+}
+
+#[tauri::command]
+pub async fn list_messages(app: AppHandle, state: State<'_, AppState>, folder_id: String, cursor: Option<String>) -> Result<MessagePage, AppError> {
+    let key = FolderKey::decode(&folder_id)?;
     let cursor = cursor.as_deref().map(Cursor::decode).transpose()?;
-    imap_client::with_session(&state, |s| {
+    if let Some(c) = &cursor {
+        if c.account != key.account || c.folder != key.folder {
+            return Err(AppError::InvalidId);
+        }
+    }
+    let k = key.clone();
+    let (account, mut folder) = state
+        .db
+        .call(move |c| Ok((store::require_account(c, &k.account)?, store::folder_of_account(c, &k.account, k.folder)?)))
+        .await?;
+    let active = account.status == AccountStatus::Active;
+    let handle = state.handle(&key.account).await?;
+
+    // Pasta nunca sincronizada: a primeira página espera a sincronização (CA3).
+    if folder.oldest_uid.is_none() && active && handle.try_begin_sync(folder.id) {
+        let result = sync::sync_folder(&state, &handle, folder.id).await;
+        handle.end_sync(folder.id);
+        result?;
+        let id = folder.id;
+        folder = state.db.call(move |c| store::get_folder(c, id)).await?.ok_or(AppError::InvalidId)?;
+    }
+
+    if let Some(c) = &cursor {
+        if Some(c.uid_validity) != folder.uidvalidity {
+            return Err(AppError::CursorExpired);
+        }
+    }
+    let before = cursor.as_ref().map(|c| c.before);
+    let folder_db_id = folder.id;
+    let mut rows = state.db.call(move |c| store::list_page(c, folder_db_id, before, PAGE_SIZE + 1)).await?;
+
+    // Paginando além do que está salvo: traz o próximo bloco do servidor (sem rede, segue com o que há).
+    if cursor.is_some() && rows.len() <= PAGE_SIZE as usize && !folder.complete && active {
+        match sync::fetch_older(&state, &handle, &folder).await {
+            Ok(_) => {
+                let id = folder.id;
+                let (f, r) = state
+                    .db
+                    .call(move |c| Ok((store::get_folder(c, id)?, store::list_page(c, id, before, PAGE_SIZE + 1)?)))
+                    .await?;
+                folder = f.ok_or(AppError::InvalidId)?;
+                rows = r;
+            }
+            Err(AppError::ImapConnection) => tracing::info!("sem conexão; página só com o que está salvo"),
+            Err(e) => return Err(e),
+        }
+    }
+
+    let has_more = rows.len() > PAGE_SIZE as usize || (!folder.complete && active && !rows.is_empty());
+    rows.truncate(PAGE_SIZE as usize);
+    let next_cursor = match (has_more, rows.last(), folder.uidvalidity) {
+        (true, Some(last), Some(v)) => Some(Cursor { account: key.account.clone(), folder: folder.id, uid_validity: v, before: last.uid }.encode()),
+        _ => None,
+    };
+    let items: Vec<MessageHeader> = rows
+        .into_iter()
+        .map(|m| MessageHeader {
+            id: MessageKey { account: key.account.clone(), folder: folder.id, uid: m.uid }.encode(),
+            from_name: m.from_name,
+            from_address: m.from_address,
+            subject: m.subject,
+            date: m.date,
+            flags: m.flags,
+            followup: m.followup,
+            folder_name: None,
+            folder_id: None,
+        })
+        .collect();
+
+    let stale = folder.last_sync_at.is_none_or(|t| store::now() - t >= sync::MIN_RESYNC_SECS);
+    if cursor.is_none() && active && stale && !handle.is_syncing(folder.id) {
+        sync::spawn_folder_sync(&app, key.account.clone(), folder.id);
+    }
+    Ok(MessagePage {
+        total: folder.total.unwrap_or(items.len() as u32),
+        unread: folder.unread,
+        syncing: active && handle.is_syncing(folder.id),
+        items,
+        next_cursor,
+    })
+}
+
+/// "Atualizar": sincroniza a pasta agora. O resultado chega também pelo evento `mailbox-updated`.
+#[tauri::command]
+pub async fn sync_folder(state: State<'_, AppState>, folder_id: String) -> Result<(), AppError> {
+    let key = FolderKey::decode(&folder_id)?;
+    let k = key.clone();
+    let account = state
+        .db
+        .call(move |c| {
+            store::folder_of_account(c, &k.account, k.folder)?;
+            store::require_account(c, &k.account)
+        })
+        .await?;
+    require_active(&account)?;
+    sync::run_folder_sync(&state, &key.account, key.folder).await
+}
+
+// ---------------------------------------------------------------- leitura e flags
+
+#[tauri::command]
+pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_remote_images: bool) -> Result<MessageView, AppError> {
+    let key = MessageKey::decode(&message_id)?;
+    let k = key.clone();
+    let (account, folder, stored, cached) = state
+        .db
+        .call(move |c| {
+            let account = store::require_account(c, &k.account)?;
+            let folder = store::folder_of_account(c, &k.account, k.folder)?;
+            let stored = store::message_by_uid(c, folder.id, k.uid)?.ok_or(AppError::MessageNotFound)?;
+            let cached = store::load_body(c, stored.id)?;
+            Ok((account, folder, stored, cached))
+        })
+        .await?;
+    if stored.body_state == "too_large" {
+        return Err(AppError::MessageTooLarge);
+    }
+    let handle = state.handle(&key.account).await?;
+
+    // Corpo já salvo: abre sem rede. Marcar como lida precisa do servidor; sem conexão, fica para depois.
+    if let Some(raw) = cached {
+        let mut view = message::build_view(&raw, key.encode(), stored.flags, None, allow_remote_images);
+        if !stored.flags.seen && account.status == AccountStatus::Active {
+            let mailbox = folder.imap_name.clone();
+            let (uid, v) = (key.uid, folder.uidvalidity.unwrap_or(0));
+            let marked = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
+                let mailbox = mailbox.clone();
+                async move {
+                    imap_client::select_checked(s, &mailbox, v).await?;
+                    imap_client::store_flags(s, &[uid], Some(true), None).await
+                }
+                .boxed()
+            })
+            .await;
+            match marked.map(|m| m.get(&uid).copied()) {
+                Ok(Some(flags)) => {
+                    let id = stored.id;
+                    state.db.call(move |c| store::set_local_flags(c, id, flags)).await?;
+                    view.flags = flags;
+                    state.emit_accounts_changed();
+                }
+                Ok(None) => {}
+                Err(e) => tracing::info!(kind = e.kind(), "mensagem salva aberta sem marcar como lida"),
+            }
+        }
+        return Ok(view);
+    }
+
+    require_active(&account)?;
+    let uidvalidity = folder.uidvalidity.ok_or(AppError::MessageNotFound)?;
+    let mailbox = folder.imap_name.clone();
+    let uid = key.uid;
+    let fetched = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
         let mailbox = mailbox.clone();
-        let cursor = cursor.clone();
-        async move { imap_client::list_page(s, &mailbox, cursor).await }.boxed()
+        async move {
+            imap_client::select_checked(s, &mailbox, uidvalidity).await?;
+            let raw = imap_client::fetch_raw(s, uid).await?;
+            // Abrir marca como lida, só depois de o corpo ter carregado.
+            let flags = if raw.flags.seen {
+                raw.flags
+            } else {
+                imap_client::store_flags(s, &[uid], Some(true), None).await?.get(&uid).copied().unwrap_or(raw.flags)
+            };
+            Ok((raw, flags))
+        }
+        .boxed()
+    })
+    .await;
+    let (raw, flags) = match fetched {
+        Ok(v) => v,
+        Err(AppError::MessageTooLarge) => {
+            let id = stored.id;
+            state.db.call(move |c| store::mark_too_large(c, id)).await?;
+            return Err(AppError::MessageTooLarge);
+        }
+        Err(e) => return Err(e),
+    };
+    let view = message::build_view(&raw.raw, key.encode(), flags, raw.internal_date, allow_remote_images);
+    let attachments = view.attachments.clone();
+    let id = stored.id;
+    state
+        .db
+        .call(move |c| {
+            store::save_body(c, id, &raw.raw, &attachments)?;
+            store::set_local_flags(c, id, flags)
+        })
+        .await?;
+    if flags.seen != stored.flags.seen {
+        state.emit_accounts_changed();
+    }
+    Ok(view)
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct FlagResult {
+    pub id: String,
+    pub flags: MessageFlags,
+}
+
+#[tauri::command]
+pub async fn set_flags(state: State<'_, AppState>, message_ids: Vec<String>, seen: Option<bool>, flagged: Option<bool>) -> Result<Vec<FlagResult>, AppError> {
+    if message_ids.is_empty() || message_ids.len() > MAX_FLAG_IDS || (seen.is_none() && flagged.is_none()) {
+        return Err(AppError::InvalidId);
+    }
+    let keys = message_ids.iter().map(|id| MessageKey::decode(id)).collect::<Result<Vec<_>, _>>()?;
+    let account_id = keys[0].account.clone();
+    if keys.iter().any(|k| k.account != account_id) {
+        return Err(AppError::InvalidId);
+    }
+    let mut groups: BTreeMap<i64, Vec<u32>> = BTreeMap::new();
+    for k in &keys {
+        groups.entry(k.folder).or_default().push(k.uid);
+    }
+    let id = account_id.clone();
+    let folder_ids: Vec<i64> = groups.keys().copied().collect();
+    let (account, folders) = state
+        .db
+        .call(move |c| {
+            let account = store::require_account(c, &id)?;
+            let folders = folder_ids.iter().map(|f| store::folder_of_account(c, &id, *f)).collect::<Result<Vec<_>, _>>()?;
+            Ok((account, folders))
+        })
+        .await?;
+    require_active(&account)?;
+    let handle = state.handle(&account_id).await?;
+
+    let mut results = Vec::with_capacity(keys.len());
+    for folder in folders {
+        let uids = groups.remove(&folder.id).unwrap_or_default();
+        let uidvalidity = folder.uidvalidity.ok_or(AppError::MessageNotFound)?;
+        let mailbox = folder.imap_name.clone();
+        let wanted = uids.clone();
+        let confirmed = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
+            let mailbox = mailbox.clone();
+            let wanted = wanted.clone();
+            async move {
+                imap_client::select_checked(s, &mailbox, uidvalidity).await?;
+                imap_client::store_flags(s, &wanted, seen, flagged).await
+            }
+            .boxed()
+        })
+        .await?;
+        let folder_id = folder.id;
+        let updates: Vec<(u32, MessageFlags)> = uids.iter().filter_map(|u| confirmed.get(u).map(|f| (*u, *f))).collect();
+        let to_store = updates.clone();
+        state
+            .db
+            .call(move |c| {
+                for (uid, flags) in &to_store {
+                    if let Some(m) = store::message_by_uid(c, folder_id, *uid)? {
+                        store::set_local_flags(c, m.id, *flags)?;
+                    }
+                }
+                Ok(())
+            })
+            .await?;
+        for (uid, flags) in updates {
+            results.push(FlagResult { id: MessageKey { account: account_id.clone(), folder: folder_id, uid }.encode(), flags });
+        }
+    }
+    if results.len() < keys.len() {
+        tracing::info!(requested = keys.len(), updated = results.len(), "algumas mensagens não existem mais");
+    }
+    state.emit_accounts_changed();
+    Ok(results)
+}
+
+// ---------------------------------------------------------------- busca (US4, CA1)
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchPage {
+    pub items: Vec<MessageHeader>,
+    /// Havia mais resultados que o limite.
+    pub truncated: bool,
+}
+
+const MIN_QUERY_CHARS: usize = 2;
+const MAX_QUERY_CHARS: usize = 200;
+
+#[tauri::command]
+pub async fn search_messages(state: State<'_, AppState>, account_id: String, query: String) -> Result<SearchPage, AppError> {
+    let id = self::account_id(&account_id)?;
+    let query = query.trim().to_owned();
+    let chars = query.chars().count();
+    if chars < MIN_QUERY_CHARS {
+        return Ok(SearchPage { items: Vec::new(), truncated: false });
+    }
+    if chars > MAX_QUERY_CHARS || query.chars().any(char::is_control) {
+        return Err(AppError::InvalidInput);
+    }
+    let account = id.clone();
+    let mut hits = state.db.call(move |c| {
+        store::require_account(c, &account)?;
+        store::search(c, &account, &query)
+    })
+    .await?;
+    let truncated = hits.len() > store::SEARCH_LIMIT as usize;
+    hits.truncate(store::SEARCH_LIMIT as usize);
+    tracing::info!(results = hits.len(), truncated, "busca local");
+    let items = hits
+        .into_iter()
+        .map(|h| MessageHeader {
+            id: MessageKey { account: id.clone(), folder: h.folder_id, uid: h.message.uid }.encode(),
+            from_name: h.message.from_name,
+            from_address: h.message.from_address,
+            subject: h.message.subject,
+            date: h.message.date,
+            flags: h.message.flags,
+            followup: h.message.followup,
+            folder_name: Some(h.folder_name),
+            folder_id: Some(FolderKey { account: id.clone(), folder: h.folder_id }.encode()),
+        })
+        .collect();
+    Ok(SearchPage { items, truncated })
+}
+
+// ---------------------------------------------------------------- mover, excluir, arquivar (CA4, CA5)
+
+/// Mensagens agrupadas por pasta, todas da mesma conta, com a conta ativa.
+async fn resolve_messages(state: &AppState, message_ids: &[String]) -> Result<(Account, Vec<(FolderRow, Vec<u32>)>), AppError> {
+    if message_ids.is_empty() || message_ids.len() > MAX_FLAG_IDS {
+        return Err(AppError::InvalidId);
+    }
+    let keys = message_ids.iter().map(|id| MessageKey::decode(id)).collect::<Result<Vec<_>, _>>()?;
+    let account_id = keys[0].account.clone();
+    if keys.iter().any(|k| k.account != account_id) {
+        return Err(AppError::InvalidId);
+    }
+    let mut groups: BTreeMap<i64, Vec<u32>> = BTreeMap::new();
+    for k in &keys {
+        groups.entry(k.folder).or_default().push(k.uid);
+    }
+    let (account, folders) = state
+        .db
+        .call(move |c| {
+            let account = store::require_account(c, &account_id)?;
+            let folders = groups
+                .into_iter()
+                .map(|(f, uids)| Ok((store::folder_of_account(c, &account_id, f)?, uids)))
+                .collect::<Result<Vec<_>, AppError>>()?;
+            Ok((account, folders))
+        })
+        .await?;
+    require_active(&account)?;
+    Ok((account, folders))
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Removal {
+    /// Vai para outra pasta: a mensagem fica protegida até a pasta de destino ser sincronizada.
+    MoveTo(i64),
+    /// Apagada de vez (excluir dentro da Lixeira).
+    Expunge,
+}
+
+/// Executa no servidor, atualiza o banco e devolve os ids que saíram da pasta de origem.
+async fn remove_from_folders(app: &AppHandle, state: &AppState, account: &Account, groups: Vec<(FolderRow, Vec<u32>)>, removal: Removal) -> Result<Vec<String>, AppError> {
+    let handle = state.handle(&account.id).await?;
+    let target = match removal {
+        Removal::MoveTo(id) => Some(state.db.call(move |c| store::get_folder(c, id)).await?.ok_or(AppError::FolderNotFound)?),
+        Removal::Expunge => None,
+    };
+    let mut done = Vec::new();
+    for (folder, uids) in groups {
+        if target.as_ref().is_some_and(|t| t.id == folder.id) {
+            continue;
+        }
+        let uidvalidity = folder.uidvalidity.ok_or(AppError::MessageNotFound)?;
+        let mailbox = folder.imap_name.clone();
+        let target_mailbox = target.as_ref().map(|t| t.imap_name.clone());
+        let wanted = uids.clone();
+        imap_client::with_session(state, &handle, Lane::Interactive, |s| {
+            let mailbox = mailbox.clone();
+            let target_mailbox = target_mailbox.clone();
+            let wanted = wanted.clone();
+            async move {
+                imap_client::select_checked(s, &mailbox, uidvalidity).await?;
+                match &target_mailbox {
+                    Some(t) => imap_client::move_uids(s, &wanted, t).await,
+                    None => imap_client::expunge_uids(s, &wanted).await,
+                }
+            }
+            .boxed()
+        })
+        .await?;
+        let folder_id = folder.id;
+        let in_transit = target.is_some();
+        let removed = uids.clone();
+        state.db.call(move |c| store::unlink(c, folder_id, &removed, in_transit)).await?;
+        done.extend(uids.into_iter().map(|uid| MessageKey { account: account.id.clone(), folder: folder_id, uid }.encode()));
+        tracing::info!(role = folder.role.as_str(), count = done.len(), expunge = target.is_none(), "mensagens removidas da pasta");
+    }
+    if let Some(t) = target {
+        sync::spawn_folder_sync(app, account.id.clone(), t.id);
+    }
+    state.emit_accounts_changed();
+    Ok(done)
+}
+
+#[derive(Debug, Serialize)]
+pub struct Removed {
+    pub ids: Vec<String>,
+}
+
+#[tauri::command]
+pub async fn move_messages(app: AppHandle, state: State<'_, AppState>, message_ids: Vec<String>, target_folder_id: String) -> Result<Removed, AppError> {
+    let target = FolderKey::decode(&target_folder_id)?;
+    let (account, groups) = resolve_messages(&state, &message_ids).await?;
+    if target.account != account.id {
+        return Err(AppError::InvalidId);
+    }
+    let (target_row, account_id) = (target.folder, account.id.clone());
+    let folder = state.db.call(move |c| store::folder_of_account(c, &account_id, target_row)).await?;
+    // "Com estrela" no Gmail é a estrela, não uma pasta de destino.
+    if folder.role == Role::Starred {
+        return Err(AppError::InvalidInput);
+    }
+    let ids = remove_from_folders(&app, &state, &account, groups, Removal::MoveTo(folder.id)).await?;
+    let (account_id, folder_id) = (account.id.clone(), folder.id);
+    state.db.call(move |c| store::touch_folder_usage(c, &account_id, folder_id)).await?;
+    Ok(Removed { ids })
+}
+
+/// Excluir: vai para a Lixeira; dentro da Lixeira, apaga de vez (o frontend confirma antes).
+#[tauri::command]
+pub async fn delete_messages(app: AppHandle, state: State<'_, AppState>, message_ids: Vec<String>) -> Result<Removed, AppError> {
+    let (account, groups) = resolve_messages(&state, &message_ids).await?;
+    let account_id = account.id.clone();
+    let trash = state.db.call(move |c| store::folder_by_role(c, &account_id, Role::Trash)).await?.ok_or(AppError::FolderNotFound)?;
+    let (in_trash, elsewhere): (Vec<_>, Vec<_>) = groups.into_iter().partition(|(f, _)| f.id == trash.id);
+    let mut ids = remove_from_folders(&app, &state, &account, elsewhere, Removal::MoveTo(trash.id)).await?;
+    ids.extend(remove_from_folders(&app, &state, &account, in_trash, Removal::Expunge).await?);
+    Ok(Removed { ids })
+}
+
+/// Arquivar: no Gmail, tira da pasta atual e deixa em "Todos os e-mails".
+#[tauri::command]
+pub async fn archive_messages(app: AppHandle, state: State<'_, AppState>, message_ids: Vec<String>) -> Result<Removed, AppError> {
+    let (account, groups) = resolve_messages(&state, &message_ids).await?;
+    let account_id = account.id.clone();
+    let all = state.db.call(move |c| store::folder_by_role(c, &account_id, Role::All)).await?.ok_or(AppError::FolderNotFound)?;
+    let ids = remove_from_folders(&app, &state, &account, groups, Removal::MoveTo(all.id)).await?;
+    Ok(Removed { ids })
+}
+
+#[tauri::command]
+pub async fn create_folder(state: State<'_, AppState>, account_id: String, name: String) -> Result<Folder, AppError> {
+    let id = self::account_id(&account_id)?;
+    let name = store::validate_folder_name(&name)?;
+    let (lookup, wanted) = (id.clone(), name.clone());
+    let (account, taken) = state.db.call(move |c| Ok((store::require_account(c, &lookup)?, store::folder_name_taken(c, &lookup, &wanted)?))).await?;
+    require_active(&account)?;
+    if taken {
+        return Err(AppError::FolderExists);
+    }
+    let encoded = mailbox::encode_mailbox_name(&name);
+    let handle = state.handle(&id).await?;
+    let to_create = encoded.clone();
+    imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
+        let to_create = to_create.clone();
+        async move { imap_client::create_mailbox(s, &to_create).await }.boxed()
+    })
+    .await?;
+    sync::sync_folder_list(&state, &handle).await?;
+    let folder = state
+        .db
+        .call(move |c| Ok(store::list_folders(c, &id)?.into_iter().find(|f| f.imap_name == encoded)))
+        .await?
+        .ok_or(AppError::FolderNotFound)?;
+    tracing::info!("pasta criada");
+    Ok(folder_view(&folder))
+}
+
+#[tauri::command]
+pub async fn recent_folders(state: State<'_, AppState>, account_id: String) -> Result<Vec<Folder>, AppError> {
+    let id = self::account_id(&account_id)?;
+    let rows = state.db.call(move |c| store::recent_folders(c, &id, 5)).await?;
+    Ok(rows.iter().map(folder_view).collect())
+}
+
+// ---------------------------------------------------------------- sinalização com prazo (CA7)
+
+#[derive(Debug, Serialize)]
+pub struct FollowupResult {
+    pub flags: MessageFlags,
+    pub followup: Option<Followup>,
+}
+
+/// `action`: "set" (com `due` em AAAA-MM-DD, ou sem data), "complete" ou "clear". No servidor,
+/// "set" liga a estrela; "complete" e "clear" desligam.
+#[tauri::command]
+pub async fn set_followup(state: State<'_, AppState>, message_id: String, action: String, due: Option<String>) -> Result<FollowupResult, AppError> {
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    enum Action {
+        Set,
+        Complete,
+        Clear,
+    }
+    let act = match action.as_str() {
+        "set" => Action::Set,
+        "complete" => Action::Complete,
+        "clear" => Action::Clear,
+        _ => return Err(AppError::InvalidInput),
+    };
+    if act == Action::Set && due.as_deref().is_some_and(|d| !store::valid_due_date(d)) {
+        return Err(AppError::InvalidInput);
+    }
+    let flagged = act == Action::Set;
+    let (account, groups) = resolve_messages(&state, std::slice::from_ref(&message_id)).await?;
+    let (folder, uids) = groups.into_iter().next().ok_or(AppError::InvalidId)?;
+    let uid = uids[0];
+    let handle = state.handle(&account.id).await?;
+    let uidvalidity = folder.uidvalidity.ok_or(AppError::MessageNotFound)?;
+    let mailbox = folder.imap_name.clone();
+    let confirmed = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
+        let mailbox = mailbox.clone();
+        async move {
+            imap_client::select_checked(s, &mailbox, uidvalidity).await?;
+            imap_client::store_flags(s, &[uid], None, Some(flagged)).await
+        }
+        .boxed()
+    })
+    .await?;
+    let flags = confirmed.get(&uid).copied().ok_or(AppError::MessageNotFound)?;
+    let folder_id = folder.id;
+    let followup = state
+        .db
+        .call(move |c| {
+            let m = store::message_by_uid(c, folder_id, uid)?.ok_or(AppError::MessageNotFound)?;
+            store::set_local_flags(c, m.id, flags)?;
+            let change = match act {
+                Action::Set => FollowupChange::Set(due.as_deref()),
+                Action::Complete => FollowupChange::Complete,
+                Action::Clear => FollowupChange::Clear,
+            };
+            store::set_followup(c, m.id, change)
+        })
+        .await?;
+    Ok(FollowupResult { flags, followup })
+}
+
+// ---------------------------------------------------------------- resposta e rascunhos (CA8)
+
+/// Id da mensagem no banco para um id opaco da conta (rascunhos de resposta e encaminhamento).
+async fn message_row(state: &AppState, account_id: &str, message_id: &str) -> Result<i64, AppError> {
+    let key = MessageKey::decode(message_id)?;
+    if key.account != account_id {
+        return Err(AppError::InvalidId);
+    }
+    state
+        .db
+        .call(move |c| {
+            let folder = store::folder_of_account(c, &key.account, key.folder)?;
+            Ok(store::message_by_uid(c, folder.id, key.uid)?.ok_or(AppError::MessageNotFound)?.id)
+        })
+        .await
+}
+
+fn reply_kind(kind: DraftKind, message_id: &Option<String>) -> Result<(), AppError> {
+    if (kind == DraftKind::New) != message_id.is_none() {
+        return Err(AppError::InvalidInput);
+    }
+    Ok(())
+}
+
+/// Destinatários, assunto e mensagem original para responder ou encaminhar a mensagem aberta.
+#[tauri::command]
+pub async fn compose_template(state: State<'_, AppState>, message_id: String, kind: DraftKind) -> Result<Template, AppError> {
+    if kind == DraftKind::New {
+        return Err(AppError::InvalidInput);
+    }
+    let key = MessageKey::decode(&message_id)?;
+    let (account, raw) = state
+        .db
+        .call(move |c| {
+            let account = store::require_account(c, &key.account)?;
+            let folder = store::folder_of_account(c, &key.account, key.folder)?;
+            let m = store::message_by_uid(c, folder.id, key.uid)?.ok_or(AppError::MessageNotFound)?;
+            Ok((account, store::load_body(c, m.id)?))
+        })
+        .await?;
+    let raw = raw.ok_or(AppError::MessageNotFound)?;
+    Ok(compose::template(&raw, kind, &account.email))
+}
+
+#[tauri::command]
+pub async fn get_draft(state: State<'_, AppState>, account_id: String, kind: DraftKind, message_id: Option<String>) -> Result<Option<Draft>, AppError> {
+    let id = self::account_id(&account_id)?;
+    reply_kind(kind, &message_id)?;
+    let row = match &message_id {
+        Some(m) => Some(message_row(&state, &id, m).await?),
+        None => None,
+    };
+    state.db.call(move |c| store::get_draft(c, &id, kind, row)).await
+}
+
+#[tauri::command]
+pub async fn save_draft(state: State<'_, AppState>, account_id: String, kind: DraftKind, message_id: Option<String>, content: DraftContent) -> Result<Draft, AppError> {
+    let id = self::account_id(&account_id)?;
+    reply_kind(kind, &message_id)?;
+    let row = match &message_id {
+        Some(m) => Some(message_row(&state, &id, m).await?),
+        None => None,
+    };
+    state.db.call(move |c| {
+        store::require_account(c, &id)?;
+        store::save_draft(c, &id, kind, row, &content)
     })
     .await
 }
 
 #[tauri::command]
-pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_remote_images: bool) -> Result<MessageView, AppError> {
-    let r = MessageRef::decode(&message_id)?;
-    imap_client::with_session(&state, |s| imap_client::read_message(s, r.clone(), allow_remote_images).boxed()).await
+pub async fn delete_draft(state: State<'_, AppState>, account_id: String, kind: DraftKind, message_id: Option<String>) -> Result<(), AppError> {
+    let id = self::account_id(&account_id)?;
+    reply_kind(kind, &message_id)?;
+    let row = match &message_id {
+        Some(m) => Some(message_row(&state, &id, m).await?),
+        None => None,
+    };
+    state.db.call(move |c| store::delete_draft(c, &id, kind, row)).await
 }
 
 #[tauri::command]
-pub async fn set_flags(
-    state: State<'_, AppState>,
-    message_ids: Vec<String>,
-    seen: Option<bool>,
-    flagged: Option<bool>,
-) -> Result<Vec<FlagResult>, AppError> {
-    if message_ids.is_empty() || message_ids.len() > MAX_FLAG_IDS || (seen.is_none() && flagged.is_none()) {
-        return Err(AppError::InvalidId);
-    }
-    let refs = message_ids.iter().map(|id| MessageRef::decode(id)).collect::<Result<Vec<_>, _>>()?;
-    imap_client::with_session(&state, |s| imap_client::set_flags(s, refs.clone(), seen, flagged).boxed()).await
+pub async fn set_list_width(state: State<'_, AppState>, account_id: String, width: u32) -> Result<(), AppError> {
+    let id = self::account_id(&account_id)?;
+    state.db.call(move |c| store::set_list_width(c, &id, width)).await
 }
 
 /// Esquemas que podem sair do app. Tudo o mais (javascript:, file:, relativos) é recusado.
@@ -99,11 +824,6 @@ pub fn open_external_link(app: AppHandle, url: String) -> Result<(), AppError> {
     })
 }
 
-#[tauri::command]
-pub async fn disconnect(state: State<'_, AppState>) -> Result<(), AppError> {
-    state.disconnect().await
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -117,5 +837,11 @@ mod tests {
             assert_eq!(external_link(bad), Err(AppError::UnsupportedLink), "{bad}");
         }
         assert_eq!(external_link(&format!("https://a.com/{}", "x".repeat(3000))), Err(AppError::UnsupportedLink));
+    }
+
+    #[test]
+    fn account_ids_are_validated() {
+        assert!(account_id("0f8b1c2d-3e4f-4a5b-8c6d-7e8f9a0b1c2d").is_ok());
+        assert_eq!(account_id("x"), Err(AppError::InvalidId));
     }
 }

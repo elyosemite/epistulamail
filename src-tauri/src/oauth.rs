@@ -196,7 +196,7 @@ async fn exchange_code(
     if provider.sends_scope_to_token_endpoint() {
         form.push(("scope", provider.scopes()));
     }
-    token_request(http, provider, &form).await
+    token_request(http, provider, &form, AppError::AuthFailed).await
 }
 
 /// Renova o access token. `invalid_grant` (refresh revogado ou expirado) vira `TokenExpired`.
@@ -213,13 +213,31 @@ pub async fn refresh(http: &reqwest::Client, provider: Provider, refresh_token: 
     if provider.sends_scope_to_token_endpoint() {
         form.push(("scope", provider.scopes()));
     }
-    token_request(http, provider, &form).await
+    token_request(http, provider, &form, AppError::ImapConnection).await
 }
 
-async fn token_request(http: &reqwest::Client, provider: Provider, form: &[(&str, &str)]) -> Result<Tokens, AppError> {
+/// Revoga o refresh token no provedor (sair da conta). Melhor esforço: quem chama segue em frente
+/// se falhar. A Microsoft não tem endpoint público de revogação para apps nativos.
+pub async fn revoke(http: &reqwest::Client, provider: Provider, refresh_token: &str) -> Result<(), AppError> {
+    let Some(url) = provider.revoke_url() else { return Ok(()) };
+    let response = http.post(url).form(&[("token", refresh_token)]).send().await.map_err(|e| {
+        tracing::warn!(?provider, error = %e.without_url(), "falha de rede ao revogar o token");
+        AppError::ImapConnection
+    })?;
+    if !response.status().is_success() {
+        tracing::warn!(?provider, status = %response.status(), "provedor recusou a revogação");
+        return Err(AppError::AuthFailed);
+    }
+    tracing::info!(?provider, "refresh token revogado no provedor");
+    Ok(())
+}
+
+/// `offline` é o erro devolvido quando a rede falha: no login é `AuthFailed`; na renovação em
+/// segundo plano é `ImapConnection`, para o app tratar como "sem conexão" e não como acesso negado.
+async fn token_request(http: &reqwest::Client, provider: Provider, form: &[(&str, &str)], offline: AppError) -> Result<Tokens, AppError> {
     let response = http.post(provider.token_url()).form(form).send().await.map_err(|e| {
         tracing::warn!(?provider, error = %e.without_url(), "falha de rede no endpoint de token");
-        AppError::AuthFailed
+        offline
     })?;
     let status = response.status();
     if !status.is_success() {

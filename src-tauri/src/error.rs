@@ -31,6 +31,20 @@ pub enum AppError {
     UnsupportedLink,
     #[error("O Epistula não está configurado para este provedor.")]
     Config,
+    #[error("Não foi possível acessar os dados salvos neste computador.")]
+    Storage,
+    #[error("Esta conta não está mais no Epistula.")]
+    AccountNotFound,
+    #[error("Este provedor ainda não está disponível no Epistula.")]
+    ProviderUnavailable,
+    #[error("Você saiu desta conta. Entre de novo para atualizar as mensagens.")]
+    SignedOut,
+    #[error("Valor inválido.")]
+    InvalidInput,
+    #[error("Já existe uma pasta com esse nome.")]
+    FolderExists,
+    #[error("Esta conta não tem essa pasta.")]
+    FolderNotFound,
 }
 
 impl AppError {
@@ -49,6 +63,13 @@ impl AppError {
             AppError::InvalidId => "InvalidId",
             AppError::UnsupportedLink => "UnsupportedLink",
             AppError::Config => "Config",
+            AppError::Storage => "Storage",
+            AppError::AccountNotFound => "AccountNotFound",
+            AppError::ProviderUnavailable => "ProviderUnavailable",
+            AppError::SignedOut => "SignedOut",
+            AppError::InvalidInput => "InvalidInput",
+            AppError::FolderExists => "FolderExists",
+            AppError::FolderNotFound => "FolderNotFound",
         }
     }
 }

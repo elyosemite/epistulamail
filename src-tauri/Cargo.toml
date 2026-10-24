@@ -33,6 +33,9 @@ async-native-tls = { version = "0.5", default-features = false, features = ["run
 mail-parser = "0.11"
 dotenvy = "0.15"
 ammonia = "4"
+# SQLCipher (SQLite 3 cifrado, AES-256) com OpenSSL embutido: nenhuma DLL do sistema. Decisão D2 da US3.
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
 
 [dev-dependencies]
 proptest = "1"
+tempfile = "3"

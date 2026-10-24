@@ -33,6 +33,47 @@
             <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--danger" type="button">Esvaziar lixeira</button></div>
           </div>
         </div>
+        <h3 class="sub">Ação reversível <code>.modal--warning</code></h3>
+        <div class="stage stage--sunken">
+          <div class="modal modal--warning" role="dialog" aria-labelledby="signout-title" style="margin-inline:auto">
+            <div class="modal__head"><svg class="i"><use href="#i-log-out"/></svg><h3 class="modal__title" id="signout-title">Sair de Trabalho?</h3></div>
+            <div class="modal__body"><p>O Epistula deixa de acessar <b>joao.silva.empresa@gmail.com</b>. As mensagens já salvas continuam neste computador e você pode lê-las sem entrar.</p><p>Nada muda no Gmail.</p></div>
+            <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--warning" type="button">Sair</button></div>
+          </div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Perigo ou aviso</dt><dd>Use <code>.btn--danger</code> só quando algo se perde de vez (esvaziar a lixeira). Sair da conta mantém os dados no computador, então usa <code>.modal--warning</code> e <code>.btn--warning</code>.</dd></div>
+          <div><dt>Foco</dt><dd>O foco começa em "Cancelar" e fica preso no modal; <kbd>Esc</kbd> fecha.</dd></div>
+        </dl>
+      <h3 class="sub">Seletor de pastas <code>.folder-picker</code></h3>
+      <div class="stage stage--sunken">
+        <div class="modal" role="dialog" aria-labelledby="picker-title" style="margin-inline:auto">
+          <div class="modal__head"><h3 class="modal__title" id="picker-title">Mover para</h3></div>
+          <div class="modal__body">
+            <div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar pasta" aria-label="Buscar pasta"></div>
+            <div class="folder-picker" role="listbox" aria-label="Pastas">
+              <div class="nav-item" role="option" aria-selected="false" tabindex="-1"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span></div>
+              <div class="nav-item" role="option" aria-selected="false" tabindex="-1"><svg class="i"><use href="#i-archive"/></svg><span class="nav-item__text">Todos os e-mails</span></div>
+              <div class="nav-item" role="option" aria-selected="false" tabindex="-1"><svg class="i"><use href="#i-spam"/></svg><span class="nav-item__text">Spam</span></div>
+              <div class="nav-item" role="option" aria-selected="false" tabindex="-1"><svg class="i"><use href="#i-trash"/></svg><span class="nav-item__text">Lixeira</span></div>
+              <div class="nav-item" role="option" aria-selected="false" tabindex="-1"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Contratos 2026</span></div>
+              <div class="nav-item" role="option" aria-selected="true" tabindex="0"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Financeiro</span></div>
+              <div class="nav-item" role="option" aria-selected="false" tabindex="-1"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Jurídico</span></div>
+              <div class="nav-item" role="option" aria-selected="false" tabindex="-1"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Projetos</span></div>
+              <div class="nav-item" role="option" aria-selected="false" tabindex="-1"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Viagens</span></div>
+            </div>
+          </div>
+          <div class="modal__foot modal__foot--split">
+            <button class="btn btn--subtle" type="button"><svg class="i"><use href="#i-folder-plus"/></svg>Nova pasta</button>
+            <button class="btn btn--subtle" type="button">Cancelar</button>
+            <button class="btn btn--primary" type="button">Mover</button>
+          </div>
+        </div>
+      </div>
+
+        <dl class="guidance">
+          <div><dt>Seletor</dt><dd><code>.folder-picker</code> é um <code>role="listbox"</code> com <code>.nav-item</code> como <code>role="option"</code>; setas movem a seleção e Enter confirma. <code>.modal__foot--split</code> separa "Nova pasta" à esquerda de Cancelar e Mover.</dd></div>
+        </dl>
       </section>
   </main>
 </div>

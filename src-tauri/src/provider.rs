@@ -29,6 +29,13 @@ impl Provider {
         }
     }
 
+    pub fn revoke_url(self) -> Option<&'static str> {
+        match self {
+            Provider::Google => Some("https://oauth2.googleapis.com/revoke"),
+            Provider::Microsoft => None,
+        }
+    }
+
     pub fn scopes(self) -> &'static str {
         match self {
             Provider::Google => "https://mail.google.com/ openid email",
@@ -50,13 +57,6 @@ impl Provider {
     /// A Microsoft quer o escopo também na troca de código e no refresh; o Google não.
     pub fn sends_scope_to_token_endpoint(self) -> bool {
         matches!(self, Provider::Microsoft)
-    }
-
-    pub fn imap_host(self) -> &'static str {
-        match self {
-            Provider::Google => "imap.gmail.com",
-            Provider::Microsoft => "outlook.office365.com",
-        }
     }
 
     pub fn client(self) -> Result<OAuthClient, AppError> {

@@ -11,11 +11,13 @@ import { Icon } from "./Icon";
 interface ReaderProps {
   subject: string;
   actions?: ReactNode;
+  /** Etiquetas e prazo abaixo do assunto (`.reader__labels`). */
+  labels?: ReactNode;
   onBack?: () => void;
   children?: ReactNode;
 }
 
-export function Reader({ subject, actions, onBack, children }: ReaderProps) {
+export function Reader({ subject, actions, labels, onBack, children }: ReaderProps) {
   return (
     <article className="reader" aria-label={subject}>
       <div className="reader__head">
@@ -23,6 +25,7 @@ export function Reader({ subject, actions, onBack, children }: ReaderProps) {
         <h1 className="reader__subject">{subject}</h1>
         {actions && <div className="toolbar__end">{actions}</div>}
       </div>
+      {labels && <div className="reader__labels">{labels}</div>}
       {children}
     </article>
   );

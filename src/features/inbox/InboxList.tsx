@@ -1,10 +1,12 @@
-// Composição de DS: threads.html (.toolbar com paginação, .thread-list, .thread), carregamento.html (skeleton), vazios.html (.empty)
-import { useRef, type KeyboardEvent } from "react";
+// Composição de DS: threads.html (.toolbar com paginação, .thread-list, .thread), carregamento.html (skeleton e
+// .spinner--sm de sincronização), vazios.html (.empty)
+import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import { formatListDate, senderLabel } from "../../lib/format";
 import { canGoBack, rangeLabel, type Pager } from "../../lib/pagination";
 import type { AppError, FolderRole, MessageHeader } from "../../lib/tauri";
 import { Button, IconButton } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
+import { Spinner } from "../../ui/Spinner";
 import { ThreadList, ThreadRow, ThreadSkeleton } from "../../ui/Thread";
 import { Toolbar } from "../../ui/Toolbar";
 
@@ -21,6 +23,16 @@ interface InboxListProps {
   state: ListState;
   pager: Pager;
   selectedId: string | null;
+  /** Sincronização da pasta em andamento (spinner na toolbar). */
+  syncing: boolean;
+  /** Conta sem acesso ao servidor (saiu ou precisa reconectar): "Atualizar" fica desabilitado. */
+  canRefresh: boolean;
+  /** Aviso acima da lista (section message da conta ou da busca). */
+  notice?: ReactNode;
+  /** Resultados de busca: sem paginação nem "Atualizar"; cada linha mostra a pasta. */
+  searching?: boolean;
+  /** Prazo da sinalização de cada linha. */
+  renderBadge?: (message: MessageHeader) => ReactNode;
   onSelect: (id: string) => void;
   onRefresh: () => void;
   onNextPage: () => void;
@@ -30,7 +42,7 @@ interface InboxListProps {
 }
 
 export function InboxList(props: InboxListProps) {
-  const { folderName, folderRole, state, pager, selectedId, onSelect, onRefresh, onNextPage, onPreviousPage, onToggleStar, onToggleRead } = props;
+  const { folderName, folderRole, state, pager, selectedId, syncing, canRefresh, notice, searching, renderBadge, onSelect, onRefresh, onNextPage, onPreviousPage, onToggleStar, onToggleRead } = props;
   const rows = useRef(new Map<string, HTMLDivElement>());
   const loading = state.status === "loading";
 
@@ -50,20 +62,24 @@ export function InboxList(props: InboxListProps) {
     else if (event.key === "U" && event.shiftKey) { event.preventDefault(); onToggleRead(message); }
   }
 
-  const end = state.status === "ready" && (
+  const end = state.status === "ready" && (searching ? (
+    <span>{state.items.length === 1 ? "1 resultado" : `${state.items.length.toLocaleString("pt-BR")} resultados`}</span>
+  ) : (
     <>
       <span>{rangeLabel(pager, state.items.length, state.total)}</span>
       <IconButton icon="chevron-left" label="Página anterior" compact disabled={!canGoBack(pager)} onClick={onPreviousPage} />
       <IconButton icon="chevron-right" label="Próxima página" compact disabled={!pager.next} onClick={onNextPage} />
     </>
-  );
+  ));
 
   return (
     <>
       <Toolbar label={`Ações de ${folderName}`} end={end}>
-        <IconButton icon="refresh" label="Atualizar" onClick={onRefresh} disabled={loading} />
+        <IconButton icon="refresh" label="Atualizar" onClick={onRefresh} disabled={searching || loading || syncing || !canRefresh} />
+        {syncing && <Spinner size="sm" label="Sincronizando" />}
       </Toolbar>
       <div className="app-shell__list-body">
+        {notice && <div style={{ padding: "var(--space-150) var(--space-200) 0" }}>{notice}</div>}
         {state.status === "loading" && (
           <ThreadList label="Carregando conversas" busy>
             {SKELETON_ROWS.map(([from, subject], i) => <ThreadSkeleton key={i} from={from} subject={subject} />)}
@@ -78,7 +94,9 @@ export function InboxList(props: InboxListProps) {
           />
         )}
         {state.status === "ready" && state.items.length === 0 && (
-          folderRole === "inbox"
+          searching
+            ? <EmptyState title="Nenhuma mensagem encontrada" description="Tente outras palavras, o nome ou o e-mail de quem enviou." />
+            : folderRole === "inbox"
             ? <EmptyState art="done" title="Tudo em dia" description="Não há mensagens na Caixa de entrada." />
             : <EmptyState title="Nenhuma mensagem nesta pasta" description={`${folderName} está vazia.`} />
         )}
@@ -98,6 +116,8 @@ export function InboxList(props: InboxListProps) {
                 onKeyDown={(e) => onRowKeyDown(e, index)}
                 onToggleStar={() => onToggleStar(m)}
                 onToggleRead={() => onToggleRead(m)}
+                badge={renderBadge?.(m)}
+                folder={searching ? m.folderName : undefined}
               />
             ))}
           </ThreadList>

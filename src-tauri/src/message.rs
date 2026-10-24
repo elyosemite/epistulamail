@@ -27,15 +27,31 @@ pub struct MessageHeader {
     pub subject: String,
     pub date: String,
     pub flags: MessageFlags,
+    pub followup: Option<crate::store::Followup>,
+    /// Só nos resultados de busca: a pasta onde a mensagem está.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folder_name: Option<String>,
+    /// Só nos resultados de busca: id opaco dessa pasta.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folder_id: Option<String>,
 }
 
-/// Referência de uma mensagem: pasta IMAP + UIDVALIDITY + UID. Viaja como texto opaco.
+/// Pasta de uma conta: id da conta + id da pasta no banco local. Viaja como texto opaco.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct MessageRef {
-    #[serde(rename = "m")]
-    pub mailbox: String,
-    #[serde(rename = "v")]
-    pub uid_validity: u32,
+pub struct FolderKey {
+    #[serde(rename = "a")]
+    pub account: String,
+    #[serde(rename = "f")]
+    pub folder: i64,
+}
+
+/// Mensagem: pasta + UID. O UIDVALIDITY é conferido contra o da pasta no banco.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MessageKey {
+    #[serde(rename = "a")]
+    pub account: String,
+    #[serde(rename = "f")]
+    pub folder: i64,
     #[serde(rename = "u")]
     pub uid: u32,
 }
@@ -43,17 +59,19 @@ pub struct MessageRef {
 /// Cursor de paginação: a próxima página tem as mensagens com UID menor que `before`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Cursor {
-    #[serde(rename = "m")]
-    pub mailbox: String,
+    #[serde(rename = "a")]
+    pub account: String,
+    #[serde(rename = "f")]
+    pub folder: i64,
     #[serde(rename = "v")]
     pub uid_validity: u32,
     #[serde(rename = "b")]
     pub before: u32,
 }
 
-const MESSAGE_PREFIX: &str = "m1";
-const CURSOR_PREFIX: &str = "c1";
-const FOLDER_PREFIX: &str = "f1";
+const MESSAGE_PREFIX: &str = "m2";
+const CURSOR_PREFIX: &str = "c2";
+const FOLDER_PREFIX: &str = "f2";
 
 fn encode<T: Serialize>(prefix: &str, value: &T) -> String {
     let json = serde_json::to_vec(value).unwrap_or_default();
@@ -72,12 +90,38 @@ fn decode<T: DeserializeOwned>(prefix: &str, value: &str) -> Result<T, AppError>
     serde_json::from_slice(&bytes).map_err(|_| AppError::InvalidId)
 }
 
-impl MessageRef {
+/// Ids de conta são UUIDs gerados pelo app (hex e hífens).
+pub fn valid_account_id(id: &str) -> bool {
+    id.len() == 36 && id.bytes().all(|b| b.is_ascii_hexdigit() || b == b'-')
+}
+
+fn checked<T>(value: T, account: &str) -> Result<T, AppError> {
+    if valid_account_id(account) {
+        Ok(value)
+    } else {
+        Err(AppError::InvalidId)
+    }
+}
+
+impl FolderKey {
+    pub fn encode(&self) -> String {
+        encode(FOLDER_PREFIX, self)
+    }
+    pub fn decode(value: &str) -> Result<Self, AppError> {
+        let key: Self = decode(FOLDER_PREFIX, value)?;
+        let account = key.account.clone();
+        checked(key, &account)
+    }
+}
+
+impl MessageKey {
     pub fn encode(&self) -> String {
         encode(MESSAGE_PREFIX, self)
     }
     pub fn decode(value: &str) -> Result<Self, AppError> {
-        decode(MESSAGE_PREFIX, value)
+        let key: Self = decode(MESSAGE_PREFIX, value)?;
+        let account = key.account.clone();
+        checked(key, &account)
     }
 }
 
@@ -86,34 +130,45 @@ impl Cursor {
         encode(CURSOR_PREFIX, self)
     }
     pub fn decode(value: &str) -> Result<Self, AppError> {
-        decode(CURSOR_PREFIX, value)
+        let key: Self = decode(CURSOR_PREFIX, value)?;
+        let account = key.account.clone();
+        checked(key, &account)
     }
 }
 
-pub fn encode_folder_id(mailbox: &str) -> String {
-    encode(FOLDER_PREFIX, &mailbox)
+/// Campos de cabeçalho guardados no banco para a lista (sem corpo).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct HeaderFields {
+    pub from_name: String,
+    pub from_address: String,
+    pub subject: String,
+    pub date: Option<String>,
+    pub to: Vec<Person>,
+    pub cc: Vec<Person>,
+    pub message_id: Option<String>,
+    pub has_attachments: bool,
 }
 
-pub fn decode_folder_id(value: &str) -> Result<String, AppError> {
-    let name: String = decode(FOLDER_PREFIX, value)?;
-    if name.is_empty() || name.contains(['\r', '\n', '\0']) {
-        return Err(AppError::InvalidId);
-    }
-    Ok(name)
-}
-
-/// Decodifica From/Subject/Date dos cabeçalhos (inclusive encoded-words RFC 2047).
-pub fn parse_header_fields(parser: &MessageParser, raw: &[u8]) -> Option<(String, String, String, Option<String>)> {
+/// Decodifica os cabeçalhos da lista (inclusive encoded-words RFC 2047).
+pub fn parse_header_fields(parser: &MessageParser, raw: &[u8]) -> Option<HeaderFields> {
     let message = parser.parse_headers(raw)?;
     let from = message.from().and_then(|a| a.first());
-    let from_name = from.and_then(|a| a.name()).unwrap_or_default().trim().to_owned();
-    let from_address = from.and_then(|a| a.address()).unwrap_or_default().trim().to_owned();
-    let subject = message.subject().unwrap_or_default().trim().to_owned();
-    let date = message.date().map(|d| d.to_rfc3339());
-    Some((from_name, from_address, subject, date))
+    let has_attachments = message.content_type().is_some_and(|ct| {
+        ct.ctype().eq_ignore_ascii_case("multipart") && ct.subtype().is_some_and(|s| s.eq_ignore_ascii_case("mixed"))
+    });
+    Some(HeaderFields {
+        from_name: from.and_then(|a| a.name()).unwrap_or_default().trim().to_owned(),
+        from_address: from.and_then(|a| a.address()).unwrap_or_default().trim().to_owned(),
+        subject: message.subject().unwrap_or_default().trim().to_owned(),
+        date: message.date().map(|d| d.to_rfc3339()),
+        to: people(message.to()),
+        cc: people(message.cc()),
+        message_id: message.message_id().map(|id| id.trim().to_owned()).filter(|id| !id.is_empty()),
+        has_attachments,
+    })
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Person {
     pub name: String,
     pub address: String,
@@ -287,38 +342,46 @@ JVBERi0xLjQK\r\n\
         build_view(raw, "m1.x".into(), MessageFlags::default(), None, allow)
     }
 
+    const ACCOUNT: &str = "0f8b1c2d-3e4f-4a5b-8c6d-7e8f9a0b1c2d";
+
     #[test]
     fn opaque_ids_roundtrip_and_reject_tampering() {
-        let r = MessageRef { mailbox: "[Gmail]/Enviados".into(), uid_validity: 7, uid: 42 };
-        let id = r.encode();
-        assert!(id.starts_with("m1."));
-        assert_eq!(MessageRef::decode(&id).unwrap(), r);
-        assert_eq!(MessageRef::decode("m1.%%%"), Err(AppError::InvalidId));
-        assert_eq!(MessageRef::decode(&id.replace("m1.", "c1.")), Err(AppError::InvalidId));
-        assert_eq!(MessageRef::decode(&id[..id.len() - 3]), Err(AppError::InvalidId));
-        assert_eq!(MessageRef::decode(&"m1.".repeat(2000)), Err(AppError::InvalidId));
+        let k = MessageKey { account: ACCOUNT.into(), folder: 7, uid: 42 };
+        let id = k.encode();
+        assert!(id.starts_with("m2."));
+        assert_eq!(MessageKey::decode(&id).unwrap(), k);
+        assert_eq!(MessageKey::decode("m2.%%%"), Err(AppError::InvalidId));
+        assert_eq!(MessageKey::decode(&id.replace("m2.", "c2.")), Err(AppError::InvalidId));
+        assert_eq!(MessageKey::decode(&id[..id.len() - 3]), Err(AppError::InvalidId));
+        assert_eq!(MessageKey::decode(&"m2.".repeat(2000)), Err(AppError::InvalidId));
 
-        let c = Cursor { mailbox: "INBOX".into(), uid_validity: 1, before: 900 };
+        let c = Cursor { account: ACCOUNT.into(), folder: 1, uid_validity: 1, before: 900 };
         assert_eq!(Cursor::decode(&c.encode()).unwrap(), c);
         assert_eq!(Cursor::decode(&id), Err(AppError::InvalidId));
+
+        let f = FolderKey { account: ACCOUNT.into(), folder: 3 };
+        assert_eq!(FolderKey::decode(&f.encode()).unwrap(), f);
     }
 
     #[test]
-    fn folder_ids_roundtrip_and_reject_control_chars() {
-        let id = encode_folder_id("Projetos/2026");
-        assert_eq!(decode_folder_id(&id).unwrap(), "Projetos/2026");
-        assert_eq!(decode_folder_id(&encode_folder_id("a\r\nLOGOUT")), Err(AppError::InvalidId));
-        assert_eq!(decode_folder_id(&encode_folder_id("")), Err(AppError::InvalidId));
+    fn ids_with_bad_account_are_rejected() {
+        for account in ["", "../x", "0f8b1c2d-3e4f-4a5b-8c6d-7e8f9a0b1c2dZ", "zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz"] {
+            let f = FolderKey { account: account.into(), folder: 1 }.encode();
+            assert_eq!(FolderKey::decode(&f), Err(AppError::InvalidId), "{account}");
+        }
     }
 
     #[test]
     fn decodes_encoded_word_headers() {
-        let raw = b"From: =?UTF-8?Q?Jo=C3=A3o_Silva?= <joao@lumen.com.br>\r\nSubject: =?UTF-8?B?UmV2aXPDo28gZG8gY29udHJhdG8=?=\r\nDate: Thu, 23 Oct 2026 10:42:00 -0300\r\n\r\n";
-        let (name, addr, subject, date) = parse_header_fields(&MessageParser::default(), raw).unwrap();
-        assert_eq!(name, "João Silva");
-        assert_eq!(addr, "joao@lumen.com.br");
-        assert_eq!(subject, "Revisão do contrato");
-        assert!(date.unwrap().starts_with("2026-10-23T10:42:00"));
+        let raw = b"From: =?UTF-8?Q?Jo=C3=A3o_Silva?= <joao@lumen.com.br>\r\nTo: Yuri <yuri@gmail.com>\r\nSubject: =?UTF-8?B?UmV2aXPDo28gZG8gY29udHJhdG8=?=\r\nDate: Thu, 23 Oct 2026 10:42:00 -0300\r\nMessage-ID: <abc@lumen>\r\nContent-Type: multipart/mixed; boundary=x\r\n\r\n";
+        let h = parse_header_fields(&MessageParser::default(), raw).unwrap();
+        assert_eq!(h.from_name, "João Silva");
+        assert_eq!(h.from_address, "joao@lumen.com.br");
+        assert_eq!(h.subject, "Revisão do contrato");
+        assert!(h.date.unwrap().starts_with("2026-10-23T10:42:00"));
+        assert_eq!(h.to, vec![Person { name: "Yuri".into(), address: "yuri@gmail.com".into() }]);
+        assert_eq!(h.message_id.as_deref(), Some("abc@lumen"));
+        assert!(h.has_attachments);
     }
 
     #[test]
@@ -380,7 +443,8 @@ JVBERi0xLjQK\r\n\
         })
     }
 
-    /// CA8: o pipeline de leitura não pode registrar assunto, endereços, corpo nem nome de anexo.
+    /// US2 CA8 e US3 CA8: leitura, banco e contas não podem registrar assunto, endereços, corpo,
+    /// nome de anexo, nome de pasta, nome dado à conta nem o e-mail da conta.
     #[test]
     fn logs_never_contain_message_content() {
         let capture = global_log_capture();
@@ -388,9 +452,14 @@ JVBERi0xLjQK\r\n\
         assert!(matches!(v.body, Body::Html { .. }));
         let _ = view(b"\xff\xfe lixo sem cabecalhos", false);
         let _ = parse_header_fields(&MessageParser::default(), HTML_MESSAGE);
+        crate::store::tests::exercise_for_redaction();
         let logs = String::from_utf8_lossy(&capture.0.lock().unwrap()).into_owned();
         assert!(logs.contains("mensagem montada"), "o teste precisa observar algum log: {logs}");
-        for secret in ["Revisão", "João", "joao@lumen.com.br", "yuri@gmail.com", "equipe@lumen", "segredo@oculto", "Olá", "Contrato.pdf", "tracker.example"] {
+        assert!(logs.contains("conta criada no banco"), "o teste precisa observar os logs do banco: {logs}");
+        for secret in [
+            "Revisão", "João", "joao@lumen.com.br", "yuri@gmail.com", "equipe@lumen", "segredo@oculto", "Olá", "Contrato.pdf", "tracker.example",
+            "redacao.marcador", "NomeContaMarcador", "PastaMarcadora", "AssuntoMarcador", "CorpoMarcador", "AnexoMarcador", "remetente@exemplo",
+        ] {
             assert!(!logs.contains(secret), "log vazou {secret:?}: {logs}");
         }
     }
@@ -406,9 +475,9 @@ JVBERi0xLjQK\r\n\
 
         #[test]
         fn arbitrary_ids_never_panic(s in ".{0,300}") {
-            let _ = MessageRef::decode(&s);
+            let _ = MessageKey::decode(&s);
             let _ = Cursor::decode(&s);
-            let _ = decode_folder_id(&s);
+            let _ = FolderKey::decode(&s);
         }
     }
 }

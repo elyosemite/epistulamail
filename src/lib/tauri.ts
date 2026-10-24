@@ -1,10 +1,37 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
-export type Provider = "google" | "microsoft";
+export type AccountStatus = "active" | "needs_reauth" | "signed_out";
+export type AccountColor = "blue" | "teal" | "green" | "purple" | "magenta" | "orange";
 
 export interface Account {
-  provider: Provider;
+  id: string;
+  provider: string;
   email: string;
+  displayName: string;
+  color: AccountColor;
+  position: number;
+  status: AccountStatus;
+  /** Não lidas da Caixa de entrada. */
+  unread: number | null;
+  lastFolderId: string | null;
+  /** Largura da lista em pixels, por conta (divisor entre lista e leitura). */
+  listWidth: number | null;
+}
+
+export interface ProviderInfo {
+  id: string;
+  name: string;
+  description: string;
+  available: boolean;
+  icon: string;
+}
+
+export interface Connected {
+  account: Account;
+  isNew: boolean;
+  /** A conta já estava conectada e ativa. */
+  wasActive: boolean;
 }
 
 export type FolderRole = "inbox" | "starred" | "sent" | "drafts" | "all" | "spam" | "trash" | "custom";
@@ -22,6 +49,12 @@ export interface MessageFlags {
   flagged: boolean;
 }
 
+/** Sinalização com prazo (US4): `due` em AAAA-MM-DD; `null` é "sem data". */
+export interface Followup {
+  due: string | null;
+  completed: boolean;
+}
+
 export interface MessageHeader {
   id: string;
   fromName: string;
@@ -29,13 +62,58 @@ export interface MessageHeader {
   subject: string;
   date: string;
   flags: MessageFlags;
+  followup: Followup | null;
+  /** Só em resultados de busca: a pasta da mensagem. */
+  folderName?: string;
+  folderId?: string;
 }
+
+export interface SearchPage {
+  items: MessageHeader[];
+  truncated: boolean;
+}
+
+export type DraftKind = "new" | "reply" | "reply_all" | "forward";
+
+export interface DraftContent {
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  subject: string;
+  body: string;
+}
+
+export interface Draft extends DraftContent {
+  id: number;
+  kind: DraftKind;
+  updatedAt: number;
+}
+
+export interface Quote {
+  from: string;
+  sent: string;
+  to: string;
+  cc: string;
+  subject: string;
+  text: string;
+}
+
+export interface ComposeTemplate {
+  to: string[];
+  cc: string[];
+  subject: string;
+  quote: Quote | null;
+}
+
+export type FollowupAction = { action: "set"; due: string | null } | { action: "complete" } | { action: "clear" };
 
 export interface MessagePage {
   items: MessageHeader[];
   nextCursor: string | null;
   total: number;
   unread: number | null;
+  /** Há uma sincronização desta pasta em andamento; o evento `mailbox-updated` avisa o fim. */
+  syncing: boolean;
 }
 
 export interface Person {
@@ -83,7 +161,14 @@ export type AppErrorKind =
   | "MessageTooLarge"
   | "InvalidId"
   | "UnsupportedLink"
-  | "Config";
+  | "Config"
+  | "Storage"
+  | "AccountNotFound"
+  | "ProviderUnavailable"
+  | "SignedOut"
+  | "InvalidInput"
+  | "FolderExists"
+  | "FolderNotFound";
 
 export interface AppError {
   kind: AppErrorKind;
@@ -106,23 +191,68 @@ async function call<T>(command: string, args?: Record<string, unknown>): Promise
 }
 
 export const api = {
-  getAccount: () => call<Account | null>("get_account"),
-  connectAccount: (provider: Provider) => call<Account>("connect_account", { provider }),
+  listAccounts: () => call<Account[]>("list_accounts"),
+  listProviders: () => call<ProviderInfo[]>("list_providers"),
+  connectAccount: (provider: string) => call<Connected>("connect_account", { provider }),
+  reconnectAccount: (accountId: string) => call<Connected>("reconnect_account", { accountId }),
   cancelConnect: () => call<void>("cancel_connect"),
-  listFolders: () => call<Folder[]>("list_folders"),
+  updateAccount: (accountId: string, change: { displayName?: string; color?: AccountColor }) =>
+    call<Account>("update_account", { accountId, displayName: change.displayName ?? null, color: change.color ?? null }),
+  moveAccount: (accountId: string, direction: -1 | 1) => call<Account[]>("move_account", { accountId, direction }),
+  signOutAccount: (accountId: string) => call<Account>("sign_out_account", { accountId }),
+  setLastFolder: (folderId: string) => call<void>("set_last_folder", { folderId }),
+  listFolders: (accountId: string) => call<Folder[]>("list_folders", { accountId }),
   listMessages: (folderId: string, cursor?: string | null) => call<MessagePage>("list_messages", { folderId, cursor: cursor ?? null }),
+  syncFolder: (folderId: string) => call<void>("sync_folder", { folderId }),
   getMessage: (messageId: string, allowRemoteImages: boolean) => call<MessageView>("get_message", { messageId, allowRemoteImages }),
   setFlags: (messageIds: string[], change: Partial<MessageFlags>) =>
     call<FlagResult[]>("set_flags", { messageIds, seen: change.seen ?? null, flagged: change.flagged ?? null }),
   openExternalLink: (url: string) => call<void>("open_external_link", { url }),
-  disconnect: () => call<void>("disconnect"),
+  searchMessages: (accountId: string, query: string) => call<SearchPage>("search_messages", { accountId, query }),
+  moveMessages: (messageIds: string[], targetFolderId: string) => call<{ ids: string[] }>("move_messages", { messageIds, targetFolderId }),
+  deleteMessages: (messageIds: string[]) => call<{ ids: string[] }>("delete_messages", { messageIds }),
+  archiveMessages: (messageIds: string[]) => call<{ ids: string[] }>("archive_messages", { messageIds }),
+  createFolder: (accountId: string, name: string) => call<Folder>("create_folder", { accountId, name }),
+  recentFolders: (accountId: string) => call<Folder[]>("recent_folders", { accountId }),
+  setFollowup: (messageId: string, change: FollowupAction) =>
+    call<{ flags: MessageFlags; followup: Followup | null }>("set_followup", { messageId, action: change.action, due: change.action === "set" ? change.due : null }),
+  composeTemplate: (messageId: string, kind: Exclude<DraftKind, "new">) => call<ComposeTemplate>("compose_template", { messageId, kind }),
+  getDraft: (accountId: string, kind: DraftKind, messageId: string | null) => call<Draft | null>("get_draft", { accountId, kind, messageId }),
+  saveDraft: (accountId: string, kind: DraftKind, messageId: string | null, content: DraftContent) =>
+    call<Draft>("save_draft", { accountId, kind, messageId, content }),
+  deleteDraft: (accountId: string, kind: DraftKind, messageId: string | null) => call<void>("delete_draft", { accountId, kind, messageId }),
+  setListWidth: (accountId: string, width: number) => call<void>("set_list_width", { accountId, width }),
 };
+
+/** Eventos emitidos pelo backend (US3). */
+export interface BackendEvents {
+  "accounts-updated": null;
+  "account-status": { accountId: string };
+  "folders-updated": { accountId: string };
+  "mailbox-updated": { accountId: string; folderId: string };
+  "sync-status": { accountId: string; online: boolean };
+}
+
+export function onBackendEvent<K extends keyof BackendEvents>(name: K, handler: (payload: BackendEvents[K]) => void): () => void {
+  let unlisten: UnlistenFn | null = null;
+  let disposed = false;
+  listen<BackendEvents[K]>(name, (e) => handler(e.payload))
+    .then((fn) => {
+      if (disposed) fn();
+      else unlisten = fn;
+    })
+    .catch(() => undefined);
+  return () => {
+    disposed = true;
+    unlisten?.();
+  };
+}
 
 export function isAppError(error: unknown): error is AppError {
   return !!error && typeof error === "object" && "kind" in error;
 }
 
-/** Erros que significam "a conta precisa ser conectada de novo". */
-export function isSessionLost(error: unknown): error is AppError {
-  return isAppError(error) && (error.kind === "TokenExpired" || error.kind === "ImapAuth");
+/** Erros que significam "esta conta precisa entrar de novo" (acesso revogado, expirado ou saída). */
+export function isAccessLost(error: unknown): error is AppError {
+  return isAppError(error) && (error.kind === "TokenExpired" || error.kind === "ImapAuth" || error.kind === "SignedOut");
 }

@@ -50,6 +50,42 @@
             </div>
           </form>
         </div>
+      <h3 class="sub">Resposta e encaminhamento no painel de leitura <code>.compose--inline</code></h3>
+      <div class="stage">
+        <article class="reader" style="padding:0">
+          <form class="compose compose--inline" aria-label="Encaminhar">
+            <div class="compose__bar"><span class="compose__title">Encaminhar</span><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover encaminhamento" data-tip="Remover"><svg class="i"><use href="#i-trash"/></svg></button></div>
+            <div class="compose__fields">
+              <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR</span><span class="chip__name">Ana Ribeiro</span></span><input aria-label="Adicionar destinatário"><button class="btn btn--subtle btn--compact compose__toggle" type="button" aria-expanded="false">Cc/Cco</button></div>
+              <label class="input input--line"><span class="input__prefix">Assunto</span><input value="Fw: Revisão do contrato: Fornecedor Lumen"></label>
+            </div>
+            <div class="compose__body"><textarea aria-label="Texto do encaminhamento">Ana, para seu conhecimento antes da reunião de sexta.</textarea></div>
+            <div class="message__quote">
+              <dl>
+                <dt>De</dt><dd>Marina Couto &lt;marina.couto@lumen.com.br&gt;</dd>
+                <dt>Enviado</dt><dd>quinta-feira, 23 de outubro de 2026, 10:42</dd>
+                <dt>Para</dt><dd>João Silva &lt;joao.silva.empresa@gmail.com&gt;; Rafael Dias</dd>
+                <dt>Assunto</dt><dd>Revisão do contrato: Fornecedor Lumen</dd>
+              </dl>
+              <p>Segue a versão 3 do contrato com os ajustes da cláusula 7.2. Preciso do retorno até sexta.</p>
+            </div>
+            <div class="compose__foot">
+              <div class="btn-split" data-tip="O envio chega na próxima versão"><button class="btn btn--primary" type="button" disabled>Enviar</button><button class="btn btn--primary" type="button" disabled aria-label="Opções de envio"><svg class="i"><use href="#i-chevron-down"/></svg></button></div>
+              <span class="compose__status">Rascunho salvo neste computador</span>
+              <button class="btn btn--subtle btn--icon" type="button" aria-label="Remover" data-tip="Remover"><svg class="i"><use href="#i-trash"/></svg></button>
+            </div>
+          </form>
+          <div class="message" style="opacity:.6">
+            <div class="message__head"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">MC</span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
+            <div class="message__body"><p>Segue a versão 3 do contrato…</p></div>
+          </div>
+        </article>
+      </div>
+
+        <dl class="guidance">
+          <div><dt>Onde abre</dt><dd><code>.compose--inline</code> abre dentro de <code>.reader</code>: abaixo da mensagem ao responder, acima ao encaminhar. Campos: Para (chips), Cc/Cco (<code>.compose__toggle</code>), Assunto ("Re:"/"Fw:" editável) e o corpo.</dd></div>
+          <div><dt>Encaminhar</dt><dd><code>.message__quote</code> mostra De, Enviado, Para, Assunto e o texto da mensagem original abaixo do corpo.</dd></div>
+        </dl>
       </section>
   </main>
 </div>

@@ -32,7 +32,7 @@ describe("pilha de cursores", () => {
 });
 
 const msg = (id: string, seen: boolean, flagged = false): MessageHeader => ({
-  id, fromName: "", fromAddress: "", subject: "", date: "", flags: { seen, flagged },
+  id, fromName: "", fromAddress: "", subject: "", date: "", flags: { seen, flagged }, followup: null,
 });
 
 describe("flags otimistas", () => {

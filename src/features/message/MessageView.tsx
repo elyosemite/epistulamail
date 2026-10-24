@@ -1,31 +1,39 @@
 // Composição de DS: leitura.html (.reader, cabeçalho, destinatários, .message__body, .message__frame),
 // mensagens.html (.section-message "Imagens externas bloqueadas", avisos e erros), anexos.html (.attachment--static),
-// carregamento.html (skeleton da leitura), vazios.html (.empty)
-import { useCallback, useEffect, useState } from "react";
+// carregamento.html (skeleton da leitura), vazios.html (.empty), composicao.html (.compose--inline: resposta abaixo da
+// mensagem, encaminhamento acima), menus.html (.lozenge de prazo em .reader__labels)
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { formatFullDate, formatPeople, paragraphs, recipientsSummary } from "../../lib/format";
-import { api, isAppError, isSessionLost, type AppError, type AppErrorKind, type MessageFlags, type MessageView as View } from "../../lib/tauri";
+import { api, isAccessLost, isAppError, type Account, type AppError, type DraftKind, type MessageFlags, type MessageView as View } from "../../lib/tauri";
 import { AttachmentList } from "../../ui/Attachment";
-import { IconButton } from "../../ui/Button";
 import { EmptyState } from "../../ui/EmptyState";
 import { MessageFrame } from "../../ui/MessageFrame";
 import { MessageHead, Reader, ReaderSkeleton, type RecipientRow } from "../../ui/Reader";
 import { SectionMessage } from "../../ui/SectionMessage";
 import { useToast } from "../../ui/Toast";
+import { ComposeCard } from "./ComposeCard";
+
+/** Card de resposta ou encaminhamento aberto no painel de leitura. */
+export interface ComposeState {
+  kind: DraftKind;
+  messageId: string | null;
+}
 
 type State = { status: "loading" } | { status: "ready"; view: View } | { status: "error"; error: AppError };
 
 interface MessageViewProps {
+  account: Account;
   messageId: string | null;
-  /** Flags atuais da lista, para a leitura refletir mudanças feitas na linha. */
-  flags: MessageFlags | null;
+  /** Prazo da sinalização da mensagem aberta (lozenge), vindo da lista. */
+  badge?: ReactNode;
+  compose: ComposeState | null;
+  onCloseCompose: () => void;
   onLoaded: (id: string, flags: MessageFlags) => void;
-  onToggleStar: () => void;
-  onMarkUnread: () => void;
-  onSessionLost: (kind: AppErrorKind) => void;
+  onAccessLost: () => void;
   onBack: () => void;
 }
 
-export function MessageView({ messageId, flags, onLoaded, onToggleStar, onMarkUnread, onSessionLost, onBack }: MessageViewProps) {
+export function MessageView({ account, messageId, badge, compose, onCloseCompose, onLoaded, onAccessLost, onBack }: MessageViewProps) {
   const [state, setState] = useState<State>({ status: "loading" });
   const [allowRemote, setAllowRemote] = useState(false);
   const toast = useToast();
@@ -39,10 +47,10 @@ export function MessageView({ messageId, flags, onLoaded, onToggleStar, onMarkUn
       onLoaded(id, view.flags);
     } catch (error) {
       if (signal.cancelled) return;
-      if (isSessionLost(error)) return onSessionLost(error.kind);
+      if (isAccessLost(error)) onAccessLost();
       setState({ status: "error", error: isAppError(error) ? error : { kind: "ImapConnection", message: "Tente de novo em instantes." } });
     }
-  }, [onLoaded, onSessionLost]);
+  }, [onLoaded, onAccessLost]);
 
   useEffect(() => {
     setAllowRemote(false);
@@ -58,6 +66,13 @@ export function MessageView({ messageId, flags, onLoaded, onToggleStar, onMarkUn
     );
   }, [toast]);
 
+  if (compose?.kind === "new") {
+    return (
+      <div className="reader">
+        <ComposeCard key="new" account={account} kind="new" messageId={null} onClose={onCloseCompose} />
+      </div>
+    );
+  }
   if (!messageId) {
     return <EmptyState title="Nenhuma mensagem aberta" description="Escolha uma mensagem na lista para ler." />;
   }
@@ -86,7 +101,9 @@ export function MessageView({ messageId, flags, onLoaded, onToggleStar, onMarkUn
   }
 
   const { view } = state;
-  const current = flags ?? view.flags;
+  const card = compose && compose.messageId === messageId && (
+    <ComposeCard key={`${compose.kind}-${messageId}`} account={account} kind={compose.kind} messageId={messageId} onClose={onCloseCompose} />
+  );
   const subject = view.subject || "(sem assunto)";
   const date = formatFullDate(view.date);
   const recipients: RecipientRow[] = [
@@ -102,22 +119,8 @@ export function MessageView({ messageId, flags, onLoaded, onToggleStar, onMarkUn
   };
 
   return (
-    <Reader
-      subject={subject}
-      onBack={onBack}
-      actions={
-        <>
-          <IconButton
-            icon="star"
-            label={current.flagged ? "Remover estrela" : "Marcar com estrela"}
-            aria-pressed={current.flagged}
-            className={current.flagged ? "is-selected" : undefined}
-            onClick={onToggleStar}
-          />
-          <IconButton icon="mail" label="Marcar como não lida" onClick={onMarkUnread} disabled={!current.seen} />
-        </>
-      }
-    >
+    <Reader subject={subject} labels={badge} onBack={onBack}>
+      {compose?.kind === "forward" && card}
       {view.blockedRemoteImages > 0 && !allowRemote && (
         <SectionMessage title="Imagens externas bloqueadas" actions={[{ label: "Mostrar imagens", onClick: showImages }]}>
           Para proteger sua privacidade, {view.blockedRemoteImages === 1 ? "1 imagem desta mensagem não foi carregada" : `${view.blockedRemoteImages} imagens desta mensagem não foram carregadas`}.
@@ -141,6 +144,7 @@ export function MessageView({ messageId, flags, onLoaded, onToggleStar, onMarkUn
         </div>
         <AttachmentList attachments={view.attachments} />
       </div>
+      {compose && compose.kind !== "forward" && card}
     </Reader>
   );
 }

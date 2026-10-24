@@ -56,6 +56,56 @@
             </div>
           </div>
         </div>
+      <h3 class="sub">Menus de comando: Mover para, Responder e Sinalizar</h3>
+      <div class="row" style="align-items:flex-start;gap:var(--space-400)">
+        <div class="stack">
+          <div class="menu menu--wide" role="menu" aria-label="Mover para" data-move-menu>
+            <div class="menu__search"><div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar pasta" aria-label="Buscar pasta" data-move-search></div></div>
+            <div class="menu__sep" role="separator"></div>
+            <div class="menu__heading">Mais recentes</div>
+            <div data-folders>
+              <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-folder"/></svg><span class="menu-item__text">Contratos 2026</span></button>
+              <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-folder"/></svg><span class="menu-item__text">Projetos</span></button>
+              <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-archive"/></svg><span class="menu-item__text">Todos os e-mails</span></button>
+              <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-folder"/></svg><span class="menu-item__text">Financeiro</span></button>
+              <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-folder"/></svg><span class="menu-item__text">Jurídico</span></button>
+            </div>
+            <div class="menu__empty" hidden data-empty>Nenhuma pasta com esse nome.</div>
+            <div class="menu__sep" role="separator"></div>
+            <div class="menu__heading">Criar nova pasta</div>
+            <form class="menu__form"><div class="input"><input placeholder="Nome da pasta" aria-label="Nome da nova pasta"></div><button class="btn btn--primary btn--compact" type="button">Salvar</button></form>
+            <div class="menu__sep" role="separator"></div>
+            <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-folder-move"/></svg><span class="menu-item__text">Selecionar outra pasta…</span></button>
+          </div>
+          <p class="demo-hint">Digite na busca para filtrar as pastas.</p>
+        </div>
+        <div class="stack">
+          <div class="menu" role="menu" aria-label="Opções de resposta">
+            <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-reply"/></svg><span class="menu-item__text">Responder</span><kbd>R</kbd></button>
+            <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-reply-all"/></svg><span class="menu-item__text">Responder a todos</span><kbd>⇧R</kbd></button>
+            <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-forward"/></svg><span class="menu-item__text">Encaminhar</span><kbd>⇧F</kbd></button>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="menu menu--wide" role="menu" aria-label="Sinalizar">
+            <div class="menu__heading">Sinalizar para</div>
+            <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-flag"/></svg><span class="menu-item__text">Hoje</span><span class="menu-item__meta">sex, 23 out</span></button>
+            <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-flag"/></svg><span class="menu-item__text">Amanhã</span><span class="menu-item__meta">sáb, 24 out</span></button>
+            <button class="menu-item is-selected" type="button" role="menuitemradio" aria-checked="true"><svg class="i"><use href="#i-flag"/></svg><span class="menu-item__text">Esta semana</span><span class="menu-item__meta">sex, 23 out</span></button>
+            <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-flag"/></svg><span class="menu-item__text">Próxima semana</span><span class="menu-item__meta">seg, 26 out</span></button>
+            <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-flag"/></svg><span class="menu-item__text">Sem data</span></button>
+            <div class="menu__sep" role="separator"></div>
+            <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-check"/></svg><span class="menu-item__text">Marcar como concluída</span></button>
+            <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-x"/></svg><span class="menu-item__text">Limpar sinalização</span></button>
+          </div>
+          <div class="row" aria-label="Prazos"><span class="lozenge lozenge--moved">Hoje</span><span class="lozenge">seg, 26 out</span><span class="lozenge lozenge--overdue">Atrasada</span><span class="lozenge lozenge--success">Concluída</span></div>
+        </div>
+      </div>
+
+        <dl class="guidance">
+          <div><dt>Mover para</dt><dd><code>.menu--wide</code> com <code>.menu__search</code> (filtra as pastas), "Mais recentes" (5), <code>.menu__form</code> para criar pasta e "Selecionar outra pasta…", que abre o <code>.folder-picker</code>. Sem resultado, <code>.menu__empty</code>.</dd></div>
+          <div><dt>Sinalizar</dt><dd>Cada prazo mostra a data em <code>.menu-item__meta</code>. Na lista e na leitura o prazo vira <code>.lozenge</code>: <code>--moved</code> para hoje, neutro para datas futuras, <code>--overdue</code> para atrasada e <code>--success</code> para concluída.</dd></div>
+        </dl>
       </section>
   </main>
 </div>

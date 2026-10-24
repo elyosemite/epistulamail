@@ -80,3 +80,10 @@ export function attachmentKind(mimeType: string): "pdf" | "img" | "doc" | "other
   if (/word|document|msword|rtf|opendocument\.text/.test(mimeType)) return "doc";
   return "other";
 }
+
+/** Data por extenso do bloco "Enviado" no encaminhamento: "sexta-feira, 23 de outubro de 2026, 10:42". */
+export function formatLongDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(date);
+}

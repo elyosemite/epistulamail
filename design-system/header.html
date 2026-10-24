@@ -59,6 +59,48 @@
             <span class="field__help">Operadores reconhecidos viram etiquetas: <code>de:</code>, <code>para:</code>, <code>tem:anexo</code>, <code>antes:</code>, <code>etiqueta:</code>.</span>
           </div>
         </div>
+      <h3 class="sub">Barra de comandos <code>.commandbar</code></h3>
+      <div class="stage stage--flush">
+        <div class="commandbar" role="toolbar" aria-label="Sem mensagem selecionada">
+          <button class="btn btn--primary" type="button"><svg class="i"><use href="#i-pencil"/></svg>Novo e-mail</button>
+          <span class="toolbar__sep" role="separator"></span>
+          <div class="commandbar__group">
+            <button class="btn btn--subtle" type="button" disabled><svg class="i"><use href="#i-trash"/></svg><span class="commandbar__label">Excluir</span></button>
+            <button class="btn btn--subtle" type="button" disabled><svg class="i"><use href="#i-archive"/></svg><span class="commandbar__label">Arquivar</span></button>
+            <button class="btn btn--subtle" type="button" disabled><svg class="i"><use href="#i-folder-move"/></svg><span class="commandbar__label">Mover para</span><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button>
+            <div class="btn-split"><button class="btn btn--subtle" type="button" disabled><svg class="i"><use href="#i-reply-all"/></svg><span class="commandbar__label">Responder a todos</span></button><button class="btn btn--subtle" type="button" disabled aria-label="Mais"><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button></div>
+          </div>
+          <span class="toolbar__sep" role="separator"></span>
+          <div class="commandbar__group">
+            <button class="btn btn--subtle" type="button" disabled><svg class="i"><use href="#i-mail-open"/></svg><span class="commandbar__label">Lida</span></button>
+            <div class="btn-split"><button class="btn btn--subtle" type="button" disabled><svg class="i"><use href="#i-flag"/></svg><span class="commandbar__label">Sinalizar</span></button><button class="btn btn--subtle" type="button" disabled aria-label="Prazo"><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button></div>
+          </div>
+        </div>
+      </div>
+      <p class="demo-hint">Acima: nenhuma mensagem selecionada (só "Novo e-mail" ativo). Abaixo: janela estreita, só ícones com tooltip.</p>
+      <div class="stage stage--flush" style="max-width:34rem">
+        <div class="commandbar commandbar--compact" role="toolbar" aria-label="Compacta">
+          <button class="btn btn--primary" type="button"><svg class="i"><use href="#i-pencil"/></svg>Novo e-mail</button>
+          <span class="toolbar__sep" role="separator"></span>
+          <div class="commandbar__group">
+            <button class="btn btn--subtle" type="button" aria-label="Excluir" data-tip="Excluir (Delete)"><svg class="i"><use href="#i-trash"/></svg><span class="commandbar__label">Excluir</span></button>
+            <button class="btn btn--subtle" type="button" aria-label="Arquivar" data-tip="Arquivar (E)"><svg class="i"><use href="#i-archive"/></svg><span class="commandbar__label">Arquivar</span></button>
+            <button class="btn btn--subtle" type="button" aria-label="Mover para" data-tip="Mover para (V)"><svg class="i"><use href="#i-folder-move"/></svg><span class="commandbar__label">Mover para</span><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button>
+            <div class="btn-split"><button class="btn btn--subtle" type="button" aria-label="Responder a todos" data-tip="Responder a todos"><svg class="i"><use href="#i-reply-all"/></svg><span class="commandbar__label">Responder a todos</span></button><button class="btn btn--subtle" type="button" aria-label="Mais"><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button></div>
+          </div>
+          <span class="toolbar__sep" role="separator"></span>
+          <div class="commandbar__group">
+            <button class="btn btn--subtle" type="button" aria-label="Marcar como lida" data-tip="Marcar como lida"><svg class="i"><use href="#i-mail-open"/></svg><span class="commandbar__label">Lida</span></button>
+            <div class="btn-split"><button class="btn btn--subtle" type="button" aria-label="Sinalizar" data-tip="Sinalizar"><svg class="i"><use href="#i-flag"/></svg><span class="commandbar__label">Sinalizar</span></button><button class="btn btn--subtle" type="button" aria-label="Prazo"><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button></div>
+          </div>
+        </div>
+      </div>
+
+        <dl class="guidance">
+          <div><dt>Ordem</dt><dd>Novo e-mail (<code>.btn--primary</code>, o único) | Excluir, Arquivar, Mover para, Responder a todos | Lida, Sinalizar. Grupos em <code>.commandbar__group</code>, separados por <code>.toolbar__sep</code>.</dd></div>
+          <div><dt>Rótulos</dt><dd>O texto de cada botão fica em <code>.commandbar__label</code>, que some abaixo de 1280px ou com <code>.commandbar--compact</code>. O botão mantém <code>aria-label</code> e <code>data-tip</code> com o atalho.</dd></div>
+          <div><dt>Menus</dt><dd>Comando com menu e ação principal usa <code>.btn-split</code> (Responder a todos, Sinalizar); comando só com menu leva o chevron no próprio botão (Mover para).</dd></div>
+        </dl>
       </section>
   </main>
 </div>

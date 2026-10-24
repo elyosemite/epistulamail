@@ -1,28 +1,27 @@
-//! IMAP sobre TLS com SASL XOAUTH2. Uma sessão autenticada por conta é reaproveitada entre
-//! comandos (`with_session`) e reaberta uma vez em caso de queda. Nada de conteúdo vai para log.
+//! IMAP sobre TLS com SASL XOAUTH2. Cada conta tem até duas sessões autenticadas (interativa e de
+//! sincronização), reaproveitadas entre comandos e reabertas uma vez em caso de queda.
+//! Nada de conteúdo vai para log.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::time::Duration;
 
-use async_imap::types::{Fetch, Flag};
+use async_imap::types::{Fetch, Flag, Mailbox};
 use futures::future::BoxFuture;
 use futures::TryStreamExt;
 use mail_parser::MessageParser;
-use serde::Serialize;
 use tokio::net::TcpStream;
 
 use crate::error::AppError;
-use crate::mailbox::{self, Folder, Role};
-use crate::message::{self, Cursor, MessageFlags, MessageHeader, MessageRef, MessageView};
-use crate::provider::Provider;
-use crate::session::AppState;
+use crate::mailbox::{self, RemoteFolder, Role};
+use crate::message::{self, HeaderFields, MessageFlags};
+use crate::session::{AccountHandle, AppState, Lane};
+use crate::store::RemoteHeader;
 
-const IMAP_PORT: u16 = 993;
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
-const OPERATION_TIMEOUT: Duration = Duration::from_secs(30);
-pub const PAGE_SIZE: u32 = 50;
+const OPERATION_TIMEOUT: Duration = Duration::from_secs(60);
 pub const MAX_MESSAGE_BYTES: u32 = 25 * 1024 * 1024;
-const HEADER_QUERY: &str = "(UID FLAGS INTERNALDATE BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])";
+const HEADER_QUERY: &str =
+    "(UID FLAGS INTERNALDATE RFC822.SIZE BODY.PEEK[HEADER.FIELDS (FROM TO CC SUBJECT DATE MESSAGE-ID CONTENT-TYPE)])";
 
 type TlsStream = async_native_tls::TlsStream<TcpStream>;
 pub type ImapSession = async_imap::Session<TlsStream>;
@@ -71,18 +70,19 @@ async fn with_timeout<T>(fut: impl std::future::Future<Output = Result<T, AppErr
     })?
 }
 
-async fn open_session(provider: Provider, email: &str, access_token: &str) -> Result<ImapSession, AppError> {
-    let host = provider.imap_host();
+async fn open_session(handle: &AccountHandle, access_token: &str) -> Result<ImapSession, AppError> {
+    let host = handle.imap_host.as_str();
+    let provider = handle.provider;
     with_timeout(
         async {
-            let tcp = TcpStream::connect((host, IMAP_PORT)).await.map_err(connection_error("tcp"))?;
+            let tcp = TcpStream::connect((host, handle.imap_port)).await.map_err(connection_error("tcp"))?;
             let tls = async_native_tls::TlsConnector::new().connect(host, tcp).await.map_err(|e| {
                 tracing::warn!(error = %e, "falha no handshake TLS");
                 AppError::ImapConnection
             })?;
             let mut client = async_imap::Client::new(tls);
             client.read_response().await.ok_or(AppError::ImapConnection)?.map_err(connection_error("greeting"))?;
-            let auth = XOAuth2 { payload: xoauth2_payload(email, access_token), sent: false };
+            let auth = XOAuth2 { payload: xoauth2_payload(&handle.email, access_token), sent: false };
             client.authenticate("XOAUTH2", auth).await.map_err(|(e, _)| match e {
                 async_imap::error::Error::No(_) | async_imap::error::Error::Bad(_) => {
                     tracing::warn!(error = %e, ?provider, "servidor IMAP recusou o XOAUTH2");
@@ -99,18 +99,18 @@ async fn open_session(provider: Provider, email: &str, access_token: &str) -> Re
     .await
 }
 
-/// Executa `op` na sessão da conta, abrindo-a se preciso. Em queda de conexão (ou timeout),
+/// Executa `op` numa sessão da conta, abrindo-a se preciso. Em queda de conexão (ou timeout),
 /// descarta a sessão e tenta uma vez mais; se o login for recusado, força um refresh do token.
-pub async fn with_session<T, F>(state: &AppState, mut op: F) -> Result<T, AppError>
+pub async fn with_session<T, F>(state: &AppState, handle: &AccountHandle, lane: Lane, mut op: F) -> Result<T, AppError>
 where
     F: for<'a> FnMut(&'a mut ImapSession) -> BoxFuture<'a, Result<T, AppError>>,
 {
-    let mut guard = state.imap.lock().await;
+    let mut guard = handle.lane(lane).lock().await;
     let mut force_refresh = false;
     for attempt in 0..2 {
         if guard.is_none() {
-            let (account, token) = state.access(force_refresh).await?;
-            match open_session(account.provider, &account.email, &token).await {
+            let token = state.access(handle, force_refresh).await?;
+            match open_session(handle, &token).await {
                 Ok(session) => *guard = Some(session),
                 Err(AppError::ImapAuth) if attempt == 0 => {
                     force_refresh = true;
@@ -123,7 +123,7 @@ where
         match tokio::time::timeout(OPERATION_TIMEOUT, op(session)).await {
             Ok(Ok(value)) => return Ok(value),
             Ok(Err(AppError::ImapConnection)) | Err(_) if attempt == 0 => {
-                tracing::info!("sessão IMAP descartada; reconectando");
+                tracing::info!(?lane, "sessão IMAP descartada; reconectando");
                 *guard = None;
             }
             Ok(Err(e)) => return Err(e),
@@ -134,12 +134,6 @@ where
         }
     }
     Err(AppError::ImapConnection)
-}
-
-pub async fn close_session(state: &AppState) {
-    if let Some(mut session) = state.imap.lock().await.take() {
-        let _ = tokio::time::timeout(Duration::from_secs(3), session.logout()).await;
-    }
 }
 
 fn flags_of(fetch: &Fetch) -> MessageFlags {
@@ -154,25 +148,20 @@ fn flags_of(fetch: &Fetch) -> MessageFlags {
     flags
 }
 
-fn to_header(parser: &MessageParser, mailbox: &str, uid_validity: u32, fetch: &Fetch) -> Option<MessageHeader> {
+fn to_remote_header(parser: &MessageParser, fetch: &Fetch) -> Option<RemoteHeader> {
     let uid = fetch.uid?;
-    let internal_date = fetch.internal_date().map(|d| d.to_rfc3339());
-    let (from_name, from_address, subject, date) = fetch
-        .header()
-        .and_then(|raw| message::parse_header_fields(parser, raw))
-        .unwrap_or_default();
-    Some(MessageHeader {
-        id: MessageRef { mailbox: mailbox.to_owned(), uid_validity, uid }.encode(),
-        from_name,
-        from_address,
-        subject,
-        date: date.or(internal_date).unwrap_or_default(),
+    let fields: HeaderFields = fetch.header().and_then(|raw| message::parse_header_fields(parser, raw)).unwrap_or_default();
+    Some(RemoteHeader {
+        uid,
+        fields,
+        internal_date: fetch.internal_date().map(|d| d.to_rfc3339()),
+        size: fetch.size.unwrap_or(0),
         flags: flags_of(fetch),
     })
 }
 
-/// Lista separada por vírgula para comandos `UID`. Os UIDs vêm de ids validados (números).
-fn uid_set(uids: &[u32]) -> String {
+/// Lista separada por vírgula para comandos `UID`. Os UIDs vêm do banco ou do servidor (números).
+pub fn uid_set(uids: &[u32]) -> String {
     uids.iter().map(u32::to_string).collect::<Vec<_>>().join(",")
 }
 
@@ -184,9 +173,13 @@ pub fn page_range(end: u32, count: u32) -> Option<(u32, u32)> {
     Some((end.saturating_sub(count - 1).max(1), end))
 }
 
+async fn collect(stream: impl futures::Stream<Item = async_imap::error::Result<Fetch>>, context: &'static str) -> Result<Vec<Fetch>, AppError> {
+    stream.try_collect().await.map_err(imap_error(context))
+}
+
 // ---------------------------------------------------------------- pastas
 
-pub async fn list_folders(session: &mut ImapSession) -> Result<Vec<Folder>, AppError> {
+pub async fn remote_folders(session: &mut ImapSession) -> Result<Vec<RemoteFolder>, AppError> {
     let names: Vec<_> = session
         .list(Some(""), Some("*"))
         .await
@@ -195,18 +188,18 @@ pub async fn list_folders(session: &mut ImapSession) -> Result<Vec<Folder>, AppE
         .await
         .map_err(imap_error("list"))?;
 
-    let mut folders: Vec<Folder> = names
+    let mut folders: Vec<RemoteFolder> = names
         .iter()
         .filter_map(|n| {
             let role = mailbox::classify(n.name(), n.attributes())?;
-            let name = role.label().map(str::to_owned).unwrap_or_else(|| mailbox::decode_mailbox_name(n.name()));
-            Some(Folder { id: message::encode_folder_id(n.name()), role, name, unread: None, total: None, mailbox: n.name().to_owned() })
+            let display_name = role.label().map(str::to_owned).unwrap_or_else(|| mailbox::decode_mailbox_name(n.name()));
+            Some(RemoteFolder { imap_name: n.name().to_owned(), role, display_name, unread: None, total: None })
         })
         .collect();
     mailbox::sort_folders(&mut folders);
 
     for folder in folders.iter_mut().filter(|f| f.role.is_system()) {
-        match session.status(&folder.mailbox, "(MESSAGES UNSEEN)").await {
+        match session.status(&folder.imap_name, "(MESSAGES UNSEEN)").await {
             Ok(status) => {
                 folder.total = Some(status.exists);
                 folder.unread = status.unseen;
@@ -217,173 +210,112 @@ pub async fn list_folders(session: &mut ImapSession) -> Result<Vec<Folder>, AppE
     tracing::info!(
         folders = folders.len(),
         custom = folders.iter().filter(|f| f.role == Role::Custom).count(),
-        "pastas carregadas"
+        "pastas listadas no servidor"
     );
     Ok(folders)
 }
 
-// ---------------------------------------------------------------- lista paginada
+// ---------------------------------------------------------------- seleção e leitura de cabeçalhos
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct MessagePage {
-    pub items: Vec<MessageHeader>,
-    pub next_cursor: Option<String>,
-    pub total: u32,
-    pub unread: Option<u32>,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Selected {
+    pub uidvalidity: u32,
+    pub uidnext: Option<u32>,
+    pub exists: u32,
+    pub highestmodseq: Option<u64>,
 }
 
-async fn fetch_headers(session: &mut ImapSession, set: String, by_uid: bool) -> Result<Vec<Fetch>, AppError> {
-    if by_uid {
-        session.uid_fetch(set, HEADER_QUERY).await.map_err(imap_error("uid fetch"))?.try_collect().await.map_err(imap_error("uid fetch"))
-    } else {
-        session.fetch(set, HEADER_QUERY).await.map_err(imap_error("fetch"))?.try_collect().await.map_err(imap_error("fetch"))
+fn selected(mb: &Mailbox) -> Selected {
+    Selected { uidvalidity: mb.uid_validity.unwrap_or(0), uidnext: mb.uid_next, exists: mb.exists, highestmodseq: mb.highest_modseq }
+}
+
+/// `SELECT` com CONDSTORE (RFC 7162) quando o servidor aceita; senão, `SELECT` simples.
+pub async fn select(session: &mut ImapSession, mailbox: &str) -> Result<Selected, AppError> {
+    match session.select_condstore(mailbox).await {
+        Ok(mb) => Ok(selected(&mb)),
+        Err(async_imap::error::Error::Bad(_)) | Err(async_imap::error::Error::No(_)) => {
+            let mb = session.select(mailbox).await.map_err(imap_error("select"))?;
+            Ok(selected(&mb))
+        }
+        Err(e) => Err(imap_error("select")(e)),
     }
 }
 
-/// Número de sequência atual do UID `uid`, se a mensagem ainda existir.
-async fn sequence_of(session: &mut ImapSession, uid: u32) -> Result<Option<u32>, AppError> {
-    let fetches: Vec<Fetch> = session
-        .uid_fetch(uid.to_string(), "(UID)")
-        .await
-        .map_err(imap_error("uid fetch"))?
-        .try_collect()
-        .await
-        .map_err(imap_error("uid fetch"))?;
-    Ok(fetches.iter().find(|f| f.uid == Some(uid)).map(|f| f.message))
-}
-
-pub async fn list_page(session: &mut ImapSession, mailbox: &str, cursor: Option<Cursor>) -> Result<MessagePage, AppError> {
-    let unread = session.status(mailbox, "(UNSEEN)").await.ok().and_then(|s| s.unseen);
-    let selected = session.select(mailbox).await.map_err(imap_error("select"))?;
-    let uid_validity = selected.uid_validity.unwrap_or(0);
-    let total = selected.exists;
-
-    if let Some(c) = &cursor {
-        if c.mailbox != mailbox || c.uid_validity != uid_validity {
-            return Err(AppError::CursorExpired);
-        }
-    }
-    let before = cursor.as_ref().map(|c| c.before);
-    let parser = MessageParser::default();
-
-    // Caminho normal: a âncora ainda existe, então a página são as `PAGE_SIZE` sequências anteriores.
-    // Se a âncora sumiu, cai para `UID SEARCH`, que não depende de sequência.
-    let end = match before {
-        None => Some(total),
-        Some(1) => Some(0),
-        Some(b) => sequence_of(session, b).await?.map(|seq| seq - 1),
-    };
-
-    let (fetches, has_more) = match end {
-        Some(end) => match page_range(end, PAGE_SIZE) {
-            Some((start, end)) => (fetch_headers(session, format!("{start}:{end}"), false).await?, start > 1),
-            None => (Vec::new(), false),
-        },
-        None => {
-            let b = before.unwrap_or(1);
-            let mut uids: Vec<u32> = session
-                .uid_search(format!("UID 1:{}", b.saturating_sub(1).max(1)))
-                .await
-                .map_err(imap_error("uid search"))?
-                .into_iter()
-                .filter(|u| *u < b)
-                .collect();
-            uids.sort_unstable_by(|a, b| b.cmp(a));
-            let more = uids.len() > PAGE_SIZE as usize;
-            uids.truncate(PAGE_SIZE as usize);
-            if uids.is_empty() {
-                (Vec::new(), false)
-            } else {
-                (fetch_headers(session, uid_set(&uids), true).await?, more)
-            }
-        }
-    };
-
-    let in_page = |f: &&Fetch| before.is_none_or(|b| f.uid.is_some_and(|u| u < b));
-    let mut page: Vec<(u32, MessageHeader)> = fetches
-        .iter()
-        .filter(in_page)
-        .filter_map(|f| Some((f.uid?, to_header(&parser, mailbox, uid_validity, f)?)))
-        .collect();
-    page.sort_by_key(|(uid, _)| std::cmp::Reverse(*uid));
-
-    let next_cursor = match (has_more, page.last()) {
-        (true, Some((min, _))) => Some(Cursor { mailbox: mailbox.to_owned(), uid_validity, before: *min }.encode()),
-        _ => None,
-    };
-    let items: Vec<MessageHeader> = page.into_iter().map(|(_, h)| h).collect();
-    tracing::info!(items = items.len(), total, has_more = next_cursor.is_some(), "página carregada");
-    Ok(MessagePage { items, next_cursor, total, unread })
-}
-
-// ---------------------------------------------------------------- leitura
-
-async fn select_checked(session: &mut ImapSession, mailbox: &str, uid_validity: u32) -> Result<(), AppError> {
-    let selected = session.select(mailbox).await.map_err(imap_error("select"))?;
-    if selected.uid_validity != Some(uid_validity) {
+/// Seleciona a pasta e confere o UIDVALIDITY esperado: se mudou, os UIDs do banco não valem mais.
+pub async fn select_checked(session: &mut ImapSession, mailbox: &str, uidvalidity: u32) -> Result<Selected, AppError> {
+    let s = select(session, mailbox).await?;
+    if s.uidvalidity != uidvalidity {
         return Err(AppError::MessageNotFound);
     }
-    Ok(())
+    Ok(s)
 }
 
-pub async fn read_message(session: &mut ImapSession, r: MessageRef, allow_remote_images: bool) -> Result<MessageView, AppError> {
-    select_checked(session, &r.mailbox, r.uid_validity).await?;
+pub async fn unseen_count(session: &mut ImapSession, mailbox: &str) -> Option<u32> {
+    session.status(mailbox, "(UNSEEN)").await.ok().and_then(|s| s.unseen)
+}
 
-    let meta: Vec<Fetch> = session
-        .uid_fetch(r.uid.to_string(), "(UID FLAGS RFC822.SIZE INTERNALDATE)")
+pub async fn headers_by_sequence(session: &mut ImapSession, start: u32, end: u32) -> Result<Vec<RemoteHeader>, AppError> {
+    let fetches = collect(session.fetch(format!("{start}:{end}"), HEADER_QUERY).await.map_err(imap_error("fetch"))?, "fetch").await?;
+    let parser = MessageParser::default();
+    Ok(fetches.iter().filter_map(|f| to_remote_header(&parser, f)).collect())
+}
+
+pub async fn headers_by_uid(session: &mut ImapSession, set: &str) -> Result<Vec<RemoteHeader>, AppError> {
+    let fetches = collect(session.uid_fetch(set, HEADER_QUERY).await.map_err(imap_error("uid fetch"))?, "uid fetch").await?;
+    let parser = MessageParser::default();
+    Ok(fetches.iter().filter_map(|f| to_remote_header(&parser, f)).collect())
+}
+
+/// Flags dos UIDs a partir de `from`; com `changed_since`, só as alteradas depois daquele modseq.
+pub async fn flags_from(session: &mut ImapSession, from: u32, changed_since: Option<u64>) -> Result<Vec<(u32, MessageFlags)>, AppError> {
+    let query = match changed_since {
+        Some(modseq) => format!("(UID FLAGS) (CHANGEDSINCE {modseq})"),
+        None => "(UID FLAGS)".to_owned(),
+    };
+    let fetches = collect(session.uid_fetch(format!("{from}:*"), query).await.map_err(imap_error("uid fetch"))?, "uid fetch").await?;
+    Ok(fetches.iter().filter_map(|f| Some((f.uid?, flags_of(f)))).filter(|(uid, _)| *uid >= from).collect())
+}
+
+pub async fn search_uids(session: &mut ImapSession, from: u32, to: Option<u32>) -> Result<Vec<u32>, AppError> {
+    let range = match to {
+        Some(to) => format!("UID {from}:{to}"),
+        None => format!("UID {from}:*"),
+    };
+    let mut uids: Vec<u32> = session
+        .uid_search(range)
         .await
-        .map_err(imap_error("uid fetch"))?
-        .try_collect()
-        .await
-        .map_err(imap_error("uid fetch"))?;
-    let meta = meta.iter().find(|f| f.uid == Some(r.uid)).ok_or(AppError::MessageNotFound)?;
+        .map_err(imap_error("uid search"))?
+        .into_iter()
+        .filter(|u| *u >= from && to.is_none_or(|t| *u <= t))
+        .collect();
+    uids.sort_unstable();
+    Ok(uids)
+}
+
+// ---------------------------------------------------------------- corpo e flags
+
+pub struct RawMessage {
+    pub raw: Vec<u8>,
+    pub flags: MessageFlags,
+    pub internal_date: Option<String>,
+}
+
+/// Mensagem completa por UID, com o limite de 25 MB conferido antes de baixar o corpo.
+pub async fn fetch_raw(session: &mut ImapSession, uid: u32) -> Result<RawMessage, AppError> {
+    let meta = collect(session.uid_fetch(uid.to_string(), "(UID FLAGS RFC822.SIZE INTERNALDATE)").await.map_err(imap_error("uid fetch"))?, "uid fetch").await?;
+    let meta = meta.iter().find(|f| f.uid == Some(uid)).ok_or(AppError::MessageNotFound)?;
     if meta.size.unwrap_or(0) > MAX_MESSAGE_BYTES {
         tracing::info!(bytes = meta.size, "mensagem acima do limite");
         return Err(AppError::MessageTooLarge);
     }
-    let mut flags = flags_of(meta);
+    let flags = flags_of(meta);
     let internal_date = meta.internal_date().map(|d| d.to_rfc3339());
-
-    let bodies: Vec<Fetch> = session
-        .uid_fetch(r.uid.to_string(), "(UID BODY.PEEK[])")
-        .await
-        .map_err(imap_error("uid fetch"))?
-        .try_collect()
-        .await
-        .map_err(imap_error("uid fetch"))?;
-    let raw = bodies
-        .iter()
-        .find(|f| f.uid == Some(r.uid))
-        .and_then(|f| f.body())
-        .ok_or(AppError::MessageNotFound)?;
+    let bodies = collect(session.uid_fetch(uid.to_string(), "(UID BODY.PEEK[])").await.map_err(imap_error("uid fetch"))?, "uid fetch").await?;
+    let raw = bodies.iter().find(|f| f.uid == Some(uid)).and_then(|f| f.body()).ok_or(AppError::MessageNotFound)?;
     if raw.len() > MAX_MESSAGE_BYTES as usize {
         return Err(AppError::MessageTooLarge);
     }
-
-    let mut view = message::build_view(raw, r.encode(), flags, internal_date, allow_remote_images);
-
-    // Abrir marca como lida, só depois de o corpo ter carregado.
-    if !flags.seen {
-        let _: Vec<Fetch> = session
-            .uid_store(r.uid.to_string(), "+FLAGS.SILENT (\\Seen)")
-            .await
-            .map_err(imap_error("uid store"))?
-            .try_collect()
-            .await
-            .map_err(imap_error("uid store"))?;
-        flags.seen = true;
-        view.flags = flags;
-    }
-    Ok(view)
-}
-
-// ---------------------------------------------------------------- flags
-
-#[derive(Debug, Serialize, Clone)]
-pub struct FlagResult {
-    pub id: String,
-    pub flags: MessageFlags,
+    Ok(RawMessage { raw: raw.to_vec(), flags, internal_date })
 }
 
 /// Comandos `STORE` para as mudanças pedidas. `None` deixa a flag como está.
@@ -402,46 +334,52 @@ pub fn store_commands(seen: Option<bool>, flagged: Option<bool>) -> Vec<&'static
     commands
 }
 
-/// Aplica as flags e devolve o estado final lido do servidor. Idempotente: `+FLAGS`/`-FLAGS`
-/// repetidos não mudam o resultado.
-pub async fn set_flags(session: &mut ImapSession, refs: Vec<MessageRef>, seen: Option<bool>, flagged: Option<bool>) -> Result<Vec<FlagResult>, AppError> {
-    let commands = store_commands(seen, flagged);
-    let mut groups: BTreeMap<(String, u32), Vec<u32>> = BTreeMap::new();
-    for r in &refs {
-        groups.entry((r.mailbox.clone(), r.uid_validity)).or_default().push(r.uid);
+/// Aplica as flags na pasta já selecionada e devolve o estado final lido do servidor.
+/// Idempotente: `+FLAGS`/`-FLAGS` repetidos não mudam o resultado.
+pub async fn store_flags(session: &mut ImapSession, uids: &[u32], seen: Option<bool>, flagged: Option<bool>) -> Result<HashMap<u32, MessageFlags>, AppError> {
+    let set = uid_set(uids);
+    for command in store_commands(seen, flagged) {
+        let _ = collect(session.uid_store(&set, command).await.map_err(imap_error("uid store"))?, "uid store").await?;
     }
+    let current = collect(session.uid_fetch(&set, "(UID FLAGS)").await.map_err(imap_error("uid fetch"))?, "uid fetch").await?;
+    Ok(current.iter().filter_map(|f| Some((f.uid?, flags_of(f)))).collect())
+}
 
-    let mut results = Vec::with_capacity(refs.len());
-    for ((mailbox, uid_validity), uids) in groups {
-        select_checked(session, &mailbox, uid_validity).await?;
-        let set = uid_set(&uids);
-        for command in &commands {
-            let _: Vec<Fetch> = session
-                .uid_store(&set, command)
-                .await
-                .map_err(imap_error("uid store"))?
-                .try_collect()
-                .await
-                .map_err(imap_error("uid store"))?;
-        }
-        let current: Vec<Fetch> = session
-            .uid_fetch(&set, "(UID FLAGS)")
-            .await
-            .map_err(imap_error("uid fetch"))?
-            .try_collect()
-            .await
-            .map_err(imap_error("uid fetch"))?;
-        let by_uid: HashMap<u32, MessageFlags> = current.iter().filter_map(|f| Some((f.uid?, flags_of(f)))).collect();
-        for uid in uids {
-            if let Some(flags) = by_uid.get(&uid) {
-                results.push(FlagResult { id: MessageRef { mailbox: mailbox.clone(), uid_validity, uid }.encode(), flags: *flags });
-            }
-        }
+// ---------------------------------------------------------------- mover, apagar, criar (US4)
+
+async fn supports_move(session: &mut ImapSession) -> bool {
+    session.capabilities().await.map(|c| c.has_str("MOVE")).unwrap_or(false)
+}
+
+/// Apaga de vez os UIDs da pasta selecionada (`\Deleted` + `UID EXPUNGE`, RFC 4315).
+pub async fn expunge_uids(session: &mut ImapSession, uids: &[u32]) -> Result<(), AppError> {
+    let set = uid_set(uids);
+    let _ = collect(session.uid_store(&set, "+FLAGS.SILENT (\\Deleted)").await.map_err(imap_error("uid store"))?, "uid store").await?;
+    let stream = session.uid_expunge(&set).await.map_err(imap_error("uid expunge"))?;
+    let _: Vec<_> = stream.try_collect().await.map_err(imap_error("uid expunge"))?;
+    Ok(())
+}
+
+/// Move os UIDs da pasta selecionada para `target` com `UID MOVE` (RFC 6851); sem suporte, copia
+/// e apaga da origem.
+pub async fn move_uids(session: &mut ImapSession, uids: &[u32], target: &str) -> Result<(), AppError> {
+    let set = uid_set(uids);
+    if supports_move(session).await {
+        return session.uid_mv(&set, target).await.map_err(imap_error("uid move"));
     }
-    if results.len() < refs.len() {
-        tracing::info!(requested = refs.len(), updated = results.len(), "algumas mensagens não existem mais");
-    }
-    Ok(results)
+    session.uid_copy(&set, target).await.map_err(imap_error("uid copy"))?;
+    expunge_uids(session, uids).await
+}
+
+/// Cria a pasta (nome já em UTF-7 modificado). `NO` do servidor costuma ser nome repetido.
+pub async fn create_mailbox(session: &mut ImapSession, encoded: &str) -> Result<(), AppError> {
+    session.create(encoded).await.map_err(|e| match e {
+        async_imap::error::Error::No(_) => {
+            tracing::info!("servidor recusou criar a pasta");
+            AppError::FolderExists
+        }
+        other => imap_error("create")(other),
+    })
 }
 
 #[cfg(test)]
@@ -467,7 +405,7 @@ mod tests {
         assert_eq!(page_range(10, 50), Some((1, 10)));
         assert_eq!(page_range(50, 50), Some((1, 50)));
         assert_eq!(page_range(1284, 50), Some((1235, 1284)));
-        assert_eq!(page_range(1234, 50), Some((1185, 1234)));
+        assert_eq!(page_range(5000, 2000), Some((3001, 5000)));
     }
 
     #[test]

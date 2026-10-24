@@ -1,68 +1,254 @@
-// DS: espacamento.html · .app-shell (sidebar + lista + leitura), __banner, __center, .has-reader
-import { useCallback, useEffect, useState } from "react";
-import { ConnectAccount } from "./features/account/ConnectAccount";
+// DS: espacamento.html · .app-shell (--with-rail com a coluna de contas, --commands com a barra de comandos,
+//     --no-sidebar sem contas), __banner, __center, __resizer, .has-reader; header.html · .appbar--shell com a busca
+//     sobre a lista e .appbar__account com .appbar__account-name
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { AccountSettingsDialog, SignOutDialog } from "./features/accounts/AccountDialogs";
+import { AccountsRail } from "./features/accounts/AccountsRail";
+import { AddAccount, ConnectFlow } from "./features/accounts/AddAccount";
 import { Mailbox } from "./features/mailbox/Mailbox";
-import { api, type Account, type AppErrorKind } from "./lib/tauri";
+import { accountInitial, avatarColorClass, pickActive } from "./lib/accounts";
+import { LIST_DEFAULT } from "./lib/listWidth";
+import { api, onBackendEvent, type Account, type Connected } from "./lib/tauri";
 import { AppBar } from "./ui/AppBar";
-import { Avatar } from "./ui/Avatar";
 import { Banner } from "./ui/Banner";
+import { Resizer } from "./ui/Resizer";
+import { SearchField } from "./ui/SearchField";
 import { Spinner } from "./ui/Spinner";
-import { ToastProvider } from "./ui/Toast";
+import { ToastProvider, useToast } from "./ui/Toast";
 
-type Session = { status: "booting" } | { status: "signed-out"; notice?: string } | { status: "signed-in"; account: Account };
-
-const NOTICE: Partial<Record<AppErrorKind, string>> = {
-  TokenExpired: "Sua sessão expirou. Conecte a conta de novo para continuar.",
-  ImapAuth: "O Gmail recusou o acesso desta conta. Conecte de novo para continuar.",
-};
+type View = { kind: "mail" } | { kind: "add" } | { kind: "reconnect"; account: Account };
+type Dialog = { kind: "settings"; account: Account; isNew: boolean } | { kind: "sign-out"; account: Account } | null;
 
 export function App() {
-  const [session, setSession] = useState<Session>({ status: "booting" });
-  const [readerOpen, setReaderOpen] = useState(false);
-
-  useEffect(() => {
-    api.getAccount()
-      .then((account) => setSession(account ? { status: "signed-in", account } : { status: "signed-out" }))
-      .catch(() => setSession({ status: "signed-out" }));
-  }, []);
-
-  const onSessionLost = useCallback((kind: AppErrorKind) => {
-    setReaderOpen(false);
-    setSession({ status: "signed-out", notice: NOTICE[kind] });
-  }, []);
-
-  const signedIn = session.status === "signed-in";
-  const shellCls = ["app-shell", !signedIn && "app-shell--no-sidebar", readerOpen && "has-reader"].filter(Boolean).join(" ");
-
   return (
     <ToastProvider>
-      <div className={shellCls}>
-        <AppBar actions={session.status === "signed-in" && <AccountIndicator account={session.account} />} />
-        {session.status === "signed-out" && session.notice && (
-          <div className="app-shell__banner"><Banner appearance="error">{session.notice}</Banner></div>
-        )}
-        {session.status === "booting" && (
-          <div className="app-shell__center"><Spinner size="lg" label="Carregando o Epistula" /></div>
-        )}
-        {session.status === "signed-out" && (
-          <div className="app-shell__center">
-            <ConnectAccount onConnected={(account) => setSession({ status: "signed-in", account })} />
-          </div>
-        )}
-        {session.status === "signed-in" && (
-          <Mailbox key={session.account.email} onSessionLost={onSessionLost} onReaderOpenChange={setReaderOpen} />
-        )}
-      </div>
+      <Shell />
     </ToastProvider>
   );
 }
 
-/** DS: header.html "Conta conectada" · .appbar__account */
-function AccountIndicator({ account }: { account: Account }) {
+function Shell() {
+  const [accounts, setAccounts] = useState<Account[] | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [view, setView] = useState<View>({ kind: "mail" });
+  const [dialog, setDialog] = useState<Dialog>(null);
+  const [readerOpen, setReaderOpen] = useState(false);
+  const [offline, setOffline] = useState<Record<string, boolean>>({});
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [listWidth, setListWidth] = useState(LIST_DEFAULT);
+  const searchRef = useRef<HTMLInputElement>(null);
+  // Pasta aberta por conta nesta sessão, para voltar ao mesmo lugar ao trocar de conta.
+  const lastFolder = useRef(new Map<string, string>());
+  const toast = useToast();
+
+  const reload = useCallback(async () => {
+    try {
+      const list = await api.listAccounts();
+      setAccounts(list);
+      setActiveId((current) => pickActive(list, current));
+      setLoadError(null);
+    } catch (error) {
+      setAccounts((current) => current ?? []);
+      setLoadError(error && typeof error === "object" && "message" in error ? String(error.message) : "Não foi possível carregar as contas.");
+    }
+  }, []);
+
+  useEffect(() => {
+    void reload();
+    const offs = [
+      onBackendEvent("accounts-updated", () => void reload()),
+      onBackendEvent("account-status", () => void reload()),
+      onBackendEvent("sync-status", ({ accountId, online }) => setOffline((s) => (s[accountId] === !online ? s : { ...s, [accountId]: !online }))),
+    ];
+    return () => offs.forEach((off) => off());
+  }, [reload]);
+
+  const select = useCallback((id: string) => {
+    setActiveId(id);
+    setQuery("");
+    setView({ kind: "mail" });
+    setReaderOpen(false);
+  }, []);
+
+  const onConnected = useCallback(
+    async (result: Connected) => {
+      await reload();
+      select(result.account.id);
+      if (result.isNew) setDialog({ kind: "settings", account: result.account, isNew: true });
+      else if (result.wasActive) toast({ kind: "info", title: "Esta conta já está no Epistula" });
+      else toast({ kind: "success", title: `Você entrou de novo em ${result.account.displayName}` });
+    },
+    [reload, select, toast],
+  );
+
+  const onFolderChange = useCallback((accountId: string, folderId: string) => {
+    lastFolder.current.set(accountId, folderId);
+    void api.setLastFolder(folderId).catch(() => undefined);
+  }, []);
+  const onAccessLost = useCallback(() => void reload(), [reload]);
+
+  const move = useCallback(async (account: Account, direction: -1 | 1) => {
+    try {
+      setAccounts(await api.moveAccount(account.id, direction));
+    } catch {
+      toast({ kind: "error", title: "Não foi possível mudar a ordem das contas" });
+    }
+  }, [toast]);
+
+  // Largura da lista guardada por conta.
+  const activeAccount = accounts?.find((a) => a.id === activeId) ?? accounts?.[0];
+  const savedWidth = activeAccount?.listWidth ?? LIST_DEFAULT;
+  useEffect(() => setListWidth(savedWidth), [activeAccount?.id, savedWidth]);
+
+  // "/" ou Ctrl+E levam à busca.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ["INPUT", "TEXTAREA"].includes(e.target.tagName));
+      if ((e.key === "/" && !typing && !e.ctrlKey && !e.metaKey) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e")) {
+        if (!searchRef.current) return;
+        e.preventDefault();
+        searchRef.current.focus();
+        searchRef.current.select();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  if (accounts === null) {
+    return (
+      <div className="app-shell app-shell--no-sidebar">
+        <AppBar />
+        <div className="app-shell__center"><Spinner size="lg" label="Carregando o Epistula" /></div>
+      </div>
+    );
+  }
+
+  if (accounts.length === 0) {
+    return (
+      <div className="app-shell app-shell--no-sidebar">
+        <AppBar />
+        {loadError && <div className="app-shell__banner"><Banner appearance="error">{loadError}</Banner></div>}
+        <div className="app-shell__center">
+          <AddAccount first onConnected={onConnected} onCancel={() => undefined} />
+        </div>
+      </div>
+    );
+  }
+
+  const active = accounts.find((a) => a.id === activeId) ?? accounts[0];
+  const showMail = view.kind === "mail";
+  const shellCls = ["app-shell", "app-shell--with-rail", showMail && "app-shell--commands", showMail && readerOpen && "has-reader"].filter(Boolean).join(" ");
+
+  return (
+    <div className={shellCls} style={{ "--app-shell-list": `${listWidth}px` } as CSSProperties}>
+      <AppBar
+        actions={<ActiveAccount account={active} />}
+        search={
+          showMail && (
+            <SearchField
+              ref={searchRef}
+              value={query}
+              placeholder={`Buscar em ${active.displayName}`}
+              label="Buscar e-mails nas mensagens salvas"
+              shortcut="/"
+              onChange={setQuery}
+              onEscape={() => {
+                setQuery("");
+                searchRef.current?.blur();
+              }}
+            />
+          )
+        }
+      />
+      {offline[active.id] && active.status === "active" && (
+        <div className="app-shell__banner"><Banner appearance="warning">Sem conexão. Mostrando mensagens salvas neste computador.</Banner></div>
+      )}
+      <AccountsRail
+        accounts={accounts}
+        activeId={showMail ? active.id : null}
+        onSelect={select}
+        onAdd={() => setView({ kind: "add" })}
+        onEdit={(account) => setDialog({ kind: "settings", account, isNew: false })}
+        onMove={move}
+        onSignOut={(account) => setDialog({ kind: "sign-out", account })}
+        onReconnect={(account) => setView({ kind: "reconnect", account })}
+      />
+      {view.kind === "add" && (
+        <div className="app-shell__center">
+          <AddAccount first={false} onConnected={onConnected} onCancel={() => setView({ kind: "mail" })} />
+        </div>
+      )}
+      {view.kind === "reconnect" && (
+        <div className="app-shell__center">
+          <ConnectFlow
+            providerName="Google"
+            run={() => api.reconnectAccount(view.account.id)}
+            onConnected={onConnected}
+            onBack={() => setView({ kind: "mail" })}
+          />
+        </div>
+      )}
+      {showMail && (
+        <Mailbox
+          key={active.id}
+          account={active}
+          query={query}
+          initialFolderId={lastFolder.current.get(active.id) ?? active.lastFolderId}
+          onFolderChange={(folderId) => onFolderChange(active.id, folderId)}
+          onAccessLost={onAccessLost}
+          onReconnect={() => setView({ kind: "reconnect", account: active })}
+          onReaderOpenChange={setReaderOpen}
+        />
+      )}
+      {showMail && (
+        <Resizer
+          label="Largura da lista de mensagens"
+          width={listWidth}
+          onChange={setListWidth}
+          onCommit={(width) => void api.setListWidth(active.id, width).then(() => reload()).catch(() => undefined)}
+        />
+      )}
+      {dialog?.kind === "settings" && (
+        <AccountSettingsDialog
+          account={dialog.account}
+          isNew={dialog.isNew}
+          onSave={async (change) => {
+            await api.updateAccount(dialog.account.id, change);
+            await reload();
+          }}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === "sign-out" && (
+        <SignOutDialog
+          account={dialog.account}
+          onConfirm={async () => {
+            try {
+              await api.signOutAccount(dialog.account.id);
+              toast({ kind: "info", title: `Você saiu de ${dialog.account.displayName}`, description: "As mensagens salvas continuam neste computador." });
+            } catch {
+              toast({ kind: "error", title: "Não foi possível sair da conta", description: "Tente de novo em instantes." });
+            }
+            await reload();
+          }}
+          onClose={() => setDialog(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/** DS: header.html "Conta conectada" · .appbar__account, .appbar__account-name */
+function ActiveAccount({ account }: { account: Account }) {
+  const avatar = ["avatar avatar--sm", avatarColorClass(account.color)].filter(Boolean).join(" ");
   return (
     <div className="appbar__account" role="status">
-      <Avatar name={account.email} seed={account.email} size="sm" />
-      <span className="appbar__account-text">Conectado como <span className="appbar__account-email">{account.email}</span></span>
+      <span className={avatar} aria-hidden="true">{accountInitial(account.displayName)}</span>
+      <span className="appbar__account-text">
+        <span className="appbar__account-name">{account.displayName}</span> · {account.email}
+      </span>
     </div>
   );
 }

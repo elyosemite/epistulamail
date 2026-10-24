@@ -6,3 +6,4 @@ src-tauri/gen/
 .env.*
 !.env.example
 client_secret_*.json
+.tools/

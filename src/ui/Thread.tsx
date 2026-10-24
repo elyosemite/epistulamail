@@ -1,6 +1,6 @@
 // DS: threads.html · .thread-list, .thread (__star, __from, __from-name, __meta, __date, __actions, __subject, __subject-text), .is-unread, .is-open, .star-btn
 // DS: threads.html "Só cabeçalho" · .thread-list--headers (sem checkbox e prévia; ações rápidas opcionais)
-// DS: carregamento.html · linhas .thread com .skeleton
+// DS: carregamento.html · linhas .thread com .skeleton; etiquetas.html · .label (pasta na busca); menus.html · .lozenge de prazo
 import { forwardRef, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { IconButton } from "./Button";
 import { Icon } from "./Icon";
@@ -25,6 +25,10 @@ interface ThreadRowProps {
   /** Sem estes callbacks a linha é somente leitura (estrela apagada, sem ações no hover). */
   onToggleStar?: () => void;
   onToggleRead?: () => void;
+  /** Prazo da sinalização (`.lozenge`), antes da data. */
+  badge?: ReactNode;
+  /** Pasta da mensagem nos resultados de busca (`.label`). */
+  folder?: string;
 }
 
 const stop = (fn: () => void) => (event: MouseEvent) => {
@@ -33,7 +37,7 @@ const stop = (fn: () => void) => (event: MouseEvent) => {
 };
 
 export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function ThreadRow(
-  { from, subject, date, unread, starred, open, onOpen, onKeyDown, onToggleStar, onToggleRead },
+  { from, subject, date, unread, starred, open, onOpen, onKeyDown, onToggleStar, onToggleRead, badge, folder },
   ref,
 ) {
   const cls = ["thread", unread && "is-unread", open && "is-open"].filter(Boolean).join(" ");
@@ -67,6 +71,7 @@ export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function Thr
       )}
       <div className="thread__from"><span className="thread__from-name">{from}</span></div>
       <div className="thread__meta">
+        {badge}
         <span className="thread__date">{date}</span>
         {onToggleRead && (
           <span className="thread__actions">
@@ -80,7 +85,10 @@ export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function Thr
           </span>
         )}
       </div>
-      <div className="thread__subject"><span className="thread__subject-text">{subject}</span></div>
+      <div className="thread__subject">
+        {folder && <span className="label">{folder}</span>}
+        <span className="thread__subject-text">{subject}</span>
+      </div>
     </div>
   );
 });

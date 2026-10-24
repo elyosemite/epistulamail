@@ -1,0 +1,5 @@
+# O OpenSSL embutido no SQLCipher (rusqlite, feature bundled-sqlcipher-vendored-openssl) precisa de
+# um Perl nativo do Windows para configurar o build; o Perl do Git Bash não serve.
+# scripts/setup-build-tools.ps1 baixa um Strawberry Perl portátil para .tools/ (fora do git).
+[env]
+OPENSSL_SRC_PERL = { value = "../.tools/strawberry/perl/bin/perl.exe", relative = true }

@@ -37,8 +37,35 @@ impl Role {
     pub fn is_system(self) -> bool {
         self != Role::Custom
     }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Role::Inbox => "inbox",
+            Role::Starred => "starred",
+            Role::Sent => "sent",
+            Role::Drafts => "drafts",
+            Role::All => "all",
+            Role::Spam => "spam",
+            Role::Trash => "trash",
+            Role::Custom => "custom",
+        }
+    }
+
+    pub fn parse(value: &str) -> Role {
+        match value {
+            "inbox" => Role::Inbox,
+            "starred" => Role::Starred,
+            "sent" => Role::Sent,
+            "drafts" => Role::Drafts,
+            "all" => Role::All,
+            "spam" => Role::Spam,
+            "trash" => Role::Trash,
+            _ => Role::Custom,
+        }
+    }
 }
 
+/// Pasta como o frontend a vê: id opaco, papel, nome e contadores.
 #[derive(Debug, Clone, Serialize)]
 pub struct Folder {
     pub id: String,
@@ -46,8 +73,16 @@ pub struct Folder {
     pub name: String,
     pub unread: Option<u32>,
     pub total: Option<u32>,
-    #[serde(skip)]
-    pub mailbox: String,
+}
+
+/// Pasta como o servidor a lista: nome IMAP cru, papel, nome de exibição e contadores do `STATUS`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RemoteFolder {
+    pub imap_name: String,
+    pub role: Role,
+    pub display_name: String,
+    pub unread: Option<u32>,
+    pub total: Option<u32>,
 }
 
 /// `None` para pastas que não aparecem: não selecionáveis e a "Importante" do Gmail.
@@ -82,6 +117,38 @@ const MODIFIED_BASE64: GeneralPurpose = GeneralPurpose::new(
         .with_decode_allow_trailing_bits(true),
 );
 
+/// Codifica um nome de pasta em UTF-7 modificado (RFC 3501 §5.1.3) para `CREATE`: ASCII
+/// imprimível fica como está, `&` vira `&-`, e o resto vai em base64 de UTF-16 entre `&` e `-`.
+pub fn encode_mailbox_name(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    let mut pending: Vec<u16> = Vec::new();
+    let flush = |pending: &mut Vec<u16>, out: &mut String| {
+        if pending.is_empty() {
+            return;
+        }
+        let bytes: Vec<u8> = pending.iter().flat_map(|u| u.to_be_bytes()).collect();
+        out.push('&');
+        out.push_str(&MODIFIED_BASE64.encode(bytes));
+        out.push('-');
+        pending.clear();
+    };
+    for c in name.chars() {
+        if (' '..='~').contains(&c) {
+            flush(&mut pending, &mut out);
+            if c == '&' {
+                out.push_str("&-");
+            } else {
+                out.push(c);
+            }
+        } else {
+            let mut buf = [0u16; 2];
+            pending.extend_from_slice(c.encode_utf16(&mut buf));
+        }
+    }
+    flush(&mut pending, &mut out);
+    out
+}
+
 /// Decodifica UTF-7 modificado. Sequências inválidas ficam como estão, para nunca perder o nome.
 pub fn decode_mailbox_name(raw: &str) -> String {
     let mut out = String::with_capacity(raw.len());
@@ -112,8 +179,8 @@ pub fn decode_mailbox_name(raw: &str) -> String {
 }
 
 /// Pastas do sistema na ordem da US2, depois marcadores em ordem alfabética (sem diferenciar caixa).
-pub fn sort_folders(folders: &mut [Folder]) {
-    folders.sort_by(|a, b| a.role.cmp(&b.role).then_with(|| a.name.to_lowercase().cmp(&b.name.to_lowercase())));
+pub fn sort_folders(folders: &mut [RemoteFolder]) {
+    folders.sort_by(|a, b| a.role.cmp(&b.role).then_with(|| a.display_name.to_lowercase().cmp(&b.display_name.to_lowercase())));
 }
 
 #[cfg(test)]
@@ -137,6 +204,25 @@ mod tests {
     }
 
     #[test]
+    fn roles_roundtrip_as_text() {
+        for role in [Role::Inbox, Role::Starred, Role::Sent, Role::Drafts, Role::All, Role::Spam, Role::Trash, Role::Custom] {
+            assert_eq!(Role::parse(role.as_str()), role);
+        }
+        assert_eq!(Role::parse("desconhecido"), Role::Custom);
+    }
+
+    #[test]
+    fn encodes_modified_utf7_and_roundtrips() {
+        assert_eq!(encode_mailbox_name("Reunião"), "Reuni&AOM-o");
+        assert_eq!(encode_mailbox_name("日本語"), "&ZeVnLIqe-");
+        assert_eq!(encode_mailbox_name("Tom & Jerry"), "Tom &- Jerry");
+        for name in ["Contratos 2026", "Família/Fotos", "Ação & Reação", "😀 emoji", "çãõ"] {
+            assert_eq!(decode_mailbox_name(&encode_mailbox_name(name)), name, "{name}");
+            assert!(encode_mailbox_name(name).is_ascii());
+        }
+    }
+
+    #[test]
     fn decodes_modified_utf7() {
         assert_eq!(decode_mailbox_name("INBOX"), "INBOX");
         assert_eq!(decode_mailbox_name("[Gmail]/Lixeira"), "[Gmail]/Lixeira");
@@ -149,10 +235,10 @@ mod tests {
 
     #[test]
     fn sorts_system_first_then_labels() {
-        let f = |role, name: &str| Folder { id: String::new(), role, name: name.into(), unread: None, total: None, mailbox: String::new() };
+        let f = |role, name: &str| RemoteFolder { imap_name: name.into(), role, display_name: name.into(), unread: None, total: None };
         let mut folders = vec![f(Role::Custom, "zeta"), f(Role::Trash, "Lixeira"), f(Role::Custom, "Alfa"), f(Role::Inbox, "Caixa de entrada")];
         sort_folders(&mut folders);
-        let names: Vec<_> = folders.iter().map(|f| f.name.as_str()).collect();
+        let names: Vec<_> = folders.iter().map(|f| f.display_name.as_str()).collect();
         assert_eq!(names, ["Caixa de entrada", "Lixeira", "Alfa", "zeta"]);
     }
 }

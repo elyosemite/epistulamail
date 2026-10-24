@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Checkbox e toggle · Epistula Design System</title>
+<title>Seleção · Epistula Design System</title>
 <meta name="description" content="Seleção na lista e configurações imediatas.">
 <script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +20,7 @@
     <section class="ds-section" id="selecao">
         <div class="ds-head">
           <p class="eyebrow">ADS · Checkbox, Toggle</p>
-          <h1>Checkbox e toggle</h1>
+          <h1>Seleção</h1>
           <p class="lede">O checkbox seleciona conversas na lista e opções em formulários. O toggle liga e desliga uma configuração com efeito imediato, como a resposta automática.</p>
         </div>
         <div class="stage">
@@ -42,6 +42,60 @@
             <figure class="state"><label class="choice" for="tg-4" style="color:var(--color-text-disabled)"><input type="checkbox" class="toggle" id="tg-4" disabled>Criptografia S/MIME</label><figcaption><b>Desabilitado</b>requer certificado</figcaption></figure>
           </div>
         </div>
+        <h3 class="sub" id="provedores">Grade de provedores <code>.provider-grid</code></h3>
+        <p class="demo-hint">Primeiro passo de "Adicionar conta". Sem logotipos de marca: todos usam o envelope, e "Outro" usa o globo. Provedores ainda não suportados ficam desabilitados com "Em breve".</p>
+        <div class="stage">
+          <ul class="provider-grid" role="list">
+            <li><button class="provider-card" type="button"><span class="provider-card__icon" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">Gmail</span><span class="provider-card__desc">Entrar com o Google</span></span></button></li>
+            <li><button class="provider-card" type="button" disabled aria-describedby="provider-soon"><span class="provider-card__icon" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">Outlook <span class="lozenge">Em breve</span></span><span class="provider-card__desc">Outlook.com, Hotmail e Microsoft 365</span></span></button></li>
+            <li><button class="provider-card" type="button" disabled aria-describedby="provider-soon"><span class="provider-card__icon" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">Yahoo <span class="lozenge">Em breve</span></span><span class="provider-card__desc">Yahoo Mail</span></span></button></li>
+            <li><button class="provider-card" type="button" disabled aria-describedby="provider-soon"><span class="provider-card__icon" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">iCloud Mail <span class="lozenge">Em breve</span></span><span class="provider-card__desc">@icloud.com, @me.com, @mac.com</span></span></button></li>
+            <li><button class="provider-card" type="button" disabled aria-describedby="provider-soon"><span class="provider-card__icon" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">Zoho Mail <span class="lozenge">Em breve</span></span><span class="provider-card__desc">Zoho Mail pessoal e empresarial</span></span></button></li>
+            <li><button class="provider-card" type="button" disabled aria-describedby="provider-soon"><span class="provider-card__icon" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">GMX <span class="lozenge">Em breve</span></span><span class="provider-card__desc">GMX Mail</span></span></button></li>
+            <li><button class="provider-card" type="button" disabled aria-describedby="provider-soon"><span class="provider-card__icon" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">AOL Mail <span class="lozenge">Em breve</span></span><span class="provider-card__desc">AOL Mail</span></span></button></li>
+            <li><button class="provider-card" type="button" disabled aria-describedby="provider-soon"><span class="provider-card__icon" aria-hidden="true"><svg class="i"><use href="#i-globe"/></svg></span><span class="provider-card__text"><span class="provider-card__name">Outro <span class="lozenge">Em breve</span></span><span class="provider-card__desc">Domínio próprio (IMAP e SMTP)</span></span></button></li>
+          </ul>
+          <span class="visually-hidden" id="provider-soon">Ainda não disponível no Epistula.</span>
+        </div>
+        <div class="stage">
+          <div class="states">
+            <figure class="state" style="width:16rem"><ul class="provider-grid" role="list"><li><button class="provider-card is-hover" type="button"><span class="provider-card__icon" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">Gmail</span><span class="provider-card__desc">Entrar com o Google</span></span></button></li></ul><figcaption><b>Hover</b>borda azul</figcaption></figure>
+            <figure class="state" style="width:16rem"><ul class="provider-grid" role="list"><li><button class="provider-card is-focus" type="button"><span class="provider-card__icon" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">Gmail</span><span class="provider-card__desc">Entrar com o Google</span></span></button></li></ul><figcaption><b>Foco</b>teclado</figcaption></figure>
+          </div>
+        </div>
+
+        <h3 class="sub" id="cor-da-conta">Cor da conta <code>.color-picker</code></h3>
+        <p class="demo-hint">Rádios com amostras de avatar nas seis cores, usadas na coluna de contas e no header. A amostra mostra a inicial da conta, para o usuário ver exatamente como vai ficar.</p>
+        <div class="stage stage--sunken">
+          <div class="modal" role="dialog" aria-labelledby="setup-title" style="margin-inline:auto" data-account-setup>
+            <div class="modal__head"><h3 class="modal__title" id="setup-title">Como quer chamar esta conta?</h3></div>
+            <div class="modal__body">
+              <div class="stack">
+                <p style="color:var(--color-text-subtle)">joao.silva.empresa@gmail.com</p>
+                <div class="field">
+                  <label class="field__label" for="acc-name">Nome da conta</label>
+                  <div class="input"><input id="acc-name" value="Trabalho" maxlength="32"></div>
+                  <div class="chip-group" role="group" aria-label="Sugestões"><button class="chip" type="button" data-name="Pessoal">Pessoal</button><button class="chip is-selected" type="button" data-name="Trabalho">Trabalho</button><button class="chip" type="button" data-name="Família">Família</button></div>
+                </div>
+                <fieldset class="color-picker">
+                  <legend>Cor</legend>
+                  <label class="color-swatch"><input type="radio" name="acc-color" value="blue"><span class="avatar avatar--lg" aria-hidden="true">T</span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Azul</span></label>
+                  <label class="color-swatch"><input type="radio" name="acc-color" value="teal"><span class="avatar avatar--lg avatar--teal" aria-hidden="true">T</span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Verde-azulado</span></label>
+                  <label class="color-swatch"><input type="radio" name="acc-color" value="green"><span class="avatar avatar--lg avatar--green" aria-hidden="true">T</span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Verde</span></label>
+                  <label class="color-swatch"><input type="radio" name="acc-color" value="purple" checked><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T</span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Roxo</span></label>
+                  <label class="color-swatch"><input type="radio" name="acc-color" value="magenta"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">T</span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Magenta</span></label>
+                  <label class="color-swatch"><input type="radio" name="acc-color" value="orange"><span class="avatar avatar--lg avatar--orange" aria-hidden="true">T</span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Laranja</span></label>
+                </fieldset>
+              </div>
+            </div>
+            <div class="modal__foot"><button class="btn btn--primary" type="button">Concluir</button></div>
+          </div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Quando aparece</dt><dd>Logo depois do login no provedor. O nome sugerido é a parte do e-mail antes do "@"; a cor sugerida é a próxima ainda não usada.</dd></div>
+          <div><dt>Acessibilidade</dt><dd><code>fieldset</code> com <code>legend</code> "Cor"; cada opção é um rádio nativo com o nome da cor em <code>.visually-hidden</code>. A seleção tem anel azul e marca de verificação, não só cor.</dd></div>
+          <div><dt>Mais de seis contas</dt><dd>As cores se repetem; a inicial e o nome continuam distinguindo as contas.</dd></div>
+        </dl>
       </section>
   </main>
 </div>

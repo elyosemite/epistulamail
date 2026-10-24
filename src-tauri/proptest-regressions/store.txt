@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc d12b90a72ed4a9d7aa7d25a2218f178d6ee02c471387292f999c33abc289f875 # shrinks to ops = [Sync { folder: 0, uid: 26, mid: 10, seen: false }, Sync { folder: 0, uid: 1, mid: 10, seen: false }, Sync { folder: 0, uid: 1, mid: 10, seen: false }, Flag { folder: 0, uid: 26, seen: true }]

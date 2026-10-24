@@ -116,7 +116,7 @@ pub fn email_document(clean_html: &str, allow_remote_images: bool) -> String {
     format!(
         "<!doctype html><html><head><meta charset=\"utf-8\">\
 <meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src {img_src}; font-src data:\">\
-<style>html,body{{margin:0}}body{{padding:16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:14px;line-height:1.5;overflow-wrap:anywhere}}img{{max-width:100%;height:auto}}table{{max-width:100%}}</style>\
+<style>html,body{{margin:0}}html{{overflow-y:hidden;overflow-x:auto}}body{{padding:16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:14px;line-height:1.5;overflow-wrap:anywhere}}img{{max-width:100%;height:auto}}table{{max-width:100%}}</style>\
 </head><body>{clean_html}</body></html>"
     )
 }

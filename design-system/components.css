@@ -187,6 +187,8 @@ kbd, .kbd {
 .chip .avatar { width: 1.25rem; height: 1.25rem; font-size: 0.5625rem; }
 .chip-input { flex-wrap: wrap; padding-block: var(--space-050); gap: var(--space-050); }
 .chip-input > input { min-width: 8rem; }
+/* Sugestões clicáveis abaixo de um campo (ex.: nomes de conta) */
+.chip-group { display: flex; flex-wrap: wrap; gap: var(--space-075); }
 
 /* ==========================================================================
    Seleção: checkbox e toggle (ADS Checkbox / Toggle)
@@ -291,6 +293,8 @@ kbd, .kbd {
 .lozenge--bold.lozenge--inprogress { background: var(--color-bg-information-bold); }
 .lozenge--bold.lozenge--new { background: var(--color-bg-discovery-bold); }
 .lozenge--bold.lozenge--moved { background: var(--color-bg-warning-bold); color: var(--color-text-warning-inverse); }
+/* L24 · Prazo vencido da sinalização */
+.lozenge--overdue { background: var(--color-bg-danger); color: var(--color-text-danger); }
 
 /* ==========================================================================
    Etiquetas de e-mail (ADS Tag colorida)
@@ -442,6 +446,189 @@ kbd, .kbd {
   .app-shell.has-reader .app-shell__reader { display: block; }
   .app-shell.has-reader .app-shell__list { display: none; }
   .app-shell__back { display: inline-flex; }
+}
+
+/* ==========================================================================
+   Coluna de contas (L15): à esquerda da sidebar quando há contas conectadas.
+   Cada conta é um avatar na cor escolhida, com a inicial e o nome dados pelo
+   usuário (não o e-mail, que pode ter o mesmo domínio em todas). Ver sidebar.html.
+   ========================================================================== */
+.account-rail {
+  display: flex; flex-direction: column; align-items: stretch; gap: var(--space-050);
+  width: var(--layout-sidebar-collapsed); min-height: 0; overflow-y: auto;
+  padding: var(--space-100) 0;
+  background: var(--color-surface-sunken);
+  border-right: var(--border-width) solid var(--color-border);
+}
+.account-rail__list { display: contents; }
+.account-rail__item {
+  position: relative;
+  display: grid; justify-items: center; gap: var(--space-025);
+  width: 100%; padding: var(--space-050);
+  border: 0; background: transparent; color: var(--color-text-subtle);
+  cursor: pointer; font: inherit;
+}
+/* Marcador à esquerda: cresce no hover e fica longo na conta ativa */
+.account-rail__item::before {
+  content: ""; position: absolute; left: 0; top: calc(var(--space-050) + 1.25rem);
+  width: 4px; height: 0; transform: translateY(-50%);
+  border-radius: 0 var(--radius-small) var(--radius-small) 0;
+  background: var(--color-text-subtle);
+  transition: height var(--duration-fast) var(--easing-standard);
+}
+.account-rail__item:hover::before, .account-rail__item.is-hover::before { height: 0.75rem; }
+.account-rail__item[aria-current="true"]::before { height: 2rem; background: var(--color-border-selected); }
+.account-rail__item .avatar { transition: border-radius var(--duration-fast) var(--easing-standard), box-shadow var(--duration-fast) var(--easing-standard); }
+.account-rail__item:hover .avatar, .account-rail__item.is-hover .avatar { box-shadow: 0 0 0 2px var(--color-surface-sunken), 0 0 0 4px var(--color-border); }
+.account-rail__item[aria-current="true"] .avatar { border-radius: var(--radius-large); box-shadow: 0 0 0 2px var(--color-surface-sunken), 0 0 0 4px var(--color-border-selected); }
+.account-rail__item:focus-visible, .account-rail__item.is-focus { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: -2px; border-radius: var(--radius-medium); }
+.account-rail__name {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: var(--font-weight-medium) var(--font-size-label)/var(--line-height-label) var(--font-family-body);
+}
+.account-rail__item[aria-current="true"] .account-rail__name { color: var(--color-text); font-weight: var(--font-weight-semibold); }
+/* Contador de não lidas da Caixa de entrada: use com .badge.badge--primary */
+.account-rail__badge {
+  position: absolute; top: 0; right: var(--space-025);
+  min-width: 1.25rem; padding-inline: var(--space-050);
+  box-shadow: 0 0 0 2px var(--color-surface-sunken);
+  font-size: var(--font-size-label);
+}
+/* Precisa reconectar: alerta no canto inferior do avatar */
+.account-rail__alert {
+  position: absolute; top: calc(var(--space-050) + 1.75rem); left: calc(50% + 0.625rem);
+  display: grid; place-items: center; width: 1rem; height: 1rem; border-radius: var(--radius-round);
+  background: var(--color-bg-warning-bold); color: var(--color-text-warning-inverse);
+  box-shadow: 0 0 0 2px var(--color-surface-sunken);
+}
+.account-rail__alert .i { width: 10px; height: 10px; stroke-width: 3; }
+/* Saiu da conta: esmaecida, sem contador; continua clicável para ler o que está salvo */
+.account-rail__item--signed-out .avatar { opacity: .45; filter: grayscale(1); }
+.account-rail__item--signed-out .account-rail__name { color: var(--color-text-subtlest); }
+.account-rail__sep { flex: none; height: 1px; margin: var(--space-050) var(--space-150); background: var(--color-border); }
+.account-rail__add {
+  display: grid; place-items: center; align-self: center; flex: none;
+  width: 2.5rem; height: 2.5rem;
+  border: var(--border-width) dashed var(--color-border-bold); border-radius: var(--radius-round);
+  background: transparent; color: var(--color-icon-subtle); cursor: pointer;
+}
+.account-rail__add:hover, .account-rail__add.is-hover { background: var(--color-bg-neutral-subtle-hovered); color: var(--color-icon); border-style: solid; }
+.account-rail__add:focus-visible, .account-rail__add.is-focus { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 2px; }
+
+/* Conta ativa no header: "Trabalho · e-mail" */
+.appbar__account-name { font-weight: var(--font-weight-semibold); color: var(--color-text); }
+
+/* Troca de conta no topo da sidebar, para telas sem a coluna (abaixo de 960px) */
+.account-switcher {
+  display: flex; align-items: center; gap: var(--space-100); width: 100%; flex: none;
+  min-height: 2.75rem; padding: var(--space-050) var(--space-100);
+  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-medium);
+  background: var(--color-surface); color: var(--color-text); cursor: pointer; text-align: left; font: inherit;
+}
+.account-switcher:hover, .account-switcher.is-hover { background: var(--color-bg-neutral-subtle-hovered); }
+.account-switcher:focus-visible { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 2px; }
+.account-switcher__text { flex: 1; min-width: 0; display: grid; }
+.account-switcher__name { font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); }
+.account-switcher__email { font: var(--font-body-small); color: var(--color-text-subtlest); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar--collapsed .account-switcher { justify-content: center; width: var(--control-height); min-height: var(--control-height); padding: 0; border: 0; border-radius: var(--radius-round); background: transparent; }
+.sidebar--collapsed .account-switcher__text,
+.sidebar--collapsed .account-switcher > .i { display: none; }
+
+/* Casca com a coluna de contas à esquerda da sidebar */
+.app-shell--with-rail {
+  grid-template-columns: var(--layout-sidebar-collapsed) var(--app-shell-sidebar) clamp(20rem, var(--app-shell-list), 35rem) minmax(0, 1fr);
+  grid-template-areas:
+    "header header  header header"
+    "banner banner  banner banner"
+    "rail   sidebar list   reader";
+}
+.app-shell__rail { grid-area: rail; }
+/* Telas inteiras (adicionar conta, login) ficam ao lado da coluna, que continua visível */
+.app-shell--with-rail .app-shell__center { grid-column: 2 / -1; }
+.app-shell .account-switcher { display: none; }
+
+@media (max-width: 1279px) {
+  .app-shell__sidebar .account-switcher { justify-content: center; width: var(--control-height); min-height: var(--control-height); padding: 0; border: 0; border-radius: var(--radius-round); background: transparent; }
+  .app-shell__sidebar .account-switcher__text,
+  .app-shell__sidebar .account-switcher > .i { display: none; }
+}
+
+@media (max-width: 959px) {
+  .app-shell--with-rail {
+    grid-template-columns: var(--app-shell-sidebar) minmax(0, 1fr);
+    grid-template-areas:
+      "header  header"
+      "banner  banner"
+      "sidebar main";
+  }
+  .app-shell__rail { display: none; }
+  .app-shell .account-switcher { display: flex; }
+}
+
+/* ==========================================================================
+   Header nas colunas da casca, barra de comandos e divisor (L18–L20, US4)
+   ========================================================================== */
+/* Linha de comandos abaixo do header (use com --with-rail) */
+.app-shell--commands {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "header   header   header   header"
+    "banner   banner   banner   banner"
+    "commands commands commands commands"
+    "rail     sidebar  list     reader";
+}
+.app-shell__commands { grid-area: commands; }
+
+/* L18 · Header em subgrid: marca sobre a coluna de contas e as pastas, busca sobre a lista,
+   conta sobre a leitura. A busca acompanha a largura da lista (--app-shell-list). */
+.appbar.appbar--shell { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; gap: 0; padding-inline: 0; }
+.appbar--shell .appbar__brand { grid-column: 1 / 3; min-width: 0; overflow: hidden; padding-inline: var(--space-150); }
+.appbar--shell .appbar__search { grid-column: 3; max-width: none; padding-inline: var(--space-100); }
+.appbar--shell .appbar__actions { grid-column: 4; min-width: 0; padding-inline: var(--space-150); }
+
+/* L19 · Barra de comandos: "Novo e-mail" é o único botão principal; grupos separados por .toolbar__sep */
+.commandbar {
+  display: flex; align-items: center; gap: var(--space-050);
+  min-height: 3rem; padding: var(--space-075) var(--space-150);
+  background: var(--color-surface-sunken);
+  border-bottom: var(--border-width) solid var(--color-border);
+  overflow-x: auto;
+}
+.commandbar__group { display: flex; align-items: center; gap: var(--space-025); flex: none; }
+.commandbar .toolbar__sep { flex: none; }
+.commandbar .btn-split { gap: 0; }
+.commandbar .btn-split > .btn:last-child { padding-inline: var(--space-050); }
+/* Sem espaço, os rótulos somem: o botão mantém aria-label e data-tip */
+.commandbar--compact .commandbar__label { display: none; }
+.commandbar--compact .btn:not(.btn--icon):not(.btn--primary) { padding-inline: var(--space-075); }
+
+/* L20 · Divisor entre lista e leitura: role="separator", focável, ajusta --app-shell-list */
+.app-shell__resizer {
+  grid-area: list; justify-self: end; z-index: 1; position: relative;
+  width: 9px; margin-right: -5px;
+  cursor: col-resize; touch-action: none; outline: none;
+}
+.app-shell__resizer::after {
+  content: ""; position: absolute; inset-block: 0; left: 3px; width: 3px; border-radius: var(--radius-round);
+  background: transparent; transition: background var(--duration-fast) var(--easing-standard);
+}
+.app-shell__resizer:hover::after, .app-shell__resizer.is-hover::after { background: var(--color-border-bold); }
+.app-shell__resizer:focus-visible::after, .app-shell__resizer.is-focus::after,
+.app-shell__resizer.is-dragging::after { background: var(--color-border-focused); }
+
+@media (max-width: 1279px) {
+  .commandbar .commandbar__label { display: none; }
+  .appbar--shell .appbar__brand .wordmark { font-size: 0; gap: 0; }
+}
+@media (max-width: 959px) {
+  .app-shell--commands {
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-areas: "header header" "banner banner" "commands commands" "sidebar main";
+  }
+  .appbar.appbar--shell { display: flex; gap: var(--space-150); padding-inline: var(--space-150); }
+  .appbar--shell .appbar__brand, .appbar--shell .appbar__actions { padding-inline: 0; }
+  .appbar--shell .appbar__search { flex: 1; padding-inline: 0; }
+  .app-shell__resizer { display: none; }
 }
 
 /* ==========================================================================
@@ -691,6 +878,24 @@ kbd, .kbd {
 .compose__format { display: flex; gap: var(--space-025); padding: var(--space-050) var(--space-150); border-top: var(--border-width) solid var(--color-border); flex-wrap: wrap; }
 .compose__foot { display: flex; align-items: center; gap: var(--space-100); padding: var(--space-150) var(--space-200); flex-wrap: wrap; }
 .compose__status { font: var(--font-body-small); color: var(--color-text-subtlest); margin-right: auto; }
+/* L23 · Resposta e encaminhamento dentro do painel de leitura: sem sombra, na largura da leitura.
+   Responder fica abaixo da mensagem; encaminhar, acima. */
+.compose--inline { width: 100%; max-width: var(--layout-reading-measure); box-shadow: none; border: var(--border-width) solid var(--color-border); background: var(--color-surface); }
+.compose--inline .compose__body { min-height: 7rem; }
+.compose--inline .chip-input > input { flex: 1; min-width: 3rem; }
+.compose__toggle { margin-left: auto; flex: none; }
+.compose__body textarea { display: block; width: 100%; min-height: inherit; border: 0; padding: 0; resize: vertical; background: transparent; color: inherit; font: inherit; outline: none; }
+/* Mensagem original no encaminhamento: De, Enviado, Para, Assunto e o texto */
+.message__quote {
+  display: grid; gap: var(--space-075);
+  margin: 0 var(--space-200) var(--space-150); padding-left: var(--space-150);
+  border-left: 2px solid var(--color-border-bold);
+  font: var(--font-body); color: var(--color-text-subtle);
+}
+.message__quote dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-025) var(--space-150); margin: 0; font: var(--font-body-small); }
+.message__quote dt { font-weight: var(--font-weight-semibold); }
+.message__quote dd { margin: 0; overflow-wrap: anywhere; }
+.message__quote p { margin: 0; white-space: pre-wrap; }
 
 /* ==========================================================================
    Banner (ADS Banner) e Section message (ADS Section Message)
@@ -782,6 +987,18 @@ kbd, .kbd {
 .modal__body { padding: var(--space-100) var(--space-300); font: var(--font-body); color: var(--color-text); }
 .modal__body p { margin: 0 0 var(--space-150); }
 .modal__foot { display: flex; justify-content: flex-end; gap: var(--space-100); padding: var(--space-300); flex-wrap: wrap; }
+/* Ação reversível (ex.: sair da conta mantendo os dados): ícone de aviso em vez de perigo */
+.modal--warning .modal__head .i { color: var(--color-icon-warning); }
+
+/* L22 · Seletor de pastas num modal: lista com rolagem, seleção única (role="listbox") */
+.folder-picker {
+  display: grid; gap: var(--space-025); max-height: 16rem; overflow-y: auto;
+  margin-top: var(--space-150); padding: var(--space-050);
+  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-medium);
+}
+.folder-picker .nav-item[aria-selected="true"] { background: var(--color-bg-selected); color: var(--color-text-selected); }
+.folder-picker .nav-item[aria-selected="true"] > .i { color: var(--color-icon-brand); }
+.modal__foot--split > :first-child { margin-right: auto; }
 
 /* ==========================================================================
    Menu (ADS Dropdown Menu) e Tooltip
@@ -812,6 +1029,14 @@ kbd, .kbd {
 .menu-item:disabled > .i { color: var(--color-text-disabled); }
 .menu-item--danger, .menu-item--danger > .i { color: var(--color-text-danger); }
 .menu-item .kbd { margin-left: auto; }
+/* L21 · Menu com busca, criação inline e mensagem de vazio (ex.: "Mover para") */
+.menu--wide { min-width: 18rem; }
+.menu__search { padding: var(--space-075) var(--space-150) var(--space-050); }
+.menu__form { display: flex; gap: var(--space-075); align-items: center; padding: var(--space-050) var(--space-150) var(--space-075); }
+.menu__form .input { flex: 1; min-width: 0; }
+.menu__empty { padding: var(--space-075) var(--space-200); font: var(--font-body-small); color: var(--color-text-subtlest); }
+/* L24 · Informação à direita do item (ex.: data do prazo) */
+.menu-item__meta { margin-left: auto; font: var(--font-body-small); color: var(--color-text-subtlest); font-variant-numeric: tabular-nums; }
 
 .tooltip {
   display: inline-flex; align-items: center; gap: var(--space-100);
@@ -830,6 +1055,51 @@ kbd, .kbd {
 }
 /* O display de .tooltip anularia o atributo hidden: sem esta regra, a camada vazia aparece no canto. */
 .tooltip--floating[hidden] { display: none; }
+
+/* ==========================================================================
+   Grade de provedores (L16): "Adicionar conta". Sem logotipos de marca (L1):
+   todos usam o envelope; "Outro" usa o globo. Indisponíveis ficam desabilitados
+   com .lozenge "Em breve". Ver selecao.html.
+   ========================================================================== */
+.provider-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: var(--space-150); margin: 0; padding: 0; list-style: none; }
+.provider-card {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-150);
+  width: 100%; height: 100%; min-height: 4rem; padding: var(--space-150) var(--space-200);
+  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large);
+  background: var(--color-surface-raised); color: var(--color-text);
+  font: inherit; text-align: left; cursor: pointer;
+}
+.provider-card:hover:not(:disabled), .provider-card.is-hover { border-color: var(--color-border-selected); background: var(--color-bg-neutral-subtle-hovered); }
+.provider-card:focus-visible, .provider-card.is-focus { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 2px; }
+.provider-card__icon { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-medium); background: var(--color-bg-neutral); color: var(--color-icon); }
+.provider-card__icon .i { width: 20px; height: 20px; }
+.provider-card:not(:disabled) .provider-card__icon { background: var(--color-label-blue-bg); color: var(--color-label-blue-text); }
+.provider-card__text { display: grid; gap: var(--space-025); min-width: 0; }
+.provider-card__name { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-100); font-weight: var(--font-weight-semibold); }
+.provider-card__desc { font: var(--font-body-small); color: var(--color-text-subtlest); }
+.provider-card:disabled { cursor: not-allowed; background: var(--color-surface); }
+.provider-card:disabled .provider-card__name { color: var(--color-text-subtle); }
+
+/* ==========================================================================
+   Seletor de cor da conta (L17): rádios com amostras de .avatar nas 6 cores.
+   Cada opção leva o nome da cor em .visually-hidden. Ver selecao.html.
+   ========================================================================== */
+.color-picker { display: flex; flex-wrap: wrap; gap: var(--space-150); min-width: 0; margin: 0; padding: 0; border: 0; }
+.color-picker legend { padding: 0; margin-bottom: var(--space-100); font: var(--font-weight-semibold) var(--font-size-body-small)/var(--line-height-body-small) var(--font-family-body); color: var(--color-text-subtle); }
+.color-swatch { position: relative; display: inline-grid; cursor: pointer; border-radius: var(--radius-round); }
+.color-swatch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.color-swatch .avatar { pointer-events: none; }
+.color-swatch:hover .avatar { box-shadow: 0 0 0 2px var(--color-surface-overlay), 0 0 0 4px var(--color-border); }
+.color-swatch:has(input:checked) .avatar { box-shadow: 0 0 0 2px var(--color-surface-overlay), 0 0 0 4px var(--color-border-selected); }
+.color-swatch:has(input:focus-visible) { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 6px; }
+.color-swatch__check {
+  position: absolute; right: -4px; bottom: -4px; display: none; place-items: center;
+  width: 1rem; height: 1rem; border-radius: var(--radius-round);
+  background: var(--color-bg-brand-bold); color: var(--color-text-inverse);
+  box-shadow: 0 0 0 2px var(--color-surface-overlay);
+}
+.color-swatch__check .i { width: 10px; height: 10px; stroke-width: 3; }
+.color-swatch:has(input:checked) .color-swatch__check { display: grid; }
 
 /* ==========================================================================
    Empty state (ADS Empty State)
