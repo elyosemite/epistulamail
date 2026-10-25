@@ -39,7 +39,7 @@ jobs:
         run: pnpm build
 
       # Perl portátil para o OpenSSL embutido do SQLCipher (src-tauri/.cargo/config.toml aponta para ele).
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .tools
           key: tools-${{ hashFiles('scripts/setup-build-tools.ps1') }}
