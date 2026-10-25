@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
       - uses: actions/setup-node@v4
@@ -81,7 +81,7 @@ jobs:
           manifest-path: src-tauri/Cargo.toml
 
       # Vulnerabilidades nas dependências do frontend que vão para o app.
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
       - name: pnpm audit
