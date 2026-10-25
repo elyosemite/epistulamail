@@ -1,4 +1,4 @@
-// DS: leitura.html · .reader, .reader__head, .reader__subject, .message, .message__head, .message__from, .message__addr,
+// DS: leitura.html · .reader (com .reader--fluid na casca em blocos, US5), .reader__head, .reader__subject, .message, .message__head, .message__from, .message__addr,
 //     .message__to[aria-expanded] + .message__recipients ("Destinatários expandidos"), .message__time, .message__body
 // DS: carregamento.html "Painel de leitura" · .skeleton--title, .skeleton--avatar, .skeleton--line
 // DS: espacamento.html · .app-shell__back (visível só abaixo de 960px)
@@ -19,7 +19,7 @@ interface ReaderProps {
 
 export function Reader({ subject, actions, labels, onBack, children }: ReaderProps) {
   return (
-    <article className="reader" aria-label={subject}>
+    <article className="reader reader--fluid" aria-label={subject}>
       <div className="reader__head">
         {onBack && <IconButton icon="chevron-left" label="Voltar para a lista" className="app-shell__back" onClick={onBack} />}
         <h1 className="reader__subject">{subject}</h1>
@@ -83,7 +83,7 @@ export function MessageHead({ fromName, fromAddress, time, summary, recipients }
 
 export function ReaderSkeleton() {
   return (
-    <div className="reader" aria-busy="true" aria-label="Carregando mensagem">
+    <div className="reader reader--fluid" aria-busy="true" aria-label="Carregando mensagem">
       <span className="skeleton skeleton--title" style={{ width: "60%" }} />
       <div className="message__head">
         <span className="skeleton skeleton--avatar" />

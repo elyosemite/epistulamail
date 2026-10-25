@@ -65,7 +65,9 @@
         </div>
         <dl class="guidance">
           <div><dt>Não lida</dt><dd>Remetente e assunto em 600, ponto azul de 6px à esquerda e data em azul. Ao abrir, os três sinais somem juntos.</dd></div>
-          <div><dt>Hover</dt><dd>A data dá lugar a quatro ações rápidas: arquivar, excluir, marcar como lida e adiar. O anexo continua visível.</dd></div>
+          <div><dt>Hover</dt><dd>Fundo <code>--color-bg-neutral-subtle-hovered</code>, visível também dentro de um bloco. A data dá lugar às ações rápidas (arquivar, excluir, marcar como lida, adiar). O anexo continua visível.</dd></div>
+          <div><dt>Arrastar</dt><dd>Linhas marcadas mostram a mão aberta (<code>grab</code>). Arrastar uma delas leva todas as marcadas: <code>html.is-grabbing</code> troca o cursor pela mão fechada e o <code>.drag-ghost.drag-ghost--follow</code> ("Mover 3 conversas") segue o ponteiro, com o cursor no canto superior esquerdo. Ver sidebar.html.</dd></div>
+          <div><dt>Seleção</dt><dd>Marcar o checkbox não abre a conversa. <kbd>X</kbd> marca a linha em foco, <kbd>Shift</kbd>+clique marca o intervalo, <kbd>Ctrl</kbd>+<kbd>A</kbd> marca a página. Com seleção, a toolbar ganha <code>.is-selecting</code>, o contador e "Limpar seleção", e os comandos agem em todas as marcadas.</dd></div>
           <div><dt>Marcada x aberta</dt><dd>As duas usam o fundo selecionado. A conversa aberta ganha também uma barra azul de 2px à esquerda, para distinguir "estou lendo" de "vou agir em lote".</dd></div>
           <div><dt>Truncamento</dt><dd>Remetente, assunto e prévia cortam com reticências numa única linha. A data nunca é cortada.</dd></div>
         </dl>

@@ -6,6 +6,7 @@ mod imap_client;
 mod mailbox;
 mod message;
 mod oauth;
+mod photo;
 mod provider;
 mod providers;
 mod sanitize;
@@ -133,7 +134,11 @@ async fn startup(state: &AppState) {
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+/// Início do processo, para medir quanto a primeira tela demora (`app_ready`).
+pub static STARTED_AT: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+
 pub fn run() {
+    STARTED_AT.get_or_init(std::time::Instant::now);
     if cfg!(debug_assertions) {
         let _ = dotenvy::from_path(concat!(env!("CARGO_MANIFEST_DIR"), "/../.env"));
     }
@@ -149,13 +154,22 @@ pub fn run() {
             })?;
             let state = AppState::new(app.handle().clone(), db)?;
             app.manage(state);
-            let state = app.state::<AppState>();
-            tauri::async_runtime::block_on(startup(&state));
+            // A janela não espera a inicialização: o keyring e a limpeza rodam em segundo plano, e só
+            // `list_accounts` aguarda o fim (a tela de carregamento aparece antes).
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let state = handle.state::<AppState>();
+                let started = std::time::Instant::now();
+                startup(&state).await;
+                state.mark_started();
+                tracing::info!(ms = started.elapsed().as_millis() as u64, "inicialização concluída");
+            });
             sync::start_periodic(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::list_accounts,
+            commands::app_ready,
             commands::list_providers,
             commands::connect_account,
             commands::reconnect_account,
@@ -182,6 +196,13 @@ pub fn run() {
             commands::save_draft,
             commands::delete_draft,
             commands::set_list_width,
+            commands::get_sync_settings,
+            commands::flagged_counts,
+            commands::list_flagged,
+            commands::get_appearance,
+            commands::set_appearance,
+            commands::set_default_sync_interval,
+            commands::set_account_sync_interval,
         ])
         .build(tauri::generate_context!());
 

@@ -17,6 +17,42 @@ export interface Account {
   lastFolderId: string | null;
   /** Largura da lista em pixels, por conta (divisor entre lista e leitura). */
   listWidth: number | null;
+  /** Foto do perfil do provedor (`data:` URL), baixada pelo backend (US5). */
+  photo: string | null;
+}
+
+/** Intervalo em minutos; `null` = manualmente (US5, CA7). */
+export type SyncMinutes = number | null;
+
+export interface SyncSettings {
+  defaultMinutes: SyncMinutes;
+  accounts: Array<{ accountId: string; minutes: SyncMinutes; usesDefault: boolean }>;
+}
+
+/** Prazo das sinalizadas na coluna de pastas (US6, CA6). */
+export type FlagBucket = "overdue" | "today" | "this_week" | "later" | "no_date";
+
+export interface FlaggedCounts {
+  overdue: number;
+  today: number;
+  thisWeek: number;
+  later: number;
+  noDate: number;
+}
+
+export type ThemeChoice = "light" | "dark" | "system";
+/** Cor do fundo; "" é o padrão. */
+export type CanvasChoice = "" | "blue" | "teal" | "green" | "purple" | "magenta" | "orange" | "sand";
+
+export interface Appearance {
+  theme: ThemeChoice;
+  canvas: CanvasChoice;
+}
+
+/** Resultado de excluir, arquivar e mover em lote: o que saiu e o que ficou na pasta. */
+export interface Removed {
+  ids: string[];
+  failed: string[];
 }
 
 export interface ProviderInfo {
@@ -192,6 +228,8 @@ async function call<T>(command: string, args?: Record<string, unknown>): Promise
 
 export const api = {
   listAccounts: () => call<Account[]>("list_accounts"),
+  /** A primeira tela apareceu: o backend libera a sincronização automática. */
+  appReady: () => call<void>("app_ready"),
   listProviders: () => call<ProviderInfo[]>("list_providers"),
   connectAccount: (provider: string) => call<Connected>("connect_account", { provider }),
   reconnectAccount: (accountId: string) => call<Connected>("reconnect_account", { accountId }),
@@ -209,19 +247,33 @@ export const api = {
     call<FlagResult[]>("set_flags", { messageIds, seen: change.seen ?? null, flagged: change.flagged ?? null }),
   openExternalLink: (url: string) => call<void>("open_external_link", { url }),
   searchMessages: (accountId: string, query: string) => call<SearchPage>("search_messages", { accountId, query }),
-  moveMessages: (messageIds: string[], targetFolderId: string) => call<{ ids: string[] }>("move_messages", { messageIds, targetFolderId }),
-  deleteMessages: (messageIds: string[]) => call<{ ids: string[] }>("delete_messages", { messageIds }),
-  archiveMessages: (messageIds: string[]) => call<{ ids: string[] }>("archive_messages", { messageIds }),
+  moveMessages: (messageIds: string[], targetFolderId: string) => call<Removed>("move_messages", { messageIds, targetFolderId }),
+  deleteMessages: (messageIds: string[]) => call<Removed>("delete_messages", { messageIds }),
+  archiveMessages: (messageIds: string[]) => call<Removed>("archive_messages", { messageIds }),
   createFolder: (accountId: string, name: string) => call<Folder>("create_folder", { accountId, name }),
   recentFolders: (accountId: string) => call<Folder[]>("recent_folders", { accountId }),
-  setFollowup: (messageId: string, change: FollowupAction) =>
-    call<{ flags: MessageFlags; followup: Followup | null }>("set_followup", { messageId, action: change.action, due: change.action === "set" ? change.due : null }),
+  setFollowup: (messageIds: string[], change: FollowupAction) =>
+    call<Array<{ id: string; flags: MessageFlags; followup: Followup | null }>>("set_followup", {
+      messageIds,
+      action: change.action,
+      due: change.action === "set" ? change.due : null,
+    }),
   composeTemplate: (messageId: string, kind: Exclude<DraftKind, "new">) => call<ComposeTemplate>("compose_template", { messageId, kind }),
   getDraft: (accountId: string, kind: DraftKind, messageId: string | null) => call<Draft | null>("get_draft", { accountId, kind, messageId }),
   saveDraft: (accountId: string, kind: DraftKind, messageId: string | null, content: DraftContent) =>
     call<Draft>("save_draft", { accountId, kind, messageId, content }),
   deleteDraft: (accountId: string, kind: DraftKind, messageId: string | null) => call<void>("delete_draft", { accountId, kind, messageId }),
   setListWidth: (accountId: string, width: number) => call<void>("set_list_width", { accountId, width }),
+  getSyncSettings: () => call<SyncSettings>("get_sync_settings"),
+  flaggedCounts: (accountId: string, dates: { today: string; weekEnd: string }) =>
+    call<FlaggedCounts>("flagged_counts", { accountId, today: dates.today, weekEnd: dates.weekEnd }),
+  listFlagged: (accountId: string, bucket: FlagBucket, dates: { today: string; weekEnd: string }) =>
+    call<SearchPage>("list_flagged", { accountId, bucket, today: dates.today, weekEnd: dates.weekEnd }),
+  getAppearance: () => call<Appearance>("get_appearance"),
+  setAppearance: (change: Partial<Appearance>) => call<Appearance>("set_appearance", { theme: change.theme ?? null, canvas: change.canvas ?? null }),
+  setDefaultSyncInterval: (minutes: SyncMinutes) => call<SyncSettings>("set_default_sync_interval", { minutes }),
+  setAccountSyncInterval: (accountIds: string[], minutes: SyncMinutes, useDefault: boolean) =>
+    call<SyncSettings>("set_account_sync_interval", { accountIds, minutes, useDefault }),
 };
 
 /** Eventos emitidos pelo backend (US3). */

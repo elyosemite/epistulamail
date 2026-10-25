@@ -16,6 +16,7 @@ pub const FILE_NAME: &str = "epistula.db";
 pub const MIGRATIONS: &[&str] = &[
     include_str!("../migrations/0001_inicial.sql"),
     include_str!("../migrations/0002_comandos.sql"),
+    include_str!("../migrations/0003_sincronia_e_foto.sql"),
 ];
 
 pub type DbKey = [u8; 32];
@@ -88,8 +89,16 @@ impl Db {
     {
         let conn = self.conn.clone();
         tokio::task::spawn_blocking(move || {
+            let asked = std::time::Instant::now();
             let mut guard = conn.lock().map_err(|_| AppError::Storage)?;
-            f(&mut guard)
+            let waited = asked.elapsed();
+            let result = f(&mut guard);
+            let ran = asked.elapsed() - waited;
+            // Diagnóstico da abertura: espera pela conexão única e consultas lentas (só tempos).
+            if waited.as_millis() >= 100 || ran.as_millis() >= 100 {
+                tracing::info!(wait_ms = waited.as_millis() as u64, run_ms = ran.as_millis() as u64, "acesso lento ao banco");
+            }
+            result
         })
         .await
         .map_err(|_| AppError::Storage)?

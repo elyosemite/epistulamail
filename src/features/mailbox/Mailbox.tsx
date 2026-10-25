@@ -1,10 +1,13 @@
-// Composição de DS: espacamento.html (.app-shell__commands, __sidebar, __list, __reader) + toasts.html (desfazer e erros)
-// + mensagens.html (.section-message "Você saiu desta conta" / "Reconecte esta conta" / busca local)
-// + modais.html (confirmar exclusão definitiva na Lixeira)
-import { useCallback, useEffect, useRef, useState } from "react";
+// Composição de layout: Header (com a CommandBar), NavigationBlock (FoldersColumn + EmailListColumn) e ContentColumn.
+// DS: toasts.html (desfazer e erros), mensagens.html (.section-message "Você saiu desta conta" / "Reconecte esta conta" /
+// busca local), modais.html (confirmar exclusão definitiva na Lixeira)
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { bucketLabel, flagDates, visibleBuckets } from "../../lib/flagged";
+import { canReceive } from "../../lib/folders";
 import { dueLabel } from "../../lib/followup";
 import { adjustUnread, applyFlags, restoreFlags, snapshotFlags, unreadDelta } from "../../lib/flags";
 import { currentCursor, firstPage, goBack, goForward, withNext, type Pager } from "../../lib/pagination";
+import { batchTitle, commandTargets, conversations, emptySelection, masterState, prune, readActionFor, toggle, toggleAll, type Selection } from "../../lib/selection";
 import {
   api,
   isAccessLost,
@@ -12,28 +15,37 @@ import {
   onBackendEvent,
   type Account,
   type DraftKind,
+  type FlagBucket,
+  type FlaggedCounts,
   type Folder,
   type FollowupAction,
   type Followup,
   type MessageFlags,
   type MessageHeader,
+  type Removed,
 } from "../../lib/tauri";
 import { UndoQueue } from "../../lib/undo";
+import { CommandBar } from "../../layout/CommandBar";
+import { ContentColumn } from "../../layout/ContentColumn";
+import { EmailListColumn, type ListState } from "../../layout/EmailListColumn";
+import { FoldersColumn } from "../../layout/FoldersColumn";
+import { NavigationBlock } from "../../layout/NavigationBlock";
 import { Button } from "../../ui/Button";
 import { Lozenge } from "../../ui/Lozenge";
 import { Modal } from "../../ui/Modal";
 import { SectionMessage } from "../../ui/SectionMessage";
 import { useToast } from "../../ui/Toast";
-import { InboxList, type ListState } from "../inbox/InboxList";
 import { MessageView, type ComposeState } from "../message/MessageView";
-import { FolderNav } from "./FolderNav";
-import { MailCommands } from "./MailCommands";
 
 interface MailboxProps {
   account: Account;
   initialFolderId: string | null;
   /** Busca do header (US4, CA1); a partir de 2 caracteres, a lista mostra os resultados. */
   query: string;
+  /** Configurações abertas: os comandos ficam inertes (US5, D2). */
+  settingsOpen: boolean;
+  /** Monta o bloco do header com a barra de comandos desta caixa. */
+  renderHeader: (commands: ReactNode) => ReactNode;
   onFolderChange: (folderId: string) => void;
   /** O backend recusou por falta de acesso: o App recarrega as contas (status mudou). */
   onAccessLost: () => void;
@@ -53,21 +65,37 @@ export function DueBadge({ followup }: { followup: Followup | null }) {
   return <Lozenge appearance={TONE[label.tone]}>{label.text}</Lozenge>;
 }
 
-export function Mailbox({ account, initialFolderId, query, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange }: MailboxProps) {
+/** O que sai da lista numa ação em lote, como executar e o aviso de falha parcial. */
+interface Removal {
+  messages: MessageHeader[];
+  title: string;
+  run: () => Promise<Removed>;
+  failedTitle: (count: number) => string;
+}
+
+export function Mailbox({ account, initialFolderId, query, settingsOpen, renderHeader, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange }: MailboxProps) {
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [folder, setFolder] = useState<Folder | null>(null);
   const [pager, setPager] = useState<Pager>(firstPage);
   const [list, setList] = useState<ListState>({ status: "loading" });
   const [syncing, setSyncing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [checked, setChecked] = useState<Selection>(emptySelection);
+  const [dragging, setDragging] = useState<string[] | null>(null);
+  const [dropHover, setDropHover] = useState<string | null>(null);
+  // Prazo das sinalizadas aberto na lista (US6, CA6) e as quantidades da coluna de pastas.
+  const [flagBucket, setFlagBucket] = useState<FlagBucket | null>(null);
+  const [flagCounts, setFlagCounts] = useState<FlaggedCounts | null>(null);
   const [compose, setCompose] = useState<ComposeState | null>(null);
-  const [confirmPurge, setConfirmPurge] = useState<MessageHeader | null>(null);
+  const [confirmPurge, setConfirmPurge] = useState<MessageHeader[] | null>(null);
   const [searchTruncated, setSearchTruncated] = useState(false);
   const toast = useToast();
   const request = useRef(0);
   // Leitura das mensagens atuais sem fazer callbacks estáveis dependerem da lista inteira.
   const itemsRef = useRef<MessageHeader[]>([]);
   itemsRef.current = list.status === "ready" ? list.items : [];
+  const selectedRef = useRef(selectedId);
+  selectedRef.current = selectedId;
   const pagerRef = useRef(pager);
   pagerRef.current = pager;
   const folderRef = useRef(folder);
@@ -83,8 +111,12 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
   readerOpenRef.current = onReaderOpenChange;
   const accessLost = useCallback(() => accessLostRef.current(), []);
   const searching = query.trim().length >= 2;
-  const searchingRef = useRef(searching);
-  searchingRef.current = searching;
+  // Busca ou sinalizadas: mensagens de várias pastas, sem paginação nem contadores da pasta.
+  const crossFolder = searching || flagBucket !== null;
+  const searchingRef = useRef(crossFolder);
+  searchingRef.current = crossFolder;
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
 
   const fail = useCallback((error: unknown, onOther: () => void) => {
     if (isAccessLost(error)) accessLostRef.current();
@@ -96,11 +128,9 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
   if (!undo.current) {
     undo.current = new UndoQueue(undefined, (_action, error) => {
       if (isAccessLost(error)) accessLostRef.current();
-      toastRef.current({ kind: "error", title: "Não foi possível concluir a ação", description: isAppError(error) ? error.message : "A mensagem voltou para a lista." });
+      toastRef.current({ kind: "error", title: "Não foi possível concluir a ação", description: isAppError(error) ? error.message : "As mensagens voltaram para a lista." });
     });
   }
-  const toastRef = useRef(toast);
-  toastRef.current = toast;
   // Troca de conta ou fechamento: o que estava esperando o "Desfazer" vai para o servidor agora.
   useEffect(() => () => undo.current?.flush(), []);
 
@@ -131,16 +161,20 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
     readerOpenRef.current(id !== null);
   }, []);
 
-  /** `silent`: recarrega sem esqueleto (atualização vinda da sincronização em segundo plano). */
+  /** `silent`: recarrega sem esqueleto e mantém a seleção (atualização vinda da sincronização). */
   const loadPage = useCallback(async (target: Folder, page: Pager, silent = false) => {
     if (searchingRef.current) return;
     const token = ++request.current;
-    if (!silent) setList({ status: "loading" });
+    if (!silent) {
+      setList({ status: "loading" });
+      setChecked(emptySelection);
+    }
     try {
       const result = await api.listMessages(target.id, currentCursor(page));
       if (token !== request.current) return;
       setPager(withNext(page, result.nextCursor));
       setList({ status: "ready", items: result.items, total: result.total });
+      setChecked((sel) => prune(sel, result.items.map((m) => m.id)));
       setSyncing(result.syncing);
       if (result.unread !== null) {
         setFolders((all) => all && all.map((f) => (f.id === target.id ? { ...f, unread: result.unread } : f)));
@@ -154,20 +188,54 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
   }, [fail]);
 
   useEffect(() => {
-    if (!folder || searching) return;
+    if (!folder || crossFolder) return;
     const page = firstPage();
     setPager(page);
     select(null);
     void loadPage(folder, page);
     folderChangeRef.current(folder.id);
-    // Só ao trocar de pasta ou ao sair da busca: o objeto `folder` muda também com os contadores.
-  }, [folder?.id, searching, loadPage, select]);
+    // Só ao trocar de pasta ou ao sair da busca e das sinalizadas: o objeto `folder` muda também com os contadores.
+  }, [folder?.id, crossFolder, loadPage, select]);
 
-  // Busca local (CA1): 250 ms depois da última tecla.
+  // Quantidades das sinalizadas por prazo, na data local de hoje.
+  const loadFlagCounts = useCallback(() => {
+    api.flaggedCounts(account.id, flagDates()).then(setFlagCounts).catch(() => undefined);
+  }, [account.id]);
+  useEffect(() => loadFlagCounts(), [loadFlagCounts]);
+
+  // Mensagens de um prazo das sinalizadas (a busca tem prioridade).
+  const [flagReload, setFlagReload] = useState(0);
+  useEffect(() => {
+    if (searching || !flagBucket) return;
+    const token = ++request.current;
+    if (flagReload === 0) {
+      setList({ status: "loading" });
+      setChecked(emptySelection);
+      select(null);
+    }
+    api.listFlagged(account.id, flagBucket, flagDates())
+      .then((page) => {
+        if (token !== request.current) return;
+        setList({ status: "ready", items: page.items, total: page.items.length });
+        setChecked((sel) => prune(sel, page.items.map((m) => m.id)));
+      })
+      .catch((error) => {
+        if (token !== request.current) return;
+        setList({ status: "error", error: isAppError(error) ? error : FALLBACK });
+      });
+  }, [account.id, flagBucket, flagReload, searching, select]);
+  /** Depois de mudar sinalizações ou mover, a lista do prazo e as quantidades acompanham. */
+  const refreshFlagged = useCallback(() => {
+    loadFlagCounts();
+    setFlagReload((n) => n + 1);
+  }, [loadFlagCounts]);
+
+  // Busca local (US4, CA1): 250 ms depois da última tecla.
   useEffect(() => {
     if (!searching) return;
     const token = ++request.current;
     setList({ status: "loading" });
+    setChecked(emptySelection);
     select(null);
     const timer = setTimeout(() => {
       api.searchMessages(account.id, query.trim())
@@ -188,6 +256,7 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
   useEffect(() => {
     const offs = [
       onBackendEvent("mailbox-updated", ({ accountId, folderId }) => {
+        if (accountId === account.id) loadFlagCounts();
         const current = folderRef.current;
         if (accountId !== account.id || !current || current.id !== folderId) return;
         void loadPage(current, pagerRef.current, true);
@@ -197,7 +266,7 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
       }),
     ];
     return () => offs.forEach((off) => off());
-  }, [account.id, loadFolders, loadPage]);
+  }, [account.id, loadFlagCounts, loadFolders, loadPage]);
 
   const refresh = useCallback(async () => {
     if (!folder) return;
@@ -228,18 +297,19 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
       const results = await api.setFlags(ids, change);
       const confirmed = new Map(results.map((r) => [r.id, r.flags]));
       setList((s) => (s.status === "ready" ? { ...s, items: s.items.map((m) => ({ ...m, flags: confirmed.get(m.id) ?? m.flags })) } : s));
+      if (change.flagged !== undefined) refreshFlagged();
     } catch (error) {
       setList((s) => (s.status === "ready" ? { ...s, items: restoreFlags(s.items, previous) } : s));
       if (folderId && !searchingRef.current) setFolders((all) => all && adjustUnread(all, folderId, -delta));
       if (isAccessLost(error)) accessLost();
       toast({
         kind: "error",
-        title: "Não foi possível atualizar a mensagem",
+        title: messages.length > 1 ? `Não foi possível atualizar ${conversations(messages.length)}` : "Não foi possível atualizar a mensagem",
         description: isAppError(error) ? error.message : undefined,
         action: isAccessLost(error) ? undefined : { label: "Tentar de novo", onClick: () => void changeFlags(messages, change) },
       });
     }
-  }, [accessLost, toast]);
+  }, [accessLost, refreshFlagged, toast]);
 
   // Abrir marca como lida no servidor; a lista e o contador acompanham sem nova chamada.
   const onLoaded = useCallback((id: string, flags: MessageFlags) => {
@@ -251,94 +321,172 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
     setList((s) => (s.status === "ready" ? { ...s, items: s.items.map((m) => (m.id === id ? { ...m, flags } : m)) } : s));
   }, []);
 
-  // ------------------------------------------------------------ excluir, arquivar, mover (CA4, CA5)
+  // ------------------------------------------------------------ seleção (US5, CA1)
 
-  /** Tira a mensagem da lista na hora, seleciona a próxima e agenda a chamada com "Desfazer". */
-  const removeWithUndo = useCallback((message: MessageHeader, title: string, run: () => Promise<unknown>) => {
-    const items = itemsRef.current;
-    const index = items.findIndex((m) => m.id === message.id);
-    if (index < 0) return;
-    const next = items[index + 1] ?? items[index - 1] ?? null;
+  const items = list.status === "ready" ? list.items : [];
+  const order = useMemo(() => items.map((m) => m.id), [items]);
+  const onCheck = useCallback((id: string, range: boolean) => setChecked((sel) => toggle(sel, itemsRef.current.map((m) => m.id), id, range)), []);
+  const onCheckAll = useCallback(() => setChecked((sel) => toggleAll(sel, itemsRef.current.map((m) => m.id))), []);
+  const clearChecked = useCallback(() => setChecked(emptySelection), []);
+
+  const selected = items.find((m) => m.id === selectedId) ?? null;
+  const targets = useMemo(() => commandTargets(checked, items, selectedId), [checked, items, selectedId]);
+  const allFolders = useMemo(() => folders ?? [], [folders]);
+  const sourceFolderId = crossFolder ? null : folder?.id ?? null;
+  const roleOf = useCallback(
+    (m: MessageHeader) => allFolders.find((f) => f.id === (crossFolder ? m.folderId : folder?.id))?.role,
+    [allFolders, folder?.id, crossFolder],
+  );
+
+  // ------------------------------------------------------------ excluir, arquivar, mover em lote (US4 CA4–CA5, US5 CA2–CA3)
+
+  /** Tira as mensagens da lista na hora, ajusta a mensagem aberta e agenda a chamada com "Desfazer". */
+  const removeWithUndo = useCallback(({ messages, title, run, failedTitle }: Removal) => {
+    const current = itemsRef.current;
+    const gone = new Set(messages.map((m) => m.id));
+    const positions = current.flatMap((m, index) => (gone.has(m.id) ? [{ message: m, index }] : []));
+    if (positions.length === 0) return;
+    const after = current.slice(positions[positions.length - 1].index + 1).find((m) => !gone.has(m.id));
+    const before = current.slice(0, positions[0].index).reverse().find((m) => !gone.has(m.id));
     const folderId = folderRef.current?.id;
-    const unread = message.flags.seen ? 0 : 1;
-    setList((s) => (s.status === "ready" ? { ...s, items: s.items.filter((m) => m.id !== message.id), total: Math.max(0, s.total - 1) } : s));
+    const unread = positions.filter((p) => !p.message.flags.seen).length;
+    const openGone = selectedRef.current !== null && gone.has(selectedRef.current);
+
+    setList((s) => (s.status === "ready" ? { ...s, items: s.items.filter((m) => !gone.has(m.id)), total: Math.max(0, s.total - gone.size) } : s));
+    setChecked((sel) => prune(sel, current.filter((m) => !gone.has(m.id)).map((m) => m.id)));
     if (folderId && !searchingRef.current) setFolders((all) => all && adjustUnread(all, folderId, -unread));
-    select(next?.id ?? null);
+    if (openGone) select((after ?? before)?.id ?? null);
+
+    const restore = (only?: ReadonlySet<string>) => {
+      if (folderRef.current?.id !== folderId) return;
+      const back = only ? positions.filter((p) => only.has(p.message.id)) : positions;
+      setList((s) => {
+        if (s.status !== "ready") return s;
+        const restored = [...s.items];
+        let added = 0;
+        for (const { message, index } of back) {
+          if (restored.some((m) => m.id === message.id)) continue;
+          restored.splice(Math.min(index, restored.length), 0, message);
+          added++;
+        }
+        return { ...s, items: restored, total: s.total + added };
+      });
+      const backUnread = back.filter((p) => !p.message.flags.seen).length;
+      if (folderId && !searchingRef.current) setFolders((all) => all && adjustUnread(all, folderId, backUnread));
+    };
+
     undo.current!.schedule({
       run: async () => {
-        await run();
+        const result = await run();
+        refreshFlaggedRef.current();
+        if (result.failed.length > 0) {
+          restore(new Set(result.failed));
+          toastRef.current({ kind: "error", title: failedTitle(result.failed.length), description: "Elas voltaram para a lista. Tente de novo em instantes." });
+        }
       },
-      restore: () => {
-        if (folderRef.current?.id !== folderId) return;
-        setList((s) => {
-          if (s.status !== "ready" || s.items.some((m) => m.id === message.id)) return s;
-          const items = [...s.items];
-          items.splice(Math.min(index, items.length), 0, message);
-          return { ...s, items, total: s.total + 1 };
-        });
-        if (folderId && !searchingRef.current) setFolders((all) => all && adjustUnread(all, folderId, unread));
-      },
+      restore: () => restore(),
     });
     toast({ kind: "info", title, action: { label: "Desfazer", onClick: () => undo.current!.undo() } });
   }, [select, toast]);
-
-  const selected = list.status === "ready" ? list.items.find((m) => m.id === selectedId) ?? null : null;
-  const allFolders = folders ?? [];
-  const sourceFolderId = selected ? (searching ? selected.folderId ?? null : folder?.id ?? null) : null;
-  const sourceFolder = allFolders.find((f) => f.id === sourceFolderId);
+  const refreshFlaggedRef = useRef(refreshFlagged);
+  refreshFlaggedRef.current = refreshFlagged;
 
   const onDelete = useCallback(() => {
-    if (!selected) return;
-    if (sourceFolder?.role === "trash") return setConfirmPurge(selected);
-    removeWithUndo(selected, "Mensagem movida para a Lixeira", () => api.deleteMessages([selected.id]));
-  }, [removeWithUndo, selected, sourceFolder?.role]);
+    if (targets.length === 0) return;
+    // Na Lixeira, excluir apaga de vez: pede confirmação antes, sem "Desfazer".
+    if (targets.some((m) => roleOf(m) === "trash")) return setConfirmPurge(targets);
+    removeWithUndo({
+      messages: targets,
+      title: batchTitle(targets.length, "Mensagem movida para a Lixeira", (n) => `${n} movidas para a Lixeira`),
+      run: () => api.deleteMessages(targets.map((m) => m.id)),
+      failedTitle: (n) => `${conversations(n)} não puderam ser excluídas`,
+    });
+  }, [removeWithUndo, roleOf, targets]);
 
-  const purge = useCallback(async (message: MessageHeader) => {
+  const purge = useCallback(async (messages: MessageHeader[]) => {
     setConfirmPurge(null);
     try {
-      await api.deleteMessages([message.id]);
-      setList((s) => (s.status === "ready" ? { ...s, items: s.items.filter((m) => m.id !== message.id), total: Math.max(0, s.total - 1) } : s));
-      select(null);
-      toast({ kind: "success", title: "Mensagem excluída para sempre" });
+      const result = await api.deleteMessages(messages.map((m) => m.id));
+      const gone = new Set(result.ids);
+      setList((s) => (s.status === "ready" ? { ...s, items: s.items.filter((m) => !gone.has(m.id)), total: Math.max(0, s.total - gone.size) } : s));
+      setChecked((sel) => prune(sel, itemsRef.current.filter((m) => !gone.has(m.id)).map((m) => m.id)));
+      if (selectedRef.current && gone.has(selectedRef.current)) select(null);
+      if (result.failed.length > 0) toast({ kind: "error", title: `${conversations(result.failed.length)} não puderam ser excluídas` });
+      else toast({ kind: "success", title: batchTitle(gone.size, "Mensagem excluída", (n) => `${n} excluídas`) });
     } catch (error) {
       fail(error, () => toast({ kind: "error", title: "Não foi possível excluir", description: isAppError(error) ? error.message : undefined }));
     }
   }, [fail, select, toast]);
 
   const onArchive = useCallback(() => {
-    if (!selected) return;
-    removeWithUndo(selected, "Mensagem arquivada", () => api.archiveMessages([selected.id]));
-  }, [removeWithUndo, selected]);
+    const messages = targets.filter((m) => roleOf(m) !== "all");
+    if (messages.length === 0) return;
+    removeWithUndo({
+      messages,
+      title: batchTitle(messages.length, "Mensagem arquivada", (n) => `${n} arquivadas`),
+      run: () => api.archiveMessages(messages.map((m) => m.id)),
+      failedTitle: (n) => `${conversations(n)} não puderam ser arquivadas`,
+    });
+  }, [removeWithUndo, roleOf, targets]);
+
+  const moveTo = useCallback((messages: MessageHeader[], targetId: string, name: string) => {
+    if (messages.length === 0) return;
+    removeWithUndo({
+      messages,
+      title: batchTitle(messages.length, `Mensagem movida para ${name}`, (n) => `${n} movidas para ${name}`),
+      run: () => api.moveMessages(messages.map((m) => m.id), targetId),
+      failedTitle: (n) => `${conversations(n)} não puderam ser movidas`,
+    });
+  }, [removeWithUndo]);
 
   const onMove = useCallback((targetId: string) => {
-    if (!selected) return;
-    const name = allFolders.find((f) => f.id === targetId)?.name ?? "a pasta";
-    removeWithUndo(selected, `Mensagem movida para ${name}`, () => api.moveMessages([selected.id], targetId));
-  }, [allFolders, removeWithUndo, selected]);
+    moveTo(targets, targetId, allFolders.find((f) => f.id === targetId)?.name ?? "a pasta");
+  }, [allFolders, moveTo, targets]);
 
   const onCreateAndMove = useCallback(async (name: string) => {
-    if (!selected) return;
+    if (targets.length === 0) return;
     const created = await api.createFolder(account.id, name);
     await loadFolders();
-    removeWithUndo(selected, `Pasta "${created.name}" criada; mensagem movida`, () => api.moveMessages([selected.id], created.id));
-  }, [account.id, loadFolders, removeWithUndo, selected]);
+    moveTo(targets, created.id, created.name);
+  }, [account.id, loadFolders, moveTo, targets]);
 
-  // ------------------------------------------------------------ sinalizar (CA7)
+  // Arrastar mensagens até uma pasta (US5 CA3, por ponteiro na US6 CA5).
+  const onDragMessages = useCallback((ids: string[] | null) => {
+    setDragging(ids);
+    if (!ids) setDropHover(null);
+  }, []);
+  const onDropMessages = useCallback((folderId: string, ids: string[]) => {
+    const target = allFolders.find((f) => f.id === folderId);
+    if (!target || !canReceive(target, sourceFolderId)) return;
+    const moving = new Set(ids);
+    moveTo(itemsRef.current.filter((m) => moving.has(m.id)), target.id, target.name);
+  }, [allFolders, moveTo, sourceFolderId]);
+
+  // ------------------------------------------------------------ lida, sinalizar, responder
+
+  const onToggleRead = useCallback(() => void changeFlags(targets, readActionFor(targets)), [changeFlags, targets]);
 
   const onFollowup = useCallback(async (change: FollowupAction) => {
-    if (!selected) return;
-    const id = selected.id;
+    if (targets.length === 0) return;
     try {
-      const result = await api.setFollowup(id, change);
-      setList((s) => (s.status === "ready" ? { ...s, items: s.items.map((m) => (m.id === id ? { ...m, flags: result.flags, followup: result.followup } : m)) } : s));
+      const results = await api.setFollowup(targets.map((m) => m.id), change);
+      const byId = new Map(results.map((r) => [r.id, r]));
+      setList((s) => {
+        if (s.status !== "ready") return s;
+        return { ...s, items: s.items.map((m) => { const r = byId.get(m.id); return r ? { ...m, flags: r.flags, followup: r.followup } : m; }) };
+      });
+      refreshFlagged();
     } catch (error) {
-      fail(error, () => toast({ kind: "error", title: "Não foi possível sinalizar a mensagem", description: isAppError(error) ? error.message : undefined }));
+      const title = targets.length > 1 ? `Não foi possível sinalizar ${conversations(targets.length)}` : "Não foi possível sinalizar a mensagem";
+      fail(error, () => toast({ kind: "error", title, description: isAppError(error) ? error.message : undefined }));
     }
-  }, [fail, selected, toast]);
+  }, [fail, refreshFlagged, targets, toast]);
 
   const onReply = useCallback((kind: Exclude<DraftKind, "new">) => {
-    if (selected) setCompose({ kind, messageId: selected.id });
-  }, [selected]);
+    if (targets.length !== 1) return;
+    if (selectedRef.current !== targets[0].id) select(targets[0].id);
+    setCompose({ kind, messageId: targets[0].id });
+  }, [select, targets]);
 
   const onNew = useCallback(() => {
     setCompose({ kind: "new", messageId: null });
@@ -360,45 +508,79 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
       </SectionMessage>
     ) : null;
 
+  const listName = searching
+    ? `Resultados para “${query.trim()}”`
+    : flagBucket
+      ? `Sinalizadas: ${bucketLabel(flagBucket)}`
+      : folder?.name ?? "Mensagens";
+  const purgeInTrash = confirmPurge ? confirmPurge.filter((m) => roleOf(m) === "trash").length : 0;
+
   return (
     <>
-      <MailCommands
-        account={account}
-        folders={allFolders}
-        sourceFolderId={sourceFolderId}
-        selected={selected}
-        readOnly={account.status !== "active"}
-        onNew={onNew}
-        onDelete={onDelete}
-        onArchive={onArchive}
-        onMove={onMove}
-        onCreateAndMove={onCreateAndMove}
-        onReply={onReply}
-        onToggleRead={() => selected && void changeFlags([selected], { seen: !selected.flags.seen })}
-        onFollowup={(change) => void onFollowup(change)}
-      />
-      <FolderNav folders={folders} currentId={searching ? null : folder?.id ?? null} onSelect={(f) => setFolder(f)} />
-      <section className="app-shell__list" aria-label={searching ? "Resultados da busca" : folder?.name ?? "Mensagens"}>
-        <InboxList
-          folderName={searching ? `Resultados para “${query.trim()}”` : folder?.name ?? "Mensagens"}
+      {renderHeader(
+        <CommandBar
+          account={account}
+          folders={allFolders}
+          sourceFolderId={sourceFolderId}
+          targets={targets}
+          roleOf={roleOf}
+          readOnly={account.status !== "active"}
+          inert={settingsOpen}
+          onNew={onNew}
+          onDelete={onDelete}
+          onArchive={onArchive}
+          onMove={onMove}
+          onCreateAndMove={onCreateAndMove}
+          onReply={onReply}
+          onToggleRead={onToggleRead}
+          onFollowup={(change) => void onFollowup(change)}
+        />,
+      )}
+      <NavigationBlock>
+        <FoldersColumn
+          folders={folders}
+          currentId={crossFolder ? null : folder?.id ?? null}
+          flagged={visibleBuckets(flagCounts)}
+          currentFlag={searching ? null : flagBucket}
+          drag={dragging ? { sourceId: sourceFolderId, hoveredId: dropHover } : null}
+          onSelect={(f) => {
+            setFlagBucket(null);
+            setFolder(f);
+          }}
+          onSelectFlag={(bucket) => {
+            setFlagReload(0);
+            setFlagBucket(bucket);
+          }}
+        />
+        <EmailListColumn
+          folderName={listName}
           folderRole={folder?.role ?? "inbox"}
-          searching={searching}
+          searching={crossFolder}
           state={list}
           pager={pager}
-          selectedId={selectedId}
+          openId={selectedId}
+          checked={checked.ids}
+          master={masterState(checked, order)}
           syncing={syncing}
           canRefresh={account.status === "active"}
           notice={notice}
           renderBadge={(m) => <DueBadge followup={m.followup} />}
-          onSelect={select}
+          onOpen={select}
+          onCheck={onCheck}
+          onCheckAll={onCheckAll}
+          onClearChecked={clearChecked}
+          canDrag={account.status === "active"}
+          onDragMessages={onDragMessages}
+          onDragOver={setDropHover}
+          onDropMessages={onDropMessages}
           onRefresh={() => void refresh()}
           onNextPage={() => folder && void loadPage(folder, goForward(pager))}
           onPreviousPage={() => folder && void loadPage(folder, goBack(pager))}
           onToggleStar={(m) => void changeFlags([m], { flagged: !m.flags.flagged })}
           onToggleRead={(m) => void changeFlags([m], { seen: !m.flags.seen })}
         />
-      </section>
-      <section className="app-shell__reader" aria-label="Mensagem">
+      </NavigationBlock>
+      <ContentColumn>
         <MessageView
           account={account}
           messageId={selectedId}
@@ -412,7 +594,7 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
           onAccessLost={accessLost}
           onBack={() => select(null)}
         />
-      </section>
+      </ContentColumn>
       {confirmPurge && (
         <Modal
           title="Excluir para sempre?"
@@ -426,7 +608,12 @@ export function Mailbox({ account, initialFolderId, query, onFolderChange, onAcc
             </>
           }
         >
-          <p>A mensagem será apagada do Gmail e não poderá ser recuperada.</p>
+          <p>
+            {purgeInTrash === 1
+              ? "A mensagem que está na Lixeira será apagada do Gmail e não poderá ser recuperada."
+              : `As ${conversations(purgeInTrash)} que estão na Lixeira serão apagadas do Gmail e não poderão ser recuperadas.`}
+            {confirmPurge.length > purgeInTrash && ` As outras ${conversations(confirmPurge.length - purgeInTrash)} vão para a Lixeira.`}
+          </p>
         </Modal>
       )}
     </>

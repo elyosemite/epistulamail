@@ -74,6 +74,93 @@
         <dl class="guidance">
           <div><dt>Seletor</dt><dd><code>.folder-picker</code> é um <code>role="listbox"</code> com <code>.nav-item</code> como <code>role="option"</code>; setas movem a seleção e Enter confirma. <code>.modal__foot--split</code> separa "Nova pasta" à esquerda de Cancelar e Mover.</dd></div>
         </dl>
+        <h3 class="sub">Configurações <code>.settings-sheet</code></h3>
+        <p class="demo-hint">Não é um <code>.modal</code> centralizado: cobre a área dos blocos (pastas, lista e leitura) e deixa visíveis a coluna de contas e o header.</p>
+        <div class="stage stage--flush scroll-x">
+          <div style="display:flex;height:38rem;min-width:56rem;padding:var(--space-100);background:var(--color-canvas)">
+            <div class="settings-sheet" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+              <div class="settings-sheet__head">
+                <svg class="i"><use href="#i-settings"/></svg>
+                <h2 class="modal__title" id="settings-title">Configurações</h2>
+                <button class="btn btn--subtle btn--icon" type="button" aria-label="Fechar" data-tip="Fechar (Esc)"><svg class="i"><use href="#i-x"/></svg></button>
+              </div>
+              <div class="settings">
+              <div class="settings__nav" role="tablist" aria-orientation="vertical" aria-label="Seções">
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-sliders"/></svg><span class="nav-item__text">Geral</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-palette"/></svg><span class="nav-item__text">Aparência</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-user"/></svg><span class="nav-item__text">Conta</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="true"><svg class="i"><use href="#i-mail"/></svg><span class="nav-item__text">E-mail</span></button>
+              </div>
+
+              <div class="settings__panel" role="tabpanel">
+                <h3 class="settings__title">E-mail</h3>
+                <div class="settings__group">
+                  <h4 class="settings__group-title">Sincronização</h4>
+                  <div class="setting">
+                    <div><div class="setting__label" id="sync-default-label">Verificar novos e-mails a cada</div><p class="setting__desc">Vale para todas as contas que usam o padrão.</p></div>
+                    <span class="select"><select aria-labelledby="sync-default-label"><option>Manualmente</option><option>1 minuto</option><option>2 minutos</option><option selected>5 minutos</option><option>10 minutos</option><option>15 minutos</option><option>30 minutos</option><option>1 hora</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                  </div>
+                  <div class="setting-list">
+                    <div class="setting-list__head is-selecting">
+                      <input type="checkbox" class="checkbox" aria-label="Selecionar todas as contas">
+                      <span>Aplicar a 2 contas</span>
+                      <div class="setting-list__bulk">
+                        <span class="select" style="min-width:11rem"><select aria-label="Intervalo para as contas selecionadas"><option>Usar o padrão</option><option>Manualmente</option><option>1 minuto</option><option>2 minutos</option><option>5 minutos</option><option selected>10 minutos</option><option>15 minutos</option><option>30 minutos</option><option>1 hora</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                        <button class="btn btn--primary btn--compact" type="button">Aplicar</button>
+                      </div>
+                    </div>
+                    <div class="setting-list__row is-checked">
+                      <input type="checkbox" class="checkbox" aria-label="Selecionar Trabalho" checked>
+                      <span class="avatar avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%235E4DB2%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23DFD8FD%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23DFD8FD%22/%3E%3C/svg%3E"></span>
+                      <div class="setting-list__name"><span class="setting-list__title">Trabalho</span><span class="setting-list__sub">joao.silva.empresa@gmail.com</span></div>
+                      <span class="select"><select aria-label="Intervalo de Trabalho"><option selected>Usar o padrão (5 min)</option><option>Manualmente</option><option>1 minuto</option><option>2 minutos</option><option>5 minutos</option><option>10 minutos</option><option>15 minutos</option><option>30 minutos</option><option>1 hora</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                    </div>
+                    <div class="setting-list__row is-checked">
+                      <input type="checkbox" class="checkbox" aria-label="Selecionar Pessoal" checked>
+                      <span class="avatar" aria-hidden="true">P<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23206A83%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23C6EDFB%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23C6EDFB%22/%3E%3C/svg%3E"></span>
+                      <div class="setting-list__name"><span class="setting-list__title">Pessoal</span><span class="setting-list__sub">joao.silva@gmail.com</span></div>
+                      <span class="select"><select aria-label="Intervalo de Pessoal"><option>Usar o padrão (5 min)</option><option>Manualmente</option><option selected>1 minuto</option><option>2 minutos</option><option>5 minutos</option><option>10 minutos</option><option>15 minutos</option><option>30 minutos</option><option>1 hora</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                    </div>
+                    <div class="setting-list__row">
+                      <input type="checkbox" class="checkbox" aria-label="Selecionar Família">
+                      <span class="avatar avatar--orange" aria-hidden="true">F</span>
+                      <div class="setting-list__name"><span class="setting-list__title">Família</span><span class="setting-list__sub">familia.silva@gmail.com</span></div>
+                      <span class="select"><select aria-label="Intervalo de Família"><option>Usar o padrão (5 min)</option><option selected>Manualmente</option><option>1 minuto</option><option>2 minutos</option><option>5 minutos</option><option>10 minutos</option><option>15 minutos</option><option>30 minutos</option><option>1 hora</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                    </div>
+                    <div class="setting-list__row is-disabled">
+                      <input type="checkbox" class="checkbox" aria-label="Selecionar Antiga" disabled>
+                      <span class="avatar avatar--teal" aria-hidden="true">A</span>
+                      <div class="setting-list__name"><span class="setting-list__title">Antiga</span><span class="setting-list__sub">Você saiu desta conta</span></div>
+                      <span class="select"><select aria-label="Intervalo de Antiga" disabled><option>Usar o padrão (5 min)</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                    </div>
+                  </div>
+                  <p class="setting__desc" style="margin:0">"Manualmente": a conta só procura e-mails novos quando você a abre ou clica em Atualizar.</p>
+                </div>
+              </div>
+
+              <div class="settings__panel" role="tabpanel" hidden>
+                <h3 class="settings__title">Geral</h3>
+                <div class="empty" style="padding:var(--space-400) 0"><p class="empty__title">Em breve</p><p class="empty__desc">Idioma, formato de data e o que acontece ao abrir o app.</p></div>
+              </div>
+              <div class="settings__panel" role="tabpanel" hidden>
+                <h3 class="settings__title">Aparência</h3>
+                <div class="empty" style="padding:var(--space-400) 0"><p class="empty__title">Em breve</p><p class="empty__desc">Tema claro ou escuro, densidade da lista e o fundo do app (cor ou imagem).</p></div>
+              </div>
+              <div class="settings__panel" role="tabpanel" hidden>
+                <h3 class="settings__title">Conta</h3>
+                <div class="empty" style="padding:var(--space-400) 0"><p class="empty__title">Em breve</p><p class="empty__desc">Nome, cor e foto de cada conta, assinatura e sair da conta.</p></div>
+              </div>
+            </div>
+              </div>
+            </div>
+          </div>
+        
+        <dl class="guidance">
+          <div><dt>Posição</dt><dd>No app, <code>.app-shell__sheet</code> põe a <code>.settings-sheet</code> sobre as áreas de navegação e leitura do <code>.app-shell--blocks</code>. A coluna de contas e o header continuam visíveis; os comandos e a busca ficam inertes enquanto ela está aberta.</dd></div>
+          <div><dt>Seções</dt><dd><code>.settings__nav</code> é uma <code>tablist</code> vertical de <code>.nav-item</code> (<kbd>↑</kbd>/<kbd>↓</kbd> trocam de seção); cada <code>.settings__panel</code> é um <code>tabpanel</code> com <code>.settings__title</code>, grupos (<code>.settings__group</code>) e ajustes (<code>.setting</code>: rótulo, descrição e controle). As mudanças valem na hora.</dd></div>
+          <div><dt>Aparência</dt><dd>A seção Aparência tem o grupo Tema (<code>.theme-picker</code>) e o grupo Cor do fundo (<code>.color-picker</code> com <code>.color-swatch__fill</code>). Ver selecao.html.</dd></div>
+          <div><dt>Várias contas</dt><dd><code>.setting-list</code> tem uma linha por conta com o controle próprio. Marcar linhas troca o cabeçalho por <code>.is-selecting</code> com "Aplicar a N contas". Conta de que o usuário saiu fica em <code>.is-disabled</code>.</dd></div>
+        </dl>
       </section>
   </main>
 </div>

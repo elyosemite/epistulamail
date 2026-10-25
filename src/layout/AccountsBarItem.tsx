@@ -1,26 +1,15 @@
-// DS: sidebar.html "Coluna de contas" · .account-rail, __list, __item ([aria-current], --signed-out), __name, __badge
-//     (.badge.badge--primary), __alert, __sep, __add
-// DS: espacamento.html · .app-shell__rail (área da casca .app-shell--with-rail)
-import { forwardRef, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
-import { Icon } from "./Icon";
+// DS: sidebar.html "Coluna de contas" · .account-rail__item ([aria-current], --signed-out), __name, __badge
+//     (.badge.badge--primary), __alert; identidade.html · .avatar--lg com .avatar__img (foto da conta)
+import { forwardRef, type KeyboardEvent, type MouseEvent } from "react";
+import { AccountAvatar } from "../ui/AccountAvatar";
+import { Icon } from "../ui/Icon";
 
-export function AccountRail({ children, onAdd }: { children: ReactNode; onAdd: () => void }) {
-  return (
-    <nav className="account-rail app-shell__rail" aria-label="Contas">
-      <div className="account-rail__list" role="list">{children}</div>
-      <div className="account-rail__sep" role="separator" />
-      <button className="account-rail__add" type="button" aria-label="Adicionar conta" data-tip="Adicionar conta" onClick={onAdd}>
-        <Icon name="plus" />
-      </button>
-    </nav>
-  );
-}
-
-interface AccountRailItemProps {
+interface AccountsBarItemProps {
   name: string;
   initial: string;
   /** Classe de cor do avatar (`avatar--purple`) ou `null` para o azul padrão. */
   colorClass: string | null;
+  photo: string | null;
   badge: string | null;
   state: "normal" | "alert" | "signed-out";
   current: boolean;
@@ -31,12 +20,12 @@ interface AccountRailItemProps {
   onKeyDown?: (event: KeyboardEvent<HTMLButtonElement>) => void;
 }
 
-export const AccountRailItem = forwardRef<HTMLButtonElement, AccountRailItemProps>(function AccountRailItem(
-  { name, initial, colorClass, badge, state, current, label, tip, onSelect, onMenu, onKeyDown },
+/** Uma conta na coluna de contas. */
+export const AccountsBarItem = forwardRef<HTMLButtonElement, AccountsBarItemProps>(function AccountsBarItem(
+  { name, initial, colorClass, photo, badge, state, current, label, tip, onSelect, onMenu, onKeyDown },
   ref,
 ) {
   const cls = ["account-rail__item", state === "signed-out" && "account-rail__item--signed-out"].filter(Boolean).join(" ");
-  const avatar = ["avatar avatar--lg", colorClass].filter(Boolean).join(" ");
   const openMenu = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     onMenu({ x: event.clientX, y: event.clientY });
@@ -64,7 +53,7 @@ export const AccountRailItem = forwardRef<HTMLButtonElement, AccountRailItemProp
         onContextMenu={openMenu}
         onKeyDown={keyDown}
       >
-        <span className={avatar} aria-hidden="true">{initial}</span>
+        <AccountAvatar initial={initial} colorClass={colorClass} photo={photo} size="lg" />
         {badge && state === "normal" && <span className="badge badge--primary account-rail__badge" aria-hidden="true">{badge}</span>}
         {state === "alert" && (
           <span className="account-rail__alert" aria-hidden="true"><Icon name="warning" /></span>

@@ -1,6 +1,6 @@
 # Epistula: arquitetura e modelo de ameaças
 
-Situação em 23 out 2026, após a US4. Produto: cliente desktop que conecta várias contas de e-mail (Gmail por OAuth nesta versão) e lê as caixas por IMAP, com um banco local cifrado (decisão D1, opção A, provisória). Não há servidor do Epistula.
+Situação em 24 out 2026, após a US5. Produto: cliente desktop que conecta várias contas de e-mail (Gmail por OAuth nesta versão) e lê as caixas por IMAP, com um banco local cifrado (decisão D1, opção A, provisória). Não há servidor do Epistula.
 
 ## Componentes e limites de confiança
 
@@ -13,7 +13,9 @@ Situação em 23 out 2026, após a US4. Produto: cliente desktop que conecta vá
 │   · HTML de e-mail num iframe                          · parse MIME + limpeza  │
 │     sandbox sem scripts                                · até 2 sessões IMAP    │
 │                                                          por conta, em memória │
-│                                                        · sincronização         │
+│                                                        · sincronização por     │
+│                                                          conta (intervalo)     │
+│                                                        · foto do perfil        │
 │                                        │                       │               │
 │                 Keyring do SO ◀────────┘                       ▼               │
 │                 · refresh token por conta          epistula.db (SQLCipher,     │
@@ -23,7 +25,8 @@ Situação em 23 out 2026, após a US4. Produto: cliente desktop que conecta vá
                                                          │ TLS
                        ┌─────────────────────────────────┴───────────────┐
                        │ Google: accounts.google.com, oauth2.googleapis.com│
-                       │ (token e revogação), imap.gmail.com:993          │
+                       │ (token e revogação), imap.gmail.com:993,         │
+                       │ *.googleusercontent.com (foto do perfil)         │
                        └──────────────────────────────────────────────────┘
 ```
 
@@ -49,17 +52,22 @@ Limites de confiança, do mais confiável ao menos:
 | Corpo RFC 822 das mensagens abertas e metadados de anexos | `epistula.db` | Até a mensagem sumir do servidor | Processo Rust; WebView (HTML sanitizado) |
 | Rascunhos de resposta, encaminhamento e e-mail novo (destinatários, assunto, texto) | `epistula.db` (`draft`) | Até o usuário descartar ou a mensagem respondida sair do banco | Processo Rust; WebView |
 | Prazos de sinalização e pastas usadas recentemente | `epistula.db` (`message_followup`, `folder_usage`) | Até limpar a sinalização ou a pasta sumir | Processo Rust; WebView |
-| Largura da lista e última pasta, por conta | `epistula.db` (`account_setting`) | Permanente | Processo Rust; WebView |
+| Largura da lista, última pasta e intervalo de sincronização, por conta | `epistula.db` (`account_setting`) | Permanente | Processo Rust; WebView |
+| Intervalo padrão de sincronização, tema e cor do fundo | `epistula.db` (`app_setting`) | Permanente | Processo Rust; WebView |
+| Cópia do tema e da cor do fundo (só esses dois valores) | Armazenamento local da WebView | Até a próxima mudança | WebView |
+| Foto do perfil Google (até 256 KB, JPEG/PNG/WebP) | `epistula.db` (`account.photo`) | Até a conta ser removida; trocada a cada conexão e no máximo uma vez por dia | Processo Rust; WebView (como `data:` URL) |
 | `client_id` e `client_secret` do Google | `.env` local (dev) ou binário (build) | Permanente | Qualquer pessoa com o binário (o Google não trata o secret de app desktop como confidencial) |
 | Logs | stdout do processo | Sessão do terminal | Usuário do SO |
 
-Os logs contêm só: comando, papel da pasta, contagens, tamanhos, duração, códigos de erro e status de conta. Termos de busca, nomes de pasta criados e rascunhos nunca vão para o log. A conta nunca aparece por e-mail ou nome; erros do SQLite vão só com o código. O teste `message::tests::logs_never_contain_message_content` captura os logs da suíte inteira, passa por contas, pastas, mensagens, corpo e saída de conta com marcadores únicos, e falha se algum aparecer. O teste `store::tests::database_file_has_no_plaintext` confere que o arquivo do banco (e o WAL) não contém nenhum desses marcadores.
+Os logs contêm só: comando, papel da pasta, contagens, tamanhos, duração, códigos de erro e status de conta. Termos de busca, nomes de pasta criados, rascunhos, a URL e os bytes da foto nunca vão para o log. A conta nunca aparece por e-mail ou nome; erros do SQLite vão só com o código. O teste `message::tests::logs_never_contain_message_content` captura os logs da suíte inteira, passa por contas, pastas, mensagens, corpo e saída de conta com marcadores únicos, e falha se algum aparecer. O teste `store::tests::database_file_has_no_plaintext` confere que o arquivo do banco (e o WAL) não contém nenhum desses marcadores.
 
 ## Esquema do banco
 
 ```
-account ──┬── provider_config (1:1)
-          ├── account_setting (última pasta aberta)
+app_setting (intervalo padrão de sincronização)
+
+account ──┬── provider_config (1:1)       (account.photo: foto do perfil)
+          ├── account_setting (última pasta, largura da lista, intervalo de sincronização)
           ├── folder ──────────────┐
           ├── label ── message_label
           └── message ─── message_folder ──┘   (mensagem ↔ pastas, com o UID em cada uma)
@@ -84,7 +92,7 @@ account ──┬── provider_config (1:1)
 | 6 | Operador curioso ou malicioso | Fora do escopo | Não há operador do Epistula com acesso a dados. O Google, como provedor, tem acesso total (ver 8). |
 | 7 | Dispositivo do usuário comprometido | Não mitigada | Malware com a sessão do usuário lê o keyring (refresh tokens e chave do banco), o banco aberto, a memória e a tela. Nenhum cliente de e-mail resolve isso. |
 | 8 | Provedor externo sem E2EE | Aceita | **O Google lê todos os e-mails da conta.** O Epistula não muda isso; TLS protege só o trânsito. E2EE depende da decisão D3 (OpenPGP no cliente). |
-| 9 | Abuso: phishing, rastreamento, conteúdo malicioso | Parcialmente mitigada | HTML limpo por allowlist no Rust a cada leitura (corpus de ataques + proptest); iframe sem scripts; imagens remotas bloqueadas até o usuário liberar por mensagem; links só `http`/`https`/`mailto`, abertos no navegador do sistema. Não há detecção de phishing nem verificação de SPF/DKIM na UI. |
+| 9 | Abuso: phishing, rastreamento, conteúdo malicioso | Parcialmente mitigada | HTML limpo por allowlist no Rust a cada leitura (corpus de ataques + proptest); iframe sem scripts; imagens remotas bloqueadas até o usuário liberar por mensagem; links só `http`/`https`/`mailto`, abertos no navegador do sistema. A foto do perfil vem da claim `picture` do `id_token` e só é baixada de `https://*.googleusercontent.com` (também depois de redirecionamentos), com até 256 KB, timeout de 10 s e só JPEG, PNG ou WebP (SVG recusado); a WebView recebe uma `data:` URL e não faz requisições ao Google. Não há detecção de phishing nem verificação de SPF/DKIM na UI. |
 | 10 | Perda, roubo ou revogação de chaves | Mitigada | Sair da conta revoga o refresh token no Google e apaga o segredo do keyring. Revogar em `myaccount.google.com/permissions` faz a conta virar "precisa reconectar" sem apagar os dados. Sem a chave do banco, o arquivo é posto de lado (`epistula.db.unreadable-*`) e um banco novo é criado; as contas voltam pelo índice do keyring e o conteúdo é baixado de novo do servidor. Não há chaves E2EE ainda. |
 | 11 | Logs, traces, dumps de memória, temporários | Parcialmente mitigada | Logs sem conteúdo nem identificação da conta, com teste. WAL cifrado como o banco; `temp_store = MEMORY` evita temporários em disco; `secure_delete` sobrescreve páginas apagadas. Dumps de memória do processo conteriam tokens, a chave do banco e mensagens abertas; os segredos não são zerados ao sair da memória. |
 | 12 | Infraestrutura ou ordem legal | Fora do escopo do Epistula | Não há infraestrutura do Epistula. Pedidos legais alcançam os dados no Google. |
@@ -97,6 +105,8 @@ account ──┬── provider_config (1:1)
 - A WebView do sistema (WebView2 no Windows) aplica corretamente `sandbox`, `srcdoc` e CSP.
 - O `ammonia` (allowlist sobre o parser html5ever) é a barreira principal contra HTML ativo; o iframe sem scripts é a segunda.
 - O SQLCipher 4 com as configurações padrão (AES-256-CBC, HMAC-SHA512, chave crua sem KDF, porque já vem do gerador do SO) é adequado para cifra em repouso.
+- O app não faz requisições de rede para desenhar a tela: fontes e estilos vêm empacotados (sem Google Fonts), e a CSP só permite fontes e estilos locais.
+- O escopo OAuth do Google é `https://mail.google.com/ openid email profile`. `profile` (não sensível) só serve para a foto; sem ele, a conta funciona com a inicial.
 - Testes contra o Gmail real são manuais: não há servidor IMAP com XOAUTH2 em CI. O banco tem testes de integração reais (SQLCipher em diretório temporário).
 
 ## Riscos residuais priorizados

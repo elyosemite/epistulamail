@@ -6,13 +6,14 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::{oneshot, Mutex};
 
 use crate::db::Db;
 use crate::error::AppError;
 use crate::imap_client::ImapSession;
 use crate::oauth::{self, Tokens};
+use crate::photo;
 use crate::provider::Provider;
 use crate::providers::{self, AuthKind};
 use crate::secrets;
@@ -102,6 +103,11 @@ pub struct AppState {
     pub db: Db,
     accounts: Mutex<HashMap<String, Arc<AccountHandle>>>,
     pending_connect: std::sync::Mutex<Option<oneshot::Sender<()>>>,
+    /// Inicialização (índice de contas, migração, limpeza) concluída. A janela abre antes dela; só
+    /// a lista de contas espera.
+    started: tokio::sync::watch::Sender<bool>,
+    /// O frontend já mostrou a primeira tela: a sincronização automática pode começar.
+    ui_ready: tokio::sync::Notify,
 }
 
 impl AppState {
@@ -110,7 +116,34 @@ impl AppState {
             tracing::error!(error = %e, "não foi possível criar o cliente HTTP");
             AppError::Config
         })?;
-        Ok(AppState { app, http, db, accounts: Mutex::new(HashMap::new()), pending_connect: std::sync::Mutex::new(None) })
+        Ok(AppState {
+            app,
+            http,
+            db,
+            accounts: Mutex::new(HashMap::new()),
+            pending_connect: std::sync::Mutex::new(None),
+            started: tokio::sync::watch::channel(false).0,
+            ui_ready: tokio::sync::Notify::new(),
+        })
+    }
+
+    pub fn mark_started(&self) {
+        self.started.send_replace(true);
+    }
+
+    pub async fn wait_started(&self) {
+        let mut rx = self.started.subscribe();
+        let _ = rx.wait_for(|done| *done).await;
+    }
+
+    /// Chamado pelo frontend depois da primeira tela (`app_ready`).
+    pub fn mark_ui_ready(&self) {
+        self.ui_ready.notify_one();
+    }
+
+    /// Espera a primeira tela, com limite: sem resposta do frontend, a sincronização começa assim mesmo.
+    pub async fn wait_ui_ready(&self, limit: Duration) {
+        let _ = tokio::time::timeout(limit, self.ui_ready.notified()).await;
     }
 
     pub fn emit_accounts_changed(&self) {
@@ -207,6 +240,7 @@ impl AppState {
                     auth.refresh_token = Some(rotated);
                 }
                 tracing::info!(provider = ?handle.provider, "access token renovado");
+                self.update_photo(&handle.id, tokens.id_token.as_deref(), false);
                 Ok(tokens.access_token)
             }
             Err(AppError::TokenExpired) => {
@@ -218,6 +252,34 @@ impl AppState {
             }
             Err(e) => Err(e),
         }
+    }
+
+    /// Baixa a foto do perfil em segundo plano (US5, CA5). `force` ignora o limite de uma vez por
+    /// dia (conectar e reconectar). Sem a claim `picture` (escopo `profile` não autorizado), a foto
+    /// salva continua; sem rede, tenta de novo na próxima renovação.
+    pub fn update_photo(&self, account_id: &str, id_token: Option<&str>, force: bool) {
+        let Some(url) = id_token.and_then(photo::picture_from_id_token) else { return };
+        let app = self.app.clone();
+        let id = account_id.to_owned();
+        tauri::async_runtime::spawn(async move {
+            let state = app.state::<AppState>();
+            if !force {
+                let account = id.clone();
+                if !matches!(state.db.call(move |c| store::photo_due(c, &account)).await, Ok(true)) {
+                    return;
+                }
+            }
+            let photo = match photo::download(&state.http, &url).await {
+                Ok(photo) => Some(photo),
+                Err(AppError::ImapConnection) => return,
+                Err(_) => None,
+            };
+            let account = id.clone();
+            let saved = state.db.call(move |c| store::set_photo(c, &account, photo.as_ref().map(|(b, k)| (b.as_slice(), *k)))).await;
+            if saved.is_ok() {
+                state.emit_accounts_changed();
+            }
+        });
     }
 
     // ------------------------------------------------------------ login
@@ -295,6 +357,7 @@ impl AppState {
             auth.access = Some(access_from(&tokens));
         }
         self.save_index().await;
+        self.update_photo(&account.id, tokens.id_token.as_deref(), true);
         tracing::info!(provider = provider_id, is_new, "conta conectada");
         self.emit_accounts_changed();
         Ok(Connected { account, is_new, was_active })

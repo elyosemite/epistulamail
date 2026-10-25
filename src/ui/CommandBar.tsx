@@ -1,11 +1,12 @@
-// DS: header.html "Barra de comandos" · .commandbar (área .app-shell__commands), .commandbar__group, .commandbar__label,
+// DS: header.html "Barra de comandos" · .commandbar (segunda linha de .app-shell__block--header), .commandbar__group, .commandbar__label,
 //     .toolbar__sep; botoes.html · .btn--primary, .btn--subtle, .btn-split
 import { forwardRef, type ReactNode } from "react";
 import { Icon } from "./Icon";
 
-export function CommandBar({ label, children }: { label: string; children: ReactNode }) {
+/** `inert`: com as configurações abertas, os comandos não respondem (US5, D2). */
+export function CommandToolbar({ label, inert, children }: { label: string; inert?: boolean; children: ReactNode }) {
   return (
-    <div className="commandbar app-shell__commands" role="toolbar" aria-label={label}>
+    <div className="commandbar" role="toolbar" aria-label={label} inert={inert}>
       {children}
     </div>
   );

@@ -1,13 +1,14 @@
-// DS: threads.html · .thread-list, .thread (__star, __from, __from-name, __meta, __date, __actions, __subject, __subject-text), .is-unread, .is-open, .star-btn
-// DS: threads.html "Só cabeçalho" · .thread-list--headers (sem checkbox e prévia; ações rápidas opcionais)
+// DS: threads.html · .thread-list, .thread (__check, __star, __from, __from-name, __meta, __date, __actions, __subject,
+//     __subject-text), .is-unread, .is-checked (mão aberta para arrastar), .is-open, .star-btn; hover com
+//     --color-bg-neutral-subtle-hovered (US5); sidebar.html · .drag-ghost--follow (US6)
 // DS: carregamento.html · linhas .thread com .skeleton; etiquetas.html · .label (pasta na busca); menus.html · .lozenge de prazo
-import { forwardRef, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { forwardRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { IconButton } from "./Button";
 import { Icon } from "./Icon";
 
 export function ThreadList({ children, label, busy }: { children: ReactNode; label: string; busy?: boolean }) {
   return (
-    <div className="thread-list thread-list--headers" role="list" aria-label={label} aria-busy={busy || undefined}>
+    <div className="thread-list" role="list" aria-label={label} aria-busy={busy || undefined}>
       {children}
     </div>
   );
@@ -20,8 +21,14 @@ interface ThreadRowProps {
   unread: boolean;
   starred: boolean;
   open: boolean;
+  /** Marcada para ação em lote (checkbox). */
+  checked: boolean;
   onOpen: () => void;
+  /** `range`: Shift pressionado (marca o intervalo). */
+  onCheck: (range: boolean) => void;
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
+  /** Começo de um possível arraste para uma pasta (US6, CA5: eventos de ponteiro). */
+  onPointerDown?: (event: PointerEvent<HTMLDivElement>) => void;
   /** Sem estes callbacks a linha é somente leitura (estrela apagada, sem ações no hover). */
   onToggleStar?: () => void;
   onToggleRead?: () => void;
@@ -37,10 +44,10 @@ const stop = (fn: () => void) => (event: MouseEvent) => {
 };
 
 export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function ThreadRow(
-  { from, subject, date, unread, starred, open, onOpen, onKeyDown, onToggleStar, onToggleRead, badge, folder },
+  { from, subject, date, unread, starred, open, checked, onOpen, onCheck, onKeyDown, onPointerDown, onToggleStar, onToggleRead, badge, folder },
   ref,
 ) {
-  const cls = ["thread", unread && "is-unread", open && "is-open"].filter(Boolean).join(" ");
+  const cls = ["thread", unread && "is-unread", checked && "is-checked", open && "is-open"].filter(Boolean).join(" ");
   return (
     <div
       ref={ref}
@@ -48,10 +55,23 @@ export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function Thr
       role="listitem"
       tabIndex={0}
       aria-current={open || undefined}
-      aria-label={`${unread ? "Não lida, " : ""}${starred ? "com estrela, " : ""}${from}, ${subject}, ${date}`}
+      aria-label={`${checked ? "Marcada, " : ""}${unread ? "Não lida, " : ""}${starred ? "com estrela, " : ""}${from}, ${subject}, ${date}`}
       onClick={onOpen}
       onKeyDown={onKeyDown}
+      onPointerDown={onPointerDown}
     >
+      <input
+        type="checkbox"
+        className="checkbox thread__check"
+        aria-label={`Selecionar conversa de ${from}`}
+        checked={checked}
+        tabIndex={-1}
+        onChange={() => undefined}
+        onClick={(e) => {
+          e.stopPropagation();
+          onCheck(e.shiftKey);
+        }}
+      />
       {onToggleStar ? (
         <button
           type="button"
@@ -96,10 +116,21 @@ export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function Thr
 export function ThreadSkeleton({ from = "40%", subject = "70%" }: { from?: string; subject?: string }) {
   return (
     <div className="thread" style={{ cursor: "default" }} aria-hidden="true">
+      <span className="skeleton thread__check" style={{ width: "1rem", height: "1rem" }} />
       <span className="skeleton skeleton--circle thread__star" />
       <span className="skeleton thread__from" style={{ width: from }} />
       <span className="skeleton thread__meta" style={{ width: "2.5rem" }} />
       <span className="skeleton thread__subject" style={{ width: subject }} />
     </div>
+  );
+}
+
+/** `.drag-ghost.drag-ghost--follow`: segue o ponteiro, com o cursor no canto superior esquerdo ("Mover 3 conversas"). */
+export function DragGhost({ label, x, y }: { label: string; x: number; y: number }) {
+  return (
+    <span className="drag-ghost drag-ghost--follow" aria-hidden="true" style={{ "--x": `${x}px`, "--y": `${y}px` } as CSSProperties}>
+      <Icon name="mail" />
+      {label}
+    </span>
   );
 }

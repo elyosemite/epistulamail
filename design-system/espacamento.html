@@ -249,6 +249,136 @@
         </div>
       </div>
 
+      <h3 class="sub">Em blocos <code>.app-shell--blocks</code></h3>
+      <p class="demo-hint">A coluna de contas vai do topo ao rodapé sobre o fundo. O header e os comandos formam um bloco; pastas e lista, outro; a leitura, o terceiro. O divisor fica no gap entre a lista e a leitura.</p>
+      <div class="stage stage--flush scroll-x">
+        <div class="app-shell app-shell--embedded app-shell--with-rail app-shell--blocks" style="min-width:68rem;height:46rem">
+          <nav class="account-rail app-shell__rail" aria-label="Contas">
+            <div class="account-rail__list" role="list">
+              <div role="listitem"><button class="account-rail__item" type="button" aria-current="true" aria-label="Trabalho"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%235E4DB2%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23DFD8FD%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23DFD8FD%22/%3E%3C/svg%3E"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">12</span><span class="account-rail__name" aria-hidden="true">Trabalho</span></button></div>
+              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Pessoal"><span class="avatar avatar--lg" aria-hidden="true">P<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23206A83%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23C6EDFB%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23C6EDFB%22/%3E%3C/svg%3E"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
+              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Família"><span class="avatar avatar--lg avatar--orange" aria-hidden="true">F</span><span class="account-rail__name" aria-hidden="true">Família</span></button></div>
+            </div>
+            <div class="account-rail__sep" role="separator"></div>
+            <button class="account-rail__add" type="button" aria-label="Adicionar conta" data-tip="Adicionar conta"><svg class="i"><use href="#i-plus"/></svg></button>
+          </nav>
+
+          <div class="app-shell__block app-shell__block--header">
+            <header class="appbar appbar--shell">
+              <span class="appbar__brand"><span class="wordmark wordmark--sm"><span class="wordmark__glyph" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</span></span>
+              <div class="appbar__search">
+                <div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar em Trabalho" aria-label="Buscar e-mails"><kbd>/</kbd></div>
+                <button class="btn btn--subtle btn--icon" type="button" aria-label="Configurações" data-tip="Configurações (Ctrl+,)"><svg class="i"><use href="#i-settings"/></svg></button>
+              </div>
+              <div class="appbar__actions">
+                <div class="appbar__account" role="status"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%235E4DB2%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23DFD8FD%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23DFD8FD%22/%3E%3C/svg%3E"></span><span class="appbar__account-text"><span class="appbar__account-name">Trabalho</span> · joao.silva.empresa@gmail.com</span></div>
+              </div>
+            </header>
+            <div class="commandbar" role="toolbar" aria-label="Ações de 2 conversas selecionadas">
+              <button class="btn btn--primary" type="button" data-tip="Novo e-mail (N)"><svg class="i"><use href="#i-pencil"/></svg>Novo e-mail</button>
+              <span class="toolbar__sep" role="separator"></span>
+              <div class="commandbar__group">
+                <button class="btn btn--subtle" type="button" data-tip="Excluir (Delete)"><svg class="i"><use href="#i-trash"/></svg><span class="commandbar__label">Excluir</span></button>
+                <button class="btn btn--subtle" type="button" data-tip="Arquivar (E)"><svg class="i"><use href="#i-archive"/></svg><span class="commandbar__label">Arquivar</span></button>
+                <button class="btn btn--subtle" type="button" aria-haspopup="menu" data-tip="Mover para (V)"><svg class="i"><use href="#i-folder-move"/></svg><span class="commandbar__label">Mover para</span><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button>
+                <div class="btn-split">
+                  <button class="btn btn--subtle" type="button" disabled data-tip="Selecione uma conversa só"><svg class="i"><use href="#i-reply-all"/></svg><span class="commandbar__label">Responder a todos</span></button>
+                  <button class="btn btn--subtle" type="button" disabled aria-label="Mais opções de resposta"><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button>
+                </div>
+              </div>
+              <span class="toolbar__sep" role="separator"></span>
+              <div class="commandbar__group">
+                <button class="btn btn--subtle" type="button" data-tip="Marcar como lida (Shift+U)"><svg class="i"><use href="#i-mail-open"/></svg><span class="commandbar__label">Lida</span></button>
+                <div class="btn-split">
+                  <button class="btn btn--subtle" type="button" data-tip="Sinalizar (Insert)"><svg class="i"><use href="#i-flag"/></svg><span class="commandbar__label">Sinalizar</span></button>
+                  <button class="btn btn--subtle" type="button" aria-label="Prazos da sinalização" aria-haspopup="menu"><svg class="i i--sm"><use href="#i-chevron-down"/></svg></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="app-shell__block app-shell__block--nav">
+            <nav class="sidebar app-shell__sidebar" aria-label="Pastas">
+              <div class="nav-group">
+                <a class="nav-item has-unread" href="#layout" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></a>
+                <a class="nav-item" href="#layout"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></a>
+                <a class="nav-item" href="#layout"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></a>
+                <a class="nav-item" href="#layout"><svg class="i"><use href="#i-file"/></svg><span class="nav-item__text">Rascunhos</span></a>
+                <a class="nav-item" href="#layout"><svg class="i"><use href="#i-trash"/></svg><span class="nav-item__text">Lixeira</span></a>
+              </div>
+              <div class="nav-group">
+                <div class="nav-heading">Marcadores</div>
+                <a class="nav-item" href="#layout"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Projetos</span></a>
+                <a class="nav-item" href="#layout"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Financeiro</span></a>
+              </div>
+            </nav>
+            <section class="app-shell__list" aria-label="Caixa de entrada">
+              <div class="toolbar is-selecting">
+                <input type="checkbox" class="checkbox" aria-label="Selecionar todas desta página">
+                <span class="toolbar__count" aria-live="polite">2 selecionadas</span>
+                <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Limpar seleção" data-tip="Limpar seleção (Esc)"><svg class="i"><use href="#i-x"/></svg></button>
+                <div class="toolbar__end"><span>1–50 de 2.000</span><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Página anterior" disabled><svg class="i"><use href="#i-chevron-left"/></svg></button><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Próxima página"><svg class="i"><use href="#i-chevron-right"/></svg></button></div>
+              </div>
+              <div class="app-shell__list-body">
+                <div class="thread-list" role="list" aria-label="Conversas"><div class="thread is-checked is-open" role="listitem" tabindex="0"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar conversa de Marina Couto" checked><span class="star-btn thread__star" aria-hidden="true" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="lozenge lozenge--moved">Hoje</span><span class="thread__date">10:42</span><span class="thread__actions"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Marcar como lida"><svg class="i"><use href="#i-mail-open"/></svg></button></span></div><div class="thread__subject"><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span></div></div><div class="thread is-unread is-checked" role="listitem" tabindex="0"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar conversa de Rafael Dias" checked><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Rafael Dias</span></div><div class="thread__meta"><span class="thread__date">09:15</span><span class="thread__actions"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Marcar como lida"><svg class="i"><use href="#i-mail-open"/></svg></button></span></div><div class="thread__subject"><span class="thread__subject-text">Planejamento do Q1</span></div></div><div class="thread" role="listitem" tabindex="0"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar conversa de RH Empresa"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">RH Empresa</span></div><div class="thread__meta"><span class="lozenge lozenge--overdue">Atrasada</span><span class="thread__date">21 out</span><span class="thread__actions"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Marcar como lida"><svg class="i"><use href="#i-mail-open"/></svg></button></span></div><div class="thread__subject"><span class="thread__subject-text">Holerite de outubro disponível</span></div></div><div class="thread is-unread" role="listitem" tabindex="0"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar conversa de Banco Atlântico"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Banco Atlântico</span></div><div class="thread__meta"><span class="thread__date">20 out</span><span class="thread__actions"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Marcar como lida"><svg class="i"><use href="#i-mail-open"/></svg></button></span></div><div class="thread__subject"><span class="thread__subject-text">Seu extrato de outubro está disponível</span></div></div><div class="thread" role="listitem" tabindex="0"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar conversa de Paulo Henrique"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Paulo Henrique</span></div><div class="thread__meta"><span class="thread__date">19 out</span><span class="thread__actions"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Marcar como lida"><svg class="i"><use href="#i-mail-open"/></svg></button></span></div><div class="thread__subject"><span class="thread__subject-text">Almoço de sexta?</span></div></div></div>
+              </div>
+            </section>
+          </div>
+
+          <div class="app-shell__resizer" role="separator" aria-orientation="vertical" aria-label="Largura da lista de mensagens" tabindex="0"></div>
+
+          <section class="app-shell__reader app-shell__block" aria-label="Mensagem">
+            <article class="reader reader--fluid">
+              <div class="reader__head"><h3 class="reader__subject">Revisão do contrato: Fornecedor Lumen</h3></div>
+              <div class="message">
+                <div class="message__head">
+                  <span class="avatar" aria-hidden="true">MC</span>
+                  <div><div class="message__from">Marina Couto <span class="message__addr">&lt;marina@lumen.com.br&gt;</span></div><button class="message__to" type="button">para mim <svg class="i i--sm"><use href="#i-chevron-down"/></svg></button></div>
+                  <div class="message__time">10:42</div>
+                </div>
+                <div class="message__body">
+                  <p>Oi, João! Segue a versão revisada do contrato com as mudanças que combinamos na reunião de terça.</p>
+                  <p>O texto agora ocupa a largura inteira do bloco de conteúdo: aumente ou diminua a janela e o bloco acompanha, sem sobrar espaço à direita. O e-mail HTML e o card de resposta seguem a mesma regra.</p>
+                  <p>Abraços,<br>Marina</p>
+                </div>
+              </div>
+            </article>
+          </section>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Áreas</dt><dd><code>.app-shell--blocks</code> (com <code>--with-rail</code>) tem cinco colunas: contas, pastas, lista, o gap de 8px e a leitura. Cada bloco é um <code>.app-shell__block</code>: superfície, raio de 8px e <code>--shadow-raised</code>. Os gaps de <code>--space-100</code> mostram o fundo.</dd></div>
+        <div><dt>Header</dt><dd><code>.app-shell__block--header</code> usa <code>subgrid</code>: a marca fica sobre as pastas, a busca e o botão de configurações sobre a lista, a conta sobre a leitura. A <code>.commandbar</code> é a segunda linha do mesmo bloco.</dd></div>
+        <div><dt>Navegação</dt><dd><code>.app-shell__block--nav</code> agrupa <code>.app-shell__sidebar</code> e <code>.app-shell__list</code>, também em <code>subgrid</code>. A leitura (<code>.app-shell__reader.app-shell__block</code>) é o bloco de conteúdo.</dd></div>
+        <div><dt>Fundo</dt><dd>A casca pinta <code>var(--app-background, var(--color-canvas))</code>. Tema, cor ou imagem do usuário trocam só <code>--app-background</code>; a coluna de contas não tem superfície própria.</dd></div>
+        <div><dt>Leitura fluida</dt><dd><code>.reader--fluid</code> tira a medida de 672px do corpo, do quadro HTML e da resposta: o conteúdo acompanha a largura do bloco.</dd></div>
+        <div><dt>Telas estreitas</dt><dd>Abaixo de 960px a coluna de contas some, o bloco de navegação ocupa a largura e a leitura entra no lugar dele com <code>.has-reader</code>.</dd></div>
+      </dl>
+      <h3 class="sub">Barra de rolagem</h3>
+      <div class="stage">
+        <div class="states">
+          <div style="width:20rem;height:12rem;overflow:auto;border:var(--border-width) solid var(--color-border);border-radius:var(--radius-medium);background:var(--color-surface)" tabindex="0" aria-label="Exemplo vertical">
+            <div class="thread-list" role="list">
+              <div class="thread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="thread__subject-text">Revisão do contrato</span></div></div>
+              <div class="thread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Rafael Dias</span></div><div class="thread__meta"><span class="thread__date">09:15</span></div><div class="thread__subject"><span class="thread__subject-text">Planejamento do Q1</span></div></div>
+              <div class="thread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">RH Empresa</span></div><div class="thread__meta"><span class="thread__date">21 out</span></div><div class="thread__subject"><span class="thread__subject-text">Holerite de outubro</span></div></div>
+              <div class="thread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Banco Atlântico</span></div><div class="thread__meta"><span class="thread__date">20 out</span></div><div class="thread__subject"><span class="thread__subject-text">Seu extrato de outubro</span></div></div>
+              <div class="thread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Paulo Henrique</span></div><div class="thread__meta"><span class="thread__date">19 out</span></div><div class="thread__subject"><span class="thread__subject-text">Almoço de sexta?</span></div></div>
+            </div>
+          </div>
+          <div style="width:24rem;height:12rem;overflow:auto;border:var(--border-width) solid var(--color-border);border-radius:var(--radius-medium);background:var(--color-surface)" tabindex="0" aria-label="Exemplo nos dois eixos">
+            <div style="width:60rem;padding:var(--space-200);font:var(--font-body);color:var(--color-text-subtle)">
+              <p>Um e-mail HTML mais largo que a coluna de conteúdo rola na horizontal dentro do quadro da mensagem; a coluna rola na vertical. As duas barras usam o mesmo estilo, e o canto entre elas fica transparente.</p>
+              <p>Linha longa: ████████████████████████████████████████████████████████████████████████████████████████████</p>
+              <p>Mais texto para rolar na vertical.</p><p>Mais texto.</p><p>Mais texto.</p><p>Fim.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Barra</dt><dd>Global (<code>::-webkit-scrollbar</code>), nos dois eixos: 12px de área, trilho transparente, alça de 6px arredondada em <code>--color-scrollbar-thumb</code> que vai para <code>--color-scrollbar-thumb-hovered</code> no hover, mínimo de 32px. Fora do Chromium, cai para <code>scrollbar-width: thin</code> com as mesmas cores.</dd></div>
+        <div><dt>E-mail HTML</dt><dd>O quadro da mensagem é um documento à parte, sempre com fundo de papel: usa a mesma barra com as cores do tema claro.</dd></div>
+      </dl>
       </section>
   </main>
 </div>

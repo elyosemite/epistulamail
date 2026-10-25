@@ -13,6 +13,7 @@ const account = (over: Partial<Account> = {}): Account => ({
   unread: 12,
   lastFolderId: null,
   listWidth: null,
+  photo: null,
   ...over,
 });
 

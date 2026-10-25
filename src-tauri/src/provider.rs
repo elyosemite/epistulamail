@@ -38,7 +38,7 @@ impl Provider {
 
     pub fn scopes(self) -> &'static str {
         match self {
-            Provider::Google => "https://mail.google.com/ openid email",
+            Provider::Google => "https://mail.google.com/ openid email profile",
             Provider::Microsoft => {
                 "https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send offline_access openid email"
             }

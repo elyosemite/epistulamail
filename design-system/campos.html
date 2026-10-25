@@ -33,11 +33,13 @@
             <div class="field"><label class="field__label" for="f-search">Busca</label><div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input id="f-search" placeholder="Buscar e-mails"><kbd>/</kbd></div></div>
             <div class="field"><label class="field__label" for="f-signature">Assinatura</label><div class="input input--textarea"><textarea id="f-signature" rows="3">Yuri Melo
 Engenharia · Epistula</textarea></div></div>
+            <div class="field"><label class="field__label" for="f-select">Verificar novos e-mails a cada</label><span class="select"><select id="f-select"><option>Manualmente</option><option>1 minuto</option><option selected>5 minutos</option><option>1 hora</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span></div>
             <div class="field"><span class="field__label">Linha de composição</span><label class="input input--line" for="f-subject"><span class="input__prefix">Assunto</span><input id="f-subject" value="Proposta Q4 para a diretoria"></label></div>
           </div>
         </div>
         <dl class="guidance">
           <div><dt>Estados</dt><dd>Padrão, hover (fundo sutil), foco (borda azul de 2px), inválido (borda vermelha e mensagem com ícone), desabilitado (sem borda e texto esmaecido).</dd></div>
+          <div><dt>Lista de opções</dt><dd><code>.select</code> envolve um <code>&lt;select&gt;</code> nativo e o ícone <code>chevron-down</code>. Use para escolhas fechadas com até ~10 opções; o rótulo vem de <code>&lt;label&gt;</code> ou <code>aria-label</code>.</dd></div>
           <div><dt>Erros</dt><dd>A mensagem diz o que corrigir, não só o que deu errado. Valide ao sair do campo, nunca a cada tecla.</dd></div>
         </dl>
       </section>

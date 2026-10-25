@@ -458,7 +458,7 @@ JVBERi0xLjQK\r\n\
         assert!(logs.contains("conta criada no banco"), "o teste precisa observar os logs do banco: {logs}");
         for secret in [
             "Revisão", "João", "joao@lumen.com.br", "yuri@gmail.com", "equipe@lumen", "segredo@oculto", "Olá", "Contrato.pdf", "tracker.example",
-            "redacao.marcador", "NomeContaMarcador", "PastaMarcadora", "AssuntoMarcador", "CorpoMarcador", "AnexoMarcador", "remetente@exemplo",
+            "redacao.marcador", "NomeContaMarcador", "PastaMarcadora", "AssuntoMarcador", "CorpoMarcador", "AnexoMarcador", "remetente@exemplo", "FotoMarcador", "Rm90b01hcmNhZG9y",
         ] {
             assert!(!logs.contains(secret), "log vazou {secret:?}: {logs}");
         }

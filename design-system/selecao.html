@@ -96,6 +96,35 @@
           <div><dt>Acessibilidade</dt><dd><code>fieldset</code> com <code>legend</code> "Cor"; cada opção é um rádio nativo com o nome da cor em <code>.visually-hidden</code>. A seleção tem anel azul e marca de verificação, não só cor.</dd></div>
           <div><dt>Mais de seis contas</dt><dd>As cores se repetem; a inicial e o nome continuam distinguindo as contas.</dd></div>
         </dl>
+        <h3 class="sub">Tema <code>.theme-picker</code></h3>
+        <div class="stage">
+          <div style="max-width:36rem">
+            <fieldset class="theme-picker">
+                    <legend class="visually-hidden">Tema</legend>
+                    <label class="theme-option"><input type="radio" name="theme-doc" value="light"><span class="theme-option__icon"><svg class="i i--lg"><use href="#i-sun"/></svg></span><span class="theme-option__name">Claro</span><span class="theme-option__desc">Sempre claro</span></label>
+                    <label class="theme-option"><input type="radio" name="theme-doc" value="dark"><span class="theme-option__icon"><svg class="i i--lg"><use href="#i-moon"/></svg></span><span class="theme-option__name">Escuro</span><span class="theme-option__desc">Sempre escuro</span></label>
+                    <label class="theme-option"><input type="radio" name="theme-doc" value="system" checked><span class="theme-option__icon"><svg class="i i--lg"><use href="#i-monitor"/></svg></span><span class="theme-option__name">Sistema</span><span class="theme-option__desc">Segue o Windows</span></label>
+                  </fieldset>
+          </div>
+        </div>
+        <h3 class="sub">Cor do fundo <code>.color-swatch__fill</code></h3>
+        <div class="stage">
+          <fieldset class="color-picker">
+                    <legend class="visually-hidden">Cor do fundo</legend>
+                    <label class="color-swatch" data-tip="Padrão"><input type="radio" name="canvas-doc" value=""><span class="color-swatch__fill" style="--swatch:var(--color-canvas)"></span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Padrão</span></label>
+                    <label class="color-swatch" data-tip="Azul"><input type="radio" name="canvas-doc" value="blue"><span class="color-swatch__fill" style="--swatch:var(--color-canvas-blue)"></span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Azul</span></label>
+                    <label class="color-swatch" data-tip="Verde-azulado"><input type="radio" name="canvas-doc" value="teal"><span class="color-swatch__fill" style="--swatch:var(--color-canvas-teal)"></span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Verde-azulado</span></label>
+                    <label class="color-swatch" data-tip="Verde"><input type="radio" name="canvas-doc" value="green"><span class="color-swatch__fill" style="--swatch:var(--color-canvas-green)"></span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Verde</span></label>
+                    <label class="color-swatch" data-tip="Roxo"><input type="radio" name="canvas-doc" value="purple" checked><span class="color-swatch__fill" style="--swatch:var(--color-canvas-purple)"></span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Roxo</span></label>
+                    <label class="color-swatch" data-tip="Magenta"><input type="radio" name="canvas-doc" value="magenta"><span class="color-swatch__fill" style="--swatch:var(--color-canvas-magenta)"></span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Magenta</span></label>
+                    <label class="color-swatch" data-tip="Laranja"><input type="radio" name="canvas-doc" value="orange"><span class="color-swatch__fill" style="--swatch:var(--color-canvas-orange)"></span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Laranja</span></label>
+                    <label class="color-swatch" data-tip="Areia"><input type="radio" name="canvas-doc" value="sand"><span class="color-swatch__fill" style="--swatch:var(--color-canvas-sand)"></span><span class="color-swatch__check" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><span class="visually-hidden">Areia</span></label>
+                  </fieldset>
+        </div>
+        <dl class="guidance">
+          <div><dt>Tema</dt><dd><code>.theme-picker</code> é um <code>fieldset</code> de rádios em cartões <code>.theme-option</code> (ícone, nome, descrição). Sistema remove o <code>data-theme</code> do <code>&lt;html&gt;</code> e segue <code>prefers-color-scheme</code>; Claro e Escuro o fixam. Fica em Configurações → Aparência.</dd></div>
+          <div><dt>Fundo</dt><dd>O mesmo <code>.color-swatch</code> do seletor de cor da conta, com <code>.color-swatch__fill</code> (quadrado da cor em <code>--swatch</code>) no lugar do avatar. Oito cores: Padrão (<code>--color-canvas</code>) e <code>--color-canvas-blue</code>, <code>-teal</code>, <code>-green</code>, <code>-purple</code>, <code>-magenta</code>, <code>-orange</code>, <code>-sand</code>, com valores para claro e escuro. A escolha grava <code>--app-background</code> na casca.</dd></div>
+        </dl>
       </section>
   </main>
 </div>

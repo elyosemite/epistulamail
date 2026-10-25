@@ -16,6 +16,11 @@ pub const COLORS: &[&str] = &["blue", "teal", "green", "purple", "magenta", "ora
 pub const MAX_NAME_CHARS: usize = 32;
 const SETTING_LAST_FOLDER: &str = "last_folder";
 const SETTING_LIST_WIDTH: &str = "list_width";
+const SETTING_SYNC_MINUTES: &str = "sync_minutes";
+const APP_SYNC_DEFAULT: &str = "sync_default_minutes";
+/// Intervalos de sincronização aceitos, em minutos (US5, D3). `None` é "Manualmente".
+pub const SYNC_INTERVALS: &[u32] = &[1, 2, 5, 10, 15, 30, 60];
+pub const SYNC_DEFAULT_MINUTES: u32 = 5;
 /// Limites da largura da lista em pixels (20rem a 35rem com fonte de 16px).
 pub const LIST_WIDTH_RANGE: std::ops::RangeInclusive<u32> = 320..=560;
 /// Mensagem movida fica protegida da limpeza de órfãs por este tempo (segundos).
@@ -82,12 +87,15 @@ pub struct Account {
     pub last_folder_id: Option<String>,
     /// Largura da lista em pixels (divisor entre lista e leitura), por conta.
     pub list_width: Option<u32>,
+    /// Foto do perfil do provedor como `data:` URL (a WebView não busca nada no provedor).
+    pub photo: Option<String>,
 }
 
 const ACCOUNT_SELECT: &str = "SELECT a.id, a.provider, a.email, a.display_name, a.color, a.position, a.status,
         (SELECT f.unread FROM folder f WHERE f.account_id = a.id AND f.role = 'inbox' LIMIT 1),
         (SELECT s.value FROM account_setting s WHERE s.account_id = a.id AND s.key = 'last_folder'),
-        (SELECT s.value FROM account_setting s WHERE s.account_id = a.id AND s.key = 'list_width')
+        (SELECT s.value FROM account_setting s WHERE s.account_id = a.id AND s.key = 'list_width'),
+        a.photo, a.photo_type
     FROM account a";
 
 fn account_from(row: &Row<'_>) -> rusqlite::Result<Account> {
@@ -102,6 +110,10 @@ fn account_from(row: &Row<'_>) -> rusqlite::Result<Account> {
         unread: row.get::<_, Option<i64>>(7)?.and_then(|n| u32::try_from(n).ok()),
         last_folder_id: row.get(8)?,
         list_width: row.get::<_, Option<String>>(9)?.and_then(|v| v.parse().ok()),
+        photo: match (row.get::<_, Option<Vec<u8>>>(10)?, row.get::<_, Option<String>>(11)?) {
+            (Some(bytes), Some(kind)) => Some(photo_data_url(&kind, &bytes)),
+            _ => None,
+        },
     })
 }
 
@@ -244,6 +256,139 @@ pub fn set_list_width(conn: &Connection, account_id: &str, width: u32) -> Result
         params![account_id, SETTING_LIST_WIDTH, width.to_string()],
     )
     .map_err(sql_error("ajuste da conta"))?;
+    Ok(())
+}
+
+// ---------------------------------------------------------------- foto da conta (US5, CA5)
+
+fn photo_data_url(kind: &str, bytes: &[u8]) -> String {
+    use base64::Engine;
+    format!("data:{kind};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes))
+}
+
+/// Grava a foto baixada (ou apaga, com `None`) e marca a hora da verificação.
+pub fn set_photo(conn: &Connection, account_id: &str, photo: Option<(&[u8], &str)>) -> Result<(), AppError> {
+    let (bytes, kind) = photo.map_or((None, None), |(b, k)| (Some(b), Some(k)));
+    let changed = conn
+        .execute(
+            "UPDATE account SET photo = ?2, photo_type = ?3, photo_checked_at = ?4 WHERE id = ?1",
+            params![account_id, bytes, kind, now()],
+        )
+        .map_err(sql_error("foto da conta"))?;
+    if changed == 0 {
+        return Err(AppError::AccountNotFound);
+    }
+    Ok(())
+}
+
+/// A foto é verificada no máximo uma vez por dia (fora conectar e reconectar).
+pub fn photo_due(conn: &Connection, account_id: &str) -> Result<bool, AppError> {
+    let checked: Option<i64> = conn
+        .query_row("SELECT photo_checked_at FROM account WHERE id = ?1", [account_id], |r| r.get(0))
+        .optional()
+        .map_err(sql_error("foto da conta"))?
+        .ok_or(AppError::AccountNotFound)?;
+    Ok(checked.is_none_or(|t| now() - t >= 24 * 3600))
+}
+
+// ---------------------------------------------------------------- intervalo de sincronização (US5, CA7)
+
+/// `None` = manualmente. Só os valores de `SYNC_INTERVALS` são aceitos.
+pub fn validate_interval(minutes: Option<u32>) -> Result<Option<u32>, AppError> {
+    match minutes {
+        Some(m) if !SYNC_INTERVALS.contains(&m) => Err(AppError::InvalidInput),
+        other => Ok(other),
+    }
+}
+
+fn encode_interval(minutes: Option<u32>) -> String {
+    minutes.map_or_else(|| "manual".to_owned(), |m| m.to_string())
+}
+
+fn decode_interval(value: &str) -> Option<Option<u32>> {
+    if value == "manual" {
+        return Some(None);
+    }
+    value.parse().ok().filter(|m| SYNC_INTERVALS.contains(m)).map(Some)
+}
+
+pub fn default_interval(conn: &Connection) -> Result<Option<u32>, AppError> {
+    let value: Option<String> = conn
+        .query_row("SELECT value FROM app_setting WHERE key = ?1", [APP_SYNC_DEFAULT], |r| r.get(0))
+        .optional()
+        .map_err(sql_error("ajuste do app"))?;
+    Ok(value.as_deref().and_then(decode_interval).unwrap_or(Some(SYNC_DEFAULT_MINUTES)))
+}
+
+pub fn set_default_interval(conn: &Connection, minutes: Option<u32>) -> Result<(), AppError> {
+    let minutes = validate_interval(minutes)?;
+    conn.execute(
+        "INSERT INTO app_setting (key, value) VALUES (?1, ?2) ON CONFLICT (key) DO UPDATE SET value = excluded.value",
+        params![APP_SYNC_DEFAULT, encode_interval(minutes)],
+    )
+    .map_err(sql_error("ajuste do app"))?;
+    Ok(())
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountSync {
+    pub account_id: String,
+    /// Intervalo que vale para a conta (o próprio ou o padrão). `None` = manualmente.
+    pub minutes: Option<u32>,
+    pub uses_default: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncSettings {
+    pub default_minutes: Option<u32>,
+    pub accounts: Vec<AccountSync>,
+}
+
+pub fn sync_settings(conn: &Connection) -> Result<SyncSettings, AppError> {
+    let default_minutes = default_interval(conn)?;
+    let mut st = conn
+        .prepare_cached(
+            "SELECT a.id, (SELECT s.value FROM account_setting s WHERE s.account_id = a.id AND s.key = ?1)
+             FROM account a ORDER BY a.position, a.created_at",
+        )
+        .map_err(sql_error("sincronização"))?;
+    let rows = st
+        .query_map([SETTING_SYNC_MINUTES], |r| Ok((r.get::<_, String>(0)?, r.get::<_, Option<String>>(1)?)))
+        .map_err(sql_error("sincronização"))?;
+    let mut accounts = Vec::new();
+    for row in rows {
+        let (account_id, own) = row.map_err(sql_error("sincronização"))?;
+        let own = own.as_deref().and_then(decode_interval);
+        accounts.push(AccountSync { account_id, minutes: own.unwrap_or(default_minutes), uses_default: own.is_none() });
+    }
+    Ok(SyncSettings { default_minutes, accounts })
+}
+
+/// Aplica o mesmo intervalo a uma ou várias contas; `use_default` volta a seguir o padrão.
+pub fn set_account_interval(conn: &mut Connection, account_ids: &[String], minutes: Option<u32>, use_default: bool) -> Result<(), AppError> {
+    let minutes = validate_interval(minutes)?;
+    if account_ids.is_empty() {
+        return Err(AppError::InvalidInput);
+    }
+    let tx = conn.transaction().map_err(sql_error("sincronização"))?;
+    for id in account_ids {
+        require_account(&tx, id)?;
+        if use_default {
+            tx.execute("DELETE FROM account_setting WHERE account_id = ?1 AND key = ?2", params![id, SETTING_SYNC_MINUTES])
+                .map_err(sql_error("sincronização"))?;
+        } else {
+            tx.execute(
+                "INSERT INTO account_setting (account_id, key, value) VALUES (?1, ?2, ?3)
+                 ON CONFLICT (account_id, key) DO UPDATE SET value = excluded.value",
+                params![id, SETTING_SYNC_MINUTES, encode_interval(minutes)],
+            )
+            .map_err(sql_error("sincronização"))?;
+        }
+    }
+    tx.commit().map_err(sql_error("sincronização"))?;
+    tracing::info!(accounts = account_ids.len(), use_default, "intervalo de sincronização alterado");
     Ok(())
 }
 
@@ -727,6 +872,156 @@ pub fn search(conn: &Connection, account_id: &str, query: &str) -> Result<Vec<Se
         })
         .map_err(sql_error("busca"))?;
     rows.collect::<Result<_, _>>().map_err(sql_error("busca"))
+}
+
+// ---------------------------------------------------------------- sinalizadas (US6, CA6)
+
+/// Prazo das sinalizadas na coluna de pastas. "Esta semana" vai de amanhã até o fim da semana
+/// calculado no frontend (a data local do usuário), como na US4.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FlagBucket {
+    Overdue,
+    Today,
+    ThisWeek,
+    Later,
+    NoDate,
+}
+
+/// Datas de referência (AAAA-MM-DD), validadas por quem chama.
+#[derive(Debug, Clone)]
+pub struct FlagDates {
+    pub today: String,
+    pub week_end: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlaggedCounts {
+    pub overdue: u32,
+    pub today: u32,
+    pub this_week: u32,
+    pub later: u32,
+    pub no_date: u32,
+}
+
+/// Sinalizada e não concluída, com a estrela ainda ligada (a sincronização apaga o prazo quando a
+/// estrela some em outro dispositivo).
+const FLAGGED_WHERE: &str = "fu.completed_at IS NULL AND m.flagged = 1 AND m.account_id = ?1";
+
+const BUCKET_CASE: &str = "CASE
+        WHEN fu.due_date IS NULL THEN 'no_date'
+        WHEN fu.due_date < ?2 THEN 'overdue'
+        WHEN fu.due_date = ?2 THEN 'today'
+        WHEN fu.due_date <= ?3 THEN 'this_week'
+        ELSE 'later' END";
+
+pub fn flagged_counts(conn: &Connection, account_id: &str, dates: &FlagDates) -> Result<FlaggedCounts, AppError> {
+    let mut st = conn
+        .prepare_cached(&format!(
+            "SELECT {BUCKET_CASE} AS bucket, count(*)
+             FROM message m JOIN message_followup fu ON fu.message_id = m.id
+             WHERE {FLAGGED_WHERE} AND EXISTS (SELECT 1 FROM message_folder mf WHERE mf.message_id = m.id)
+             GROUP BY bucket"
+        ))
+        .map_err(sql_error("sinalizadas"))?;
+    let rows = st
+        .query_map(params![account_id, dates.today, dates.week_end], |r| Ok((r.get::<_, String>(0)?, r.get::<_, u32>(1)?)))
+        .map_err(sql_error("sinalizadas"))?;
+    let mut counts = FlaggedCounts::default();
+    for row in rows {
+        let (bucket, n) = row.map_err(sql_error("sinalizadas"))?;
+        match bucket.as_str() {
+            "overdue" => counts.overdue = n,
+            "today" => counts.today = n,
+            "this_week" => counts.this_week = n,
+            "later" => counts.later = n,
+            _ => counts.no_date = n,
+        }
+    }
+    Ok(counts)
+}
+
+fn bucket_name(bucket: FlagBucket) -> &'static str {
+    match bucket {
+        FlagBucket::Overdue => "overdue",
+        FlagBucket::Today => "today",
+        FlagBucket::ThisWeek => "this_week",
+        FlagBucket::Later => "later",
+        FlagBucket::NoDate => "no_date",
+    }
+}
+
+/// Mensagens de um prazo, como na busca: uma vez cada, na primeira pasta da sidebar. Atrasadas e
+/// com prazo vêm pelo prazo mais próximo; sem data, pelas mais recentes. Até `SEARCH_LIMIT + 1`.
+pub fn flagged(conn: &Connection, account_id: &str, bucket: FlagBucket, dates: &FlagDates) -> Result<Vec<SearchHit>, AppError> {
+    let mut st = conn
+        .prepare_cached(&format!(
+            "SELECT {LISTED_COLUMNS}, f.id, f.display_name
+             FROM message m
+             JOIN message_folder mf ON mf.message_id = m.id
+             JOIN folder f ON f.id = mf.folder_id
+             JOIN message_followup fu ON fu.message_id = m.id
+             WHERE {FLAGGED_WHERE} AND {BUCKET_CASE} = ?4
+               AND f.position = (SELECT min(f2.position) FROM message_folder mf2 JOIN folder f2 ON f2.id = mf2.folder_id WHERE mf2.message_id = m.id)
+             ORDER BY fu.due_date IS NULL, fu.due_date, m.date DESC LIMIT ?5"
+        ))
+        .map_err(sql_error("sinalizadas"))?;
+    let rows = st
+        .query_map(params![account_id, dates.today, dates.week_end, bucket_name(bucket), SEARCH_LIMIT + 1], |r| {
+            Ok(SearchHit { message: listed_from(r)?, folder_id: r.get(10)?, folder_name: r.get(11)? })
+        })
+        .map_err(sql_error("sinalizadas"))?;
+    rows.collect::<Result<_, _>>().map_err(sql_error("sinalizadas"))
+}
+
+// ---------------------------------------------------------------- aparência (US6, CA3–CA4)
+
+const APP_THEME: &str = "theme";
+const APP_CANVAS: &str = "canvas";
+pub const THEMES: &[&str] = &["light", "dark", "system"];
+/// Cores do fundo; "" é o padrão (`--color-canvas`).
+pub const CANVASES: &[&str] = &["", "blue", "teal", "green", "purple", "magenta", "orange", "sand"];
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Appearance {
+    pub theme: String,
+    pub canvas: String,
+}
+
+fn app_setting(conn: &Connection, key: &str) -> Result<Option<String>, AppError> {
+    conn.query_row("SELECT value FROM app_setting WHERE key = ?1", [key], |r| r.get(0))
+        .optional()
+        .map_err(sql_error("ajuste do app"))
+}
+
+fn set_app_setting(conn: &Connection, key: &str, value: &str) -> Result<(), AppError> {
+    conn.execute(
+        "INSERT INTO app_setting (key, value) VALUES (?1, ?2) ON CONFLICT (key) DO UPDATE SET value = excluded.value",
+        params![key, value],
+    )
+    .map_err(sql_error("ajuste do app"))?;
+    Ok(())
+}
+
+pub fn appearance(conn: &Connection) -> Result<Appearance, AppError> {
+    let theme = app_setting(conn, APP_THEME)?.filter(|t| THEMES.contains(&t.as_str())).unwrap_or_else(|| "system".into());
+    let canvas = app_setting(conn, APP_CANVAS)?.filter(|c| CANVASES.contains(&c.as_str())).unwrap_or_default();
+    Ok(Appearance { theme, canvas })
+}
+
+pub fn set_appearance(conn: &Connection, theme: Option<&str>, canvas: Option<&str>) -> Result<Appearance, AppError> {
+    if theme.is_some_and(|t| !THEMES.contains(&t)) || canvas.is_some_and(|c| !CANVASES.contains(&c)) {
+        return Err(AppError::InvalidInput);
+    }
+    if let Some(theme) = theme {
+        set_app_setting(conn, APP_THEME, theme)?;
+    }
+    if let Some(canvas) = canvas {
+        set_app_setting(conn, APP_CANVAS, canvas)?;
+    }
+    appearance(conn)
 }
 
 // ---------------------------------------------------------------- mover, excluir, arquivar (CA4, CA5)
@@ -1454,8 +1749,139 @@ pub(crate) mod tests {
             save_draft(c, &a.id, DraftKind::Reply, Some(m.id), &draft).unwrap();
             set_followup(c, m.id, FollowupChange::Set(Some("2026-10-24"))).unwrap();
             unlink(c, f.id, &[1], true).unwrap();
+            set_photo(c, &a.id, Some((b"FotoMarcador", "image/png"))).unwrap();
+            set_account_interval(c, std::slice::from_ref(&a.id), Some(1), false).unwrap();
+            set_default_interval(c, None).unwrap();
             set_status(c, &a.id, AccountStatus::SignedOut).unwrap();
             let _ = insert_account(c, &new_account_id(), gmail(), "redacao.marcador@gmail.com", "NomeContaMarcador", "teal");
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn sync_intervals_default_per_account_and_bulk() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "a@gmail.com");
+            let b = account(c, "b@gmail.com");
+            let z = account(c, "z@gmail.com");
+            let s = sync_settings(c).unwrap();
+            assert_eq!(s.default_minutes, Some(SYNC_DEFAULT_MINUTES));
+            assert!(s.accounts.iter().all(|x| x.uses_default && x.minutes == Some(5)));
+
+            set_default_interval(c, Some(15)).unwrap();
+            set_account_interval(c, &[a.id.clone(), b.id.clone()], Some(1), false).unwrap();
+            set_account_interval(c, std::slice::from_ref(&z.id), None, false).unwrap();
+            let s = sync_settings(c).unwrap();
+            let of = |id: &str| s.accounts.iter().find(|x| x.account_id == id).unwrap().clone();
+            assert_eq!((of(&a.id).minutes, of(&a.id).uses_default), (Some(1), false));
+            assert_eq!((of(&b.id).minutes, of(&b.id).uses_default), (Some(1), false));
+            assert_eq!((of(&z.id).minutes, of(&z.id).uses_default), (None, false));
+
+            // Voltar ao padrão segue o padrão atual, inclusive "Manualmente".
+            set_account_interval(c, std::slice::from_ref(&a.id), None, true).unwrap();
+            set_default_interval(c, None).unwrap();
+            let s = sync_settings(c).unwrap();
+            let a_sync = s.accounts.iter().find(|x| x.account_id == a.id).unwrap();
+            assert_eq!((a_sync.minutes, a_sync.uses_default), (None, true));
+
+            for bad in [Some(0), Some(3), Some(61), Some(u32::MAX)] {
+                assert_eq!(set_default_interval(c, bad), Err(AppError::InvalidInput));
+                assert_eq!(set_account_interval(c, std::slice::from_ref(&a.id), bad, false), Err(AppError::InvalidInput));
+            }
+            assert_eq!(set_account_interval(c, &[], Some(5), false), Err(AppError::InvalidInput));
+            // Conta inexistente desfaz o lote inteiro.
+            assert_eq!(set_account_interval(c, &[b.id.clone(), new_account_id()], Some(30), false), Err(AppError::AccountNotFound));
+            assert_eq!(sync_settings(c).unwrap().accounts.iter().find(|x| x.account_id == b.id).unwrap().minutes, Some(1));
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn flagged_messages_by_bucket() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "a@gmail.com");
+            let b = account(c, "b@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            let label = folder(c, &a.id, "Projetos", Role::Custom);
+            let other = folder(c, &b.id, "INBOX", Role::Inbox);
+            let mut s = snapshot(1..=7);
+            s.headers = (1..=7).map(|u| header(u, &format!("<{u}@x>"), "s", true)).collect();
+            apply_snapshot(c, inbox.id, &s).unwrap();
+            // A mesma mensagem 1 também no marcador: conta uma vez.
+            let mut l = snapshot(1..=1);
+            l.headers = vec![header(1, "<1@x>", "s", true)];
+            apply_snapshot(c, label.id, &l).unwrap();
+            let mut o = snapshot(1..=1);
+            o.headers = vec![header(1, "<o@x>", "s", true)];
+            apply_snapshot(c, other.id, &o).unwrap();
+
+            let flag = |c: &mut Connection, folder: i64, uid: u32, due: Option<&str>| {
+                let m = message_by_uid(c, folder, uid).unwrap().unwrap();
+                set_local_flags(c, m.id, MessageFlags { seen: true, flagged: true }).unwrap();
+                set_followup(c, m.id, FollowupChange::Set(due)).unwrap();
+                m.id
+            };
+            flag(c, inbox.id, 1, Some("2026-10-20")); // atrasada
+            flag(c, inbox.id, 2, Some("2026-10-24")); // hoje
+            flag(c, inbox.id, 3, Some("2026-10-25")); // esta semana
+            flag(c, inbox.id, 4, Some("2026-11-02")); // mais tarde
+            flag(c, inbox.id, 5, None); // sem data
+            let done = flag(c, inbox.id, 6, Some("2026-10-20"));
+            set_followup(c, done, FollowupChange::Complete).unwrap();
+            // Prazo local, mas a estrela foi tirada: não conta.
+            let off = flag(c, inbox.id, 7, None);
+            set_local_flags(c, off, MessageFlags { seen: true, flagged: false }).unwrap();
+            flag(c, other.id, 1, Some("2026-10-20")); // outra conta
+
+            let dates = FlagDates { today: "2026-10-24".into(), week_end: "2026-10-30".into() };
+            let counts = flagged_counts(c, &a.id, &dates).unwrap();
+            assert_eq!(counts, FlaggedCounts { overdue: 1, today: 1, this_week: 1, later: 1, no_date: 1 });
+            let overdue = flagged(c, &a.id, FlagBucket::Overdue, &dates).unwrap();
+            assert_eq!(overdue.len(), 1);
+            assert_eq!(overdue[0].folder_id, inbox.id);
+            assert_eq!(flagged(c, &a.id, FlagBucket::NoDate, &dates).unwrap().len(), 1);
+            assert_eq!(flagged_counts(c, &b.id, &dates).unwrap().overdue, 1);
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn appearance_defaults_and_validation() {
+        let t = test_db();
+        t.db.with(|c| {
+            assert_eq!(appearance(c).unwrap(), Appearance { theme: "system".into(), canvas: "".into() });
+            assert_eq!(set_appearance(c, Some("dark"), None).unwrap(), Appearance { theme: "dark".into(), canvas: "".into() });
+            assert_eq!(set_appearance(c, None, Some("teal")).unwrap(), Appearance { theme: "dark".into(), canvas: "teal".into() });
+            assert_eq!(set_appearance(c, Some("sepia"), None), Err(AppError::InvalidInput));
+            assert_eq!(set_appearance(c, None, Some("url(http://x)")), Err(AppError::InvalidInput));
+            assert_eq!(set_appearance(c, Some("light"), Some("x")), Err(AppError::InvalidInput));
+            assert_eq!(appearance(c).unwrap().theme, "dark");
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn account_photo_is_a_data_url_and_checked_daily() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "foto@gmail.com");
+            assert_eq!(a.photo, None);
+            assert!(photo_due(c, &a.id).unwrap());
+            set_photo(c, &a.id, Some((&[1, 2, 3], "image/png"))).unwrap();
+            assert_eq!(require_account(c, &a.id).unwrap().photo.as_deref(), Some("data:image/png;base64,AQID"));
+            assert!(!photo_due(c, &a.id).unwrap());
+            c.execute("UPDATE account SET photo_checked_at = ?2 WHERE id = ?1", params![a.id, now() - 25 * 3600]).unwrap();
+            assert!(photo_due(c, &a.id).unwrap());
+            set_photo(c, &a.id, None).unwrap();
+            assert_eq!(require_account(c, &a.id).unwrap().photo, None);
+            assert!(c.execute("UPDATE account SET photo_type = 'image/svg+xml' WHERE id = ?1", [&a.id]).is_err());
+            assert_eq!(set_photo(c, &new_account_id(), None), Err(AppError::AccountNotFound));
             Ok(())
         })
         .unwrap();

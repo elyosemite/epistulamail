@@ -24,6 +24,11 @@
           <p class="lede">Os componentes usam apenas tokens semânticos. O nome diz a função (<code>--color-text-subtle</code>), e o valor muda com o tema. Clique em qualquer amostra para copiar a variável. Os valores hex mostrados são os do tema atual.</p>
         </div>
         <div id="swatches"></div>
+        <dl class="guidance">
+          <div><dt>Tema escuro</dt><dd>Quase preto, sem chegar ao preto puro: fundo da janela <code>#030304</code>, blocos <code>#0E1013</code>, rebaixada <code>#090A0C</code>, elevada <code>#15181C</code>, menus e modais <code>#1B1F24</code>. Texto <code>#E6EAF0</code> (não branco puro, para não "vazar" no preto), secundário <code>#BCC5D0</code> e terciário <code>#9AA5B2</code>.</dd></div>
+          <div><dt>Contraste no escuro</dt><dd>Todo texto passa de 7:1 (AAA) nas superfícies: texto 15,8:1, secundário 10,9:1, terciário 7,6:1, azul da marca 8,4:1, item selecionado 8,0:1, botão principal 7,8:1. Bordas de campo e ícones secundários passam de 3:1.</dd></div>
+          <div><dt>Separação</dt><dd>No preto, a sombra não separa camadas: no tema escuro, <code>--shadow-raised</code> e <code>--shadow-overlay</code> levam um contorno de 1px em branco translúcido.</dd></div>
+        </dl>
 
         <h3 class="sub">Paleta base</h3>
         <p class="demo-hint" style="max-width:68ch">As rampas de onde os tokens saem. Elas servem de referência e não devem ser usadas diretamente nos componentes.</p>

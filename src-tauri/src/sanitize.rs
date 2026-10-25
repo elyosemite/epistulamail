@@ -109,14 +109,15 @@ pub fn sanitize_email_html(input: &str, allow_remote_images: bool) -> SanitizedH
     SanitizedHtml { html, blocked_remote_images: blocked.load(Ordering::Relaxed) }
 }
 
-/// Documento completo para o `srcdoc` do iframe, com CSP própria. Sem cores fixas: o quadro
-/// do DS (`.message__frame`) fornece o fundo de papel, e o texto usa o padrão do navegador.
+/// Documento completo para o `srcdoc` do iframe, com CSP própria. O quadro do DS
+/// (`.message__frame`) fornece o fundo de papel, e o texto usa o padrão do navegador. A única cor
+/// fixa é a da barra de rolagem (a do tema claro do DS, US6), porque o quadro é sempre claro.
 pub fn email_document(clean_html: &str, allow_remote_images: bool) -> String {
     let img_src = if allow_remote_images { "data: https: http:" } else { "data:" };
     format!(
         "<!doctype html><html><head><meta charset=\"utf-8\">\
 <meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src {img_src}; font-src data:\">\
-<style>html,body{{margin:0}}html{{overflow-y:hidden;overflow-x:auto}}body{{padding:16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:14px;line-height:1.5;overflow-wrap:anywhere}}img{{max-width:100%;height:auto}}table{{max-width:100%}}</style>\
+<style>html,body{{margin:0}}html{{overflow-y:hidden;overflow-x:auto}}body{{padding:16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:14px;line-height:1.5;overflow-wrap:anywhere}}img{{max-width:100%;height:auto}}table{{max-width:100%}}::-webkit-scrollbar{{width:12px;height:12px}}::-webkit-scrollbar-track,::-webkit-scrollbar-corner{{background:transparent}}::-webkit-scrollbar-thumb{{border:3px solid transparent;border-radius:999px;background:#B3B9C4 padding-box}}::-webkit-scrollbar-thumb:hover{{background-color:#8590A2}}</style>\
 </head><body>{clean_html}</body></html>"
     )
 }

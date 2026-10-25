@@ -247,7 +247,10 @@ kbd, .kbd {
   background: var(--av-bg); color: var(--av-fg);
   font: var(--font-weight-semibold) 0.75rem/1 var(--font-family-body);
   text-transform: uppercase; user-select: none;
+  position: relative; overflow: hidden;
 }
+/* L30 · Foto: cobre o avatar; a inicial fica por baixo se a foto falhar ou não existir */
+.avatar__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 .avatar--xs { width: 1.25rem; height: 1.25rem; font-size: 0.5625rem; }
 .avatar--sm { width: 1.5rem; height: 1.5rem; font-size: 0.625rem; }
 .avatar--lg { width: 2.5rem; height: 2.5rem; font-size: 0.875rem; }
@@ -632,6 +635,225 @@ kbd, .kbd {
 }
 
 /* ==========================================================================
+   Layout em blocos e configurações (L25–L34, US5)
+   ========================================================================== */
+/* L25 · Casca em blocos: contas | pastas | lista | gap (divisor) | leitura, sobre o fundo.
+   Use com --with-rail. Os comandos ficam dentro do bloco do header (D1). */
+.app-shell.app-shell--blocks {
+  --app-shell-gap: var(--space-100);
+  grid-template-columns: var(--layout-sidebar-collapsed) var(--app-shell-sidebar) clamp(20rem, var(--app-shell-list), 35rem) var(--app-shell-gap) minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "rail header header header header"
+    "rail banner banner banner banner"
+    "rail nav    nav    gap    reader";
+  padding: var(--app-shell-gap) var(--app-shell-gap) var(--app-shell-gap) 0;
+  /* L26 · Fundo: tema, cor ou imagem trocam só esta propriedade */
+  background: var(--app-background, var(--color-canvas));
+  background-size: cover; background-position: center;
+}
+.app-shell__block {
+  min-width: 0; min-height: 0;
+  border-radius: var(--radius-large);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+}
+.app-shell--blocks .app-shell__banner { margin-bottom: var(--app-shell-gap); }
+.app-shell--blocks .app-shell__center { grid-row: 3; grid-column: 2 / -1; }
+
+/* Coluna de contas sobre o fundo, do topo ao rodapé */
+.app-shell--blocks .app-shell__rail { grid-row: 1 / -1; padding-top: var(--space-150); background: transparent; border-right: 0; }
+.app-shell--blocks .account-rail__item:hover .avatar,
+.app-shell--blocks .account-rail__item.is-hover .avatar { box-shadow: 0 0 0 2px var(--color-canvas), 0 0 0 4px var(--color-border-bold); }
+.app-shell--blocks .account-rail__item[aria-current="true"] .avatar { box-shadow: 0 0 0 2px var(--color-canvas), 0 0 0 4px var(--color-border-selected); }
+.app-shell--blocks .account-rail__badge,
+.app-shell--blocks .account-rail__alert { box-shadow: 0 0 0 2px var(--color-canvas); }
+
+/* Bloco do header: marca sobre as pastas, busca + configurações sobre a lista, conta sobre a leitura */
+.app-shell__block--header { grid-area: header; display: grid; grid-template-columns: subgrid; margin-bottom: var(--app-shell-gap); }
+.app-shell__block--header > .appbar { grid-column: 1 / -1; background: transparent; }
+.app-shell__block--header > .commandbar { grid-column: 1 / -1; background: transparent; border-bottom: 0; }
+.app-shell--blocks .appbar--shell .appbar__brand { grid-column: 1; }
+.app-shell--blocks .appbar--shell .appbar__search { grid-column: 2; display: flex; align-items: center; gap: var(--space-050); }
+.app-shell--blocks .appbar--shell .appbar__search > .input { flex: 1; }
+.app-shell--blocks .appbar--shell .appbar__actions { grid-column: 3 / -1; }
+
+/* Bloco de navegação: pastas + lista */
+.app-shell__block--nav { grid-area: nav; display: grid; grid-template-columns: subgrid; grid-template-rows: minmax(0, 1fr); }
+.app-shell__block--nav > .app-shell__sidebar { grid-area: auto; grid-column: 1; background: transparent; }
+.app-shell__block--nav > .app-shell__list { grid-area: auto; grid-column: 2; border-right: 0; }
+.app-shell--blocks .app-shell__list .toolbar { flex-wrap: nowrap; background: transparent; }
+.app-shell--blocks .app-shell__list .toolbar.is-selecting { background: var(--color-bg-selected); }
+
+/* Bloco de conteúdo; o divisor ocupa o gap entre os blocos */
+/* O bloco corta o que sai dos cantos arredondados (overflow: hidden); a leitura precisa rolar nos dois eixos */
+.app-shell--blocks .app-shell__reader { grid-area: reader; overflow: auto; }
+.app-shell--blocks .app-shell__resizer { grid-area: gap; justify-self: stretch; width: auto; margin: 0; }
+.app-shell--blocks .app-shell__resizer::after { left: calc(50% - 1.5px); }
+
+/* L27 · Leitura na largura do bloco: sem a medida de 672px */
+.reader--fluid .message__body,
+.reader--fluid .message__frame,
+.reader--fluid .compose--inline { max-width: none; }
+
+/* L29 · Arrastar mensagens para uma pasta */
+.nav-item.is-drop-target {
+  background: var(--color-bg-selected); color: var(--color-text-selected);
+  box-shadow: inset 0 0 0 2px var(--color-border-selected);
+}
+.nav-item.is-drop-target > .i { color: var(--color-icon-brand); }
+.nav-item.is-drop-blocked { cursor: no-drop; }
+.drag-ghost {
+  display: inline-flex; align-items: center; gap: var(--space-075);
+  padding: var(--space-050) var(--space-100) var(--space-050) var(--space-075);
+  border-radius: var(--radius-medium);
+  background: var(--color-bg-brand-bold); color: var(--color-text-inverse);
+  box-shadow: var(--shadow-overlay);
+  font: var(--font-weight-semibold) var(--font-size-body-small)/var(--line-height-body-small) var(--font-family-body);
+  pointer-events: none; white-space: nowrap;
+}
+
+/* L33 · Lista de opções: <span class="select"><select>…</select><svg class="i">chevron-down</svg></span> */
+.select { position: relative; display: inline-flex; align-items: center; min-width: 10rem; }
+.select > select {
+  width: 100%; height: var(--control-height); appearance: none;
+  padding: 0 var(--space-400) 0 var(--space-100);
+  border: var(--border-width) solid var(--color-border-bold); border-radius: var(--radius-small);
+  background: var(--color-bg-input); color: var(--color-text);
+  font: var(--font-body); cursor: pointer;
+}
+.select > select:hover { background: var(--color-bg-input-hovered); }
+.select > select:focus-visible { outline: none; border-color: var(--color-border-focused); box-shadow: inset 0 0 0 1px var(--color-border-focused); }
+.select > select:disabled { background: var(--color-bg-disabled); border-color: transparent; color: var(--color-text-disabled); cursor: not-allowed; }
+.select > .i { position: absolute; right: var(--space-100); pointer-events: none; color: var(--color-icon-subtle); }
+
+/* L32 · Configurações (D2): cobre as duas colunas (bloco de navegação e conteúdo), sem cobrir
+   a coluna de contas nem o header. Com --embedded, num contêiner da documentação. */
+.app-shell__sheet { grid-row: 3; grid-column: 2 / -1; z-index: 2; display: flex; min-height: 0; }
+.settings-sheet {
+  flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0;
+  border-radius: var(--radius-large);
+  background: var(--color-surface-overlay); color: var(--color-text);
+  box-shadow: var(--shadow-overlay);
+}
+.settings-sheet__head {
+  display: flex; align-items: center; gap: var(--space-100);
+  padding: var(--space-200) var(--space-300);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+.settings-sheet__head > .i { width: 20px; height: 20px; color: var(--color-icon); }
+.settings-sheet__head > .btn { margin-left: auto; }
+.settings { flex: 1; min-height: 0; display: grid; grid-template-columns: 13rem minmax(0, 1fr); }
+.settings__nav {
+  display: grid; align-content: start; gap: var(--space-025);
+  padding: var(--space-150) var(--space-100);
+  border-right: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-sunken);
+  border-bottom-left-radius: var(--radius-large);
+}
+.settings__nav .nav-item[aria-selected="true"] { background: var(--color-bg-selected); color: var(--color-text-selected); }
+.settings__nav .nav-item[aria-selected="true"] > .i { color: var(--color-icon-brand); }
+.settings__panel { min-height: 0; overflow-y: auto; padding: var(--space-300); display: grid; align-content: start; gap: var(--space-300); }
+.settings__title { margin: 0; font: var(--font-section); letter-spacing: var(--letter-spacing-section); color: var(--color-text); }
+.settings__group { display: grid; gap: var(--space-150); max-width: 48rem; }
+.settings__group-title { margin: 0; font: var(--font-card); letter-spacing: var(--letter-spacing-card); color: var(--color-text); }
+.setting { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-100) var(--space-300); }
+.setting__label { font: var(--font-weight-medium) var(--font-size-body)/var(--line-height-body) var(--font-family-body); color: var(--color-text); }
+.setting__desc { margin: var(--space-025) 0 0; font: var(--font-body-small); color: var(--color-text-subtlest); }
+
+/* L34 · Lista de contas com um controle por linha e ação em lote no cabeçalho */
+.setting-list { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-medium); overflow: hidden; }
+.setting-list__head, .setting-list__row { display: grid; align-items: center; gap: var(--space-150); padding: var(--space-100) var(--space-150); }
+.setting-list__head {
+  grid-template-columns: auto minmax(0, 1fr) auto; min-height: 3rem;
+  background: var(--color-surface-sunken); border-bottom: var(--border-width) solid var(--color-border);
+  font: var(--font-label); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtlest);
+}
+.setting-list__head.is-selecting {
+  background: var(--color-bg-selected); color: var(--color-text-selected);
+  font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); letter-spacing: 0; text-transform: none;
+}
+.setting-list__bulk { display: flex; align-items: center; gap: var(--space-100); }
+.setting-list__row { grid-template-columns: auto auto minmax(0, 1fr) 13rem; }
+.setting-list__row + .setting-list__row { border-top: var(--border-width) solid var(--color-border); }
+.setting-list__row.is-checked { background: var(--color-bg-selected); }
+.setting-list__name { display: grid; min-width: 0; }
+.setting-list__title { font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); color: var(--color-text); }
+.setting-list__sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--font-body-small); color: var(--color-text-subtlest); }
+.setting-list__row.is-disabled .setting-list__title { color: var(--color-text-subtlest); }
+.setting-list__row.is-disabled .avatar { opacity: .45; filter: grayscale(1); }
+
+@media (max-width: 959px) {
+  .app-shell.app-shell--blocks {
+    grid-template-columns: var(--app-shell-sidebar) minmax(0, 1fr);
+    grid-template-areas: "header header" "banner banner" "nav nav";
+    padding-left: var(--app-shell-gap);
+  }
+  .app-shell--blocks .app-shell__center, .app-shell__sheet { grid-column: 1 / -1; }
+  .app-shell--blocks .app-shell__reader { grid-area: nav; display: none; }
+  .app-shell--blocks.has-reader .app-shell__reader { display: block; }
+  .app-shell--blocks.has-reader .app-shell__block--nav { display: none; }
+  .app-shell--blocks .app-shell__list { display: flex; }
+  .settings { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .settings__nav { grid-auto-flow: column; grid-auto-columns: max-content; overflow-x: auto; border-right: 0; border-bottom: var(--border-width) solid var(--color-border); border-radius: 0; }
+  .setting-list__row { grid-template-columns: auto auto minmax(0, 1fr); }
+  .setting-list__row > .select { grid-column: 2 / -1; }
+}
+
+/* ==========================================================================
+   Aparência, rolagem, arrastar e sinalizadas (L35–L39, US6)
+   ========================================================================== */
+/* L35 · Barra de rolagem global, nos dois eixos */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb {
+  min-height: 2rem; min-width: 2rem;
+  border: 3px solid transparent; border-radius: var(--radius-round);
+  background: var(--color-scrollbar-thumb) padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--color-scrollbar-thumb-hovered); }
+::-webkit-scrollbar-thumb:active { background-color: var(--color-scrollbar-thumb-hovered); border-width: 2px; }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--color-scrollbar-thumb) transparent; }
+}
+
+/* L36 · Escolha de tema: rádios em cartões (Claro, Escuro, Sistema) */
+.theme-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-150); margin: 0; padding: 0; border: 0; min-width: 0; }
+.theme-option {
+  position: relative; display: grid; justify-items: start; gap: var(--space-050);
+  padding: var(--space-150); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-medium);
+  background: var(--color-surface); color: var(--color-text); cursor: pointer;
+}
+.theme-option input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.theme-option__icon { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-medium); background: var(--color-bg-neutral); color: var(--color-icon); }
+.theme-option__name { font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); }
+.theme-option__desc { font: var(--font-body-small); color: var(--color-text-subtlest); }
+.theme-option:hover, .theme-option.is-hover { border-color: var(--color-border-bold); background: var(--color-bg-neutral-subtle-hovered); }
+.theme-option:has(input:checked) { border-color: var(--color-border-selected); box-shadow: inset 0 0 0 1px var(--color-border-selected); background: var(--color-bg-selected); }
+.theme-option:has(input:checked) .theme-option__icon { background: var(--color-bg-brand-bold); color: var(--color-text-inverse); }
+.theme-option:has(input:focus-visible) { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 2px; }
+
+/* L37 · Amostra de cor do fundo no .color-swatch (a cor vem de --swatch) */
+.color-swatch__fill {
+  display: block; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-medium);
+  background: var(--swatch); box-shadow: inset 0 0 0 1px var(--color-border);
+  pointer-events: none;
+}
+.color-swatch:has(.color-swatch__fill) { border-radius: var(--radius-medium); }
+.color-swatch:hover .color-swatch__fill { box-shadow: inset 0 0 0 1px var(--color-border), 0 0 0 2px var(--color-surface-overlay), 0 0 0 4px var(--color-border); }
+.color-swatch:has(input:checked) .color-swatch__fill { box-shadow: inset 0 0 0 1px var(--color-border), 0 0 0 2px var(--color-surface-overlay), 0 0 0 4px var(--color-border-selected); }
+
+/* L38 · Arrastar: mão aberta nas marcadas, mão fechada durante o arraste; rótulo segue o ponteiro
+   (--x/--y) com o cursor no canto superior esquerdo */
+.thread.is-checked { cursor: grab; }
+html.is-grabbing, html.is-grabbing * { cursor: grabbing !important; user-select: none; }
+.drag-ghost--follow { position: fixed; z-index: var(--z-tooltip, 800); left: 0; top: 0; margin: 2px 0 0 2px; transform: translate(var(--x), var(--y)); }
+
+/* L39 · Sinalizadas na coluna de pastas: prazo vencido em vermelho (com a palavra "Atrasadas") */
+.nav-item.is-overdue > .i, .nav-item.is-overdue .nav-item__count { color: var(--color-text-danger); }
+
+/* ==========================================================================
    Marca (wordmark): glyph azul com o envelope + nome do produto
    Padrão 32px para capas e telas de boas-vindas; --sm 24px para o header.
    ========================================================================== */
@@ -735,11 +957,11 @@ kbd, .kbd {
   content: ""; position: absolute; left: var(--space-050); top: calc(var(--space-150) + 6px);
   width: 6px; height: 6px; border-radius: 50%; background: var(--color-icon-brand);
 }
-.thread:hover, .thread.is-hover { background: var(--color-surface-sunken); }
+.thread:hover, .thread.is-hover { background: var(--color-bg-neutral-subtle-hovered); }
 .thread:hover .thread__actions, .thread.is-hover .thread__actions { display: inline-flex; }
 .thread:hover .thread__date, .thread.is-hover .thread__date { display: none; }
 .thread.is-checked { background: var(--color-bg-selected); }
-.thread.is-checked:hover { background: var(--color-bg-selected-hovered); }
+.thread.is-checked:hover, .thread.is-checked.is-hover { background: var(--color-bg-selected-hovered); }
 .thread.is-open { background: var(--color-bg-selected); box-shadow: inset 2px 0 0 var(--color-border-selected); }
 .thread:focus-visible, .thread.is-focus { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: -2px; }
 .thread.is-sending { cursor: progress; }

@@ -1,11 +1,13 @@
-// Composição de DS: sidebar.html "Coluna de contas" (.account-rail) + menus.html (.menu de contexto)
+// Composição de DS: sidebar.html "Coluna de contas" (.account-rail, __list, __sep, __add) em .app-shell__rail, que na
+// casca em blocos vai do topo ao rodapé sobre o fundo (espacamento.html) + menus.html (.menu de contexto)
 import { useEffect, useRef, useState } from "react";
-import { accountInitial, accountShortcut, avatarColorClass, railLabel, railTip, unreadBadge } from "../../lib/accounts";
-import type { Account } from "../../lib/tauri";
-import { AccountRail, AccountRailItem } from "../../ui/AccountRail";
-import { Menu, type MenuEntry } from "../../ui/Menu";
+import { accountInitial, accountShortcut, avatarColorClass, railLabel, railTip, unreadBadge } from "../lib/accounts";
+import type { Account } from "../lib/tauri";
+import { Icon } from "../ui/Icon";
+import { Menu, type MenuEntry } from "../ui/Menu";
+import { AccountsBarItem } from "./AccountsBarItem";
 
-interface AccountsRailProps {
+interface AccountsBarProps {
   accounts: Account[];
   activeId: string | null;
   onSelect: (id: string) => void;
@@ -16,7 +18,8 @@ interface AccountsRailProps {
   onReconnect: (account: Account) => void;
 }
 
-export function AccountsRail({ accounts, activeId, onSelect, onAdd, onEdit, onMove, onSignOut, onReconnect }: AccountsRailProps) {
+/** Coluna com as contas do usuário, do topo ao rodapé da janela. */
+export function AccountsBar({ accounts, activeId, onSelect, onAdd, onEdit, onMove, onSignOut, onReconnect }: AccountsBarProps) {
   const [menu, setMenu] = useState<{ account: Account; anchor: { x: number; y: number } } | null>(null);
   const items = useRef(new Map<string, HTMLButtonElement>());
 
@@ -54,14 +57,16 @@ export function AccountsRail({ accounts, activeId, onSelect, onAdd, onEdit, onMo
 
   return (
     <>
-      <AccountRail onAdd={onAdd}>
+      <nav className="account-rail app-shell__rail" aria-label="Contas">
+        <div className="account-rail__list" role="list">
         {accounts.map((a, i) => (
-          <AccountRailItem
+          <AccountsBarItem
             key={a.id}
             ref={(el) => { if (el) items.current.set(a.id, el); else items.current.delete(a.id); }}
             name={a.displayName}
             initial={accountInitial(a.displayName)}
             colorClass={avatarColorClass(a.color)}
+            photo={a.photo}
             badge={unreadBadge(a.unread)}
             state={a.status === "signed_out" ? "signed-out" : a.status === "needs_reauth" ? "alert" : "normal"}
             current={a.id === activeId}
@@ -75,7 +80,12 @@ export function AccountsRail({ accounts, activeId, onSelect, onAdd, onEdit, onMo
             }}
           />
         ))}
-      </AccountRail>
+        </div>
+        <div className="account-rail__sep" role="separator" />
+        <button className="account-rail__add" type="button" aria-label="Adicionar conta" data-tip="Adicionar conta" onClick={onAdd}>
+          <Icon name="plus" />
+        </button>
+      </nav>
       {menu && (
         <Menu
           label={`Conta ${menu.account.displayName}`}

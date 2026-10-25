@@ -36,7 +36,9 @@ export default defineConfig({
   server: {
     port: 1420,
     strictPort: true,
-    watch: { ignored: ["**/src-tauri/**"] },
+    // Pastas grandes que o app não importa: observá-las travava o Vite por minutos na primeira carga
+    // (.tools tem o Strawberry Perl portátil do build do OpenSSL, com ~20 mil arquivos).
+    watch: { ignored: ["**/src-tauri/**", "**/.tools/**", "**/dist/**"] },
   },
   envPrefix: ["VITE_", "TAURI_ENV_"],
   build: {

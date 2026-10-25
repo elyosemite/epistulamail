@@ -43,7 +43,17 @@ fn require_active(account: &Account) -> Result<(), AppError> {
 
 #[tauri::command]
 pub async fn list_accounts(state: State<'_, AppState>) -> Result<Vec<Account>, AppError> {
+    state.wait_started().await;
     state.db.call(|c| store::list_accounts(c)).await
+}
+
+/// O frontend mostrou a primeira tela com as contas: libera a sincronização automática, que até
+/// aqui esperava para não disputar o banco e a rede com a abertura do app.
+#[tauri::command]
+pub fn app_ready(state: State<'_, AppState>) {
+    let ms = crate::STARTED_AT.get().map_or(0, |t| t.elapsed().as_millis() as u64);
+    tracing::info!(ms, "primeira tela desenhada");
+    state.mark_ui_ready();
 }
 
 #[tauri::command]
@@ -464,18 +474,24 @@ pub async fn search_messages(state: State<'_, AppState>, account_id: String, que
         return Err(AppError::InvalidInput);
     }
     let account = id.clone();
-    let mut hits = state.db.call(move |c| {
+    let hits = state.db.call(move |c| {
         store::require_account(c, &account)?;
         store::search(c, &account, &query)
     })
     .await?;
+    let page = hits_page(&id, hits);
+    tracing::info!(results = page.items.len(), truncated = page.truncated, "busca local");
+    Ok(page)
+}
+
+/// Resultados com a pasta de cada mensagem (busca e sinalizadas), cortados no limite.
+fn hits_page(account_id: &str, mut hits: Vec<store::SearchHit>) -> SearchPage {
     let truncated = hits.len() > store::SEARCH_LIMIT as usize;
     hits.truncate(store::SEARCH_LIMIT as usize);
-    tracing::info!(results = hits.len(), truncated, "busca local");
     let items = hits
         .into_iter()
         .map(|h| MessageHeader {
-            id: MessageKey { account: id.clone(), folder: h.folder_id, uid: h.message.uid }.encode(),
+            id: MessageKey { account: account_id.to_owned(), folder: h.folder_id, uid: h.message.uid }.encode(),
             from_name: h.message.from_name,
             from_address: h.message.from_address,
             subject: h.message.subject,
@@ -483,10 +499,67 @@ pub async fn search_messages(state: State<'_, AppState>, account_id: String, que
             flags: h.message.flags,
             followup: h.message.followup,
             folder_name: Some(h.folder_name),
-            folder_id: Some(FolderKey { account: id.clone(), folder: h.folder_id }.encode()),
+            folder_id: Some(FolderKey { account: account_id.to_owned(), folder: h.folder_id }.encode()),
         })
         .collect();
-    Ok(SearchPage { items, truncated })
+    SearchPage { items, truncated }
+}
+
+// ---------------------------------------------------------------- sinalizadas (US6, CA6)
+
+fn flag_dates(today: String, week_end: String) -> Result<store::FlagDates, AppError> {
+    if !store::valid_due_date(&today) || !store::valid_due_date(&week_end) || week_end < today {
+        return Err(AppError::InvalidInput);
+    }
+    Ok(store::FlagDates { today, week_end })
+}
+
+#[tauri::command]
+pub async fn flagged_counts(state: State<'_, AppState>, account_id: String, today: String, week_end: String) -> Result<store::FlaggedCounts, AppError> {
+    let id = self::account_id(&account_id)?;
+    let dates = flag_dates(today, week_end)?;
+    state
+        .db
+        .call(move |c| {
+            store::require_account(c, &id)?;
+            store::flagged_counts(c, &id, &dates)
+        })
+        .await
+}
+
+#[tauri::command]
+pub async fn list_flagged(
+    state: State<'_, AppState>,
+    account_id: String,
+    bucket: store::FlagBucket,
+    today: String,
+    week_end: String,
+) -> Result<SearchPage, AppError> {
+    let id = self::account_id(&account_id)?;
+    let dates = flag_dates(today, week_end)?;
+    let account = id.clone();
+    let hits = state
+        .db
+        .call(move |c| {
+            store::require_account(c, &account)?;
+            store::flagged(c, &account, bucket, &dates)
+        })
+        .await?;
+    let page = hits_page(&id, hits);
+    tracing::info!(results = page.items.len(), "sinalizadas listadas");
+    Ok(page)
+}
+
+// ---------------------------------------------------------------- aparência (US6, CA3–CA4)
+
+#[tauri::command]
+pub async fn get_appearance(state: State<'_, AppState>) -> Result<store::Appearance, AppError> {
+    state.db.call(|c| store::appearance(c)).await
+}
+
+#[tauri::command]
+pub async fn set_appearance(state: State<'_, AppState>, theme: Option<String>, canvas: Option<String>) -> Result<store::Appearance, AppError> {
+    state.db.call(move |c| store::set_appearance(c, theme.as_deref(), canvas.as_deref())).await
 }
 
 // ---------------------------------------------------------------- mover, excluir, arquivar (CA4, CA5)
@@ -528,23 +601,34 @@ enum Removal {
     Expunge,
 }
 
-/// Executa no servidor, atualiza o banco e devolve os ids que saíram da pasta de origem.
-async fn remove_from_folders(app: &AppHandle, state: &AppState, account: &Account, groups: Vec<(FolderRow, Vec<u32>)>, removal: Removal) -> Result<Vec<String>, AppError> {
+/// Executa no servidor e atualiza o banco, pasta por pasta. Uma pasta que falha não impede as
+/// outras (US5, CA2): o resultado diz quais ids saíram e quais ficaram. Se nada saiu, devolve o erro.
+async fn remove_from_folders(app: &AppHandle, state: &AppState, account: &Account, groups: Vec<(FolderRow, Vec<u32>)>, removal: Removal) -> Result<Removed, AppError> {
+    let mut result = Removed::default();
+    if groups.is_empty() {
+        return Ok(result);
+    }
     let handle = state.handle(&account.id).await?;
     let target = match removal {
         Removal::MoveTo(id) => Some(state.db.call(move |c| store::get_folder(c, id)).await?.ok_or(AppError::FolderNotFound)?),
         Removal::Expunge => None,
     };
-    let mut done = Vec::new();
+    let mut first_error = None;
     for (folder, uids) in groups {
         if target.as_ref().is_some_and(|t| t.id == folder.id) {
             continue;
         }
-        let uidvalidity = folder.uidvalidity.ok_or(AppError::MessageNotFound)?;
+        let folder_id = folder.id;
+        let ids = |uids: &[u32]| uids.iter().map(|&uid| MessageKey { account: account.id.clone(), folder: folder_id, uid }.encode()).collect::<Vec<_>>();
+        let Some(uidvalidity) = folder.uidvalidity else {
+            result.failed.extend(ids(&uids));
+            first_error.get_or_insert(AppError::MessageNotFound);
+            continue;
+        };
         let mailbox = folder.imap_name.clone();
         let target_mailbox = target.as_ref().map(|t| t.imap_name.clone());
         let wanted = uids.clone();
-        imap_client::with_session(state, &handle, Lane::Interactive, |s| {
+        let outcome = imap_client::with_session(state, &handle, Lane::Interactive, |s| {
             let mailbox = mailbox.clone();
             let target_mailbox = target_mailbox.clone();
             let wanted = wanted.clone();
@@ -557,24 +641,42 @@ async fn remove_from_folders(app: &AppHandle, state: &AppState, account: &Accoun
             }
             .boxed()
         })
-        .await?;
-        let folder_id = folder.id;
-        let in_transit = target.is_some();
-        let removed = uids.clone();
-        state.db.call(move |c| store::unlink(c, folder_id, &removed, in_transit)).await?;
-        done.extend(uids.into_iter().map(|uid| MessageKey { account: account.id.clone(), folder: folder_id, uid }.encode()));
-        tracing::info!(role = folder.role.as_str(), count = done.len(), expunge = target.is_none(), "mensagens removidas da pasta");
+        .await;
+        let outcome = match outcome {
+            Ok(()) => {
+                let (in_transit, removed) = (target.is_some(), uids.clone());
+                state.db.call(move |c| store::unlink(c, folder_id, &removed, in_transit)).await.map(drop)
+            }
+            Err(e) => Err(e),
+        };
+        match outcome {
+            Ok(()) => {
+                tracing::info!(role = folder.role.as_str(), count = uids.len(), expunge = target.is_none(), "mensagens removidas da pasta");
+                result.ids.extend(ids(&uids));
+            }
+            Err(e) => {
+                tracing::warn!(role = folder.role.as_str(), count = uids.len(), error = ?e, "falha ao remover mensagens da pasta");
+                result.failed.extend(ids(&uids));
+                first_error.get_or_insert(e);
+            }
+        }
     }
-    if let Some(t) = target {
+    if let Some(t) = target.filter(|_| !result.ids.is_empty()) {
         sync::spawn_folder_sync(app, account.id.clone(), t.id);
     }
     state.emit_accounts_changed();
-    Ok(done)
+    match first_error {
+        Some(e) if result.ids.is_empty() => Err(e),
+        _ => Ok(result),
+    }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 pub struct Removed {
+    /// Saíram da pasta de origem.
     pub ids: Vec<String>,
+    /// Continuam na pasta (o servidor recusou ou a conexão caiu).
+    pub failed: Vec<String>,
 }
 
 #[tauri::command]
@@ -590,10 +692,10 @@ pub async fn move_messages(app: AppHandle, state: State<'_, AppState>, message_i
     if folder.role == Role::Starred {
         return Err(AppError::InvalidInput);
     }
-    let ids = remove_from_folders(&app, &state, &account, groups, Removal::MoveTo(folder.id)).await?;
+    let removed = remove_from_folders(&app, &state, &account, groups, Removal::MoveTo(folder.id)).await?;
     let (account_id, folder_id) = (account.id.clone(), folder.id);
     state.db.call(move |c| store::touch_folder_usage(c, &account_id, folder_id)).await?;
-    Ok(Removed { ids })
+    Ok(removed)
 }
 
 /// Excluir: vai para a Lixeira; dentro da Lixeira, apaga de vez (o frontend confirma antes).
@@ -603,9 +705,18 @@ pub async fn delete_messages(app: AppHandle, state: State<'_, AppState>, message
     let account_id = account.id.clone();
     let trash = state.db.call(move |c| store::folder_by_role(c, &account_id, Role::Trash)).await?.ok_or(AppError::FolderNotFound)?;
     let (in_trash, elsewhere): (Vec<_>, Vec<_>) = groups.into_iter().partition(|(f, _)| f.id == trash.id);
-    let mut ids = remove_from_folders(&app, &state, &account, elsewhere, Removal::MoveTo(trash.id)).await?;
-    ids.extend(remove_from_folders(&app, &state, &account, in_trash, Removal::Expunge).await?);
-    Ok(Removed { ids })
+    let moved = remove_from_folders(&app, &state, &account, elsewhere, Removal::MoveTo(trash.id)).await;
+    let purged = remove_from_folders(&app, &state, &account, in_trash, Removal::Expunge).await;
+    match (moved, purged) {
+        (Ok(mut a), Ok(b)) => {
+            a.ids.extend(b.ids);
+            a.failed.extend(b.failed);
+            Ok(a)
+        }
+        (Ok(a), Err(e)) | (Err(e), Ok(a)) if a.ids.is_empty() => Err(e),
+        (Ok(a), Err(_)) | (Err(_), Ok(a)) => Ok(a),
+        (Err(e), Err(_)) => Err(e),
+    }
 }
 
 /// Arquivar: no Gmail, tira da pasta atual e deixa em "Todos os e-mails".
@@ -614,8 +725,7 @@ pub async fn archive_messages(app: AppHandle, state: State<'_, AppState>, messag
     let (account, groups) = resolve_messages(&state, &message_ids).await?;
     let account_id = account.id.clone();
     let all = state.db.call(move |c| store::folder_by_role(c, &account_id, Role::All)).await?.ok_or(AppError::FolderNotFound)?;
-    let ids = remove_from_folders(&app, &state, &account, groups, Removal::MoveTo(all.id)).await?;
-    Ok(Removed { ids })
+    remove_from_folders(&app, &state, &account, groups, Removal::MoveTo(all.id)).await
 }
 
 #[tauri::command]
@@ -657,14 +767,15 @@ pub async fn recent_folders(state: State<'_, AppState>, account_id: String) -> R
 
 #[derive(Debug, Serialize)]
 pub struct FollowupResult {
+    pub id: String,
     pub flags: MessageFlags,
     pub followup: Option<Followup>,
 }
 
-/// `action`: "set" (com `due` em AAAA-MM-DD, ou sem data), "complete" ou "clear". No servidor,
-/// "set" liga a estrela; "complete" e "clear" desligam.
+/// `action`: "set" (com `due` em AAAA-MM-DD, ou sem data), "complete" ou "clear", para uma ou
+/// várias mensagens (US5, CA2). No servidor, "set" liga a estrela; "complete" e "clear" desligam.
 #[tauri::command]
-pub async fn set_followup(state: State<'_, AppState>, message_id: String, action: String, due: Option<String>) -> Result<FollowupResult, AppError> {
+pub async fn set_followup(state: State<'_, AppState>, message_ids: Vec<String>, action: String, due: Option<String>) -> Result<Vec<FollowupResult>, AppError> {
     #[derive(Clone, Copy, PartialEq, Eq)]
     enum Action {
         Set,
@@ -681,37 +792,49 @@ pub async fn set_followup(state: State<'_, AppState>, message_id: String, action
         return Err(AppError::InvalidInput);
     }
     let flagged = act == Action::Set;
-    let (account, groups) = resolve_messages(&state, std::slice::from_ref(&message_id)).await?;
-    let (folder, uids) = groups.into_iter().next().ok_or(AppError::InvalidId)?;
-    let uid = uids[0];
+    let (account, groups) = resolve_messages(&state, &message_ids).await?;
     let handle = state.handle(&account.id).await?;
-    let uidvalidity = folder.uidvalidity.ok_or(AppError::MessageNotFound)?;
-    let mailbox = folder.imap_name.clone();
-    let confirmed = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
-        let mailbox = mailbox.clone();
-        async move {
-            imap_client::select_checked(s, &mailbox, uidvalidity).await?;
-            imap_client::store_flags(s, &[uid], None, Some(flagged)).await
-        }
-        .boxed()
-    })
-    .await?;
-    let flags = confirmed.get(&uid).copied().ok_or(AppError::MessageNotFound)?;
-    let folder_id = folder.id;
-    let followup = state
-        .db
-        .call(move |c| {
-            let m = store::message_by_uid(c, folder_id, uid)?.ok_or(AppError::MessageNotFound)?;
-            store::set_local_flags(c, m.id, flags)?;
-            let change = match act {
-                Action::Set => FollowupChange::Set(due.as_deref()),
-                Action::Complete => FollowupChange::Complete,
-                Action::Clear => FollowupChange::Clear,
-            };
-            store::set_followup(c, m.id, change)
+    let mut results = Vec::new();
+    for (folder, uids) in groups {
+        let uidvalidity = folder.uidvalidity.ok_or(AppError::MessageNotFound)?;
+        let mailbox = folder.imap_name.clone();
+        let confirmed = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
+            let mailbox = mailbox.clone();
+            let wanted = uids.clone();
+            async move {
+                imap_client::select_checked(s, &mailbox, uidvalidity).await?;
+                imap_client::store_flags(s, &wanted, None, Some(flagged)).await
+            }
+            .boxed()
         })
         .await?;
-    Ok(FollowupResult { flags, followup })
+        let folder_id = folder.id;
+        let due = due.clone();
+        let saved = state
+            .db
+            .call(move |c| {
+                let mut out = Vec::new();
+                for (uid, flags) in confirmed {
+                    let Some(m) = store::message_by_uid(c, folder_id, uid)? else { continue };
+                    store::set_local_flags(c, m.id, flags)?;
+                    let change = match act {
+                        Action::Set => FollowupChange::Set(due.as_deref()),
+                        Action::Complete => FollowupChange::Complete,
+                        Action::Clear => FollowupChange::Clear,
+                    };
+                    out.push((uid, flags, store::set_followup(c, m.id, change)?));
+                }
+                Ok(out)
+            })
+            .await?;
+        results.extend(saved.into_iter().map(|(uid, flags, followup)| FollowupResult {
+            id: MessageKey { account: account.id.clone(), folder: folder_id, uid }.encode(),
+            flags,
+            followup,
+        }));
+    }
+    tracing::info!(count = results.len(), "sinalização alterada");
+    Ok(results)
 }
 
 // ---------------------------------------------------------------- resposta e rascunhos (CA8)
@@ -799,6 +922,41 @@ pub async fn delete_draft(state: State<'_, AppState>, account_id: String, kind: 
 pub async fn set_list_width(state: State<'_, AppState>, account_id: String, width: u32) -> Result<(), AppError> {
     let id = self::account_id(&account_id)?;
     state.db.call(move |c| store::set_list_width(c, &id, width)).await
+}
+
+// ---------------------------------------------------------------- sincronização (US5, CA7)
+
+#[tauri::command]
+pub async fn get_sync_settings(state: State<'_, AppState>) -> Result<store::SyncSettings, AppError> {
+    state.db.call(|c| store::sync_settings(c)).await
+}
+
+#[tauri::command]
+pub async fn set_default_sync_interval(state: State<'_, AppState>, minutes: Option<u32>) -> Result<store::SyncSettings, AppError> {
+    state
+        .db
+        .call(move |c| {
+            store::set_default_interval(c, minutes)?;
+            store::sync_settings(c)
+        })
+        .await
+}
+
+#[tauri::command]
+pub async fn set_account_sync_interval(
+    state: State<'_, AppState>,
+    account_ids: Vec<String>,
+    minutes: Option<u32>,
+    use_default: bool,
+) -> Result<store::SyncSettings, AppError> {
+    let ids = account_ids.iter().map(|id| account_id(id)).collect::<Result<Vec<_>, _>>()?;
+    state
+        .db
+        .call(move |c| {
+            store::set_account_interval(c, &ids, minutes, use_default)?;
+            store::sync_settings(c)
+        })
+        .await
 }
 
 /// Esquemas que podem sair do app. Tudo o mais (javascript:, file:, relativos) é recusado.

@@ -1,19 +1,26 @@
-// DS: espacamento.html · .app-shell (--with-rail com a coluna de contas, --commands com a barra de comandos,
-//     --no-sidebar sem contas), __banner, __center, __resizer, .has-reader; header.html · .appbar--shell com a busca
-//     sobre a lista e .appbar__account com .appbar__account-name
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+// Layout (US5): AppLayout em blocos com AccountsBar, Header (marca, busca, configurações, conta e comandos),
+// NavigationBlock e ContentColumn (montados pelo Mailbox). DS: espacamento.html (.app-shell--blocks, __banner,
+// __center, __resizer, .has-reader; --no-sidebar antes da primeira conta), modais.html (configurações)
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AccountSettingsDialog, SignOutDialog } from "./features/accounts/AccountDialogs";
-import { AccountsRail } from "./features/accounts/AccountsRail";
 import { AddAccount, ConnectFlow } from "./features/accounts/AddAccount";
 import { Mailbox } from "./features/mailbox/Mailbox";
-import { accountInitial, avatarColorClass, pickActive } from "./lib/accounts";
+import { Settings } from "./features/settings/Settings";
+import { AccountsBar } from "./layout/AccountsBar";
+import { AppLayout } from "./layout/AppLayout";
+import { AppSkeleton } from "./layout/AppSkeleton";
+import { Header } from "./layout/Header";
+import { HeaderAccount } from "./layout/HeaderAccount";
+import { HeaderBrand } from "./layout/HeaderBrand";
+import { HeaderSearch } from "./layout/HeaderSearch";
+import { SettingsButton } from "./layout/SettingsButton";
+import { pickActive } from "./lib/accounts";
+import { applyAppearance, cachedAppearance, parseAppearance } from "./lib/appearance";
 import { LIST_DEFAULT } from "./lib/listWidth";
-import { api, onBackendEvent, type Account, type Connected } from "./lib/tauri";
+import { api, onBackendEvent, type Account, type Appearance, type Connected } from "./lib/tauri";
 import { AppBar } from "./ui/AppBar";
 import { Banner } from "./ui/Banner";
 import { Resizer } from "./ui/Resizer";
-import { SearchField } from "./ui/SearchField";
-import { Spinner } from "./ui/Spinner";
 import { ToastProvider, useToast } from "./ui/Toast";
 
 type View = { kind: "mail" } | { kind: "add" } | { kind: "reconnect"; account: Account };
@@ -37,6 +44,8 @@ function Shell() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [listWidth, setListWidth] = useState(LIST_DEFAULT);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [appearance, setAppearance] = useState<Appearance>(cachedAppearance);
   const searchRef = useRef<HTMLInputElement>(null);
   // Pasta aberta por conta nesta sessão, para voltar ao mesmo lugar ao trocar de conta.
   const lastFolder = useRef(new Map<string, string>());
@@ -53,6 +62,30 @@ function Shell() {
       setLoadError(error && typeof error === "object" && "message" in error ? String(error.message) : "Não foi possível carregar as contas.");
     }
   }, []);
+
+  // Aparência salva no banco (US6); a cópia local já foi aplicada no main.tsx.
+  useEffect(() => {
+    api.getAppearance().then((saved) => {
+      const parsed = parseAppearance(saved);
+      setAppearance(parsed);
+      applyAppearance(parsed);
+    }).catch(() => undefined);
+  }, []);
+
+  const changeAppearance = useCallback((change: Partial<Appearance>) => {
+    setAppearance((current) => {
+      const next = { ...current, ...change };
+      applyAppearance(next);
+      return next;
+    });
+    api.setAppearance(change).catch(() => toast({ kind: "error", title: "Não foi possível salvar a aparência", description: "Ela volta ao que era na próxima abertura." }));
+  }, [toast]);
+
+  // Com a primeira tela de contas desenhada, o backend começa a sincronização automática.
+  const loaded = accounts !== null;
+  useEffect(() => {
+    if (loaded) void api.appReady().catch(() => undefined);
+  }, [loaded]);
 
   useEffect(() => {
     void reload();
@@ -101,9 +134,14 @@ function Shell() {
   const savedWidth = activeAccount?.listWidth ?? LIST_DEFAULT;
   useEffect(() => setListWidth(savedWidth), [activeAccount?.id, savedWidth]);
 
-  // "/" ou Ctrl+E levam à busca.
+  // "/" ou Ctrl+E levam à busca; Ctrl+, abre e fecha as configurações.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === ",") {
+        e.preventDefault();
+        setSettingsOpen((open) => !open);
+        return;
+      }
       const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ["INPUT", "TEXTAREA"].includes(e.target.tagName));
       if ((e.key === "/" && !typing && !e.ctrlKey && !e.metaKey) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e")) {
         if (!searchRef.current) return;
@@ -116,14 +154,8 @@ function Shell() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  if (accounts === null) {
-    return (
-      <div className="app-shell app-shell--no-sidebar">
-        <AppBar />
-        <div className="app-shell__center"><Spinner size="lg" label="Carregando o Epistula" /></div>
-      </div>
-    );
-  }
+  // Abertura: a tela em blocos aparece já com cada componente em carregamento (skeleton).
+  if (accounts === null) return <AppSkeleton />;
 
   if (accounts.length === 0) {
     return (
@@ -139,33 +171,32 @@ function Shell() {
 
   const active = accounts.find((a) => a.id === activeId) ?? accounts[0];
   const showMail = view.kind === "mail";
-  const shellCls = ["app-shell", "app-shell--with-rail", showMail && "app-shell--commands", showMail && readerOpen && "has-reader"].filter(Boolean).join(" ");
+
+  const renderHeader = (commands?: ReactNode) => (
+    <Header
+      brand={<HeaderBrand />}
+      search={
+        <HeaderSearch
+          ref={searchRef}
+          value={query}
+          placeholder={`Buscar em ${active.displayName}`}
+          inert={!showMail || settingsOpen}
+          onChange={setQuery}
+          onEscape={() => {
+            setQuery("");
+            searchRef.current?.blur();
+          }}
+          settings={<SettingsButton open={settingsOpen} onClick={() => setSettingsOpen((open) => !open)} />}
+        />
+      }
+      account={<HeaderAccount account={active} />}
+      commands={commands}
+    />
+  );
 
   return (
-    <div className={shellCls} style={{ "--app-shell-list": `${listWidth}px` } as CSSProperties}>
-      <AppBar
-        actions={<ActiveAccount account={active} />}
-        search={
-          showMail && (
-            <SearchField
-              ref={searchRef}
-              value={query}
-              placeholder={`Buscar em ${active.displayName}`}
-              label="Buscar e-mails nas mensagens salvas"
-              shortcut="/"
-              onChange={setQuery}
-              onEscape={() => {
-                setQuery("");
-                searchRef.current?.blur();
-              }}
-            />
-          )
-        }
-      />
-      {offline[active.id] && active.status === "active" && (
-        <div className="app-shell__banner"><Banner appearance="warning">Sem conexão. Mostrando mensagens salvas neste computador.</Banner></div>
-      )}
-      <AccountsRail
+    <AppLayout listWidth={listWidth} hasReader={showMail && readerOpen}>
+      <AccountsBar
         accounts={accounts}
         activeId={showMail ? active.id : null}
         onSelect={select}
@@ -175,13 +206,17 @@ function Shell() {
         onSignOut={(account) => setDialog({ kind: "sign-out", account })}
         onReconnect={(account) => setView({ kind: "reconnect", account })}
       />
+      {!showMail && renderHeader()}
+      {offline[active.id] && active.status === "active" && (
+        <div className="app-shell__banner"><Banner appearance="warning">Sem conexão. Mostrando mensagens salvas neste computador.</Banner></div>
+      )}
       {view.kind === "add" && (
-        <div className="app-shell__center">
+        <div className="app-shell__center app-shell__block">
           <AddAccount first={false} onConnected={onConnected} onCancel={() => setView({ kind: "mail" })} />
         </div>
       )}
       {view.kind === "reconnect" && (
-        <div className="app-shell__center">
+        <div className="app-shell__center app-shell__block">
           <ConnectFlow
             providerName="Google"
             run={() => api.reconnectAccount(view.account.id)}
@@ -195,6 +230,8 @@ function Shell() {
           key={active.id}
           account={active}
           query={query}
+          settingsOpen={settingsOpen}
+          renderHeader={renderHeader}
           initialFolderId={lastFolder.current.get(active.id) ?? active.lastFolderId}
           onFolderChange={(folderId) => onFolderChange(active.id, folderId)}
           onAccessLost={onAccessLost}
@@ -209,6 +246,9 @@ function Shell() {
           onChange={setListWidth}
           onCommit={(width) => void api.setListWidth(active.id, width).then(() => reload()).catch(() => undefined)}
         />
+      )}
+      {settingsOpen && (
+        <Settings accounts={accounts} appearance={appearance} onAppearance={changeAppearance} onClose={() => setSettingsOpen(false)} />
       )}
       {dialog?.kind === "settings" && (
         <AccountSettingsDialog
@@ -236,19 +276,6 @@ function Shell() {
           onClose={() => setDialog(null)}
         />
       )}
-    </div>
-  );
-}
-
-/** DS: header.html "Conta conectada" · .appbar__account, .appbar__account-name */
-function ActiveAccount({ account }: { account: Account }) {
-  const avatar = ["avatar avatar--sm", avatarColorClass(account.color)].filter(Boolean).join(" ");
-  return (
-    <div className="appbar__account" role="status">
-      <span className={avatar} aria-hidden="true">{accountInitial(account.displayName)}</span>
-      <span className="appbar__account-text">
-        <span className="appbar__account-name">{account.displayName}</span> · {account.email}
-      </span>
-    </div>
+    </AppLayout>
   );
 }

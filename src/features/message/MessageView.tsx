@@ -68,7 +68,7 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
 
   if (compose?.kind === "new") {
     return (
-      <div className="reader">
+      <div className="reader reader--fluid">
         <ComposeCard key="new" account={account} kind="new" messageId={null} onClose={onCloseCompose} />
       </div>
     );
@@ -80,7 +80,7 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
   if (state.status === "error") {
     if (state.error.kind === "MessageNotFound") {
       return (
-        <div className="reader">
+        <div className="reader reader--fluid">
           <SectionMessage appearance="warning" title="Esta mensagem não está mais nesta pasta">
             Ela pode ter sido movida ou excluída em outro dispositivo. Atualize a lista.
           </SectionMessage>
@@ -88,7 +88,7 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
       );
     }
     return (
-      <div className="reader">
+      <div className="reader reader--fluid">
         <SectionMessage
           appearance="error"
           title="Não foi possível abrir a mensagem"

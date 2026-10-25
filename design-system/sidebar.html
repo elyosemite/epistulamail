@@ -108,6 +108,51 @@
           <div><dt>Estados da conta</dt><dd><code>.account-rail__alert</code> quando o acesso precisa ser refeito. <code>--signed-out</code> quando o usuário saiu: os dados salvos continuam legíveis, com a section message "Você saiu desta conta".</dd></div>
           <div><dt>Teclado</dt><dd><kbd>Ctrl</kbd>+<kbd>1</kbd> a <kbd>9</kbd> trocam de conta pela ordem da coluna; setas movem o foco dentro dela; <kbd>Shift</kbd>+<kbd>F10</kbd> abre o menu da conta. "Sair desta conta" não é perigo: os dados ficam.</dd></div>
         </dl>
+        <h3 class="sub">Arrastar para uma pasta <code>.is-drop-target</code></h3>
+        <div class="stage">
+          <nav class="sidebar" aria-label="Pastas (exemplo)" style="border:var(--border-width) solid var(--color-border);border-radius:var(--radius-large)">
+            <div class="nav-group">
+              <span class="nav-item is-drop-blocked" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></span>
+              <span class="nav-item"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span>
+              <div class="nav-heading">Marcadores</div>
+              <span class="nav-item is-drop-target" style="position:relative"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Projetos</span>
+                <span class="drag-ghost" style="position:absolute;left:60%;top:70%"><svg class="i"><use href="#i-mail"/></svg>Mover 3 conversas</span></span>
+              <span class="nav-item"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Financeiro</span></span>
+            </div>
+          </nav>
+        </div>
+        <dl class="guidance">
+          <div><dt>Soltar</dt><dd>A pasta sob o cursor ganha <code>.is-drop-target</code> (fundo selecionado e contorno azul de 2px). A pasta atual e "Com estrela" não aceitam: <code>.is-drop-blocked</code> mostra o cursor de proibido.</dd></div>
+          <div><dt>Rótulo</dt><dd><code>.drag-ghost.drag-ghost--follow</code> segue o ponteiro (<code>--x</code>/<code>--y</code>) com o cursor no canto superior esquerdo e diz "Mover 1 conversa" ou "Mover 3 conversas". Durante o arraste, <code>html.is-grabbing</code> mostra a mão fechada. O arraste usa eventos de ponteiro, porque o arrastar nativo não deixa trocar o cursor. Arrastar uma conversa marcada leva todas as marcadas; soltar fora de uma pasta cancela. "Mover para" na barra de comandos continua sendo o caminho pelo teclado.</dd></div>
+        </dl>
+        <h3 class="sub">Sinalizadas <code>.is-overdue</code></h3>
+        <div class="stage">
+        <nav class="sidebar" aria-label="Pastas (exemplo)" style="border:var(--border-width) solid var(--color-border);border-radius:var(--radius-large)">
+          <div class="nav-group">
+            <span class="nav-item has-unread" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-trash"/></svg><span class="nav-item__text">Lixeira</span></span>
+          </div>
+          <div class="nav-group">
+            <div class="nav-heading">Marcadores</div>
+            <span class="nav-item"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Projetos</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Financeiro</span></span>
+          </div>
+          <div class="nav-group">
+            <div class="nav-heading">Sinalizadas</div>
+            <span class="nav-item is-overdue"><svg class="i"><use href="#i-flag"/></svg><span class="nav-item__text">Atrasadas</span><span class="nav-item__count">2</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-flag"/></svg><span class="nav-item__text">Hoje</span><span class="nav-item__count">1</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-flag"/></svg><span class="nav-item__text">Esta semana</span><span class="nav-item__count">3</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-flag"/></svg><span class="nav-item__text">Mais tarde</span><span class="nav-item__count">1</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-flag"/></svg><span class="nav-item__text">Sem data</span><span class="nav-item__count">4</span></span>
+          </div>
+        </nav>
+        </div>
+        <dl class="guidance">
+          <div><dt>Grupo</dt><dd>"Sinalizadas" fica abaixo dos marcadores e só aparece quando há mensagens sinalizadas e não concluídas. Um <code>.nav-item</code> (ícone <code>flag</code>) por prazo com mensagens: Atrasadas, Hoje, Esta semana, Mais tarde, Sem data. Clicar mostra essas mensagens na lista, com a pasta de cada uma.</dd></div>
+          <div><dt>Atrasadas</dt><dd><code>.nav-item.is-overdue</code>: ícone e contador em <code>--color-text-danger</code>, junto com a palavra "Atrasadas" (nunca só a cor).</dd></div>
+        </dl>
       </section>
   </main>
 </div>

@@ -2,6 +2,8 @@
 //! sincronização e o resultado é aplicado no banco numa transação (`store::apply_snapshot`).
 //! O frontend lê sempre do banco e é avisado por eventos quando algo muda.
 
+use std::collections::HashSet;
+use std::sync::Arc;
 use std::time::Duration;
 
 use futures::FutureExt;
@@ -19,7 +21,6 @@ pub const INITIAL_WINDOW: u32 = 2000;
 /// Mensagens mais antigas buscadas por vez quando o usuário pagina além do que está salvo.
 pub const OLDER_BATCH: u32 = 100;
 const FETCH_CHUNK: u32 = 250;
-pub const INBOX_INTERVAL: Duration = Duration::from_secs(5 * 60);
 /// Abrir uma pasta sincronizada há menos que isso não dispara outra sincronização.
 pub const MIN_RESYNC_SECS: i64 = 30;
 
@@ -301,17 +302,67 @@ pub fn spawn_account_sync(app: &AppHandle, account_id: String) {
     });
 }
 
-/// A cada 5 minutos, sincroniza a Caixa de entrada de cada conta ativa (a primeira volta é na abertura).
+/// O agendador acorda a cada 15 s e sincroniza as contas cuja vez chegou (US5, CA7).
+const SCHEDULER_TICK: Duration = Duration::from_secs(15);
+/// Quanto a sincronização automática espera pela primeira tela antes de começar assim mesmo.
+const UI_READY_LIMIT: Duration = Duration::from_secs(10);
+
+/// Contas ativas cuja próxima verificação venceu. Conta nunca verificada vence na hora (abertura
+/// do app); "Manualmente" (`None`) nunca vence.
+pub fn due_accounts(
+    accounts: &[store::Account],
+    settings: &store::SyncSettings,
+    last_run: &std::collections::HashMap<String, std::time::Instant>,
+    now: std::time::Instant,
+) -> Vec<String> {
+    accounts
+        .iter()
+        .filter(|a| a.status == AccountStatus::Active)
+        .filter_map(|a| {
+            let minutes = settings
+                .accounts
+                .iter()
+                .find(|s| s.account_id == a.id)
+                .map_or(settings.default_minutes, |s| s.minutes)?;
+            let due = last_run
+                .get(&a.id)
+                .is_none_or(|t| now.saturating_duration_since(*t) >= Duration::from_secs(u64::from(minutes) * 60));
+            due.then(|| a.id.clone())
+        })
+        .collect()
+}
+
+/// Sincroniza a Caixa de entrada de cada conta ativa no intervalo dela. Mudar o intervalo vale a
+/// partir da próxima volta, sem reiniciar. Cada conta roda sozinha (uma sincronização por vez).
 pub fn start_periodic(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
+        // A tela vem primeiro (a pasta aberta já sincroniza sozinha ao listar).
+        app.state::<AppState>().wait_ui_ready(UI_READY_LIMIT).await;
+        app.state::<AppState>().wait_started().await;
+        let running: Arc<std::sync::Mutex<HashSet<String>>> = Arc::default();
+        let mut last_run = std::collections::HashMap::new();
         loop {
             let state = app.state::<AppState>();
-            let accounts = state.db.call(|c| store::list_accounts(c)).await.unwrap_or_default();
-            for account in accounts.into_iter().filter(|a| a.status == AccountStatus::Active) {
-                let _ = run_account_sync(&state, &account.id).await;
+            let loaded = state.db.call(|c| Ok((store::list_accounts(c)?, store::sync_settings(c)?))).await;
+            if let Ok((accounts, settings)) = loaded {
+                let now = std::time::Instant::now();
+                for id in due_accounts(&accounts, &settings, &last_run, now) {
+                    if !running.lock().map(|mut r| r.insert(id.clone())).unwrap_or(false) {
+                        continue;
+                    }
+                    last_run.insert(id.clone(), now);
+                    let (app, running) = (app.clone(), running.clone());
+                    tauri::async_runtime::spawn(async move {
+                        let state = app.state::<AppState>();
+                        let _ = run_account_sync(&state, &id).await;
+                        if let Ok(mut r) = running.lock() {
+                            r.remove(&id);
+                        }
+                    });
+                }
             }
-            tokio::time::sleep(INBOX_INTERVAL).await;
+            tokio::time::sleep(SCHEDULER_TICK).await;
         }
     });
 }
@@ -326,6 +377,44 @@ mod tests {
 
     fn sel(uidvalidity: u32, uidnext: u32, exists: u32, modseq: Option<u64>) -> Selected {
         Selected { uidvalidity, uidnext: Some(uidnext), exists, highestmodseq: modseq }
+    }
+
+    #[test]
+    fn scheduler_picks_only_due_active_accounts() {
+        use std::collections::HashMap;
+        use std::time::Instant;
+        let t = test_db();
+        let (accounts, ids) = t
+            .db
+            .with(|c| {
+                let a = account(c, "a@gmail.com");
+                let b = account(c, "b@gmail.com");
+                let m = account(c, "m@gmail.com");
+                let out = account(c, "out@gmail.com");
+                store::set_account_interval(c, std::slice::from_ref(&b.id), Some(1), false).unwrap();
+                store::set_account_interval(c, std::slice::from_ref(&m.id), None, false).unwrap();
+                store::set_status(c, &out.id, AccountStatus::SignedOut).unwrap();
+                Ok((store::list_accounts(c).unwrap(), [a.id, b.id, m.id, out.id]))
+            })
+            .unwrap();
+        let settings = t.db.with(|c| store::sync_settings(c)).unwrap();
+        let [a, b, m, _] = ids;
+        let now = Instant::now() + Duration::from_secs(3600);
+
+        // Nunca verificadas: todas as ativas, menos a manual e a que saiu.
+        let mut due = due_accounts(&accounts, &settings, &HashMap::new(), now);
+        due.sort();
+        let mut expected = vec![a.clone(), b.clone()];
+        expected.sort();
+        assert_eq!(due, expected);
+
+        // Há 2 min: só a de 1 min vence (a outra usa o padrão de 5 min).
+        let last: HashMap<_, _> = [(a.clone(), now - Duration::from_secs(120)), (b.clone(), now - Duration::from_secs(120))].into();
+        assert_eq!(due_accounts(&accounts, &settings, &last, now), vec![b.clone()]);
+        // A do padrão, verificada há 5 min, vence; a de 1 min, verificada há 59 s, ainda não.
+        let last: HashMap<_, _> = [(a.clone(), now - Duration::from_secs(300)), (b.clone(), now - Duration::from_secs(59))].into();
+        assert_eq!(due_accounts(&accounts, &settings, &last, now), vec![a.clone()]);
+        assert!(!due_accounts(&accounts, &settings, &last, now).contains(&m));
     }
 
     #[test]

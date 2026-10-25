@@ -8,16 +8,17 @@ interface SearchFieldProps {
   placeholder: string;
   label: string;
   shortcut?: string;
+  inert?: boolean;
   onChange: (value: string) => void;
   onEscape: () => void;
 }
 
 export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(function SearchField(
-  { value, placeholder, label, shortcut, onChange, onEscape },
+  { value, placeholder, label, shortcut, inert, onChange, onEscape },
   ref,
 ) {
   return (
-    <div className="input input--search">
+    <div className="input input--search" inert={inert}>
       <Icon name="search" />
       <input
         ref={ref}
