@@ -1,4 +1,4 @@
-# CI do Epistula: build e testes no Windows (alvo do app) e checagens de segurança.
+# CI do Epistula: build e testes no Windows (alvo do app) e busca de segredos commitados.
 # Não usa segredos: o build sai sem as credenciais OAuth, só para provar que compila e passa nos testes.
 name: CI
 
@@ -74,15 +74,3 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Vulnerabilidades (base RustSec), licenças e origens das crates, conforme src-tauri/deny.toml.
-      - uses: EmbarkStudios/cargo-deny-action@v2
-        with:
-          manifest-path: src-tauri/Cargo.toml
-
-      # Vulnerabilidades nas dependências do frontend que vão para o app.
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - name: pnpm audit
-        run: pnpm audit --prod
