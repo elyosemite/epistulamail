@@ -12,8 +12,8 @@ importers:
         specifier: 5.2.5
         version: 5.2.5
       '@fontsource/jetbrains-mono':
-        specifier: 5.2.5
-        version: 5.2.5
+        specifier: 5.3.0
+        version: 5.3.0
       '@tauri-apps/api':
         specifier: ^2.12.0
         version: 2.12.4
@@ -293,8 +293,8 @@ packages:
   '@fontsource/inter@5.2.5':
     resolution: {integrity: sha512-kbsPKj0S4p44JdYRFiW78Td8Ge2sBVxi/PIBwmih+RpSXUdvS9nbs1HIiuUSPtRMi14CqLEZ/fbk7dj7vni1Sg==}
 
-  '@fontsource/jetbrains-mono@5.2.5':
-    resolution: {integrity: sha512-TPZ9b/uq38RMdrlZZkl0RwN8Ju9JxuqMETrw76pUQFbGtE1QbwQaNsLlnUrACNNBNbd0NZRXiJJSkC8ajPgbew==}
+  '@fontsource/jetbrains-mono@5.3.0':
+    resolution: {integrity: sha512-fqDfB5I9f1p1TV486aUgB9t8zP84P0O1FtQR5Ol9vjwPy+S+EIGlVYm1cvj2W5shcZMTg2nZFdVMoH5wFu8a1A==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1101,7 +1101,7 @@ snapshots:
 
   '@fontsource/inter@5.2.5': {}
 
-  '@fontsource/jetbrains-mono@5.2.5': {}
+  '@fontsource/jetbrains-mono@5.3.0': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
