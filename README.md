@@ -1,99 +1,107 @@
 # Epistula
 
-Um cliente de e-mail para desktop que guarda as suas mensagens no seu computador, cifradas, e não depende de nenhum servidor nosso.
+**English** | [Português](README.pt-BR.md)
 
-O Epistula conecta as suas contas, baixa o que você precisa ler e mantém tudo num banco local protegido por AES-256. A chave fica no cofre do sistema operacional. Não existe conta Epistula, não existe nuvem Epistula e não existe ninguém do nosso lado com acesso ao que você recebe.
+A desktop email client that keeps your messages on your own computer, encrypted, with no server of ours in between.
 
-![Caixa de entrada do Epistula com várias contas, pastas, lista de mensagens e uma mensagem aberta com as imagens externas bloqueadas](docs/images/epistula-caixa-de-entrada.png)
+Epistula connects your accounts, downloads what you need to read and stores it in a local database protected by AES-256. The key lives in your operating system's credential vault. There is no Epistula account, no Epistula cloud, and nobody on our side with access to your mail.
 
-> O projeto está em desenvolvimento ativo. Leitura, organização e múltiplas contas já funcionam. Envio, backup completo e criptografia pós-quântica estão a caminho. A seção [Estado atual](#estado-atual) diz exatamente o que existe hoje.
+![Epistula inbox with several accounts, folders, the message list and an open message with remote images blocked](docs/images/epistula-caixa-de-entrada.png)
 
-## Por que mais um cliente de e-mail
+> Epistula is under active development. Reading, organizing and multiple accounts work today. Sending, full backups and post-quantum cryptography are on the way. [Current state](#current-state) lists exactly what exists right now.
 
-O e-mail é o arquivo mais longo da vida digital de quase todo mundo. Contratos, exames, conversas de família, recuperação de senha de tudo. E esse arquivo costuma morar em um único lugar, controlado por outra empresa, acessível por um navegador.
+## Why another email client
 
-O Epistula parte de três ideias simples:
+Email is the longest-running archive in most people's digital lives. Contracts, medical results, family threads, the password reset for everything else. And that archive usually lives in a single place, run by someone else, reachable through a browser tab.
 
-**Seus dados ficam com você.** Cada mensagem que você abre é guardada no seu disco. Se a rede cair, a caixa continua lá. Se o provedor mudar de regra, a sua cópia continua sua.
+Epistula starts from three simple ideas:
 
-**O que fica no disco fica cifrado.** O banco inteiro é cifrado, inclusive índices, assuntos e remetentes. Um backup do arquivo, um notebook esquecido no táxi ou um HD descartado não revelam nada sem a chave.
+**Your data stays with you.** Every message you open is stored on your disk. If the network drops, your mailbox is still there. If your provider changes its rules, your copy is still yours.
 
-**Segurança se demonstra, não se promete.** O modelo de ameaças está publicado, os riscos que ainda não resolvemos estão escritos, e as garantias que dá para testar têm teste.
+**What sits on disk is encrypted.** The whole database is encrypted, including indexes, subjects and senders. A copied file, a laptop left in a cab or a discarded drive reveals nothing without the key.
 
-## Estado atual
+**Security is shown, not promised.** The threat model is public, the risks we have not solved yet are written down, and the guarantees that can be tested have tests.
 
-O que funciona hoje:
+## Current state
 
-- Conexão com contas Google por OAuth (PKCE), lendo a caixa por IMAP sobre TLS. Nenhuma senha passa pelo app.
-- Várias contas ao mesmo tempo, cada uma com nome, cor e foto, e troca com um clique.
-- Pastas e marcadores, paginação e sincronização em segundo plano com intervalo configurável por conta.
-- Banco local SQLCipher (AES-256, HMAC por página). A lista abre do disco e continua disponível offline.
-- Leitura segura: HTML de terceiros limpo por allowlist no processo Rust e exibido num iframe sem scripts. Imagens remotas ficam bloqueadas até você liberar, mensagem por mensagem.
-- Mover, arquivar, excluir, marcar como lida e sinalizar com prazo, inclusive em várias mensagens de uma vez e arrastando para a pasta.
-- Busca, barra de comandos e rascunhos locais de resposta, resposta a todos e encaminhamento.
-- Tema claro, escuro ou do sistema, e cor de fundo personalizável.
+What works today:
 
-O que ainda não existe:
+- Google accounts over OAuth (PKCE), reading mail through IMAP over TLS. Your password never passes through the app.
+- Several accounts at once, each with its own name, color and photo, one click apart.
+- Folders and labels, pagination, and background sync with a per-account interval.
+- Local SQLCipher database (AES-256, per-page HMAC). The message list opens from disk and stays available offline.
+- Safe reading: third-party HTML is cleaned against an allowlist in the Rust process and shown in an iframe with scripts disabled. Remote images stay blocked until you allow them, one message at a time.
+- Move, archive, delete, mark as read and flag with a due date, for one message or many, including drag and drop onto a folder.
+- Search, a command bar, and local drafts for reply, reply all and forward.
+- Light, dark or system theme, and a customizable background color.
 
-- Envio de mensagens (SMTP). Os rascunhos já ficam salvos, cifrados.
-- Outros provedores além do Google. O modelo de dados já prevê Outlook, Yahoo, iCloud, Zoho, GMX, AOL e IMAP genérico.
-- Releases assinados. Por enquanto, o caminho é compilar a partir do código.
+What does not exist yet:
 
-## Para onde vamos
+- Sending mail (SMTP). Drafts are already saved, encrypted.
+- Providers other than Google. The data model already covers Outlook, Yahoo, iCloud, Zoho, GMX, AOL and generic IMAP.
+- Signed releases. For now, the way in is building from source.
 
-### Criptografia pós-quântica
+## Where this is going
 
-Mensagens cifradas hoje podem ser capturadas hoje e decifradas daqui a alguns anos, quando houver computadores quânticos capazes de quebrar as trocas de chave atuais. Para e-mail, que costuma ser guardado por décadas, esse risco não é teórico.
+### Post-quantum cryptography
 
-A cifra simétrica que o Epistula já usa em repouso (AES-256) continua forte nesse cenário. O ponto frágil está em tudo que envolve chave pública: backups que precisam ser abertos em outro computador, sincronização entre dispositivos seus e mensagens cifradas de ponta a ponta. É ali que entram esquemas híbridos, combinando um algoritmo clássico com um pós-quântico padronizado (X25519 com ML-KEM), para que a proteção não dependa de uma única aposta.
+Data encrypted today can be captured today and decrypted years from now, once quantum computers can break the key exchanges in use. For email, which people keep for decades, that risk is not theoretical.
 
-### Backup que você controla
+The symmetric encryption Epistula already uses at rest (AES-256) holds up in that scenario. The weak spot is everything built on public keys: backups that must be opened on another machine, sync between your own devices, and end-to-end encrypted messages. That is where hybrid schemes come in, pairing a classical algorithm with a standardized post-quantum one (X25519 with ML-KEM), so protection never rests on a single bet.
 
-Exportar uma conta inteira para um arquivo cifrado, guardar onde quiser (um disco externo, um pendrive, o serviço de armazenamento da sua escolha) e restaurar em outra máquina sem precisar baixar tudo de novo do provedor. O backup deve ser legível só por quem tem a chave, e o formato deve ser documentado, para que você nunca fique preso ao Epistula.
+### Backups you control
 
-### Gestão de e-mail de verdade
+Export a whole account to an encrypted file, keep it wherever you like (an external drive, a USB stick, the storage service of your choice) and restore it on another machine without downloading everything from the provider again. Only the key holder should be able to read it, and the format will be documented, so you are never locked into Epistula.
 
-Busca local completa, mesmo offline. Regras e filtros. Adiar mensagens. Visão unificada de todas as contas. Assinaturas, modelos e agendamento de envio. Indicadores de autenticidade do remetente (SPF, DKIM, DMARC) visíveis na leitura, para ajudar a reconhecer phishing.
+### Real email management
 
-## Como a sua informação é tratada
+Full local search, offline included. Rules and filters. Snooze. A unified view across accounts. Signatures, templates and scheduled send. Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
+
+## How your information is handled
 
 ```
-Seu computador
-├── Interface (WebView)      só exibe; nunca vê tokens nem a chave do banco
-├── Processo Rust            OAuth, IMAP, limpeza de HTML, decide o que sai para a tela
-├── Cofre do sistema         refresh tokens e a chave do banco
-└── epistula.db              mensagens, pastas e ajustes, cifrado por inteiro
+Your computer
+├── Interface (WebView)      display only; never sees tokens or the database key
+├── Rust process             OAuth, IMAP, HTML cleaning, decides what reaches the screen
+├── OS credential vault      refresh tokens and the database key
+└── epistula.db              messages, folders and settings, fully encrypted
 
         │ TLS
         ▼
-Seu provedor de e-mail
+Your email provider
 ```
 
-Alguns pontos que valem ser ditos com clareza:
+A few things worth saying plainly:
 
-- **O seu provedor continua lendo os seus e-mails.** O Epistula protege a cópia local e o caminho até ela. Enquanto não houver criptografia de ponta a ponta, quem hospeda a caixa tem acesso a ela.
-- **Os logs não contêm conteúdo.** Nem assunto, nem remetente, nem endereço da conta. Um teste percorre o app inteiro com marcadores únicos e falha se algum aparecer no log ou em texto puro no arquivo do banco.
-- **Sair de uma conta revoga o acesso** no provedor e apaga o segredo do cofre do sistema. As mensagens já baixadas continuam no disco, cifradas, até que exista a opção de apagá-las.
-- **Um computador comprometido continua comprometido.** Malware rodando na sua sessão consegue ler o que você consegue ler. Nenhum cliente de e-mail resolve isso, e preferimos dizer isso a fingir o contrário.
+- **Your provider can still read your email.** Epistula protects the local copy and the path to it. Until there is end-to-end encryption, whoever hosts the mailbox has access to it.
+- **Logs contain no content.** No subject, no sender, no account address. A test walks through the whole app with unique markers and fails if any of them shows up in the logs or in plain text in the database file.
+- **Signing out revokes access** at the provider and deletes the secret from the credential vault. Messages already downloaded stay on disk, encrypted, until there is an option to erase them.
+- **A compromised computer stays compromised.** Malware running in your session can read whatever you can read. No email client fixes that, and we would rather say so than pretend otherwise.
 
-A análise completa, com a matriz de dados, os limites de confiança e as doze ameaças consideradas, está em [docs/arquitetura-e-ameacas.md](docs/arquitetura-e-ameacas.md).
+The full analysis, with the data inventory, trust boundaries and the twelve threats considered, is in [docs/arquitetura-e-ameacas.md](docs/arquitetura-e-ameacas.md) (in Portuguese).
 
-## Compilando
+## Design system
 
-O alvo principal hoje é o Windows. O Epistula é feito com [Tauri 2](https://tauri.app), Rust e React.
+An email client gets opened dozens of times a day, and every small bit of friction turns into real annoyance. So the interface comes from its own design system, in [`design-system/`](design-system/), with tokens, typography, colors, accessibility notes and a page for each component. It changes constantly, and every new screen goes through it before it becomes code.
 
-Requisitos:
+Four principles guide the decisions: density with breathing room, reading first, one gesture per action, and state always visible. Suggestions about interface and usability are as welcome as code.
 
-- Node.js 24 e pnpm 10
-- Rust 1.82 ou mais recente
-- No Windows, o Perl portátil usado para compilar o OpenSSL embutido do SQLCipher. O script abaixo baixa e confere o SHA-256.
+## Building
+
+The main target today is Windows. Epistula is built with [Tauri 2](https://tauri.app), Rust and React.
+
+Requirements:
+
+- Node.js 24 and pnpm 10
+- Rust 1.82 or later
+- On Windows, the portable Perl used to compile SQLCipher's bundled OpenSSL. The script below downloads it and checks its SHA-256.
 
 ```powershell
 pnpm install
 ./scripts/setup-build-tools.ps1
 ```
 
-Para conectar uma conta Google, crie um cliente OAuth do tipo "Desktop app" no Google Cloud e preencha o `.env`:
+To connect a Google account, create an OAuth client of type "Desktop app" in Google Cloud and fill in `.env`:
 
 ```powershell
 Copy-Item .env.example .env
@@ -101,40 +109,42 @@ Copy-Item .env.example .env
 # EPISTULA_GOOGLE_CLIENT_SECRET=...
 ```
 
-Depois:
+Then:
 
 ```powershell
-pnpm tauri dev      # desenvolvimento
-pnpm tauri build    # instalador
+pnpm tauri dev      # development
+pnpm tauri build    # installer
 ```
 
-## Testes
+## Tests
 
 ```powershell
 pnpm test                         # interface
-cd src-tauri; cargo test          # backend, com banco SQLCipher real
+cd src-tauri; cargo test          # backend, against a real SQLCipher database
 cargo clippy --all-targets -- -D warnings
 ```
 
-O CI roda tudo isso no Windows a cada push, além de uma varredura de segredos no histórico do repositório.
+CI runs all of this on Windows on every push, plus a scan of the repository history for committed secrets.
 
-## Estrutura
+## Layout
 
 ```
-src/                 interface em React
-src-tauri/src/       backend em Rust (OAuth, IMAP, sincronização, banco, limpeza de HTML)
-src-tauri/migrations versões do esquema do banco
-design-system/       componentes e tokens visuais
-docs/                arquitetura e modelo de ameaças
-userstory/           histórico de decisões, uma story por entrega
+src/                 React interface
+src-tauri/src/       Rust backend (OAuth, IMAP, sync, database, HTML cleaning)
+src-tauri/migrations database schema versions
+design-system/       visual components and tokens
+docs/                architecture and threat model
+userstory/           decision history, one story per delivery
 ```
 
-## Contribuindo
+Most internal documentation, user stories and commit messages are in Portuguese. Contributions in English are just as welcome.
 
-Issues e pull requests são bem-vindos. Antes de abrir um PR que toque em credenciais, armazenamento ou exibição de conteúdo de terceiros, leia o modelo de ameaças: mudanças nessas áreas precisam dizer qual ameaça afetam e como foram testadas.
+## Contributing
 
-Encontrou uma falha de segurança? Não abra uma issue pública. Escreva para os mantenedores pelo GitHub em privado e daremos retorno antes de qualquer divulgação.
+Issues and pull requests are welcome, in English or Portuguese. Before opening a PR that touches credentials, storage or the display of third-party content, read the threat model: changes in those areas need to say which threat they affect and how they were tested.
 
-## Licença
+Found a security issue? Please do not open a public issue. Reach the maintainers privately through GitHub and we will get back to you before any disclosure.
 
-A definir.
+## License
+
+To be defined.
