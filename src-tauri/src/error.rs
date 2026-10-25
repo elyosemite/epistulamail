@@ -3,7 +3,7 @@ use serde::{Serialize, Serializer};
 
 /// Erro tipado que chega ao frontend como `{ kind, message }`.
 /// A mensagem é sempre texto amigável; detalhes técnicos só vão para o log.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, Clone, thiserror::Error, PartialEq, Eq)]
 pub enum AppError {
     #[error("Você cancelou o login no navegador.")]
     AuthCancelled,
@@ -45,6 +45,18 @@ pub enum AppError {
     FolderExists,
     #[error("Esta conta não tem essa pasta.")]
     FolderNotFound,
+    #[error("Esta mensagem está sendo movida. Tente de novo em instantes.")]
+    MessageMoving,
+    #[error("Não foi possível falar com o servidor de envio. Verifique sua conexão e tente de novo.")]
+    SmtpConnection,
+    #[error("O servidor de e-mail recusou o envio. Confira os destinatários e tente de novo.")]
+    SendRejected,
+    #[error("Adicione pelo menos um destinatário.")]
+    NoRecipients,
+    #[error("Há um destinatário com endereço inválido.")]
+    InvalidRecipient,
+    #[error("Os anexos passam do limite de 25 MB.")]
+    AttachmentsTooLarge,
 }
 
 impl AppError {
@@ -70,6 +82,12 @@ impl AppError {
             AppError::InvalidInput => "InvalidInput",
             AppError::FolderExists => "FolderExists",
             AppError::FolderNotFound => "FolderNotFound",
+            AppError::MessageMoving => "MessageMoving",
+            AppError::SmtpConnection => "SmtpConnection",
+            AppError::SendRejected => "SendRejected",
+            AppError::NoRecipients => "NoRecipients",
+            AppError::InvalidRecipient => "InvalidRecipient",
+            AppError::AttachmentsTooLarge => "AttachmentsTooLarge",
         }
     }
 }

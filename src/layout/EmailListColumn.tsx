@@ -3,7 +3,7 @@
 // sincronização), vazios.html (.empty)
 import type { ReactNode } from "react";
 import { canGoBack, rangeLabel, type Pager } from "../lib/pagination";
-import type { AppError, FolderRole, MessageHeader } from "../lib/tauri";
+import type { AppError, Density, FolderRole, MessageHeader } from "../lib/tauri";
 import { Button, IconButton } from "../ui/Button";
 import { EmptyState } from "../ui/EmptyState";
 import { Spinner } from "../ui/Spinner";
@@ -22,6 +22,7 @@ interface EmailListColumnProps extends DragHandlers {
   folderName: string;
   folderRole: FolderRole;
   state: ListState;
+  density: Density;
   pager: Pager;
   openId: string | null;
   checked: ReadonlySet<string>;
@@ -93,7 +94,7 @@ export function EmailListColumn(props: EmailListColumnProps) {
       <div className="app-shell__list-body">
         {notice && <div style={{ padding: "var(--space-150) var(--space-200) 0" }}>{notice}</div>}
         {state.status === "loading" && (
-          <ThreadList label="Carregando conversas" busy>
+          <ThreadList label="Carregando conversas" busy density={props.density}>
             {SKELETON_ROWS.map(([from, subject], i) => <ThreadSkeleton key={i} from={from} subject={subject} />)}
           </ThreadList>
         )}
@@ -116,6 +117,7 @@ export function EmailListColumn(props: EmailListColumnProps) {
           <EmailList
             label={folderName}
             items={state.items}
+            density={props.density}
             openId={openId}
             checked={checked}
             showFolder={!!searching}

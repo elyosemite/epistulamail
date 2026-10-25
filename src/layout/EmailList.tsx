@@ -2,7 +2,7 @@
 // DS: sidebar.html · arrastar para uma pasta com html.is-grabbing e .drag-ghost--follow (US6, CA5)
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { conversations } from "../lib/selection";
-import type { MessageHeader } from "../lib/tauri";
+import type { Density, MessageHeader } from "../lib/tauri";
 import { DragGhost, ThreadList } from "../ui/Thread";
 import { EmailItem } from "./EmailItem";
 
@@ -21,6 +21,8 @@ export interface DragHandlers {
 interface EmailListProps extends DragHandlers {
   label: string;
   items: MessageHeader[];
+  /** Densidade da lista (US7, CA7). */
+  density: Density;
   openId: string | null;
   checked: ReadonlySet<string>;
   /** Mostra a pasta de cada e-mail (busca e sinalizadas). */
@@ -40,7 +42,7 @@ const folderAt = (x: number, y: number) => document.elementFromPoint(x, y)?.clos
 
 /** A lista de e-mails da pasta (ou da busca, ou de um prazo das sinalizadas). */
 export function EmailList(props: EmailListProps) {
-  const { label, items, openId, checked, showFolder, canDrag, renderBadge, onOpen, onCheck, onCheckAll, onClearChecked, onToggleStar, onToggleRead } = props;
+  const { label, items, density, openId, checked, showFolder, canDrag, renderBadge, onOpen, onCheck, onCheckAll, onClearChecked, onToggleStar, onToggleRead } = props;
   const rows = useRef(new Map<string, HTMLDivElement>());
   const [press, setPress] = useState<{ id: string; x: number; y: number } | null>(null);
   const [drag, setDrag] = useState<{ ids: string[]; x: number; y: number } | null>(null);
@@ -131,7 +133,7 @@ export function EmailList(props: EmailListProps) {
 
   return (
     <>
-      <ThreadList label={label}>
+      <ThreadList label={label} density={density}>
         {items.map((m, index) => (
           <EmailItem
             key={m.id}

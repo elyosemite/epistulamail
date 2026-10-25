@@ -2,9 +2,10 @@
 //! sincronização), reaproveitadas entre comandos e reabertas uma vez em caso de queda.
 //! Nada de conteúdo vai para log.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::time::Duration;
 
+use async_imap::imap_proto::SectionPath;
 use async_imap::types::{Fetch, Flag, Mailbox};
 use futures::future::BoxFuture;
 use futures::TryStreamExt;
@@ -14,6 +15,7 @@ use tokio::net::TcpStream;
 use crate::error::AppError;
 use crate::mailbox::{self, RemoteFolder, Role};
 use crate::message::{self, HeaderFields, MessageFlags};
+use crate::preview::{self, Preview};
 use crate::session::{AccountHandle, AppState, Lane};
 use crate::store::RemoteHeader;
 
@@ -290,6 +292,42 @@ pub async fn search_uids(session: &mut ImapSession, from: u32, to: Option<u32>) 
         .collect();
     uids.sort_unstable();
     Ok(uids)
+}
+
+// ---------------------------------------------------------------- prévia da lista (US7, D2)
+
+/// Prévia dos UIDs da pasta selecionada: `BODYSTRUCTURE` de todos e, por seção de texto, os
+/// primeiros `PEEK_BYTES` (sem marcar como lida). UIDs que não existem mais ficam de fora.
+pub async fn previews(session: &mut ImapSession, uids: &[u32]) -> Result<Vec<(u32, Preview)>, AppError> {
+    if uids.is_empty() {
+        return Ok(Vec::new());
+    }
+    let fetches = collect(session.uid_fetch(uid_set(uids), "(UID BODYSTRUCTURE)").await.map_err(imap_error("uid fetch"))?, "uid fetch").await?;
+    let structures: Vec<(u32, preview::Structure)> = fetches.iter().filter_map(|f| Some((f.uid?, preview::analyze(f.bodystructure()?)))).collect();
+    let mut by_section: BTreeMap<String, Vec<u32>> = BTreeMap::new();
+    for (uid, s) in &structures {
+        if let Some(text) = &s.text {
+            by_section.entry(text.section.clone()).or_default().push(*uid);
+        }
+    }
+    let mut texts: HashMap<u32, Vec<u8>> = HashMap::new();
+    for (section, group) in by_section {
+        let path = SectionPath::Part(section.split('.').filter_map(|n| n.parse().ok()).collect(), None);
+        let query = format!("(UID BODY.PEEK[{section}]<0.{}>)", preview::PEEK_BYTES);
+        let fetched = collect(session.uid_fetch(uid_set(&group), query).await.map_err(imap_error("uid fetch"))?, "uid fetch").await?;
+        for f in &fetched {
+            if let (Some(uid), Some(data)) = (f.uid, f.section(&path)) {
+                texts.insert(uid, data.to_vec());
+            }
+        }
+    }
+    Ok(structures
+        .into_iter()
+        .map(|(uid, s)| {
+            let snippet = s.text.as_ref().and_then(|t| texts.get(&uid).map(|b| preview::snippet_from_part(b, t))).unwrap_or_default();
+            (uid, Preview { snippet, has_files: s.has_files, has_images: s.has_images })
+        })
+        .collect())
 }
 
 // ---------------------------------------------------------------- corpo e flags

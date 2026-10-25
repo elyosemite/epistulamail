@@ -44,15 +44,46 @@ export type ThemeChoice = "light" | "dark" | "system";
 /** Cor do fundo; "" é o padrão. */
 export type CanvasChoice = "" | "blue" | "teal" | "green" | "purple" | "magenta" | "orange" | "sand";
 
+/** Densidade da lista (US7, CA7): Confortável, Padrão ou Compacta. */
+export type Density = "comfortable" | "standard" | "compact";
+
+/** Aparência e preferências de lista, salvas no banco local (US6 e US7). */
 export interface Appearance {
   theme: ThemeChoice;
   canvas: CanvasChoice;
+  density: Density;
+  showFolders: boolean;
+  showReader: boolean;
 }
 
-/** Resultado de excluir, arquivar e mover em lote: o que saiu e o que ficou na pasta. */
-export interface Removed {
+/** Resultado de excluir, arquivar e mover em lote (US7, D1): o que saiu da pasta, o que ficou e o
+ *  lote para o "Desfazer" (`null` quando nada ficou pendente, ex.: excluir de vez). */
+export interface Moved {
+  batch: string | null;
   ids: string[];
   failed: string[];
+}
+
+/** Seção 1 do menu da conta (US7, CA6). */
+export interface AccountOverview {
+  lastSyncAt: number | null;
+  unread: number;
+  saved: number;
+  /** Tamanho do banco local, em bytes (todas as contas). */
+  localBytes: number;
+}
+
+export interface SendRequest {
+  accountId: string;
+  kind: DraftKind;
+  messageId: string | null;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  subject: string;
+  body: string;
+  /** Encaminhar: posições dos anexos da original que vão junto. */
+  keepAttachments: number[];
 }
 
 export interface ProviderInfo {
@@ -99,6 +130,10 @@ export interface MessageHeader {
   date: string;
   flags: MessageFlags;
   followup: Followup | null;
+  /** Começo do texto (densidade Confortável); ausente enquanto não foi buscado. */
+  snippet?: string;
+  hasFiles: boolean;
+  hasImages: boolean;
   /** Só em resultados de busca: a pasta da mensagem. */
   folderName?: string;
   folderId?: string;
@@ -204,7 +239,13 @@ export type AppErrorKind =
   | "SignedOut"
   | "InvalidInput"
   | "FolderExists"
-  | "FolderNotFound";
+  | "FolderNotFound"
+  | "MessageMoving"
+  | "SmtpConnection"
+  | "SendRejected"
+  | "NoRecipients"
+  | "InvalidRecipient"
+  | "AttachmentsTooLarge";
 
 export interface AppError {
   kind: AppErrorKind;
@@ -247,9 +288,17 @@ export const api = {
     call<FlagResult[]>("set_flags", { messageIds, seen: change.seen ?? null, flagged: change.flagged ?? null }),
   openExternalLink: (url: string) => call<void>("open_external_link", { url }),
   searchMessages: (accountId: string, query: string) => call<SearchPage>("search_messages", { accountId, query }),
-  moveMessages: (messageIds: string[], targetFolderId: string) => call<Removed>("move_messages", { messageIds, targetFolderId }),
-  deleteMessages: (messageIds: string[]) => call<Removed>("delete_messages", { messageIds }),
-  archiveMessages: (messageIds: string[]) => call<Removed>("archive_messages", { messageIds }),
+  moveMessages: (messageIds: string[], targetFolderId: string) => call<Moved>("move_messages", { messageIds, targetFolderId }),
+  deleteMessages: (messageIds: string[]) => call<Moved>("delete_messages", { messageIds }),
+  archiveMessages: (messageIds: string[]) => call<Moved>("archive_messages", { messageIds }),
+  /** Desfaz o lote; devolve os ids que voltaram (os que já foram ao servidor não voltam). */
+  undoMove: (accountId: string, batch: string) => call<string[]>("undo_move", { accountId, batch }),
+  /** Agenda o envio (6 s para desfazer) e devolve o id; o resultado chega por `send-finished`. */
+  sendMessage: (request: SendRequest) => call<string>("send_message", { request }),
+  /** `false`: o envio já saiu. */
+  cancelSend: (sendId: string) => call<boolean>("cancel_send", { sendId }),
+  accountOverview: (accountId: string) => call<AccountOverview>("account_overview", { accountId }),
+  syncAccount: (accountId: string) => call<void>("sync_account", { accountId }),
   createFolder: (accountId: string, name: string) => call<Folder>("create_folder", { accountId, name }),
   recentFolders: (accountId: string) => call<Folder[]>("recent_folders", { accountId }),
   setFollowup: (messageIds: string[], change: FollowupAction) =>
@@ -270,7 +319,7 @@ export const api = {
   listFlagged: (accountId: string, bucket: FlagBucket, dates: { today: string; weekEnd: string }) =>
     call<SearchPage>("list_flagged", { accountId, bucket, today: dates.today, weekEnd: dates.weekEnd }),
   getAppearance: () => call<Appearance>("get_appearance"),
-  setAppearance: (change: Partial<Appearance>) => call<Appearance>("set_appearance", { theme: change.theme ?? null, canvas: change.canvas ?? null }),
+  setAppearance: (change: Partial<Appearance>) => call<Appearance>("set_appearance", { change }),
   setDefaultSyncInterval: (minutes: SyncMinutes) => call<SyncSettings>("set_default_sync_interval", { minutes }),
   setAccountSyncInterval: (accountIds: string[], minutes: SyncMinutes, useDefault: boolean) =>
     call<SyncSettings>("set_account_sync_interval", { accountIds, minutes, useDefault }),
@@ -283,6 +332,9 @@ export interface BackendEvents {
   "folders-updated": { accountId: string };
   "mailbox-updated": { accountId: string; folderId: string };
   "sync-status": { accountId: string; online: boolean };
+  /** Mover que o servidor recusou: as mensagens voltaram para a origem (US7, D1). */
+  "moves-finished": { accountId: string; failed: string[]; folderIds: string[] };
+  "send-finished": { sendId: string; accountId: string; ok: boolean; error: AppError | null };
 }
 
 export function onBackendEvent<K extends keyof BackendEvents>(name: K, handler: (payload: BackendEvents[K]) => void): () => void {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyAppearance, canvasToken, parseAppearance } from "./appearance";
+import { applyAppearance, canvasToken, DEFAULT_APPEARANCE, parseAppearance } from "./appearance";
 import { flagDates, visibleBuckets } from "./flagged";
 
 describe("sinalizadas na coluna de pastas", () => {
@@ -19,9 +19,9 @@ describe("sinalizadas na coluna de pastas", () => {
 
 describe("aparência", () => {
   it("aceita só opções conhecidas", () => {
-    expect(parseAppearance({ theme: "dark", canvas: "teal" })).toEqual({ theme: "dark", canvas: "teal" });
-    expect(parseAppearance({ theme: "sepia", canvas: "url(x)" })).toEqual({ theme: "system", canvas: "" });
-    expect(parseAppearance(null)).toEqual({ theme: "system", canvas: "" });
+    expect(parseAppearance({ theme: "dark", canvas: "teal" })).toMatchObject({ theme: "dark", canvas: "teal" });
+    expect(parseAppearance({ theme: "sepia", canvas: "url(x)" })).toMatchObject({ theme: "system", canvas: "" });
+    expect(parseAppearance(null)).toEqual(DEFAULT_APPEARANCE);
     expect(canvasToken("")).toBe("var(--color-canvas)");
     expect(canvasToken("sand")).toBe("var(--color-canvas-sand)");
   });
@@ -32,10 +32,10 @@ describe("aparência", () => {
       dataset: {} as Record<string, string>,
       style: { setProperty: (k: string, v: string) => style.set(k, v), removeProperty: (k: string) => style.delete(k) },
     } as unknown as HTMLElement;
-    applyAppearance({ theme: "dark", canvas: "purple" }, root);
+    applyAppearance({ ...DEFAULT_APPEARANCE, theme: "dark", canvas: "purple" }, root);
     expect(root.dataset.theme).toBe("dark");
     expect(style.get("--app-background")).toBe("var(--color-canvas-purple)");
-    applyAppearance({ theme: "system", canvas: "" }, root);
+    applyAppearance(DEFAULT_APPEARANCE, root);
     expect(root.dataset.theme).toBeUndefined();
     expect(style.has("--app-background")).toBe(false);
   });

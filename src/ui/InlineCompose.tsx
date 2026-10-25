@@ -1,9 +1,13 @@
 // DS: composicao.html "Resposta e encaminhamento" · .compose.compose--inline (__bar, __title, __fields, __body, __foot,
 //     __status), .compose__toggle, .message__quote; destinatarios.html · .chip (.is-invalid, __name, __remove),
 //     .input--line.chip-input com .input__prefix; botoes.html · .btn-split
+// DS: composicao.html "Envio" (US7) · .compose__quote-toggle, .compose__attachments com .attachment, .compose__hint,
+//     .compose.is-sending; carregamento.html · .spinner--sm no botão
 import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
+import type { SendCheck } from "../lib/compose";
+import { attachmentKind, avatarColor, formatBytes, initials } from "../lib/format";
 import { addRecipients, parseRecipient } from "../lib/recipients";
-import { avatarColor, initials } from "../lib/format";
+import type { AttachmentInfo } from "../lib/tauri";
 import { IconButton } from "./Button";
 import { Icon } from "./Icon";
 
@@ -74,23 +78,49 @@ export interface QuoteView {
   text: string;
 }
 
+/** Citação da resposta (D5): cabeçalho "Em …, … escreveu:" e as linhas com `>`. */
+export interface ReplyQuote {
+  header: string;
+  lines: string;
+}
+
 interface InlineComposeProps {
   title: string;
   value: ComposeValue;
   onChange: (value: ComposeValue) => void;
+  /** Encaminhamento: a mensagem original, sempre visível. */
   quote?: QuoteView | null;
+  /** Resposta: a citação, recolhida no botão "…" (`null` depois de removida). */
+  replyQuote?: ReplyQuote | null;
+  onRemoveReplyQuote?: () => void;
+  /** Encaminhamento: anexos da original que vão junto, cada um com "Remover". */
+  attachments?: AttachmentInfo[];
+  onRemoveAttachment?: (index: number) => void;
   status: string;
   /** Rótulo do botão de descartar ("Descartar" ou "Remover"). */
   discardLabel: string;
   onDiscard: () => void;
   bodyLabel: string;
+  /** Enviar ativo ou o motivo do bloqueio (ao lado do botão). */
+  sendCheck: SendCheck;
+  sending: boolean;
+  onSend: () => void;
 }
 
-export function InlineCompose({ title, value, onChange, quote, status, discardLabel, onDiscard, bodyLabel }: InlineComposeProps) {
+export function InlineCompose(props: InlineComposeProps) {
+  const { title, value, onChange, quote, replyQuote, attachments, status, discardLabel, onDiscard, bodyLabel, sendCheck, sending, onSend } = props;
   const [copies, setCopies] = useState(value.cc.length > 0 || value.bcc.length > 0);
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const hintId = useId();
   const set = (change: Partial<ComposeValue>) => onChange({ ...value, ...change });
+  const onKeyDown = (e: KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      if (sendCheck.ok && !sending) onSend();
+    }
+  };
   return (
-    <form className="compose compose--inline" aria-label={title} onSubmit={(e) => e.preventDefault()}>
+    <form className={["compose compose--inline", sending && "is-sending"].filter(Boolean).join(" ")} aria-label={title} aria-busy={sending || undefined} onSubmit={(e) => e.preventDefault()} onKeyDown={onKeyDown}>
       <div className="compose__bar">
         <span className="compose__title">{title}</span>
         <IconButton icon="trash" label={discardLabel} compact onClick={onDiscard} />
@@ -118,6 +148,52 @@ export function InlineCompose({ title, value, onChange, quote, status, discardLa
       <div className="compose__body">
         <textarea aria-label={bodyLabel} value={value.body} onChange={(e) => set({ body: e.target.value })} />
       </div>
+      {replyQuote && (
+        <>
+          <button
+            className="btn btn--subtle btn--compact compose__quote-toggle"
+            type="button"
+            aria-expanded={quoteOpen}
+            aria-label={quoteOpen ? "Esconder a mensagem citada" : "Mostrar a mensagem citada"}
+            data-tip={quoteOpen ? "Esconder a mensagem citada" : "Mostrar a mensagem citada"}
+            onClick={() => setQuoteOpen((o) => !o)}
+          >
+            …
+          </button>
+          {quoteOpen && (
+            <div className="message__quote">
+              <p style={{ marginTop: 0 }}>{replyQuote.header}</p>
+              <p style={{ whiteSpace: "pre-wrap" }}>{replyQuote.lines}</p>
+              {props.onRemoveReplyQuote && (
+                <button className="btn btn--subtle btn--compact" type="button" onClick={props.onRemoveReplyQuote}>Não citar a mensagem</button>
+              )}
+            </div>
+          )}
+        </>
+      )}
+      {attachments && attachments.length > 0 && (
+        <div className="compose__attachments" role="list" aria-label="Anexos">
+          {attachments.map((a, i) => {
+            const kind = attachmentKind(a.mimeType);
+            return (
+              <div key={`${a.name}-${i}`} className="attachment attachment--static" role="listitem">
+                <span className={["attachment__icon", kind !== "other" && `attachment__icon--${kind}`].filter(Boolean).join(" ")}>
+                  <Icon name={kind === "img" ? "image" : "file"} size="lg" />
+                </span>
+                <span style={{ minWidth: 0, display: "grid" }}>
+                  <span className="attachment__name">{a.name}</span>
+                  <span className="attachment__meta">{formatBytes(a.size)}</span>
+                </span>
+                {props.onRemoveAttachment && (
+                  <span className="attachment__action">
+                    <IconButton icon="x" label={`Remover ${a.name}`} data-tip="Remover" compact onClick={() => props.onRemoveAttachment!(i)} />
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
       {quote && (
         <div className="message__quote">
           <dl>
@@ -131,10 +207,20 @@ export function InlineCompose({ title, value, onChange, quote, status, discardLa
         </div>
       )}
       <div className="compose__foot">
-        <div className="btn-split" data-tip="O envio chega na próxima versão">
-          <button className="btn btn--primary" type="button" disabled>Enviar</button>
-          <button className="btn btn--primary" type="button" disabled aria-label="Opções de envio"><Icon name="chevron-down" /></button>
-        </div>
+        <button
+          className="btn btn--primary"
+          type="button"
+          disabled={!sendCheck.ok || sending}
+          aria-describedby={sendCheck.ok ? undefined : hintId}
+          data-tip="Enviar (Ctrl+Enter)"
+          onClick={onSend}
+        >
+          {sending ? <span className="spinner spinner--sm" aria-hidden="true" /> : <Icon name="send" />}
+          {sending ? "Enviando…" : "Enviar"}
+        </button>
+        {!sendCheck.ok && (
+          <span className="compose__hint" id={hintId}><Icon name="error" size="sm" />{sendCheck.reason}</span>
+        )}
         <span className="compose__status" role="status">{status}</span>
         <IconButton icon="trash" label={discardLabel} onClick={onDiscard} />
       </div>

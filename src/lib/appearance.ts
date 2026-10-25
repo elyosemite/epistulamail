@@ -1,4 +1,4 @@
-import type { Appearance, CanvasChoice, ThemeChoice } from "./tauri";
+import type { Appearance, CanvasChoice, Density, ThemeChoice } from "./tauri";
 
 /** Cores do fundo, na ordem da paleta (US6, CA4). O valor é o sufixo do token `--color-canvas-*`. */
 export const CANVAS_CHOICES: ReadonlyArray<{ value: CanvasChoice; label: string }> = [
@@ -18,7 +18,14 @@ export const THEME_CHOICES: ReadonlyArray<{ value: ThemeChoice; label: string; d
   { value: "system", label: "Sistema", description: "Segue o Windows", icon: "monitor" },
 ];
 
-export const DEFAULT_APPEARANCE: Appearance = { theme: "system", canvas: "" };
+/** Densidade da lista (US7, CA7), do mais arejado ao mais denso. */
+export const DENSITY_CHOICES: ReadonlyArray<{ value: Density; label: string }> = [
+  { value: "comfortable", label: "Confortável" },
+  { value: "standard", label: "Padrão" },
+  { value: "compact", label: "Compacta" },
+];
+
+export const DEFAULT_APPEARANCE: Appearance = { theme: "system", canvas: "", density: "standard", showFolders: true, showReader: true };
 
 export const canvasToken = (canvas: CanvasChoice) => (canvas ? `var(--color-canvas-${canvas})` : "var(--color-canvas)");
 
@@ -27,7 +34,10 @@ export function parseAppearance(value: unknown): Appearance {
   const v = (value ?? {}) as Partial<Record<keyof Appearance, unknown>>;
   const theme = THEME_CHOICES.some((t) => t.value === v.theme) ? (v.theme as ThemeChoice) : DEFAULT_APPEARANCE.theme;
   const canvas = CANVAS_CHOICES.some((c) => c.value === v.canvas) ? (v.canvas as CanvasChoice) : DEFAULT_APPEARANCE.canvas;
-  return { theme, canvas };
+  const density = DENSITY_CHOICES.some((d) => d.value === v.density) ? (v.density as Density) : DEFAULT_APPEARANCE.density;
+  const showFolders = typeof v.showFolders === "boolean" ? v.showFolders : DEFAULT_APPEARANCE.showFolders;
+  const showReader = typeof v.showReader === "boolean" ? v.showReader : DEFAULT_APPEARANCE.showReader;
+  return { theme, canvas, density, showFolders, showReader };
 }
 
 const CACHE_KEY = "epistula-appearance";

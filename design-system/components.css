@@ -854,6 +854,72 @@ html.is-grabbing, html.is-grabbing * { cursor: grabbing !important; user-select:
 .nav-item.is-overdue > .i, .nav-item.is-overdue .nav-item__count { color: var(--color-text-danger); }
 
 /* ==========================================================================
+   Menu da conta, colunas recolhíveis, densidade e envio (L40–L45, US7)
+   ========================================================================== */
+/* L41 · Controle segmentado: uma opção entre poucas (role="radiogroup" com aria-checked, ou
+   botões com aria-pressed). --fill divide a largura igualmente. */
+.segmented { display: inline-flex; gap: var(--space-025); padding: var(--space-025); border-radius: var(--radius-small); background: var(--color-bg-neutral); }
+.segmented .btn { --btn-bg: transparent; height: 1.75rem; }
+.segmented .btn[aria-checked="true"], .segmented .btn[aria-pressed="true"] { --btn-bg: var(--color-surface); --btn-bg-hover: var(--color-surface); --btn-fg: var(--color-text); box-shadow: var(--shadow-raised); }
+.segmented--fill { display: flex; }
+.segmented--fill .btn { flex: 1; justify-content: center; }
+
+/* L42 · Fim do header: botões das colunas e, por último, a foto da conta (extrema direita) */
+.appbar__end { justify-content: flex-end; gap: var(--space-025); }
+.appbar__end .account-trigger { margin-left: var(--space-075); }
+.account-trigger { display: grid; place-items: center; flex: none; width: var(--control-height); height: var(--control-height); padding: 0; border: 0; border-radius: var(--radius-round); background: transparent; cursor: pointer; }
+.account-trigger:hover .avatar, .account-trigger.is-hover .avatar { box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-border-bold); }
+.account-trigger[aria-expanded="true"] .avatar { box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-border-selected); }
+.account-trigger:focus-visible { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 2px; }
+
+/* L40 · Menu da conta: (1) foto, nome, e-mail e informações; (2) preferências; (3) sair */
+.account-menu { width: 21rem; max-width: calc(100vw - 2 * var(--space-200)); padding-block: var(--space-050); }
+.account-menu__head { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-150); padding: var(--space-150) var(--space-200); }
+.account-menu__name { font: var(--font-card); color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-menu__email { font: var(--font-body-small); color: var(--color-text-subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-menu__info { display: grid; gap: var(--space-100); padding: 0 var(--space-200) var(--space-150); }
+.account-menu__line { display: flex; align-items: center; gap: var(--space-100); font: var(--font-body-small); color: var(--color-text-subtle); }
+.account-menu__line > .i { flex: none; color: var(--color-icon-subtle); }
+.account-menu__line .btn { margin-left: auto; }
+.account-menu__line--warning, .account-menu__line--warning > .i { color: var(--color-text-warning); }
+.account-menu__pref { display: grid; gap: var(--space-075); padding: var(--space-075) var(--space-200); }
+.account-menu__label { font: var(--font-body-small); color: var(--color-text-subtlest); }
+
+/* L43 · Colunas recolhíveis na casca em blocos: sem pastas, sem leitura ou só a lista */
+.app-shell--no-folders .app-shell__block--nav > .app-shell__sidebar,
+.app-shell--no-reader .app-shell__reader,
+.app-shell--no-reader .app-shell__resizer { display: none; }
+@media (min-width: 960px) {
+  .app-shell--blocks.app-shell--no-folders { grid-template-columns: var(--layout-sidebar-collapsed) 0 clamp(20rem, var(--app-shell-list), 35rem) var(--app-shell-gap) minmax(0, 1fr); }
+  .app-shell--blocks.app-shell--no-reader { grid-template-columns: var(--layout-sidebar-collapsed) var(--app-shell-sidebar) minmax(0, 1fr) 0 0; }
+  .app-shell--blocks.app-shell--no-folders.app-shell--no-reader { grid-template-columns: var(--layout-sidebar-collapsed) 0 minmax(0, 1fr) 0 0; }
+  /* Sem a leitura, as colunas sobre ela ficam com largura 0 e levariam junto o fim do header (botões e
+     foto): o header passa a ser uma linha, com a marca na largura das pastas e a busca alinhada à lista */
+  .app-shell--no-reader .appbar.appbar--shell { display: flex; }
+  .app-shell--no-reader:not(.app-shell--no-folders) .appbar--shell .appbar__brand { flex: none; width: var(--app-shell-sidebar); }
+  .app-shell--no-reader .appbar--shell .appbar__search { flex: 1; max-width: 40rem; }
+  /* Sem a coluna de pastas, o header deixa de seguir as colunas: marca, busca e o fim em linha */
+  .app-shell--no-folders .appbar.appbar--shell { display: flex; gap: var(--space-100); padding-inline: var(--space-150); }
+  .app-shell--no-folders .appbar--shell .appbar__brand,
+  .app-shell--no-folders .appbar--shell .appbar__actions { padding-inline: 0; }
+  .app-shell--no-folders .appbar--shell .appbar__search { flex: 1; max-width: 40rem; padding-inline: 0; }
+}
+
+/* L44 · Densidade da lista: .thread-list = Confortável (remetente, assunto, trecho e ícones);
+   --standard = Padrão (remetente e assunto); --compact = Compacta (uma linha, duas colunas) */
+.thread-list--standard .thread__snippet { display: none; }
+.thread__icons { display: inline-flex; align-items: center; gap: var(--space-050); margin-left: auto; padding-left: var(--space-100); color: var(--color-icon-subtle); flex: none; }
+.thread-list--compact .thread__icons { display: none; }
+
+/* L45 · Envio: citação recolhida, anexos do encaminhamento, motivo do bloqueio e "Enviando…" */
+.compose__quote-toggle { align-self: flex-start; justify-self: start; margin: 0 var(--space-200) var(--space-100); padding-inline: var(--space-100); letter-spacing: .1em; }
+.compose__attachments { display: flex; flex-wrap: wrap; gap: var(--space-100); padding: 0 var(--space-200) var(--space-150); }
+.compose__attachments .attachment { max-width: 16rem; }
+.compose__attachments .attachment__action { display: flex; }
+.compose__hint { display: flex; align-items: center; gap: var(--space-050); font: var(--font-body-small); color: var(--color-text-danger); }
+.compose.is-sending { opacity: .6; pointer-events: none; }
+
+/* ==========================================================================
    Marca (wordmark): glyph azul com o envelope + nome do produto
    Padrão 32px para capas e telas de boas-vindas; --sm 24px para o header.
    ========================================================================== */

@@ -35,6 +35,8 @@ dotenvy = "0.15"
 ammonia = "4"
 # SQLCipher (SQLite 3 cifrado, AES-256) com OpenSSL embutido: nenhuma DLL do sistema. Decisão D2 da US3.
 rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
+# Envio (US7): MIME e SMTP com XOAUTH2. Sem "hostname": o nome do computador não vai no EHLO nem no Message-ID.
+lettre = { version = "0.11.23", default-features = false, features = ["builder", "smtp-transport", "tokio1", "tokio1-native-tls"] }
 
 [dev-dependencies]
 proptest = "1"

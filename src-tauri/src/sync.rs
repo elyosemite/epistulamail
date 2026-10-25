@@ -147,6 +147,7 @@ pub async fn sync_folder(state: &AppState, handle: &AccountHandle, folder_id: i6
     let saved = SavedState::from(&folder);
     let mailbox = folder.imap_name.clone();
     let started = std::time::Instant::now();
+    let synced_from = store::now();
     let snap = imap_client::with_session(state, handle, Lane::Sync, |s| {
         let mailbox = mailbox.clone();
         let saved = saved.clone();
@@ -154,7 +155,14 @@ pub async fn sync_folder(state: &AppState, handle: &AccountHandle, folder_id: i6
     })
     .await?;
     let reset = snap.reset;
-    let report = state.db.call(move |c| store::apply_snapshot(c, folder_id, &snap)).await?;
+    let report = state.db.call(move |c| {
+        let report = store::apply_snapshot(c, folder_id, &snap)?;
+        // Movidas para cá antes desta leitura já chegaram com o UID do servidor (US7, D1).
+        store::settle_moves(c, folder_id, synced_from)?;
+        Ok(report)
+    })
+    .await?;
+    fill_previews(state, handle, folder_id).await;
     tracing::info!(
         role = folder.role.as_str(),
         reset,
@@ -165,6 +173,38 @@ pub async fn sync_folder(state: &AppState, handle: &AccountHandle, folder_id: i6
         "pasta sincronizada"
     );
     Ok(report)
+}
+
+/// Prévias buscadas por sincronização, das mais novas para as mais antigas (US7, D2).
+const PREVIEW_BATCH: u32 = 200;
+
+/// Completa a prévia das mensagens da pasta que ainda não têm. Falhar aqui não falha a sincronização.
+async fn fill_previews(state: &AppState, handle: &AccountHandle, folder_id: i64) {
+    let wanted = state
+        .db
+        .call(move |c| Ok((store::get_folder(c, folder_id)?, store::uids_without_preview(c, folder_id, PREVIEW_BATCH)?)))
+        .await;
+    let Ok((Some(folder), uids)) = wanted else { return };
+    let Some(uidvalidity) = folder.uidvalidity.filter(|_| !uids.is_empty()) else { return };
+    let mailbox = folder.imap_name.clone();
+    let fetched = imap_client::with_session(state, handle, Lane::Sync, |s| {
+        let (mailbox, uids) = (mailbox.clone(), uids.clone());
+        async move {
+            imap_client::select_checked(s, &mailbox, uidvalidity).await?;
+            imap_client::previews(s, &uids).await
+        }
+        .boxed()
+    })
+    .await;
+    match fetched {
+        Ok(previews) => {
+            let count = previews.len();
+            if state.db.call(move |c| store::save_previews(c, folder_id, &previews)).await.is_ok() {
+                tracing::info!(role = folder.role.as_str(), count, "prévias da lista salvas");
+            }
+        }
+        Err(e) => tracing::info!(kind = e.kind(), "prévias da lista ficaram para a próxima sincronização"),
+    }
 }
 
 /// Traz do servidor o próximo bloco de mensagens mais antigas que as salvas. Devolve quantas vieram.

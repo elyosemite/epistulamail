@@ -671,6 +671,23 @@ pub fn apply_snapshot(conn: &mut Connection, folder_id: i64, snap: &Snapshot) ->
             ],
         )
         .map_err(sql_error("sincronização"))?;
+        // Os contadores do servidor ainda contam as mensagens que estão saindo (ou não contam as que
+        // estão chegando) por um mover pendente deste computador.
+        tx.execute(
+            "UPDATE folder SET
+                total = max(0, coalesce(total, 0)
+                    - (SELECT count(*) FROM pending_move pm WHERE pm.from_folder_id = ?1 AND pm.state <> 'moved')
+                    + (SELECT count(*) FROM pending_move pm WHERE pm.to_folder_id = ?1
+                        AND NOT EXISTS (SELECT 1 FROM message_folder x WHERE x.message_id = pm.message_id AND x.folder_id = ?1))),
+                unread = CASE WHEN unread IS NULL THEN NULL ELSE max(0, unread
+                    - (SELECT count(*) FROM pending_move pm JOIN message m ON m.id = pm.message_id
+                        WHERE pm.from_folder_id = ?1 AND pm.state <> 'moved' AND m.seen = 0)
+                    + (SELECT count(*) FROM pending_move pm JOIN message m ON m.id = pm.message_id WHERE pm.to_folder_id = ?1 AND m.seen = 0
+                        AND NOT EXISTS (SELECT 1 FROM message_folder x WHERE x.message_id = pm.message_id AND x.folder_id = ?1))) END
+             WHERE id = ?1",
+            [folder_id],
+        )
+        .map_err(sql_error("sincronização"))?;
         tx.execute("UPDATE account SET last_sync_at = ?2 WHERE id = ?1", params![folder.account_id, now()])
             .map_err(sql_error("sincronização"))?;
     }
@@ -711,6 +728,10 @@ pub struct ListedMessage {
     pub date: String,
     pub flags: MessageFlags,
     pub followup: Option<Followup>,
+    /// Trecho do texto (densidade Confortável); `None` enquanto a prévia não foi buscada.
+    pub snippet: Option<String>,
+    pub has_files: bool,
+    pub has_images: bool,
 }
 
 fn listed_from(r: &Row<'_>) -> rusqlite::Result<ListedMessage> {
@@ -723,11 +744,16 @@ fn listed_from(r: &Row<'_>) -> rusqlite::Result<ListedMessage> {
         date: r.get(4)?,
         flags: MessageFlags { seen: r.get(5)?, flagged: r.get(6)? },
         followup: has_followup.then(|| Followup { due: r.get(8).ok().flatten(), completed: r.get::<_, Option<i64>>(9).ok().flatten().is_some() }),
+        snippet: r.get(10)?,
+        has_files: r.get(11)?,
+        has_images: r.get(12)?,
     })
 }
 
+/// Sem a prévia (estrutura ainda não lida), o clipe segue o palpite do cabeçalho (`multipart/mixed`).
 const LISTED_COLUMNS: &str = "mf.uid, m.subject, m.from_name, m.from_address, m.date, m.seen, m.flagged,
-    fu.message_id IS NOT NULL, fu.due_date, fu.completed_at";
+    fu.message_id IS NOT NULL, fu.due_date, fu.completed_at,
+    m.snippet, CASE WHEN m.snippet IS NULL THEN m.has_attachments ELSE m.has_files END, m.has_images";
 
 /// Página da pasta em ordem decrescente de UID, a partir de `before` (exclusivo).
 pub fn list_page(conn: &Connection, folder_id: i64, before: Option<u32>, limit: u32) -> Result<Vec<ListedMessage>, AppError> {
@@ -738,6 +764,7 @@ pub fn list_page(conn: &Connection, folder_id: i64, before: Option<u32>, limit: 
                  FROM message_folder mf JOIN message m ON m.id = mf.message_id
                  LEFT JOIN message_followup fu ON fu.message_id = m.id
                  WHERE mf.folder_id = ?1 AND mf.uid < ?2
+                   AND NOT EXISTS (SELECT 1 FROM pending_move pm WHERE pm.from_folder_id = mf.folder_id AND pm.from_uid = mf.uid)
                  ORDER BY mf.uid DESC LIMIT ?3"
             ),
         )
@@ -787,12 +814,43 @@ pub fn save_body(conn: &mut Connection, message_id: i64, raw: &[u8], attachments
         )
         .map_err(sql_error("corpo"))?;
     }
+    let preview = crate::preview::from_raw(raw);
     tx.execute(
-        "UPDATE message SET body_state = 'cached', has_attachments = ?2 WHERE id = ?1",
-        params![message_id, !attachments.is_empty()],
+        "UPDATE message SET body_state = 'cached', has_attachments = ?2, snippet = ?3, has_files = ?4, has_images = ?5 WHERE id = ?1",
+        params![message_id, !attachments.is_empty(), preview.snippet, preview.has_files, preview.has_images],
     )
     .map_err(sql_error("corpo"))?;
     tx.commit().map_err(sql_error("corpo"))
+}
+
+// ---------------------------------------------------------------- prévia da lista (US7, CA7)
+
+/// UIDs da pasta, dos mais novos para os mais antigos, cuja prévia ainda não foi buscada.
+pub fn uids_without_preview(conn: &Connection, folder_id: i64, limit: u32) -> Result<Vec<u32>, AppError> {
+    let mut st = conn
+        .prepare_cached(
+            "SELECT mf.uid FROM message_folder mf JOIN message m ON m.id = mf.message_id
+             WHERE mf.folder_id = ?1 AND m.snippet IS NULL ORDER BY mf.uid DESC LIMIT ?2",
+        )
+        .map_err(sql_error("prévia"))?;
+    let rows = st.query_map(params![folder_id, limit], |r| r.get::<_, u32>(0)).map_err(sql_error("prévia"))?;
+    rows.collect::<Result<_, _>>().map_err(sql_error("prévia"))
+}
+
+pub fn save_previews(conn: &mut Connection, folder_id: i64, previews: &[(u32, crate::preview::Preview)]) -> Result<(), AppError> {
+    let tx = conn.transaction().map_err(sql_error("prévia"))?;
+    {
+        let mut st = tx
+            .prepare_cached(
+                "UPDATE message SET snippet = ?3, has_files = ?4, has_images = ?5
+                 WHERE id = (SELECT message_id FROM message_folder WHERE folder_id = ?1 AND uid = ?2)",
+            )
+            .map_err(sql_error("prévia"))?;
+        for (uid, p) in previews {
+            st.execute(params![folder_id, uid, p.snippet, p.has_files, p.has_images]).map_err(sql_error("prévia"))?;
+        }
+    }
+    tx.commit().map_err(sql_error("prévia"))
 }
 
 pub fn mark_too_large(conn: &Connection, message_id: i64) -> Result<(), AppError> {
@@ -868,7 +926,7 @@ pub fn search(conn: &Connection, account_id: &str, query: &str) -> Result<Vec<Se
         .map_err(sql_error("busca"))?;
     let rows = st
         .query_map(params![account_id, pattern, SEARCH_LIMIT + 1], |r| {
-            Ok(SearchHit { message: listed_from(r)?, folder_id: r.get(10)?, folder_name: r.get(11)? })
+            Ok(SearchHit { message: listed_from(r)?, folder_id: r.get(13)?, folder_name: r.get(14)? })
         })
         .map_err(sql_error("busca"))?;
     rows.collect::<Result<_, _>>().map_err(sql_error("busca"))
@@ -969,7 +1027,7 @@ pub fn flagged(conn: &Connection, account_id: &str, bucket: FlagBucket, dates: &
         .map_err(sql_error("sinalizadas"))?;
     let rows = st
         .query_map(params![account_id, dates.today, dates.week_end, bucket_name(bucket), SEARCH_LIMIT + 1], |r| {
-            Ok(SearchHit { message: listed_from(r)?, folder_id: r.get(10)?, folder_name: r.get(11)? })
+            Ok(SearchHit { message: listed_from(r)?, folder_id: r.get(13)?, folder_name: r.get(14)? })
         })
         .map_err(sql_error("sinalizadas"))?;
     rows.collect::<Result<_, _>>().map_err(sql_error("sinalizadas"))
@@ -983,11 +1041,30 @@ pub const THEMES: &[&str] = &["light", "dark", "system"];
 /// Cores do fundo; "" é o padrão (`--color-canvas`).
 pub const CANVASES: &[&str] = &["", "blue", "teal", "green", "purple", "magenta", "orange", "sand"];
 
+pub const DENSITIES: &[&str] = &["comfortable", "standard", "compact"];
+const APP_DENSITY: &str = "density";
+const APP_SHOW_FOLDERS: &str = "show_folders";
+const APP_SHOW_READER: &str = "show_reader";
+
+/// Aparência e preferências de lista (US6 e US7): valem para todas as contas deste computador.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Appearance {
     pub theme: String,
     pub canvas: String,
+    pub density: String,
+    pub show_folders: bool,
+    pub show_reader: bool,
+}
+
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppearanceChange {
+    pub theme: Option<String>,
+    pub canvas: Option<String>,
+    pub density: Option<String>,
+    pub show_folders: Option<bool>,
+    pub show_reader: Option<bool>,
 }
 
 fn app_setting(conn: &Connection, key: &str) -> Result<Option<String>, AppError> {
@@ -1008,20 +1085,84 @@ fn set_app_setting(conn: &Connection, key: &str, value: &str) -> Result<(), AppE
 pub fn appearance(conn: &Connection) -> Result<Appearance, AppError> {
     let theme = app_setting(conn, APP_THEME)?.filter(|t| THEMES.contains(&t.as_str())).unwrap_or_else(|| "system".into());
     let canvas = app_setting(conn, APP_CANVAS)?.filter(|c| CANVASES.contains(&c.as_str())).unwrap_or_default();
-    Ok(Appearance { theme, canvas })
+    let density = app_setting(conn, APP_DENSITY)?.filter(|d| DENSITIES.contains(&d.as_str())).unwrap_or_else(|| "standard".into());
+    let shown = |key| Ok::<_, AppError>(app_setting(conn, key)?.as_deref() != Some("0"));
+    Ok(Appearance { theme, canvas, density, show_folders: shown(APP_SHOW_FOLDERS)?, show_reader: shown(APP_SHOW_READER)? })
 }
 
-pub fn set_appearance(conn: &Connection, theme: Option<&str>, canvas: Option<&str>) -> Result<Appearance, AppError> {
-    if theme.is_some_and(|t| !THEMES.contains(&t)) || canvas.is_some_and(|c| !CANVASES.contains(&c)) {
+pub fn set_appearance(conn: &Connection, change: &AppearanceChange) -> Result<Appearance, AppError> {
+    let invalid = change.theme.as_deref().is_some_and(|t| !THEMES.contains(&t))
+        || change.canvas.as_deref().is_some_and(|c| !CANVASES.contains(&c))
+        || change.density.as_deref().is_some_and(|d| !DENSITIES.contains(&d));
+    if invalid {
         return Err(AppError::InvalidInput);
     }
-    if let Some(theme) = theme {
+    if let Some(theme) = &change.theme {
         set_app_setting(conn, APP_THEME, theme)?;
     }
-    if let Some(canvas) = canvas {
+    if let Some(canvas) = &change.canvas {
         set_app_setting(conn, APP_CANVAS, canvas)?;
     }
+    if let Some(density) = &change.density {
+        set_app_setting(conn, APP_DENSITY, density)?;
+    }
+    if let Some(show) = change.show_folders {
+        set_app_setting(conn, APP_SHOW_FOLDERS, if show { "1" } else { "0" })?;
+    }
+    if let Some(show) = change.show_reader {
+        set_app_setting(conn, APP_SHOW_READER, if show { "1" } else { "0" })?;
+    }
     appearance(conn)
+}
+
+// ---------------------------------------------------------------- menu da conta (US7, CA6)
+
+/// Informações da seção 1 do menu da conta. Só números; nada cita o provedor.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountOverview {
+    /// Última sincronização bem-sucedida (segundos Unix).
+    pub last_sync_at: Option<i64>,
+    /// Mensagens não lidas salvas da conta, cada uma uma vez (fora Lixeira, Spam e "Todos").
+    pub unread: u32,
+    /// Mensagens salvas da conta neste computador.
+    pub saved: u32,
+}
+
+pub fn account_overview(conn: &Connection, account_id: &str) -> Result<AccountOverview, AppError> {
+    conn.query_row(
+        "SELECT a.last_sync_at,
+            (SELECT count(DISTINCT m.id) FROM message m JOIN message_folder mf ON mf.message_id = m.id JOIN folder f ON f.id = mf.folder_id
+              WHERE m.account_id = a.id AND m.seen = 0 AND f.role NOT IN ('trash', 'spam', 'all')),
+            (SELECT count(*) FROM message m WHERE m.account_id = a.id)
+         FROM account a WHERE a.id = ?1",
+        [account_id],
+        |r| Ok(AccountOverview { last_sync_at: r.get(0)?, unread: r.get(1)?, saved: r.get(2)? }),
+    )
+    .optional()
+    .map_err(sql_error("conta"))?
+    .ok_or(AppError::AccountNotFound)
+}
+
+/// Nome de quem envia (claim `name` do provedor), para o cabeçalho `From` das mensagens enviadas.
+pub fn set_sender_name(conn: &Connection, account_id: &str, name: Option<&str>) -> Result<(), AppError> {
+    conn.execute("UPDATE account SET sender_name = ?2 WHERE id = ?1", params![account_id, name]).map_err(sql_error("conta"))?;
+    Ok(())
+}
+
+pub fn sender_name(conn: &Connection, account_id: &str) -> Result<Option<String>, AppError> {
+    conn.query_row("SELECT sender_name FROM account WHERE id = ?1", [account_id], |r| r.get(0))
+        .optional()
+        .map(Option::flatten)
+        .map_err(sql_error("conta"))
+}
+
+/// Servidor de envio da conta.
+pub fn smtp_server(conn: &Connection, account_id: &str) -> Result<(String, u16, String), AppError> {
+    conn.query_row("SELECT smtp_host, smtp_port, smtp_security FROM provider_config WHERE account_id = ?1", [account_id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
+        .optional()
+        .map_err(sql_error("servidor da conta"))?
+        .ok_or(AppError::AccountNotFound)
 }
 
 // ---------------------------------------------------------------- mover, excluir, arquivar (CA4, CA5)
@@ -1060,6 +1201,237 @@ pub fn unlink(conn: &mut Connection, folder_id: i64, uids: &[u32], in_transit: b
     delete_orphans(&tx, &folder.account_id)?;
     tx.commit().map_err(sql_error("mover"))?;
     Ok(removed)
+}
+
+// ---------------------------------------------------------------- mover pendente (US7, D1)
+
+/// Mensagem a caminho de outra pasta. `waiting`: dentro do prazo do "Desfazer", nada foi ao
+/// servidor; `running`: o MOVE está em andamento; `moved`: o servidor confirmou e a mensagem
+/// espera a sincronização do destino para ganhar o UID de lá.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PendingMove {
+    pub id: i64,
+    pub batch: String,
+    pub account_id: String,
+    pub message_id: i64,
+    pub from_folder_id: i64,
+    pub from_uid: u32,
+    pub to_folder_id: i64,
+}
+
+const PENDING_COLUMNS: &str = "id, batch, account_id, message_id, from_folder_id, from_uid, to_folder_id";
+
+fn pending_from(r: &Row<'_>) -> rusqlite::Result<PendingMove> {
+    Ok(PendingMove {
+        id: r.get(0)?,
+        batch: r.get(1)?,
+        account_id: r.get(2)?,
+        message_id: r.get(3)?,
+        from_folder_id: r.get(4)?,
+        from_uid: r.get(5)?,
+        to_folder_id: r.get(6)?,
+    })
+}
+
+/// A mensagem está ligada a esta pasta no banco (ex.: "Todos os e-mails" do Gmail já tem quase tudo).
+fn linked_to(conn: &Connection, message_id: i64, folder_id: i64) -> Result<bool, AppError> {
+    conn.query_row("SELECT 1 FROM message_folder WHERE message_id = ?1 AND folder_id = ?2", params![message_id, folder_id], |_| Ok(()))
+        .optional()
+        .map(|r| r.is_some())
+        .map_err(sql_error("mover"))
+}
+
+/// Ajusta total e não lidas da pasta (`delta` +1 entra, -1 sai) sem esperar o servidor.
+fn shift_counts(conn: &Connection, folder_id: i64, delta: i64, unseen: bool) -> Result<(), AppError> {
+    conn.execute(
+        "UPDATE folder SET total = max(0, coalesce(total, 0) + ?2),
+            unread = CASE WHEN unread IS NULL OR ?3 = 0 THEN unread ELSE max(0, unread + ?2) END
+         WHERE id = ?1",
+        params![folder_id, delta, unseen],
+    )
+    .map_err(sql_error("mover"))?;
+    Ok(())
+}
+
+fn move_counts(conn: &Connection, message_id: i64, from: i64, to: i64, undo: bool) -> Result<(), AppError> {
+    let seen: bool = conn.query_row("SELECT seen FROM message WHERE id = ?1", [message_id], |r| r.get(0)).map_err(sql_error("mover"))?;
+    let sign = if undo { -1 } else { 1 };
+    shift_counts(conn, from, -sign, !seen)?;
+    if !linked_to(conn, message_id, to)? {
+        shift_counts(conn, to, sign, !seen)?;
+    }
+    Ok(())
+}
+
+/// Registra o movimento das mensagens `(pasta, uid)` para `to_folder_id`. Some da origem e aparece
+/// no destino na hora (listas e contadores). Uma mensagem que já estava indo para outra pasta muda
+/// de destino (ou volta, se o novo destino for a origem). Devolve as que entraram no lote; as que já
+/// estão no servidor a caminho ficam de fora.
+pub fn create_pending_moves(conn: &mut Connection, account_id: &str, batch: &str, items: &[(i64, u32)], to_folder_id: i64, due_at: i64) -> Result<Vec<(i64, u32)>, AppError> {
+    let tx = conn.transaction().map_err(sql_error("mover"))?;
+    let mut accepted = Vec::new();
+    for &(folder_id, uid) in items {
+        let existing: Option<(i64, i64, String)> = tx
+            .query_row(
+                "SELECT id, to_folder_id, state FROM pending_move WHERE from_folder_id = ?1 AND from_uid = ?2",
+                params![folder_id, uid],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+            )
+            .optional()
+            .map_err(sql_error("mover"))?;
+        let message_id: Option<i64> = tx
+            .query_row("SELECT message_id FROM message_folder WHERE folder_id = ?1 AND uid = ?2", params![folder_id, uid], |r| r.get(0))
+            .optional()
+            .map_err(sql_error("mover"))?;
+        let Some(message_id) = message_id else { continue };
+        match existing {
+            Some((_, _, state)) if state != "waiting" => continue,
+            Some((id, old_to, _)) => {
+                move_counts(&tx, message_id, folder_id, old_to, true)?;
+                if to_folder_id == folder_id {
+                    tx.execute("DELETE FROM pending_move WHERE id = ?1", [id]).map_err(sql_error("mover"))?;
+                } else {
+                    move_counts(&tx, message_id, folder_id, to_folder_id, false)?;
+                    tx.execute("UPDATE pending_move SET to_folder_id = ?2, batch = ?3, due_at = ?4 WHERE id = ?1", params![id, to_folder_id, batch, due_at])
+                        .map_err(sql_error("mover"))?;
+                }
+            }
+            None if to_folder_id == folder_id => continue,
+            None => {
+                tx.execute(
+                    "INSERT INTO pending_move (batch, account_id, message_id, from_folder_id, from_uid, to_folder_id, state, due_at)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'waiting', ?7)",
+                    params![batch, account_id, message_id, folder_id, uid, to_folder_id, due_at],
+                )
+                .map_err(sql_error("mover"))?;
+                move_counts(&tx, message_id, folder_id, to_folder_id, false)?;
+            }
+        }
+        accepted.push((folder_id, uid));
+    }
+    tx.commit().map_err(sql_error("mover"))?;
+    Ok(accepted)
+}
+
+/// "Desfazer": tira do lote o que ainda não foi ao servidor. Devolve `(pasta, uid)` desfeitos.
+pub fn cancel_pending(conn: &mut Connection, batch: &str) -> Result<Vec<(i64, u32)>, AppError> {
+    let tx = conn.transaction().map_err(sql_error("mover"))?;
+    let rows: Vec<PendingMove> = {
+        let mut st = tx
+            .prepare_cached(&format!("SELECT {PENDING_COLUMNS} FROM pending_move WHERE batch = ?1 AND state = 'waiting'"))
+            .map_err(sql_error("mover"))?;
+        let rows = st.query_map([batch], pending_from).map_err(sql_error("mover"))?;
+        rows.collect::<Result<_, _>>().map_err(sql_error("mover"))?
+    };
+    for m in &rows {
+        move_counts(&tx, m.message_id, m.from_folder_id, m.to_folder_id, true)?;
+        tx.execute("DELETE FROM pending_move WHERE id = ?1", [m.id]).map_err(sql_error("mover"))?;
+    }
+    tx.commit().map_err(sql_error("mover"))?;
+    Ok(rows.into_iter().map(|m| (m.from_folder_id, m.from_uid)).collect())
+}
+
+/// Pega os movimentos vencidos (`due_at <= now`) e os marca como em andamento.
+pub fn take_due_moves(conn: &mut Connection, now: i64) -> Result<Vec<PendingMove>, AppError> {
+    let tx = conn.transaction().map_err(sql_error("mover"))?;
+    let rows: Vec<PendingMove> = {
+        let mut st = tx
+            .prepare_cached(&format!("SELECT {PENDING_COLUMNS} FROM pending_move WHERE state = 'waiting' AND due_at <= ?1 ORDER BY id"))
+            .map_err(sql_error("mover"))?;
+        let rows = st.query_map([now], pending_from).map_err(sql_error("mover"))?;
+        rows.collect::<Result<_, _>>().map_err(sql_error("mover"))?
+    };
+    for m in &rows {
+        tx.execute("UPDATE pending_move SET state = 'running' WHERE id = ?1", [m.id]).map_err(sql_error("mover"))?;
+    }
+    tx.commit().map_err(sql_error("mover"))?;
+    Ok(rows)
+}
+
+/// Resultado do MOVE no servidor. Com sucesso, a ligação com a origem sai (a mensagem fica
+/// protegida da limpeza) e o registro espera a sincronização do destino. Com falha, a mensagem
+/// volta para a origem e os contadores também.
+pub fn finish_moves(conn: &mut Connection, ids: &[i64], ok: bool) -> Result<(), AppError> {
+    let tx = conn.transaction().map_err(sql_error("mover"))?;
+    for &id in ids {
+        let Some(m) = tx
+            .query_row(&format!("SELECT {PENDING_COLUMNS} FROM pending_move WHERE id = ?1"), [id], pending_from)
+            .optional()
+            .map_err(sql_error("mover"))?
+        else {
+            continue;
+        };
+        if ok {
+            tx.execute("DELETE FROM message_folder WHERE folder_id = ?1 AND uid = ?2", params![m.from_folder_id, m.from_uid]).map_err(sql_error("mover"))?;
+            tx.execute("UPDATE message SET in_transit_since = ?2 WHERE id = ?1", params![m.message_id, now()]).map_err(sql_error("mover"))?;
+            tx.execute("UPDATE pending_move SET state = 'moved', moved_at = ?2 WHERE id = ?1", params![id, now()]).map_err(sql_error("mover"))?;
+        } else {
+            move_counts(&tx, m.message_id, m.from_folder_id, m.to_folder_id, true)?;
+            tx.execute("DELETE FROM pending_move WHERE id = ?1", [id]).map_err(sql_error("mover"))?;
+        }
+    }
+    tx.commit().map_err(sql_error("mover"))
+}
+
+/// Depois de uma sincronização do destino que começou em `synced_from`, os movimentos concluídos
+/// antes dela já aparecem lá com o UID do servidor. Também limpa os que passaram do tempo.
+pub fn settle_moves(conn: &Connection, to_folder_id: i64, synced_from: i64) -> Result<usize, AppError> {
+    conn.execute(
+        "DELETE FROM pending_move WHERE state = 'moved' AND ((to_folder_id = ?1 AND moved_at <= ?2) OR moved_at < ?3)",
+        params![to_folder_id, synced_from, now() - IN_TRANSIT_SECS],
+    )
+    .map_err(sql_error("mover"))
+}
+
+/// Abertura do app: um MOVE interrompido volta a esperar e é refeito (o MOVE de um UID que já
+/// saiu da pasta não faz nada no servidor).
+pub fn resume_moves(conn: &Connection) -> Result<usize, AppError> {
+    conn.execute("UPDATE pending_move SET state = 'waiting', due_at = ?1 WHERE state = 'running'", [now()]).map_err(sql_error("mover"))
+}
+
+/// Mensagens chegando a uma pasta que ainda não aparecem nela pelo servidor, das mais recentes
+/// para as mais antigas movidas. O UID e a pasta são os da origem (o id que o frontend já tem).
+pub fn incoming_moves(conn: &Connection, folder_id: i64) -> Result<Vec<(i64, ListedMessage)>, AppError> {
+    let mut st = conn
+        .prepare_cached(&format!(
+            "SELECT {}, pm.from_folder_id
+             FROM pending_move pm JOIN message m ON m.id = pm.message_id
+             LEFT JOIN message_followup fu ON fu.message_id = m.id
+             WHERE pm.to_folder_id = ?1
+               AND NOT EXISTS (SELECT 1 FROM message_folder x WHERE x.message_id = m.id AND x.folder_id = ?1)
+             ORDER BY pm.id DESC",
+            LISTED_COLUMNS.replace("mf.uid", "pm.from_uid")
+        ))
+        .map_err(sql_error("mover"))?;
+    let rows = st.query_map([folder_id], |r| Ok((r.get(13)?, listed_from(r)?))).map_err(sql_error("mover"))?;
+    rows.collect::<Result<_, _>>().map_err(sql_error("mover"))
+}
+
+/// A mensagem de um id `(pasta, uid)`: pela ligação com a pasta ou, se ela já saiu da pasta num
+/// mover deste computador, pelo registro do mover.
+pub fn message_for_key(conn: &Connection, folder_id: i64, uid: u32) -> Result<Option<StoredMessage>, AppError> {
+    if let Some(m) = message_by_uid(conn, folder_id, uid)? {
+        return Ok(Some(m));
+    }
+    conn.query_row(
+        "SELECT m.id, m.seen, m.flagged, m.body_state FROM pending_move pm JOIN message m ON m.id = pm.message_id
+         WHERE pm.from_folder_id = ?1 AND pm.from_uid = ?2",
+        params![folder_id, uid],
+        |r| Ok(StoredMessage { id: r.get(0)?, flags: MessageFlags { seen: r.get(1)?, flagged: r.get(2)? }, body_state: r.get(3)? }),
+    )
+    .optional()
+    .map_err(sql_error("mensagem"))
+}
+
+/// Onde a mensagem está no servidor agora: a ligação com alguma pasta, preferindo `prefer`.
+pub fn location_of(conn: &Connection, message_id: i64, prefer: i64) -> Result<Option<(i64, u32)>, AppError> {
+    conn.query_row(
+        "SELECT folder_id, uid FROM message_folder WHERE message_id = ?1 ORDER BY folder_id <> ?2 LIMIT 1",
+        params![message_id, prefer],
+        |r| Ok((r.get(0)?, r.get(1)?)),
+    )
+    .optional()
+    .map_err(sql_error("mensagem"))
 }
 
 pub fn folder_by_role(conn: &Connection, account_id: &str, role: Role) -> Result<Option<FolderRow>, AppError> {
@@ -1853,14 +2225,199 @@ pub(crate) mod tests {
     #[test]
     fn appearance_defaults_and_validation() {
         let t = test_db();
+        let change = |theme: Option<&str>, canvas: Option<&str>| AppearanceChange { theme: theme.map(Into::into), canvas: canvas.map(Into::into), ..Default::default() };
+        let look = |theme: &str, canvas: &str| Appearance { theme: theme.into(), canvas: canvas.into(), density: "standard".into(), show_folders: true, show_reader: true };
         t.db.with(|c| {
-            assert_eq!(appearance(c).unwrap(), Appearance { theme: "system".into(), canvas: "".into() });
-            assert_eq!(set_appearance(c, Some("dark"), None).unwrap(), Appearance { theme: "dark".into(), canvas: "".into() });
-            assert_eq!(set_appearance(c, None, Some("teal")).unwrap(), Appearance { theme: "dark".into(), canvas: "teal".into() });
-            assert_eq!(set_appearance(c, Some("sepia"), None), Err(AppError::InvalidInput));
-            assert_eq!(set_appearance(c, None, Some("url(http://x)")), Err(AppError::InvalidInput));
-            assert_eq!(set_appearance(c, Some("light"), Some("x")), Err(AppError::InvalidInput));
+            assert_eq!(appearance(c).unwrap(), look("system", ""));
+            assert_eq!(set_appearance(c, &change(Some("dark"), None)).unwrap(), look("dark", ""));
+            assert_eq!(set_appearance(c, &change(None, Some("teal"))).unwrap(), look("dark", "teal"));
+            assert_eq!(set_appearance(c, &change(Some("sepia"), None)), Err(AppError::InvalidInput));
+            assert_eq!(set_appearance(c, &change(None, Some("url(http://x)"))), Err(AppError::InvalidInput));
+            assert_eq!(set_appearance(c, &change(Some("light"), Some("x"))), Err(AppError::InvalidInput));
             assert_eq!(appearance(c).unwrap().theme, "dark");
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn list_preferences_are_saved_and_validated() {
+        let t = test_db();
+        t.db.with(|c| {
+            let saved = set_appearance(c, &AppearanceChange { density: Some("compact".into()), show_folders: Some(false), ..Default::default() }).unwrap();
+            assert_eq!((saved.density.as_str(), saved.show_folders, saved.show_reader), ("compact", false, true));
+            assert_eq!(set_appearance(c, &AppearanceChange { density: Some("dense".into()), ..Default::default() }), Err(AppError::InvalidInput));
+            let saved = set_appearance(c, &AppearanceChange { show_folders: Some(true), show_reader: Some(false), ..Default::default() }).unwrap();
+            assert_eq!((saved.density.as_str(), saved.show_folders, saved.show_reader), ("compact", true, false));
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    /// US7, D1: o e-mail sai da origem e entra no destino na hora, "Desfazer" devolve, e nenhuma
+    /// recarga da origem o traz de volta enquanto o mover está pendente.
+    #[test]
+    fn pending_move_shows_in_target_and_hides_from_source() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            let label = folder(c, &a.id, "Projetos", Role::Custom);
+            apply_snapshot(c, inbox.id, &snapshot(1..=3)).unwrap();
+            apply_snapshot(c, label.id, &Snapshot { reset: true, uidvalidity: 7, total: 0, unread: Some(0), complete: Some(true), ..Default::default() }).unwrap();
+
+            let accepted = create_pending_moves(c, &a.id, "lote1", &[(inbox.id, 2), (inbox.id, 99)], label.id, now() + 6).unwrap();
+            assert_eq!(accepted, vec![(inbox.id, 2)], "uid inexistente fica de fora");
+            let uids = |c: &Connection, f| list_page(c, f, None, 50).unwrap().into_iter().map(|m| m.uid).collect::<Vec<_>>();
+            assert_eq!(uids(c, inbox.id), vec![3, 1]);
+            let incoming = incoming_moves(c, label.id).unwrap();
+            assert_eq!(incoming.len(), 1);
+            assert_eq!((incoming[0].0, incoming[0].1.uid), (inbox.id, 2), "id da origem");
+            let counts = |c: &Connection, f| get_folder(c, f).unwrap().map(|f| (f.total, f.unread)).unwrap();
+            assert_eq!(counts(c, inbox.id), (Some(2), Some(2)));
+            assert_eq!(counts(c, label.id), (Some(1), Some(1)));
+
+            // Sincronizar a origem (o servidor ainda tem a mensagem) não a traz de volta.
+            let mut again = snapshot(1..=3);
+            again.reset = false;
+            again.present = Some((1, vec![1, 2, 3]));
+            apply_snapshot(c, inbox.id, &again).unwrap();
+            assert_eq!(uids(c, inbox.id), vec![3, 1]);
+            assert_eq!(counts(c, inbox.id), (Some(2), Some(2)), "contadores do servidor descontam o mover pendente");
+
+            // O id da origem continua abrindo a mensagem.
+            assert!(message_for_key(c, inbox.id, 2).unwrap().is_some());
+
+            // Desfazer.
+            assert_eq!(cancel_pending(c, "lote1").unwrap(), vec![(inbox.id, 2)]);
+            assert_eq!(uids(c, inbox.id), vec![3, 2, 1]);
+            assert!(incoming_moves(c, label.id).unwrap().is_empty());
+            assert_eq!(counts(c, inbox.id), (Some(3), Some(3)));
+            assert_eq!(counts(c, label.id), (Some(0), Some(0)));
+            assert!(cancel_pending(c, "lote1").unwrap().is_empty());
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn pending_move_runs_then_settles_after_the_target_sync() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            let label = folder(c, &a.id, "Projetos", Role::Custom);
+            apply_snapshot(c, inbox.id, &snapshot(1..=3)).unwrap();
+            let m = message_by_uid(c, inbox.id, 2).unwrap().unwrap();
+            create_pending_moves(c, &a.id, "lote", &[(inbox.id, 2)], label.id, now() - 1).unwrap();
+            create_pending_moves(c, &a.id, "outro", &[(inbox.id, 3)], label.id, now() + 60).unwrap();
+
+            let due = take_due_moves(c, now()).unwrap();
+            assert_eq!(due.iter().map(|d| d.from_uid).collect::<Vec<_>>(), vec![2], "só o vencido");
+            assert!(cancel_pending(c, "lote").unwrap().is_empty(), "em andamento não desfaz");
+            assert!(create_pending_moves(c, &a.id, "x", &[(inbox.id, 2)], inbox.id, now()).unwrap().is_empty());
+
+            finish_moves(c, &[due[0].id], true).unwrap();
+            assert!(message_by_uid(c, inbox.id, 2).unwrap().is_none(), "saiu da origem");
+            assert_eq!(message_for_key(c, inbox.id, 2).unwrap().map(|s| s.id), Some(m.id), "o id antigo ainda resolve");
+            assert_eq!(incoming_moves(c, label.id).unwrap().len(), 2, "continua aparecendo no destino");
+
+            // A sincronização do destino encontra a mensagem com o UID de lá e o registro some.
+            let started = now();
+            let mut arrived = snapshot(1..=1);
+            arrived.headers = vec![header(40, "<2@x>", "s", false)];
+            apply_snapshot(c, label.id, &arrived).unwrap();
+            assert_eq!(settle_moves(c, label.id, started).unwrap(), 1);
+            let incoming = incoming_moves(c, label.id).unwrap();
+            assert_eq!(incoming.iter().map(|(_, m)| m.uid).collect::<Vec<_>>(), vec![3], "a outra ainda espera");
+            assert_eq!(message_by_uid(c, label.id, 40).unwrap().map(|s| s.id), Some(m.id));
+            assert_eq!(location_of(c, m.id, inbox.id).unwrap(), Some((label.id, 40)));
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn failed_or_retargeted_moves_put_things_back() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            let label = folder(c, &a.id, "Projetos", Role::Custom);
+            let trash = folder(c, &a.id, "Lixeira", Role::Trash);
+            apply_snapshot(c, inbox.id, &snapshot(1..=3)).unwrap();
+            let total = |c: &Connection, f| get_folder(c, f).unwrap().unwrap().total;
+
+            create_pending_moves(c, &a.id, "a", &[(inbox.id, 1)], label.id, now() + 60).unwrap();
+            // Mover de novo antes do prazo troca o destino; mover de volta para a origem desfaz.
+            assert_eq!(create_pending_moves(c, &a.id, "b", &[(inbox.id, 1)], trash.id, now() + 60).unwrap().len(), 1);
+            assert!(incoming_moves(c, label.id).unwrap().is_empty());
+            assert_eq!(incoming_moves(c, trash.id).unwrap().len(), 1);
+            assert_eq!((total(c, inbox.id), total(c, label.id), total(c, trash.id)), (Some(2), Some(0), Some(1)));
+            create_pending_moves(c, &a.id, "c", &[(inbox.id, 1)], inbox.id, now() + 60).unwrap();
+            assert_eq!(count(c, "SELECT count(*) FROM pending_move"), 0);
+            assert_eq!(total(c, inbox.id), Some(3));
+
+            // Servidor recusou: volta para a origem.
+            create_pending_moves(c, &a.id, "d", &[(inbox.id, 2)], label.id, now() - 1).unwrap();
+            let due = take_due_moves(c, now()).unwrap();
+            finish_moves(c, &[due[0].id], false).unwrap();
+            assert!(message_by_uid(c, inbox.id, 2).unwrap().is_some());
+            assert_eq!(list_page(c, inbox.id, None, 50).unwrap().len(), 3);
+            assert_eq!((total(c, inbox.id), total(c, label.id)), (Some(3), Some(0)));
+
+            // App fechado no meio do MOVE: volta a esperar.
+            create_pending_moves(c, &a.id, "e", &[(inbox.id, 3)], label.id, now() - 1).unwrap();
+            take_due_moves(c, now()).unwrap();
+            assert_eq!(resume_moves(c).unwrap(), 1);
+            assert_eq!(take_due_moves(c, now()).unwrap().len(), 1);
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn previews_are_saved_and_listed() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            apply_snapshot(c, inbox.id, &snapshot(1..=3)).unwrap();
+            assert_eq!(uids_without_preview(c, inbox.id, 2).unwrap(), vec![3, 2]);
+            let p = crate::preview::Preview { snippet: "Oi, tudo bem?".into(), has_files: true, has_images: false };
+            save_previews(c, inbox.id, &[(3, p), (2, crate::preview::Preview::default())]).unwrap();
+            assert_eq!(uids_without_preview(c, inbox.id, 10).unwrap(), vec![1]);
+            let page = list_page(c, inbox.id, None, 50).unwrap();
+            assert_eq!((page[0].snippet.as_deref(), page[0].has_files, page[0].has_images), (Some("Oi, tudo bem?"), true, false));
+            assert_eq!(page[1].snippet.as_deref(), Some(""), "sem texto: prévia vazia, não buscada de novo");
+            assert_eq!(page[2].snippet, None);
+
+            let m = message_by_uid(c, inbox.id, 1).unwrap().unwrap();
+            save_body(c, m.id, b"Subject: s\r\n\r\nCorpo salvo.", &[]).unwrap();
+            assert_eq!(list_page(c, inbox.id, None, 50).unwrap()[2].snippet.as_deref(), Some("Corpo salvo."));
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn account_overview_counts_each_unread_message_once() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            let all = folder(c, &a.id, "[Gmail]/Todos", Role::All);
+            let label = folder(c, &a.id, "Projetos", Role::Custom);
+            apply_snapshot(c, inbox.id, &snapshot(1..=3)).unwrap();
+            let mut same = snapshot(1..=3);
+            same.headers = (1..=3).map(|u| header(u + 10, &format!("<{u}@x>"), "s", false)).collect();
+            apply_snapshot(c, all.id, &same).unwrap();
+            let mut one = snapshot(1..=1);
+            one.headers = vec![header(5, "<1@x>", "s", false)];
+            apply_snapshot(c, label.id, &one).unwrap();
+            let o = account_overview(c, &a.id).unwrap();
+            assert_eq!((o.unread, o.saved), (3, 3));
+            assert!(o.last_sync_at.is_some());
             Ok(())
         })
         .unwrap();

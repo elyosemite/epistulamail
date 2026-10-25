@@ -91,6 +91,16 @@ pub fn template(raw: &[u8], kind: DraftKind, own_email: &str) -> Template {
     };
     let subject = message.subject().unwrap_or_default().trim().to_owned();
     let from = addresses(message.from());
+    let join = |l: Vec<(String, String)>| l.into_iter().map(|(_, d)| d).collect::<Vec<_>>().join("; ");
+    // Mensagem original: citada na resposta (D5 da US7) e no encaminhamento.
+    let quote = Some(Quote {
+        from: join(from.clone()),
+        sent: message.date().map(|d| d.to_rfc3339()).unwrap_or_default(),
+        to: join(addresses(message.to())),
+        cc: join(addresses(message.cc())),
+        subject: subject.clone(),
+        text: message.body_text(0).map(|t| t.into_owned()).unwrap_or_default(),
+    });
     let reply_target = {
         let reply_to = addresses(message.reply_to());
         if reply_to.is_empty() { from.clone() } else { reply_to }
@@ -103,25 +113,17 @@ pub fn template(raw: &[u8], kind: DraftKind, own_email: &str) -> Template {
             if reply_target.iter().all(|(a, _)| a.to_lowercase() == own) {
                 to = dedupe(addresses(message.to()), &own, &mut Vec::new());
             }
-            Template { to, cc: Vec::new(), subject: reply_subject(&subject), quote: None }
+            Template { to, cc: Vec::new(), subject: reply_subject(&subject), quote }
         }
         DraftKind::ReplyAll => {
             let mut seen = Vec::new();
             let mut to = dedupe(reply_target, &own, &mut seen);
             to.extend(dedupe(addresses(message.to()), &own, &mut seen));
             let cc = dedupe(addresses(message.cc()), &own, &mut seen);
-            Template { to, cc, subject: reply_subject(&subject), quote: None }
+            Template { to, cc, subject: reply_subject(&subject), quote }
         }
         DraftKind::Forward | DraftKind::New => {
-            let join = |l: Vec<(String, String)>| l.into_iter().map(|(_, d)| d).collect::<Vec<_>>().join("; ");
-            let quote = (kind == DraftKind::Forward).then(|| Quote {
-                from: join(from),
-                sent: message.date().map(|d| d.to_rfc3339()).unwrap_or_default(),
-                to: join(addresses(message.to())),
-                cc: join(addresses(message.cc())),
-                subject: subject.clone(),
-                text: message.body_text(0).map(|t| t.into_owned()).unwrap_or_default(),
-            });
+            let quote = quote.filter(|_| kind == DraftKind::Forward);
             let subject = if kind == DraftKind::Forward { forward_subject(&subject) } else { String::new() };
             Template { to: Vec::new(), cc: Vec::new(), subject, quote }
         }
@@ -159,6 +161,7 @@ Segue a versao 3.\r\n";
         assert_eq!(t.to, ["Marina Couto <marina@lumen.com.br>"]);
         assert!(t.cc.is_empty());
         assert_eq!(t.subject, "Re: Revisao do contrato");
+        assert!(t.quote.unwrap().text.contains("Segue a versao 3."), "a resposta cita a original");
 
         let with_reply_to = b"From: a@x.com\r\nReply-To: Lista <lista@x.com>\r\nSubject: s\r\n\r\nx";
         assert_eq!(template(with_reply_to, DraftKind::Reply, "eu@x.com").to, ["Lista <lista@x.com>"]);

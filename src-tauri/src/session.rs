@@ -258,6 +258,13 @@ impl AppState {
     /// dia (conectar e reconectar). Sem a claim `picture` (escopo `profile` não autorizado), a foto
     /// salva continua; sem rede, tenta de novo na próxima renovação.
     pub fn update_photo(&self, account_id: &str, id_token: Option<&str>, force: bool) {
+        // O nome do titular vem no mesmo token (US7: cabeçalho From do envio).
+        if let Some(name) = id_token.and_then(photo::name_from_id_token) {
+            let (db, id) = (self.db.clone(), account_id.to_owned());
+            tauri::async_runtime::spawn(async move {
+                let _ = db.call(move |c| store::set_sender_name(c, &id, Some(&name))).await;
+            });
+        }
         let Some(url) = id_token.and_then(photo::picture_from_id_token) else { return };
         let app = self.app.clone();
         let id = account_id.to_owned();

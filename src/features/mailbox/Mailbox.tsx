@@ -14,6 +14,7 @@ import {
   isAppError,
   onBackendEvent,
   type Account,
+  type Density,
   type DraftKind,
   type FlagBucket,
   type FlaggedCounts,
@@ -22,9 +23,8 @@ import {
   type Followup,
   type MessageFlags,
   type MessageHeader,
-  type Removed,
+  type Moved,
 } from "../../lib/tauri";
-import { UndoQueue } from "../../lib/undo";
 import { CommandBar } from "../../layout/CommandBar";
 import { ContentColumn } from "../../layout/ContentColumn";
 import { EmailListColumn, type ListState } from "../../layout/EmailListColumn";
@@ -46,6 +46,8 @@ interface MailboxProps {
   settingsOpen: boolean;
   /** Monta o bloco do header com a barra de comandos desta caixa. */
   renderHeader: (commands: ReactNode) => ReactNode;
+  /** Densidade da lista (US7, CA7). */
+  density: Density;
   onFolderChange: (folderId: string) => void;
   /** O backend recusou por falta de acesso: o App recarrega as contas (status mudou). */
   onAccessLost: () => void;
@@ -69,11 +71,11 @@ export function DueBadge({ followup }: { followup: Followup | null }) {
 interface Removal {
   messages: MessageHeader[];
   title: string;
-  run: () => Promise<Removed>;
+  run: () => Promise<Moved>;
   failedTitle: (count: number) => string;
 }
 
-export function Mailbox({ account, initialFolderId, query, settingsOpen, renderHeader, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange }: MailboxProps) {
+export function Mailbox({ account, initialFolderId, query, settingsOpen, renderHeader, density, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange }: MailboxProps) {
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [folder, setFolder] = useState<Folder | null>(null);
   const [pager, setPager] = useState<Pager>(firstPage);
@@ -123,16 +125,6 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
     if (isAccessLost(error) && error.kind === "SignedOut") return;
     onOther();
   }, []);
-
-  const undo = useRef<UndoQueue | null>(null);
-  if (!undo.current) {
-    undo.current = new UndoQueue(undefined, (_action, error) => {
-      if (isAccessLost(error)) accessLostRef.current();
-      toastRef.current({ kind: "error", title: "Não foi possível concluir a ação", description: isAppError(error) ? error.message : "As mensagens voltaram para a lista." });
-    });
-  }
-  // Troca de conta ou fechamento: o que estava esperando o "Desfazer" vai para o servidor agora.
-  useEffect(() => () => undo.current?.flush(), []);
 
   const loadFolders = useCallback(async () => {
     try {
@@ -264,6 +256,14 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
       onBackendEvent("folders-updated", ({ accountId }) => {
         if (accountId === account.id) void loadFolders();
       }),
+      onBackendEvent("moves-finished", ({ accountId, failed, folderIds }) => {
+        if (accountId !== account.id || failed.length === 0) return;
+        toastRef.current({ kind: "error", title: `${conversations(failed.length)} não puderam ser movidas`, description: "O servidor recusou. Elas voltaram para a pasta de origem." });
+        void loadFolders();
+        loadFlagCounts();
+        const current = folderRef.current;
+        if (current && folderIds.includes(current.id)) void loadPage(current, pagerRef.current, true);
+      }),
     ];
     return () => offs.forEach((off) => off());
   }, [account.id, loadFlagCounts, loadFolders, loadPage]);
@@ -340,7 +340,11 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
 
   // ------------------------------------------------------------ excluir, arquivar, mover em lote (US4 CA4–CA5, US5 CA2–CA3)
 
-  /** Tira as mensagens da lista na hora, ajusta a mensagem aberta e agenda a chamada com "Desfazer". */
+  /**
+   * Tira as mensagens da lista na hora e registra o mover no backend, que também as tira da origem e
+   * as põe no destino no banco local (US7, D1). O servidor só recebe o MOVE depois do prazo do
+   * "Desfazer", e quem cuida disso é o backend: recarregar a lista não as traz de volta.
+   */
   const removeWithUndo = useCallback(({ messages, title, run, failedTitle }: Removal) => {
     const current = itemsRef.current;
     const gone = new Set(messages.map((m) => m.id));
@@ -375,19 +379,46 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
       if (folderId && !searchingRef.current) setFolders((all) => all && adjustUnread(all, folderId, backUnread));
     };
 
-    undo.current!.schedule({
-      run: async () => {
-        const result = await run();
-        refreshFlaggedRef.current();
+    const changed = () => {
+      refreshFlaggedRef.current();
+      void loadFoldersRef.current();
+    };
+    run()
+      .then((result) => {
+        changed();
         if (result.failed.length > 0) {
           restore(new Set(result.failed));
           toastRef.current({ kind: "error", title: failedTitle(result.failed.length), description: "Elas voltaram para a lista. Tente de novo em instantes." });
         }
-      },
-      restore: () => restore(),
-    });
-    toast({ kind: "info", title, action: { label: "Desfazer", onClick: () => undo.current!.undo() } });
-  }, [select, toast]);
+        const batch = result.batch;
+        if (!batch) return;
+        toastRef.current({
+          kind: "info",
+          title,
+          action: {
+            label: "Desfazer",
+            onClick: () => {
+              api.undoMove(account.id, batch)
+                .then((back) => {
+                  restore(new Set(back));
+                  changed();
+                  if (back.length < result.ids.length) {
+                    toastRef.current({ kind: "warning", title: "Algumas conversas já tinham sido movidas", description: "Elas continuam no destino." });
+                  }
+                })
+                .catch(() => toastRef.current({ kind: "error", title: "Não foi possível desfazer" }));
+            },
+          },
+        });
+      })
+      .catch((error) => {
+        restore();
+        if (isAccessLost(error)) accessLostRef.current();
+        toastRef.current({ kind: "error", title: failedTitle(messages.length), description: isAppError(error) ? error.message : "Elas voltaram para a lista." });
+      });
+  }, [account.id, select]);
+  const loadFoldersRef = useRef(loadFolders);
+  loadFoldersRef.current = loadFolders;
   const refreshFlaggedRef = useRef(refreshFlagged);
   refreshFlaggedRef.current = refreshFlagged;
 
@@ -493,6 +524,66 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
     readerOpenRef.current(true);
   }, []);
 
+  // ------------------------------------------------------------ envio (US7, CA1–CA3)
+
+  /** Envios agendados aqui, para reabrir o card se o usuário desfizer ou se o envio falhar. */
+  const sends = useRef(new Map<string, { compose: ComposeState; selected: string | null }>());
+  const composeRef = useRef(compose);
+  composeRef.current = compose;
+  const foldersRef = useRef(folders);
+  foldersRef.current = folders;
+
+  const reopen = useCallback((entry: { compose: ComposeState; selected: string | null }) => {
+    if (entry.compose.kind !== "new" && entry.selected) select(entry.selected);
+    setCompose(entry.compose);
+    readerOpenRef.current(true);
+  }, [select]);
+
+  const onSent = useCallback((sendId: string) => {
+    const entry = { compose: composeRef.current ?? { kind: "new" as const, messageId: null }, selected: selectedRef.current };
+    sends.current.set(sendId, entry);
+    setCompose(null);
+    if (!selectedRef.current) readerOpenRef.current(false);
+    toast({
+      kind: "info",
+      title: "Enviando em 6 s",
+      action: {
+        label: "Desfazer",
+        onClick: () => {
+          api.cancelSend(sendId)
+            .then((cancelled) => {
+              if (!cancelled) return toastRef.current({ kind: "info", title: "A mensagem já foi enviada" });
+              sends.current.delete(sendId);
+              reopen(entry);
+            })
+            .catch(() => undefined);
+        },
+      },
+    });
+  }, [reopen, toast]);
+
+  useEffect(() => onBackendEvent("send-finished", ({ sendId, accountId, ok, error }) => {
+    if (accountId !== account.id) return;
+    const entry = sends.current.get(sendId);
+    sends.current.delete(sendId);
+    if (ok) {
+      const sent = foldersRef.current?.find((f) => f.role === "sent");
+      toastRef.current({
+        kind: "success",
+        title: "Mensagem enviada",
+        action: sent ? { label: "Ver em Enviados", onClick: () => { setFlagBucket(null); setFolder(sent); } } : undefined,
+      });
+      return;
+    }
+    if (error && isAccessLost(error)) accessLostRef.current();
+    toastRef.current({
+      kind: "error",
+      title: "A mensagem não foi enviada",
+      description: error ? `${error.message} O texto ficou no rascunho.` : "O texto ficou no rascunho.",
+      action: entry ? { label: "Abrir rascunho", onClick: () => reopen(entry) } : undefined,
+    });
+  }), [account.id, reopen]);
+
   const notice =
     account.status === "signed_out" ? (
       <SectionMessage title="Você saiu desta conta" actions={[{ label: "Entrar de novo", onClick: onReconnect }]}>
@@ -500,7 +591,7 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
       </SectionMessage>
     ) : account.status === "needs_reauth" ? (
       <SectionMessage appearance="warning" title="Reconecte esta conta" actions={[{ label: "Reconectar", onClick: onReconnect }]}>
-        O Google encerrou o acesso do Epistula a {account.email}. As mensagens salvas continuam disponíveis.
+        O servidor de e-mail encerrou o acesso do Epistula a {account.email}. As mensagens salvas continuam disponíveis.
       </SectionMessage>
     ) : searching ? (
       <SectionMessage title="Buscando nas mensagens salvas neste computador">
@@ -557,6 +648,7 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           folderRole={folder?.role ?? "inbox"}
           searching={crossFolder}
           state={list}
+          density={density}
           pager={pager}
           openId={selectedId}
           checked={checked.ids}
@@ -590,6 +682,7 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
             setCompose(null);
             if (!selectedId) readerOpenRef.current(false);
           }}
+          onSent={onSent}
           onLoaded={onLoaded}
           onAccessLost={accessLost}
           onBack={() => select(null)}
@@ -610,8 +703,8 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
         >
           <p>
             {purgeInTrash === 1
-              ? "A mensagem que está na Lixeira será apagada do Gmail e não poderá ser recuperada."
-              : `As ${conversations(purgeInTrash)} que estão na Lixeira serão apagadas do Gmail e não poderão ser recuperadas.`}
+              ? "A mensagem que está na Lixeira será apagada do servidor e não poderá ser recuperada."
+              : `As ${conversations(purgeInTrash)} que estão na Lixeira serão apagadas do servidor e não poderão ser recuperadas.`}
             {confirmPurge.length > purgeInTrash && ` As outras ${conversations(confirmPurge.length - purgeInTrash)} vão para a Lixeira.`}
           </p>
         </Modal>

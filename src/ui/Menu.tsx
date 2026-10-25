@@ -5,7 +5,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type 
 import { Icon } from "./Icon";
 
 const MARGIN = 8;
-const NAVIGABLE = ".menu-item:not(:disabled):not([hidden]), .menu input";
+// Setas percorrem itens, campos, botões das linhas do menu da conta e a opção escolhida de cada .segmented.
+const NAVIGABLE = ".menu-item:not(:disabled):not([hidden]), .menu input, .account-menu__line .btn:not(:disabled), .menu .segmented [aria-checked=\"true\"]";
 
 export type Anchor = { x: number; y: number };
 
@@ -19,11 +20,13 @@ interface MenuPanelProps {
   label: string;
   anchor: Anchor;
   wide?: boolean;
+  /** Classe extra (ex.: `account-menu`). */
+  className?: string;
   onClose: () => void;
   children: ReactNode;
 }
 
-export function MenuPanel({ label, anchor, wide, onClose, children }: MenuPanelProps) {
+export function MenuPanel({ label, anchor, wide, className, onClose, children }: MenuPanelProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState(anchor);
   const closeRef = useRef(onClose);
@@ -78,7 +81,7 @@ export function MenuPanel({ label, anchor, wide, onClose, children }: MenuPanelP
   return (
     <div
       ref={ref}
-      className={["menu", wide && "menu--wide"].filter(Boolean).join(" ")}
+      className={["menu", wide && "menu--wide", className].filter(Boolean).join(" ")}
       role="menu"
       aria-label={label}
       style={{ position: "fixed", left: position.x, top: position.y, zIndex: "var(--z-layer)" }}

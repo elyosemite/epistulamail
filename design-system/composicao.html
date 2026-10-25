@@ -86,7 +86,98 @@
           <div><dt>Onde abre</dt><dd><code>.compose--inline</code> abre dentro de <code>.reader</code>: abaixo da mensagem ao responder, acima ao encaminhar. Campos: Para (chips), Cc/Cco (<code>.compose__toggle</code>), Assunto ("Re:"/"Fw:" editável) e o corpo.</dd></div>
           <div><dt>Encaminhar</dt><dd><code>.message__quote</code> mostra De, Enviado, Para, Assunto e o texto da mensagem original abaixo do corpo.</dd></div>
         </dl>
-      </section>
+        <h3 class="sub">Envio <code>.compose__quote-toggle</code> <code>.compose__attachments</code> <code>.compose__hint</code></h3>
+      <h3 class="sub">Responder: citação recolhida</h3>
+      <div class="stage">
+        <form class="compose compose--inline" aria-label="Responder">
+          <div class="compose__bar"><span class="compose__title">Responder</span><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Descartar"><svg class="i"><use href="#i-trash"/></svg></button></div>
+          <div class="compose__fields">
+            <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--magenta">MC</span><span class="chip__name">Marina Couto</span><button class="chip__remove" type="button" aria-label="Remover Marina Couto"><svg class="i i--sm"><use href="#i-x"/></svg></button></span><input aria-label="Adicionar destinatário"><button class="btn btn--subtle btn--compact compose__toggle" type="button" aria-expanded="false">Cc/Cco</button></div>
+            <label class="input input--line"><span class="input__prefix">Assunto</span><input value="Re: Revisão do contrato: Fornecedor Lumen"></label>
+          </div>
+          <div class="compose__body"><textarea aria-label="Texto da resposta">Marina, li a versão 3 e está ok do meu lado. Envio o retorno do jurídico até quinta.</textarea></div>
+          <button class="btn btn--subtle btn--compact compose__quote-toggle" type="button" aria-expanded="false" aria-label="Mostrar a mensagem citada" data-tip="Mostrar a mensagem citada">…</button>
+          <div class="message__quote" hidden>
+            <p style="margin-top:0">Em 23 de out. de 2026, às 10:42, Marina Couto &lt;marina.couto@lumen.com.br&gt; escreveu:</p>
+            <p>&gt; Segue a versão 3 do contrato com os ajustes da cláusula 7.2. Preciso do retorno até sexta.</p>
+          </div>
+          <div class="compose__foot">
+            <div class="btn-split" data-tip="Enviar (Ctrl+Enter)"><button class="btn btn--primary" type="button"><svg class="i"><use href="#i-send"/></svg>Enviar</button><button class="btn btn--primary" type="button" aria-label="Opções de envio"><svg class="i"><use href="#i-chevron-down"/></svg></button></div>
+            <span class="compose__status">Rascunho salvo neste computador às 10:51</span>
+            <button class="btn btn--subtle btn--icon" type="button" aria-label="Descartar"><svg class="i"><use href="#i-trash"/></svg></button>
+          </div>
+        </form>
+      </div>
+
+      <h3 class="sub">Encaminhar: anexos da original</h3>
+      <div class="stage">
+        <form class="compose compose--inline" aria-label="Encaminhar">
+          <div class="compose__bar"><span class="compose__title">Encaminhar</span><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover"><svg class="i"><use href="#i-trash"/></svg></button></div>
+          <div class="compose__fields">
+            <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR</span><span class="chip__name">Ana Ribeiro</span><button class="chip__remove" type="button" aria-label="Remover Ana Ribeiro"><svg class="i i--sm"><use href="#i-x"/></svg></button></span><input aria-label="Adicionar destinatário"></div>
+            <label class="input input--line"><span class="input__prefix">Assunto</span><input value="Fw: Revisão do contrato: Fornecedor Lumen"></label>
+          </div>
+          <div class="compose__body"><textarea aria-label="Texto do encaminhamento">Ana, para seu conhecimento antes da reunião de sexta.</textarea></div>
+          <div class="compose__attachments" role="list" aria-label="Anexos">
+            <div class="attachment attachment--static" role="listitem"><span class="attachment__icon attachment__icon--pdf"><svg class="i i--lg"><use href="#i-file"/></svg></span><span style="min-width:0;display:grid"><span class="attachment__name">Contrato_Lumen_v3.pdf</span><span class="attachment__meta">PDF · 1,8 MB</span></span><span class="attachment__action" style="display:flex"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover Contrato_Lumen_v3.pdf" data-tip="Remover"><svg class="i"><use href="#i-x"/></svg></button></span></div>
+            <div class="attachment attachment--static" role="listitem"><span class="attachment__icon attachment__icon--img"><svg class="i i--lg"><use href="#i-image"/></svg></span><span style="min-width:0;display:grid"><span class="attachment__name">assinaturas.jpg</span><span class="attachment__meta">JPG · 640 KB</span></span><span class="attachment__action" style="display:flex"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover assinaturas.jpg" data-tip="Remover"><svg class="i"><use href="#i-x"/></svg></button></span></div>
+          </div>
+          <div class="message__quote">
+            <dl><dt>De</dt><dd>Marina Couto &lt;marina.couto@lumen.com.br&gt;</dd><dt>Enviado</dt><dd>quinta-feira, 23 de outubro de 2026, 10:42</dd><dt>Assunto</dt><dd>Revisão do contrato: Fornecedor Lumen</dd></dl>
+            <p>Segue a versão 3 do contrato com os ajustes da cláusula 7.2.</p>
+          </div>
+          <div class="compose__foot">
+            <div class="btn-split"><button class="btn btn--primary" type="button"><svg class="i"><use href="#i-send"/></svg>Enviar</button><button class="btn btn--primary" type="button" aria-label="Opções de envio"><svg class="i"><use href="#i-chevron-down"/></svg></button></div>
+            <span class="compose__status">2 anexos · 2,4 MB de 25 MB</span>
+            <button class="btn btn--subtle btn--icon" type="button" aria-label="Remover"><svg class="i"><use href="#i-trash"/></svg></button>
+          </div>
+        </form>
+      </div>
+
+      <h3 class="sub">Estados do envio</h3>
+      <div class="two-col">
+        <figure class="state" style="justify-items:stretch">
+          <div class="compose compose--inline" style="box-shadow:var(--shadow-raised)">
+            <div class="compose__fields"><div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip is-invalid" title="Endereço inválido"><svg class="i i--sm"><use href="#i-warning"/></svg><span class="chip__name">ana.ribeiro@</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span><input aria-label="Adicionar destinatário"></div></div>
+            <div class="compose__foot"><button class="btn btn--primary" type="button" disabled aria-describedby="why"><svg class="i"><use href="#i-send"/></svg>Enviar</button><span class="compose__hint" id="why"><svg class="i i--sm"><use href="#i-error"/></svg>Corrija o endereço em vermelho</span></div>
+          </div>
+          <figcaption><b>Bloqueado</b>sem destinatário válido, o motivo fica ao lado do botão</figcaption>
+        </figure>
+        <figure class="state" style="justify-items:stretch">
+          <div class="compose compose--inline is-sending" style="box-shadow:var(--shadow-raised)">
+            <div class="compose__body"><textarea aria-label="Texto" rows="2">Marina, li a versão 3 e está ok do meu lado.</textarea></div>
+            <div class="compose__foot"><button class="btn btn--primary" type="button" disabled><span class="spinner spinner--sm" aria-hidden="true"></span>Enviando…</button><span class="compose__status">Conectando ao servidor</span></div>
+          </div>
+          <figcaption><b>Enviando</b>depois do prazo do Desfazer, se o card ainda estiver aberto (ex.: enviado por Ctrl+Enter sem fechar)</figcaption>
+        </figure>
+        <figure class="state" style="justify-items:stretch">
+          <div class="toast toast--info" role="status"><svg class="i"><use href="#i-send"/></svg><div><p class="toast__title">Enviando em 5 s</p><p class="toast__desc">Para: Marina Couto</p><div class="toast__actions"><button type="button">Desfazer</button></div></div><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button><div class="progress toast__timer"><span style="width:80%"></span></div></div>
+          <figcaption><b>Desfazer envio</b>6 s; o card fecha. Desfazer reabre o card com o texto</figcaption>
+        </figure>
+        <figure class="state" style="justify-items:stretch">
+          <div class="toast" role="status"><svg class="i"><use href="#i-success"/></svg><div><p class="toast__title">Mensagem enviada</p><div class="toast__actions"><button type="button">Ver em Enviados</button></div></div><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></div>
+          <figcaption><b>Enviada</b>o rascunho some; Enviados sincroniza</figcaption>
+        </figure>
+        <figure class="state" style="justify-items:stretch">
+          <div class="toast toast--error" role="alert"><svg class="i"><use href="#i-error"/></svg><div><p class="toast__title">A mensagem não foi enviada</p><p class="toast__desc">Sem conexão com o servidor de e-mail. O texto ficou no rascunho.</p><div class="toast__actions"><button type="button">Abrir rascunho</button><button type="button">Tentar de novo</button></div></div><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></div>
+          <figcaption><b>Falhou</b>o rascunho continua salvo; não há fila de envio</figcaption>
+        </figure>
+        <figure class="state" style="justify-items:stretch">
+          <div class="modal" role="dialog" aria-modal="false" aria-labelledby="ns-title" style="position:static;max-width:26rem;box-shadow:var(--shadow-overlay)">
+            <div class="modal__head"><h2 class="modal__title" id="ns-title">Enviar sem assunto?</h2></div>
+            <div class="modal__body"><p>Quem receber vai ver "(sem assunto)" na caixa de entrada.</p></div>
+            <div class="modal__foot"><button class="btn btn--subtle" type="button">Voltar e escrever</button><button class="btn btn--primary" type="button">Enviar assim</button></div>
+          </div>
+          <figcaption><b>Sem assunto</b>confirmação, com o foco em "Voltar e escrever"</figcaption>
+        </figure>
+      </div>
+      <dl class="guidance">
+        <div><dt>Enviar</dt><dd>Ativo com pelo menos um destinatário válido. Um chip inválido bloqueia, e o motivo aparece em <code>.compose__hint</code>, ligado ao botão por <code>aria-describedby</code>. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> envia.</dd></div>
+        <div><dt>Citação</dt><dd>Na resposta, a mensagem original vai abaixo do texto ("Em …, … escreveu:" e linhas com <code>&gt;</code>). No card ela fica recolhida no botão "…" (<code>.compose__quote-toggle</code>), que pode ser expandido.</dd></div>
+        <div><dt>Anexos</dt><dd>O encaminhamento leva os anexos da original em <code>.compose__attachments</code>, cada um com "Remover". Acima de 25 MB no total o envio é bloqueado.</dd></div>
+        <div><dt>Depois de enviar</dt><dd>O card fecha e o toast "Enviando em 5 s" oferece Desfazer. Em seguida, "Mensagem enviada". Se falhar, o texto continua no rascunho e o toast explica o motivo, sem citar o provedor.</dd></div>
+      </dl>
+    </section>
   </main>
 </div>
 <script src="docs.js"></script>

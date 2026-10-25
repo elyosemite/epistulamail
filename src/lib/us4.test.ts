@@ -1,8 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { dueFor, dueLabel, shortDate } from "./followup";
 import { clampWidth, keyWidth, LIST_MAX, LIST_MIN, widthPercent } from "./listWidth";
 import { addRecipients, parseRecipient, splitRecipients } from "./recipients";
-import { UndoQueue } from "./undo";
 
 // Sexta-feira, 23 out 2026.
 const FRI23 = new Date(2026, 9, 23, 15, 0);
@@ -77,45 +76,3 @@ describe("destinatários", () => {
   });
 });
 
-describe("desfazer", () => {
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
-
-  it("chama o servidor só quando o prazo acaba", async () => {
-    const q = new UndoQueue(6000);
-    const run = vi.fn(() => Promise.resolve());
-    const restore = vi.fn();
-    q.schedule({ run, restore });
-    vi.advanceTimersByTime(5999);
-    expect(run).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(1);
-    expect(run).toHaveBeenCalledOnce();
-    expect(restore).not.toHaveBeenCalled();
-  });
-
-  it("desfazer cancela sem chamar o servidor", () => {
-    const q = new UndoQueue(6000);
-    const run = vi.fn(() => Promise.resolve());
-    const restore = vi.fn();
-    q.schedule({ run, restore });
-    expect(q.undo()).toBe(true);
-    vi.advanceTimersByTime(10000);
-    expect(run).not.toHaveBeenCalled();
-    expect(restore).toHaveBeenCalledOnce();
-    expect(q.undo()).toBe(false);
-  });
-
-  it("uma nova ação executa a anterior na hora, e a falha restaura", async () => {
-    const onError = vi.fn();
-    const q = new UndoQueue(6000, onError);
-    const first = { run: vi.fn(() => Promise.reject(new Error("x"))), restore: vi.fn() };
-    const second = { run: vi.fn(() => Promise.resolve()), restore: vi.fn() };
-    q.schedule(first);
-    q.schedule(second);
-    expect(first.run).toHaveBeenCalledOnce();
-    await vi.runAllTimersAsync();
-    expect(first.restore).toHaveBeenCalledOnce();
-    expect(onError).toHaveBeenCalledWith(first, expect.any(Error));
-    expect(second.run).toHaveBeenCalledOnce();
-  });
-});

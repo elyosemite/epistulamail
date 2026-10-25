@@ -27,6 +27,20 @@ pub fn picture_from_id_token(id_token: &str) -> Option<String> {
     serde_json::from_slice::<Claims>(&bytes).ok()?.picture
 }
 
+/// Nome do titular (claim `name`), para o cabeçalho `From` do que for enviado (US7). Sem
+/// controles e com no máximo 100 caracteres.
+pub fn name_from_id_token(id_token: &str) -> Option<String> {
+    #[derive(Deserialize)]
+    struct Claims {
+        name: Option<String>,
+    }
+    let payload = id_token.split('.').nth(1)?;
+    let bytes = URL_SAFE_NO_PAD.decode(payload.trim_end_matches('=')).ok()?;
+    let name = serde_json::from_slice::<Claims>(&bytes).ok()?.name?;
+    let clean: String = name.chars().filter(|c| !c.is_control()).take(100).collect();
+    Some(clean.trim().to_owned()).filter(|n| !n.is_empty())
+}
+
 /// Só `https` em `googleusercontent.com` (onde o Google serve as fotos de perfil).
 pub fn allowed_url(url: &str) -> Option<Url> {
     let parsed = Url::parse(url).ok()?;

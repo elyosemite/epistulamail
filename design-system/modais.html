@@ -161,7 +161,32 @@
           <div><dt>Aparência</dt><dd>A seção Aparência tem o grupo Tema (<code>.theme-picker</code>) e o grupo Cor do fundo (<code>.color-picker</code> com <code>.color-swatch__fill</code>). Ver selecao.html.</dd></div>
           <div><dt>Várias contas</dt><dd><code>.setting-list</code> tem uma linha por conta com o controle próprio. Marcar linhas troca o cabeçalho por <code>.is-selecting</code> com "Aplicar a N contas". Conta de que o usuário saiu fica em <code>.is-disabled</code>.</dd></div>
         </dl>
-      </section>
+          <h3 class="sub">Configurações → Geral</h3>
+        <div class="stage">
+        <div style="display:grid;gap:var(--space-300);max-width:40rem">
+          <h3 class="settings__title" style="margin:0">Geral</h3>
+          <div class="setting">
+            <div><div class="setting__label" id="g-density">Densidade da lista</div><p class="setting__desc">Quanto de cada e-mail aparece na lista. Vale para todas as contas.</p></div>
+            <div class="segmented" role="radiogroup" aria-labelledby="g-density">
+              <button class="btn btn--compact" type="button" role="radio" aria-checked="false">Confortável</button>
+              <button class="btn btn--compact" type="button" role="radio" aria-checked="true">Padrão</button>
+              <button class="btn btn--compact" type="button" role="radio" aria-checked="false">Compacta</button>
+            </div>
+          </div>
+          <div class="setting">
+            <div><div class="setting__label">Mostrar a coluna de pastas</div><p class="setting__desc">Também pelo botão no header ou <kbd>Ctrl</kbd>+<kbd>B</kbd>.</p></div>
+            <input type="checkbox" class="toggle" checked aria-label="Mostrar a coluna de pastas">
+          </div>
+          <div class="setting">
+            <div><div class="setting__label">Mostrar a coluna de leitura</div><p class="setting__desc">Também pelo botão no header ou <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>B</kbd>.</p></div>
+            <input type="checkbox" class="toggle" checked aria-label="Mostrar a coluna de leitura">
+          </div>
+        </div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Seção inicial</dt><dd>As Configurações abrem sempre em <b>Geral</b>, que reúne as opções da lista: densidade (<code>.segmented</code>) e as colunas visíveis (<code>.toggle</code>), as mesmas do menu da conta e dos botões do header.</dd></div>
+        </dl>
+    </section>
   </main>
 </div>
 <script src="docs.js"></script>

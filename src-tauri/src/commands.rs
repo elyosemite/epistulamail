@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use futures::FutureExt;
 use reqwest::Url;
 use serde::Serialize;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 use tauri_plugin_opener::OpenerExt;
 
 use crate::error::AppError;
@@ -16,7 +16,7 @@ use crate::session::{AppState, Connected, Lane};
 use crate::compose::{self, Template};
 use crate::mailbox::{self, Role};
 use crate::store::{self, Account, AccountStatus, Draft, DraftContent, DraftKind, FolderRow, Followup, FollowupChange};
-use crate::sync;
+use crate::{moves, send, sync};
 
 const MAX_FLAG_IDS: usize = 500;
 const MAX_URL_LEN: usize = 2048;
@@ -236,19 +236,18 @@ pub async fn list_messages(app: AppHandle, state: State<'_, AppState>, folder_id
         (true, Some(last), Some(v)) => Some(Cursor { account: key.account.clone(), folder: folder.id, uid_validity: v, before: last.uid }.encode()),
         _ => None,
     };
-    let items: Vec<MessageHeader> = rows
+    // Primeira página: as mensagens que estão chegando por um mover deste computador vêm no topo
+    // (no servidor, a mensagem movida ganha o maior UID da pasta).
+    let incoming = if cursor.is_none() {
+        let id = folder.id;
+        state.db.call(move |c| store::incoming_moves(c, id)).await?
+    } else {
+        Vec::new()
+    };
+    let items: Vec<MessageHeader> = incoming
         .into_iter()
-        .map(|m| MessageHeader {
-            id: MessageKey { account: key.account.clone(), folder: folder.id, uid: m.uid }.encode(),
-            from_name: m.from_name,
-            from_address: m.from_address,
-            subject: m.subject,
-            date: m.date,
-            flags: m.flags,
-            followup: m.followup,
-            folder_name: None,
-            folder_id: None,
-        })
+        .map(|(from, m)| header_of(&key.account, from, m, None))
+        .chain(rows.into_iter().map(|m| header_of(&key.account, folder.id, m, None)))
         .collect();
 
     let stale = folder.last_sync_at.is_none_or(|t| store::now() - t >= sync::MIN_RESYNC_SECS);
@@ -262,6 +261,25 @@ pub async fn list_messages(app: AppHandle, state: State<'_, AppState>, folder_id
         items,
         next_cursor,
     })
+}
+
+/// Linha da lista para o frontend. `folder` (nome e id) só nos resultados de várias pastas.
+fn header_of(account_id: &str, folder_id: i64, m: store::ListedMessage, folder: Option<String>) -> MessageHeader {
+    let in_results = folder.is_some();
+    MessageHeader {
+        id: MessageKey { account: account_id.to_owned(), folder: folder_id, uid: m.uid }.encode(),
+        from_name: m.from_name,
+        from_address: m.from_address,
+        subject: m.subject,
+        date: m.date,
+        flags: m.flags,
+        followup: m.followup,
+        snippet: m.snippet.filter(|s| !s.is_empty()),
+        has_files: m.has_files,
+        has_images: m.has_images,
+        folder_name: folder,
+        folder_id: in_results.then(|| FolderKey { account: account_id.to_owned(), folder: folder_id }.encode()),
+    }
 }
 
 /// "Atualizar": sincroniza a pasta agora. O resultado chega também pelo evento `mailbox-updated`.
@@ -286,14 +304,20 @@ pub async fn sync_folder(state: State<'_, AppState>, folder_id: String) -> Resul
 pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_remote_images: bool) -> Result<MessageView, AppError> {
     let key = MessageKey::decode(&message_id)?;
     let k = key.clone();
-    let (account, folder, stored, cached) = state
+    let (account, folder, uid, stored, cached) = state
         .db
         .call(move |c| {
             let account = store::require_account(c, &k.account)?;
             let folder = store::folder_of_account(c, &k.account, k.folder)?;
-            let stored = store::message_by_uid(c, folder.id, k.uid)?.ok_or(AppError::MessageNotFound)?;
+            let stored = store::message_for_key(c, folder.id, k.uid)?.ok_or(AppError::MessageNotFound)?;
             let cached = store::load_body(c, stored.id)?;
-            Ok((account, folder, stored, cached))
+            // Já saiu desta pasta no servidor (mover deste computador): lê de onde ela está agora.
+            if store::message_by_uid(c, folder.id, k.uid)?.is_some() {
+                return Ok((account, folder, k.uid, stored, cached));
+            }
+            let (where_now, uid) = store::location_of(c, stored.id, folder.id)?.ok_or(AppError::MessageMoving)?;
+            let folder = store::get_folder(c, where_now)?.ok_or(AppError::MessageMoving)?;
+            Ok((account, folder, uid, stored, cached))
         })
         .await?;
     if stored.body_state == "too_large" {
@@ -306,7 +330,7 @@ pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_r
         let mut view = message::build_view(&raw, key.encode(), stored.flags, None, allow_remote_images);
         if !stored.flags.seen && account.status == AccountStatus::Active {
             let mailbox = folder.imap_name.clone();
-            let (uid, v) = (key.uid, folder.uidvalidity.unwrap_or(0));
+            let v = folder.uidvalidity.unwrap_or(0);
             let marked = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
                 let mailbox = mailbox.clone();
                 async move {
@@ -333,7 +357,6 @@ pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_r
     require_active(&account)?;
     let uidvalidity = folder.uidvalidity.ok_or(AppError::MessageNotFound)?;
     let mailbox = folder.imap_name.clone();
-    let uid = key.uid;
     let fetched = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
         let mailbox = mailbox.clone();
         async move {
@@ -488,20 +511,7 @@ pub async fn search_messages(state: State<'_, AppState>, account_id: String, que
 fn hits_page(account_id: &str, mut hits: Vec<store::SearchHit>) -> SearchPage {
     let truncated = hits.len() > store::SEARCH_LIMIT as usize;
     hits.truncate(store::SEARCH_LIMIT as usize);
-    let items = hits
-        .into_iter()
-        .map(|h| MessageHeader {
-            id: MessageKey { account: account_id.to_owned(), folder: h.folder_id, uid: h.message.uid }.encode(),
-            from_name: h.message.from_name,
-            from_address: h.message.from_address,
-            subject: h.message.subject,
-            date: h.message.date,
-            flags: h.message.flags,
-            followup: h.message.followup,
-            folder_name: Some(h.folder_name),
-            folder_id: Some(FolderKey { account: account_id.to_owned(), folder: h.folder_id }.encode()),
-        })
-        .collect();
+    let items = hits.into_iter().map(|h| header_of(account_id, h.folder_id, h.message, Some(h.folder_name))).collect();
     SearchPage { items, truncated }
 }
 
@@ -558,8 +568,42 @@ pub async fn get_appearance(state: State<'_, AppState>) -> Result<store::Appeara
 }
 
 #[tauri::command]
-pub async fn set_appearance(state: State<'_, AppState>, theme: Option<String>, canvas: Option<String>) -> Result<store::Appearance, AppError> {
-    state.db.call(move |c| store::set_appearance(c, theme.as_deref(), canvas.as_deref())).await
+pub async fn set_appearance(state: State<'_, AppState>, change: store::AppearanceChange) -> Result<store::Appearance, AppError> {
+    state.db.call(move |c| store::set_appearance(c, &change)).await
+}
+
+// ---------------------------------------------------------------- menu da conta (US7, CA6)
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountOverview {
+    #[serde(flatten)]
+    pub counts: store::AccountOverview,
+    /// Tamanho do banco local (todas as contas), em bytes.
+    pub local_bytes: u64,
+}
+
+#[tauri::command]
+pub async fn account_overview(app: AppHandle, state: State<'_, AppState>, account_id: String) -> Result<AccountOverview, AppError> {
+    let id = self::account_id(&account_id)?;
+    let counts = state.db.call(move |c| store::account_overview(c, &id)).await?;
+    let local_bytes = app
+        .path()
+        .app_data_dir()
+        .ok()
+        .and_then(|dir| std::fs::metadata(dir.join(crate::db::FILE_NAME)).ok())
+        .map_or(0, |m| m.len());
+    Ok(AccountOverview { counts, local_bytes })
+}
+
+/// "Sincronizar agora" do menu da conta: lista de pastas e Caixa de entrada.
+#[tauri::command]
+pub async fn sync_account(state: State<'_, AppState>, account_id: String) -> Result<(), AppError> {
+    let id = self::account_id(&account_id)?;
+    let lookup = id.clone();
+    let account = state.db.call(move |c| store::require_account(c, &lookup)).await?;
+    require_active(&account)?;
+    sync::run_account_sync(&state, &id).await
 }
 
 // ---------------------------------------------------------------- mover, excluir, arquivar (CA4, CA5)
@@ -593,31 +637,16 @@ async fn resolve_messages(state: &AppState, message_ids: &[String]) -> Result<(A
     Ok((account, folders))
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Removal {
-    /// Vai para outra pasta: a mensagem fica protegida até a pasta de destino ser sincronizada.
-    MoveTo(i64),
-    /// Apagada de vez (excluir dentro da Lixeira).
-    Expunge,
-}
-
-/// Executa no servidor e atualiza o banco, pasta por pasta. Uma pasta que falha não impede as
+/// Apaga de vez (excluir dentro da Lixeira), pasta por pasta. Uma pasta que falha não impede as
 /// outras (US5, CA2): o resultado diz quais ids saíram e quais ficaram. Se nada saiu, devolve o erro.
-async fn remove_from_folders(app: &AppHandle, state: &AppState, account: &Account, groups: Vec<(FolderRow, Vec<u32>)>, removal: Removal) -> Result<Removed, AppError> {
-    let mut result = Removed::default();
+async fn expunge_from_folders(state: &AppState, account: &Account, groups: Vec<(FolderRow, Vec<u32>)>) -> Result<Moved, AppError> {
+    let mut result = Moved::default();
     if groups.is_empty() {
         return Ok(result);
     }
     let handle = state.handle(&account.id).await?;
-    let target = match removal {
-        Removal::MoveTo(id) => Some(state.db.call(move |c| store::get_folder(c, id)).await?.ok_or(AppError::FolderNotFound)?),
-        Removal::Expunge => None,
-    };
     let mut first_error = None;
     for (folder, uids) in groups {
-        if target.as_ref().is_some_and(|t| t.id == folder.id) {
-            continue;
-        }
         let folder_id = folder.id;
         let ids = |uids: &[u32]| uids.iter().map(|&uid| MessageKey { account: account.id.clone(), folder: folder_id, uid }.encode()).collect::<Vec<_>>();
         let Some(uidvalidity) = folder.uidvalidity else {
@@ -626,43 +655,35 @@ async fn remove_from_folders(app: &AppHandle, state: &AppState, account: &Accoun
             continue;
         };
         let mailbox = folder.imap_name.clone();
-        let target_mailbox = target.as_ref().map(|t| t.imap_name.clone());
         let wanted = uids.clone();
         let outcome = imap_client::with_session(state, &handle, Lane::Interactive, |s| {
             let mailbox = mailbox.clone();
-            let target_mailbox = target_mailbox.clone();
             let wanted = wanted.clone();
             async move {
                 imap_client::select_checked(s, &mailbox, uidvalidity).await?;
-                match &target_mailbox {
-                    Some(t) => imap_client::move_uids(s, &wanted, t).await,
-                    None => imap_client::expunge_uids(s, &wanted).await,
-                }
+                imap_client::expunge_uids(s, &wanted).await
             }
             .boxed()
         })
         .await;
         let outcome = match outcome {
             Ok(()) => {
-                let (in_transit, removed) = (target.is_some(), uids.clone());
-                state.db.call(move |c| store::unlink(c, folder_id, &removed, in_transit)).await.map(drop)
+                let removed = uids.clone();
+                state.db.call(move |c| store::unlink(c, folder_id, &removed, false)).await.map(drop)
             }
             Err(e) => Err(e),
         };
         match outcome {
             Ok(()) => {
-                tracing::info!(role = folder.role.as_str(), count = uids.len(), expunge = target.is_none(), "mensagens removidas da pasta");
+                tracing::info!(role = folder.role.as_str(), count = uids.len(), "mensagens apagadas de vez");
                 result.ids.extend(ids(&uids));
             }
             Err(e) => {
-                tracing::warn!(role = folder.role.as_str(), count = uids.len(), error = ?e, "falha ao remover mensagens da pasta");
+                tracing::warn!(role = folder.role.as_str(), count = uids.len(), error = ?e, "falha ao apagar mensagens");
                 result.failed.extend(ids(&uids));
                 first_error.get_or_insert(e);
             }
         }
-    }
-    if let Some(t) = target.filter(|_| !result.ids.is_empty()) {
-        sync::spawn_folder_sync(app, account.id.clone(), t.id);
     }
     state.emit_accounts_changed();
     match first_error {
@@ -672,15 +693,46 @@ async fn remove_from_folders(app: &AppHandle, state: &AppState, account: &Accoun
 }
 
 #[derive(Debug, Default, Serialize)]
-pub struct Removed {
+#[serde(rename_all = "camelCase")]
+pub struct Moved {
+    /// Lote do mover pendente, para o "Desfazer" (`None` quando nada ficou pendente).
+    pub batch: Option<String>,
     /// Saíram da pasta de origem.
     pub ids: Vec<String>,
-    /// Continuam na pasta (o servidor recusou ou a conexão caiu).
+    /// Continuam na pasta (já estão sendo movidas no servidor, ou o servidor recusou).
     pub failed: Vec<String>,
 }
 
+fn new_batch() -> String {
+    use rand::RngCore;
+    let mut bytes = [0u8; 12];
+    rand::rngs::OsRng.fill_bytes(&mut bytes);
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// Registra o mover (US7, D1): sai da origem e entra no destino na hora; o servidor recebe o MOVE
+/// depois do prazo do "Desfazer" (`moves`).
+async fn move_later(app: &AppHandle, state: &AppState, account: &Account, groups: Vec<(FolderRow, Vec<u32>)>, to: i64) -> Result<Moved, AppError> {
+    if groups.is_empty() {
+        return Ok(Moved::default());
+    }
+    let requested: Vec<(i64, u32)> = groups.iter().flat_map(|(f, uids)| uids.iter().map(move |u| (f.id, *u))).collect();
+    let (account_id, batch, wanted) = (account.id.clone(), new_batch(), requested.clone());
+    let due = store::now() + moves::UNDO_SECS;
+    let lot = batch.clone();
+    let accepted = state.db.call(move |c| store::create_pending_moves(c, &account_id, &lot, &wanted, to, due)).await?;
+    let key = |(folder, uid): (i64, u32)| MessageKey { account: account.id.clone(), folder, uid }.encode();
+    let failed = requested.iter().filter(|r| !accepted.contains(r)).map(|r| key(*r)).collect();
+    tracing::info!(count = accepted.len(), skipped = requested.len() - accepted.len(), "mover registrado");
+    if !accepted.is_empty() {
+        moves::schedule(app);
+    }
+    state.emit_accounts_changed();
+    Ok(Moved { batch: (!accepted.is_empty()).then_some(batch), ids: accepted.into_iter().map(key).collect(), failed })
+}
+
 #[tauri::command]
-pub async fn move_messages(app: AppHandle, state: State<'_, AppState>, message_ids: Vec<String>, target_folder_id: String) -> Result<Removed, AppError> {
+pub async fn move_messages(app: AppHandle, state: State<'_, AppState>, message_ids: Vec<String>, target_folder_id: String) -> Result<Moved, AppError> {
     let target = FolderKey::decode(&target_folder_id)?;
     let (account, groups) = resolve_messages(&state, &message_ids).await?;
     if target.account != account.id {
@@ -692,40 +744,105 @@ pub async fn move_messages(app: AppHandle, state: State<'_, AppState>, message_i
     if folder.role == Role::Starred {
         return Err(AppError::InvalidInput);
     }
-    let removed = remove_from_folders(&app, &state, &account, groups, Removal::MoveTo(folder.id)).await?;
+    let moved = move_later(&app, &state, &account, groups, folder.id).await?;
     let (account_id, folder_id) = (account.id.clone(), folder.id);
     state.db.call(move |c| store::touch_folder_usage(c, &account_id, folder_id)).await?;
-    Ok(removed)
+    Ok(moved)
 }
 
-/// Excluir: vai para a Lixeira; dentro da Lixeira, apaga de vez (o frontend confirma antes).
+/// Excluir: vai para a Lixeira (com "Desfazer"); dentro da Lixeira, apaga de vez (o frontend confirma antes).
 #[tauri::command]
-pub async fn delete_messages(app: AppHandle, state: State<'_, AppState>, message_ids: Vec<String>) -> Result<Removed, AppError> {
+pub async fn delete_messages(app: AppHandle, state: State<'_, AppState>, message_ids: Vec<String>) -> Result<Moved, AppError> {
     let (account, groups) = resolve_messages(&state, &message_ids).await?;
     let account_id = account.id.clone();
     let trash = state.db.call(move |c| store::folder_by_role(c, &account_id, Role::Trash)).await?.ok_or(AppError::FolderNotFound)?;
     let (in_trash, elsewhere): (Vec<_>, Vec<_>) = groups.into_iter().partition(|(f, _)| f.id == trash.id);
-    let moved = remove_from_folders(&app, &state, &account, elsewhere, Removal::MoveTo(trash.id)).await;
-    let purged = remove_from_folders(&app, &state, &account, in_trash, Removal::Expunge).await;
-    match (moved, purged) {
-        (Ok(mut a), Ok(b)) => {
-            a.ids.extend(b.ids);
-            a.failed.extend(b.failed);
-            Ok(a)
+    let mut moved = move_later(&app, &state, &account, elsewhere, trash.id).await?;
+    match expunge_from_folders(&state, &account, in_trash).await {
+        Ok(purged) => {
+            moved.ids.extend(purged.ids);
+            moved.failed.extend(purged.failed);
+            Ok(moved)
         }
-        (Ok(a), Err(e)) | (Err(e), Ok(a)) if a.ids.is_empty() => Err(e),
-        (Ok(a), Err(_)) | (Err(_), Ok(a)) => Ok(a),
-        (Err(e), Err(_)) => Err(e),
+        Err(e) if moved.ids.is_empty() => Err(e),
+        Err(_) => Ok(moved),
     }
 }
 
 /// Arquivar: no Gmail, tira da pasta atual e deixa em "Todos os e-mails".
 #[tauri::command]
-pub async fn archive_messages(app: AppHandle, state: State<'_, AppState>, message_ids: Vec<String>) -> Result<Removed, AppError> {
+pub async fn archive_messages(app: AppHandle, state: State<'_, AppState>, message_ids: Vec<String>) -> Result<Moved, AppError> {
     let (account, groups) = resolve_messages(&state, &message_ids).await?;
     let account_id = account.id.clone();
     let all = state.db.call(move |c| store::folder_by_role(c, &account_id, Role::All)).await?.ok_or(AppError::FolderNotFound)?;
-    remove_from_folders(&app, &state, &account, groups, Removal::MoveTo(all.id)).await
+    let groups = groups.into_iter().filter(|(f, _)| f.id != all.id).collect();
+    move_later(&app, &state, &account, groups, all.id).await
+}
+
+/// "Desfazer" de mover, arquivar ou excluir: devolve os ids que voltaram para a origem. Os que já
+/// estavam no servidor não voltam (o frontend avisa).
+#[tauri::command]
+pub async fn undo_move(state: State<'_, AppState>, account_id: String, batch: String) -> Result<Vec<String>, AppError> {
+    let id = self::account_id(&account_id)?;
+    if batch.len() != 24 || !batch.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err(AppError::InvalidId);
+    }
+    let restored = state.db.call(move |c| store::cancel_pending(c, &batch)).await?;
+    tracing::info!(count = restored.len(), "mover desfeito");
+    state.emit_accounts_changed();
+    Ok(restored.into_iter().map(|(folder, uid)| MessageKey { account: id.clone(), folder, uid }.encode()).collect())
+}
+
+// ---------------------------------------------------------------- envio (US7, CA1–CA3)
+
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SendRequest {
+    pub account_id: String,
+    pub kind: DraftKind,
+    pub message_id: Option<String>,
+    pub to: Vec<String>,
+    pub cc: Vec<String>,
+    pub bcc: Vec<String>,
+    pub subject: String,
+    pub body: String,
+    #[serde(default)]
+    pub keep_attachments: Vec<usize>,
+}
+
+/// Valida e agenda o envio para depois do prazo do "Desfazer". O resultado chega pelo evento
+/// `send-finished`. Devolve o id para `cancel_send`.
+#[tauri::command]
+pub async fn send_message(app: AppHandle, state: State<'_, AppState>, request: SendRequest) -> Result<String, AppError> {
+    let id = self::account_id(&request.account_id)?;
+    reply_kind(request.kind, &request.message_id)?;
+    let lookup = id.clone();
+    let account = state.db.call(move |c| store::require_account(c, &lookup)).await?;
+    require_active(&account)?;
+    let original = match &request.message_id {
+        Some(m) => {
+            let key = MessageKey::decode(m)?;
+            Some((message_row(&state, &id, m).await?, key.folder))
+        }
+        None => None,
+    };
+    let outgoing = send::validate(
+        id,
+        request.kind,
+        original,
+        &request.to,
+        &request.cc,
+        &request.bcc,
+        &request.subject,
+        request.body,
+        request.keep_attachments,
+    )?;
+    Ok(send::schedule(&app, outgoing))
+}
+
+#[tauri::command]
+pub fn cancel_send(send_id: String) -> bool {
+    send::cancel(&send_id)
 }
 
 #[tauri::command]
@@ -849,7 +966,7 @@ async fn message_row(state: &AppState, account_id: &str, message_id: &str) -> Re
         .db
         .call(move |c| {
             let folder = store::folder_of_account(c, &key.account, key.folder)?;
-            Ok(store::message_by_uid(c, folder.id, key.uid)?.ok_or(AppError::MessageNotFound)?.id)
+            Ok(store::message_for_key(c, folder.id, key.uid)?.ok_or(AppError::MessageNotFound)?.id)
         })
         .await
 }
@@ -873,7 +990,7 @@ pub async fn compose_template(state: State<'_, AppState>, message_id: String, ki
         .call(move |c| {
             let account = store::require_account(c, &key.account)?;
             let folder = store::folder_of_account(c, &key.account, key.folder)?;
-            let m = store::message_by_uid(c, folder.id, key.uid)?.ok_or(AppError::MessageNotFound)?;
+            let m = store::message_for_key(c, folder.id, key.uid)?.ok_or(AppError::MessageNotFound)?;
             Ok((account, store::load_body(c, m.id)?))
         })
         .await?;

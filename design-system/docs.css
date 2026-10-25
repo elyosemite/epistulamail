@@ -158,10 +158,14 @@
 
   /* ---------- Demos ---------- */
   .demo-client { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .layout-mini { display: grid; gap: 4px; height: 6rem; padding: 6px; border-radius: var(--radius-medium); background: var(--color-canvas); }
+  .layout-mini > span { border-radius: var(--radius-small); background: var(--color-surface); box-shadow: var(--shadow-raised); }
+  .layout-mini > span.is-rail { background: transparent; box-shadow: none; display: grid; align-content: start; justify-items: center; padding-top: 4px; }
+  .layout-mini > span.is-rail::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--color-bg-brand-bold); }
+  .layout-mini > span.is-list { background: var(--color-bg-selected); }
+  .menu-anchor > .menu.account-menu { position: absolute; top: calc(100% + var(--space-050)); right: 0; left: auto; z-index: 5; }
+  #blocks-shell .app-shell__block--header { overflow: visible; position: relative; z-index: 2; }
   .demo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-150); justify-content: space-between; }
-  .segmented { display: inline-flex; gap: var(--space-025); padding: var(--space-025); border-radius: var(--radius-small); background: var(--color-bg-neutral); }
-  .segmented .btn { --btn-bg: transparent; height: 1.75rem; }
-  .segmented .btn[aria-pressed="true"] { --btn-bg: var(--color-surface); --btn-bg-hover: var(--color-surface); --btn-fg: var(--color-text); box-shadow: var(--shadow-raised); }
   .tb-group { display: contents; }
   .tb-group[hidden] { display: none !important; }
   .demo-hint { margin: 0; font: var(--font-body-small); color: var(--color-text-subtlest); }

@@ -28,12 +28,14 @@ interface MessageViewProps {
   badge?: ReactNode;
   compose: ComposeState | null;
   onCloseCompose: () => void;
+  /** Envio agendado pelo card (US7): o Mailbox fecha o card e mostra o "Desfazer". */
+  onSent: (sendId: string) => void;
   onLoaded: (id: string, flags: MessageFlags) => void;
   onAccessLost: () => void;
   onBack: () => void;
 }
 
-export function MessageView({ account, messageId, badge, compose, onCloseCompose, onLoaded, onAccessLost, onBack }: MessageViewProps) {
+export function MessageView({ account, messageId, badge, compose, onCloseCompose, onSent, onLoaded, onAccessLost, onBack }: MessageViewProps) {
   const [state, setState] = useState<State>({ status: "loading" });
   const [allowRemote, setAllowRemote] = useState(false);
   const toast = useToast();
@@ -69,7 +71,7 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
   if (compose?.kind === "new") {
     return (
       <div className="reader reader--fluid">
-        <ComposeCard key="new" account={account} kind="new" messageId={null} onClose={onCloseCompose} />
+        <ComposeCard key="new" account={account} kind="new" messageId={null} onClose={onCloseCompose} onSent={onSent} />
       </div>
     );
   }
@@ -78,6 +80,15 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
   }
   if (state.status === "loading") return <ReaderSkeleton />;
   if (state.status === "error") {
+    if (state.error.kind === "MessageMoving") {
+      return (
+        <div className="reader reader--fluid">
+          <SectionMessage title="Esta mensagem está sendo movida" actions={[{ label: "Tentar de novo", onClick: () => void load(messageId, allowRemote, { cancelled: false }) }]}>
+            Ela abre de novo em instantes, assim que a pasta de destino for atualizada.
+          </SectionMessage>
+        </div>
+      );
+    }
     if (state.error.kind === "MessageNotFound") {
       return (
         <div className="reader reader--fluid">
@@ -102,7 +113,15 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
 
   const { view } = state;
   const card = compose && compose.messageId === messageId && (
-    <ComposeCard key={`${compose.kind}-${messageId}`} account={account} kind={compose.kind} messageId={messageId} onClose={onCloseCompose} />
+    <ComposeCard
+      key={`${compose.kind}-${messageId}`}
+      account={account}
+      kind={compose.kind}
+      messageId={messageId}
+      originalAttachments={state.view.attachments}
+      onClose={onCloseCompose}
+      onSent={onSent}
+    />
   );
   const subject = view.subject || "(sem assunto)";
   const date = formatFullDate(view.date);

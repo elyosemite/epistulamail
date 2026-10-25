@@ -43,6 +43,9 @@ export const EmailItem = forwardRef<HTMLDivElement, EmailItemProps>(function Ema
       onToggleRead={onToggleRead}
       badge={badge}
       folder={folderName}
+      snippet={message.snippet}
+      hasFiles={message.hasFiles}
+      hasImages={message.hasImages}
     />
   );
 });

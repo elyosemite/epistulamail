@@ -28,6 +28,11 @@ pub struct MessageHeader {
     pub date: String,
     pub flags: MessageFlags,
     pub followup: Option<crate::store::Followup>,
+    /// Começo do texto, para a densidade Confortável (US7); ausente enquanto não foi buscado.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub snippet: Option<String>,
+    pub has_files: bool,
+    pub has_images: bool,
     /// Só nos resultados de busca: a pasta onde a mensagem está.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub folder_name: Option<String>,

@@ -6,10 +6,13 @@ mod imap_client;
 mod mailbox;
 mod message;
 mod oauth;
+mod moves;
 mod photo;
+mod preview;
 mod provider;
 mod providers;
 mod sanitize;
+mod send;
 mod secrets;
 mod session;
 mod store;
@@ -162,6 +165,7 @@ pub fn run() {
                 let started = std::time::Instant::now();
                 startup(&state).await;
                 state.mark_started();
+                moves::resume(&handle).await;
                 tracing::info!(ms = started.elapsed().as_millis() as u64, "inicialização concluída");
             });
             sync::start_periodic(app.handle());
@@ -203,6 +207,11 @@ pub fn run() {
             commands::set_appearance,
             commands::set_default_sync_interval,
             commands::set_account_sync_interval,
+            commands::undo_move,
+            commands::send_message,
+            commands::cancel_send,
+            commands::account_overview,
+            commands::sync_account,
         ])
         .build(tauri::generate_context!());
 

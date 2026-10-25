@@ -17,6 +17,7 @@ pub const MIGRATIONS: &[&str] = &[
     include_str!("../migrations/0001_inicial.sql"),
     include_str!("../migrations/0002_comandos.sql"),
     include_str!("../migrations/0003_sincronia_e_foto.sql"),
+    include_str!("../migrations/0004_envio_e_mover.sql"),
 ];
 
 pub type DbKey = [u8; 32];

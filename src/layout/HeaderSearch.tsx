@@ -1,5 +1,5 @@
-// DS: header.html · .appbar__search sobre a coluna da lista, com .input--search e o botão de configurações à direita
-import { forwardRef, type ReactNode } from "react";
+// DS: header.html · .appbar__search sobre a coluna da lista, com .input--search
+import { forwardRef } from "react";
 import { SearchField } from "../ui/SearchField";
 
 interface HeaderSearchProps {
@@ -9,12 +9,10 @@ interface HeaderSearchProps {
   inert?: boolean;
   onChange: (value: string) => void;
   onEscape: () => void;
-  /** Botão de configurações, logo à direita do campo. */
-  settings: ReactNode;
 }
 
 export const HeaderSearch = forwardRef<HTMLInputElement, HeaderSearchProps>(function HeaderSearch(
-  { value, placeholder, inert, onChange, onEscape, settings },
+  { value, placeholder, inert, onChange, onEscape },
   ref,
 ) {
   return (
@@ -29,7 +27,6 @@ export const HeaderSearch = forwardRef<HTMLInputElement, HeaderSearchProps>(func
         onChange={onChange}
         onEscape={onEscape}
       />
-      {settings}
     </div>
   );
 });

@@ -1,6 +1,7 @@
-// Layout (US5): AppLayout em blocos com AccountsBar, Header (marca, busca, configurações, conta e comandos),
-// NavigationBlock e ContentColumn (montados pelo Mailbox). DS: espacamento.html (.app-shell--blocks, __banner,
-// __center, __resizer, .has-reader; --no-sidebar antes da primeira conta), modais.html (configurações)
+// Layout (US5): AppLayout em blocos com AccountsBar, Header e os blocos do Mailbox (NavigationBlock e ContentColumn).
+// US7: o header tem a marca à esquerda, a busca e, na extrema direita, os botões das colunas e a foto da conta (menu
+// da conta com configurações, tema, densidade e sair). DS: espacamento.html (.app-shell--blocks, __banner, __center,
+// __resizer, .has-reader, --no-folders, --no-reader; --no-sidebar antes da primeira conta), modais.html (configurações)
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AccountSettingsDialog, SignOutDialog } from "./features/accounts/AccountDialogs";
 import { AddAccount, ConnectFlow } from "./features/accounts/AddAccount";
@@ -8,12 +9,12 @@ import { Mailbox } from "./features/mailbox/Mailbox";
 import { Settings } from "./features/settings/Settings";
 import { AccountsBar } from "./layout/AccountsBar";
 import { AppLayout } from "./layout/AppLayout";
+import { AccountMenu } from "./layout/AccountMenu";
 import { AppSkeleton } from "./layout/AppSkeleton";
+import { ColumnToggles } from "./layout/ColumnToggles";
 import { Header } from "./layout/Header";
-import { HeaderAccount } from "./layout/HeaderAccount";
 import { HeaderBrand } from "./layout/HeaderBrand";
 import { HeaderSearch } from "./layout/HeaderSearch";
-import { SettingsButton } from "./layout/SettingsButton";
 import { pickActive } from "./lib/accounts";
 import { applyAppearance, cachedAppearance, parseAppearance } from "./lib/appearance";
 import { LIST_DEFAULT } from "./lib/listWidth";
@@ -46,6 +47,7 @@ function Shell() {
   const [listWidth, setListWidth] = useState(LIST_DEFAULT);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [appearance, setAppearance] = useState<Appearance>(cachedAppearance);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   // Pasta aberta por conta nesta sessão, para voltar ao mesmo lugar ao trocar de conta.
   const lastFolder = useRef(new Map<string, string>());
@@ -80,6 +82,13 @@ function Shell() {
     });
     api.setAppearance(change).catch(() => toast({ kind: "error", title: "Não foi possível salvar a aparência", description: "Ela volta ao que era na próxima abertura." }));
   }, [toast]);
+
+  const showReaderRef = useRef(appearance.showReader);
+  showReaderRef.current = appearance.showReader;
+  const onReaderOpenChange = useCallback((open: boolean) => {
+    setReaderOpen(open);
+    if (open && !showReaderRef.current) changeAppearance({ showReader: true });
+  }, [changeAppearance]);
 
   // Com a primeira tela de contas desenhada, o backend começa a sincronização automática.
   const loaded = accounts !== null;
@@ -134,12 +143,30 @@ function Shell() {
   const savedWidth = activeAccount?.listWidth ?? LIST_DEFAULT;
   useEffect(() => setListWidth(savedWidth), [activeAccount?.id, savedWidth]);
 
-  // "/" ou Ctrl+E levam à busca; Ctrl+, abre e fecha as configurações.
+  const appearanceRef = useRef(appearance);
+  appearanceRef.current = appearance;
+  const toggleFolders = useCallback(() => changeAppearance({ showFolders: !appearanceRef.current.showFolders }), [changeAppearance]);
+  const toggleReader = useCallback(() => changeAppearance({ showReader: !appearanceRef.current.showReader }), [changeAppearance]);
+
+  // "/" ou Ctrl+E levam à busca; Ctrl+, abre e fecha as configurações; Ctrl+B e Ctrl+Alt+B mostram e escondem
+  // as pastas e a leitura; Alt+A abre o menu da conta (US7). Com um modal aberto, nenhum vale.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (document.querySelector(".blanket")) return;
       if ((e.ctrlKey || e.metaKey) && e.key === ",") {
         e.preventDefault();
         setSettingsOpen((open) => !open);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        if (e.altKey) toggleReader();
+        else toggleFolders();
+        return;
+      }
+      if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        setAccountMenuOpen((open) => !open);
         return;
       }
       const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ["INPUT", "TEXTAREA"].includes(e.target.tagName));
@@ -152,7 +179,7 @@ function Shell() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [toggleFolders, toggleReader]);
 
   // Abertura: a tela em blocos aparece já com cada componente em carregamento (skeleton).
   if (accounts === null) return <AppSkeleton />;
@@ -186,16 +213,29 @@ function Shell() {
             setQuery("");
             searchRef.current?.blur();
           }}
-          settings={<SettingsButton open={settingsOpen} onClick={() => setSettingsOpen((open) => !open)} />}
         />
       }
-      account={<HeaderAccount account={active} />}
+      end={
+        <>
+          <ColumnToggles showFolders={appearance.showFolders} showReader={appearance.showReader} onToggleFolders={toggleFolders} onToggleReader={toggleReader} />
+          <AccountMenu
+            account={active}
+            appearance={appearance}
+            offline={!!offline[active.id]}
+            open={accountMenuOpen}
+            onOpenChange={setAccountMenuOpen}
+            onAppearance={changeAppearance}
+            onSettings={() => setSettingsOpen(true)}
+            onSignOut={() => setDialog({ kind: "sign-out", account: active })}
+          />
+        </>
+      }
       commands={commands}
     />
   );
 
   return (
-    <AppLayout listWidth={listWidth} hasReader={showMail && readerOpen}>
+    <AppLayout listWidth={listWidth} hasReader={showMail && readerOpen} showFolders={appearance.showFolders} showReader={appearance.showReader}>
       <AccountsBar
         accounts={accounts}
         activeId={showMail ? active.id : null}
@@ -232,14 +272,15 @@ function Shell() {
           query={query}
           settingsOpen={settingsOpen}
           renderHeader={renderHeader}
+          density={appearance.density}
           initialFolderId={lastFolder.current.get(active.id) ?? active.lastFolderId}
           onFolderChange={(folderId) => onFolderChange(active.id, folderId)}
           onAccessLost={onAccessLost}
           onReconnect={() => setView({ kind: "reconnect", account: active })}
-          onReaderOpenChange={setReaderOpen}
+          onReaderOpenChange={onReaderOpenChange}
         />
       )}
-      {showMail && (
+      {showMail && appearance.showReader && (
         <Resizer
           label="Largura da lista de mensagens"
           width={listWidth}

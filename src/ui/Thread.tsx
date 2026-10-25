@@ -2,13 +2,17 @@
 //     __subject-text), .is-unread, .is-checked (mão aberta para arrastar), .is-open, .star-btn; hover com
 //     --color-bg-neutral-subtle-hovered (US5); sidebar.html · .drag-ghost--follow (US6)
 // DS: carregamento.html · linhas .thread com .skeleton; etiquetas.html · .label (pasta na busca); menus.html · .lozenge de prazo
+// DS: threads.html "Densidade" (US7) · .thread-list (Confortável), --standard (Padrão), --compact; .thread__snippet, .thread__icons
+import type { Density } from "../lib/tauri";
 import { forwardRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { IconButton } from "./Button";
 import { Icon } from "./Icon";
 
-export function ThreadList({ children, label, busy }: { children: ReactNode; label: string; busy?: boolean }) {
+const DENSITY_CLASS: Record<Density, string> = { comfortable: "thread-list", standard: "thread-list thread-list--standard", compact: "thread-list thread-list--compact" };
+
+export function ThreadList({ children, label, busy, density = "standard" }: { children: ReactNode; label: string; busy?: boolean; density?: Density }) {
   return (
-    <div className="thread-list" role="list" aria-label={label} aria-busy={busy || undefined}>
+    <div className={DENSITY_CLASS[density]} role="list" aria-label={label} aria-busy={busy || undefined}>
       {children}
     </div>
   );
@@ -36,6 +40,10 @@ interface ThreadRowProps {
   badge?: ReactNode;
   /** Pasta da mensagem nos resultados de busca (`.label`). */
   folder?: string;
+  /** Começo do texto; só aparece na densidade Confortável. */
+  snippet?: string;
+  hasFiles?: boolean;
+  hasImages?: boolean;
 }
 
 const stop = (fn: () => void) => (event: MouseEvent) => {
@@ -44,7 +52,7 @@ const stop = (fn: () => void) => (event: MouseEvent) => {
 };
 
 export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function ThreadRow(
-  { from, subject, date, unread, starred, open, checked, onOpen, onCheck, onKeyDown, onPointerDown, onToggleStar, onToggleRead, badge, folder },
+  { from, subject, date, unread, starred, open, checked, onOpen, onCheck, onKeyDown, onPointerDown, onToggleStar, onToggleRead, badge, folder, snippet, hasFiles, hasImages },
   ref,
 ) {
   const cls = ["thread", unread && "is-unread", checked && "is-checked", open && "is-open"].filter(Boolean).join(" ");
@@ -55,7 +63,7 @@ export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function Thr
       role="listitem"
       tabIndex={0}
       aria-current={open || undefined}
-      aria-label={`${checked ? "Marcada, " : ""}${unread ? "Não lida, " : ""}${starred ? "com estrela, " : ""}${from}, ${subject}, ${date}`}
+      aria-label={`${checked ? "Marcada, " : ""}${unread ? "Não lida, " : ""}${starred ? "com estrela, " : ""}${from}, ${subject}${hasFiles ? ", com anexos" : ""}${hasImages ? ", com imagens" : ""}, ${date}`}
       onClick={onOpen}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
@@ -108,7 +116,14 @@ export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function Thr
       <div className="thread__subject">
         {folder && <span className="label">{folder}</span>}
         <span className="thread__subject-text">{subject}</span>
+        {(hasFiles || hasImages) && (
+          <span className="thread__icons" aria-hidden="true">
+            {hasFiles && <Icon name="clip" size="sm" />}
+            {hasImages && <Icon name="image" size="sm" />}
+          </span>
+        )}
       </div>
+      {snippet && <div className="thread__snippet">{snippet}</div>}
     </div>
   );
 });
