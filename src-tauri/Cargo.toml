@@ -24,7 +24,7 @@ tracing-subscriber = "0.3"
 tokio = { version = "1", features = ["net", "io-util", "time", "sync", "macros", "rt-multi-thread"] }
 futures = "0.3"
 reqwest = { version = "0.12", features = ["json"] }
-base64 = "0.22"
+base64 = "0.23"
 sha2 = "0.10"
 rand = "0.8"
 keyring = { version = "3", features = ["windows-native", "apple-native", "sync-secret-service", "crypto-rust"] }
