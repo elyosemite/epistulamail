@@ -1,0 +1,88 @@
+# CI do Epistula: build e testes no Windows (alvo do app) e checagens de segurança.
+# Não usa segredos: o build sai sem as credenciais OAuth, só para provar que compila e passa nos testes.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build e testes (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Testes do frontend
+        run: pnpm test
+      # tsc + vite build; o dist/ também é exigido pelo build do Tauri abaixo.
+      - name: Build do frontend
+        run: pnpm build
+
+      # Perl portátil para o OpenSSL embutido do SQLCipher (src-tauri/.cargo/config.toml aponta para ele).
+      - uses: actions/cache@v4
+        with:
+          path: .tools
+          key: tools-${{ hashFiles('scripts/setup-build-tools.ps1') }}
+      - name: Ferramentas de build
+        shell: pwsh
+        run: ./scripts/setup-build-tools.ps1
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets --locked -- -D warnings
+      - name: Testes do backend
+        working-directory: src-tauri
+        run: cargo test --locked
+
+  security:
+    name: Segurança
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # o gitleaks varre o histórico inteiro
+
+      # Segredos commitados (client_secret, tokens, chaves).
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Vulnerabilidades (base RustSec), licenças e origens das crates, conforme src-tauri/deny.toml.
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: src-tauri/Cargo.toml
+
+      # Vulnerabilidades nas dependências do frontend que vão para o app.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: pnpm audit
+        run: pnpm audit --prod
