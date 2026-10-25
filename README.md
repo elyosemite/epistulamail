@@ -4,6 +4,8 @@ Um cliente de e-mail para desktop que guarda as suas mensagens no seu computador
 
 O Epistula conecta as suas contas, baixa o que você precisa ler e mantém tudo num banco local protegido por AES-256. A chave fica no cofre do sistema operacional. Não existe conta Epistula, não existe nuvem Epistula e não existe ninguém do nosso lado com acesso ao que você recebe.
 
+![Caixa de entrada do Epistula com várias contas, pastas, lista de mensagens e uma mensagem aberta com as imagens externas bloqueadas](docs/images/epistula-caixa-de-entrada.png)
+
 > O projeto está em desenvolvimento ativo. Leitura, organização e múltiplas contas já funcionam. Envio, backup completo e criptografia pós-quântica estão a caminho. A seção [Estado atual](#estado-atual) diz exatamente o que existe hoje.
 
 ## Por que mais um cliente de e-mail
