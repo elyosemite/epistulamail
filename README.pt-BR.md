@@ -17,6 +17,7 @@ O Epistula conecta as suas contas, baixa o que você precisa ler e mantém tudo 
 - **Abre na hora, até sem internet.** Os e-mails recentes são baixados em segundo plano e abrem do disco.
 - **Contra rastreamento.** Imagens externas (os "pixels espiões" que avisam que você abriu) ficam bloqueadas até você liberar.
 - **Conversas fáceis de ler.** Cada resposta num card, com o texto citado escondido.
+- **Se organiza sozinho.** Regras movem, arquivam ou sinalizam os e-mails assim que chegam, com prévia antes de salvar e desfazer depois.
 - **Avisa só o que importa.** Notificações do Windows, bandeja do sistema, horário de silêncio e um histórico no sino.
 - **Segurança que dá para conferir.** Modelo de ameaças público e testes que falham se algum conteúdo aparecer nos logs.
 
@@ -55,7 +56,7 @@ O que funciona hoje:
 
 - Escrever, responder, responder a todos e encaminhar, com rascunhos salvos cifrados.
 - Pastas e marcadores, sinalizadas com prazo, e mover, arquivar, excluir e marcar como lida, em uma ou várias mensagens, inclusive arrastando para a pasta.
-- Busca, barra de comandos e sincronização em segundo plano com intervalo por conta.
+- Regras que organizam os e-mails assim que chegam: mover, arquivar, excluir, aplicar marcador, marcar como lida, estrela, sinalizar com prazo, não notificar ou notificar sempre. Cada regra se lê como uma frase, mostra uma prévia ao vivo dos e-mails que pegaria antes de salvar, e tudo que ela faz pode ser desfeito pelo histórico. Dá para começar por um modelo ou direto de uma mensagem ("sempre mover deste remetente").
 
 **Avisos**
 
@@ -96,7 +97,7 @@ Exportar uma conta inteira para um arquivo cifrado, guardar onde quiser (um disc
 
 ### Gestão de e-mail de verdade
 
-Busca local no conteúdo completo, mesmo offline. Regras e filtros. Adiar mensagens. Visão unificada de todas as contas. Assinaturas, modelos e agendamento de envio. Outros provedores (Outlook, Yahoo, iCloud e IMAP genérico). Indicadores de autenticidade do remetente (SPF, DKIM, DMARC) visíveis na leitura, para ajudar a reconhecer phishing.
+Busca local no conteúdo completo, mesmo offline. Regras que também rodam no servidor, com o app fechado. Adiar mensagens. Visão unificada de todas as contas. Assinaturas, modelos e agendamento de envio. Outros provedores (Outlook, Yahoo, iCloud e IMAP genérico). Indicadores de autenticidade do remetente (SPF, DKIM, DMARC) visíveis na leitura, para ajudar a reconhecer phishing.
 
 ## Como a sua informação é tratada
 

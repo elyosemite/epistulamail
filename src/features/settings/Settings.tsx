@@ -9,6 +9,7 @@ import { GeneralSettings } from "./GeneralSettings";
 import { NotificationSettings } from "./NotificationSettings";
 import { OfflineSettings } from "./OfflineSettings";
 import { PrivacySettings } from "./PrivacySettings";
+import { RulesSettings, type RulesRequest } from "../rules/RulesSettings";
 import { SyncSettings } from "./SyncSettings";
 
 const SECTIONS: SettingsSection[] = [
@@ -16,6 +17,7 @@ const SECTIONS: SettingsSection[] = [
   { id: "appearance", label: "Aparência", icon: "palette" },
   { id: "notifications", label: "Notificações", icon: "bell" },
   { id: "privacy", label: "Privacidade", icon: "shield" },
+  { id: "rules", label: "Regras", icon: "filter" },
   { id: "account", label: "Conta", icon: "user" },
   { id: "email", label: "E-mail", icon: "mail" },
 ];
@@ -30,11 +32,15 @@ interface SettingsProps {
   onAppearance: (change: Partial<Appearance>) => void;
   /** Seção ao abrir; sem ela, Geral. O sino abre em Notificações (US8, CA7). */
   initialSection?: string;
+  /** Conta aberta: a seção Regras começa nela (US12, D1). */
+  activeAccountId: string;
+  /** Editor ou histórico das regras pedidos de fora ("Mais opções", "Ver"). */
+  rulesRequest?: RulesRequest | null;
   onClose: () => void;
 }
 
 /** Configurações (US5, CA6): seções à esquerda, opções da seção à direita. Abrem em Geral (US7, CA4). */
-export function Settings({ accounts, appearance, onAppearance, initialSection = "general", onClose }: SettingsProps) {
+export function Settings({ accounts, appearance, onAppearance, initialSection = "general", activeAccountId, rulesRequest, onClose }: SettingsProps) {
   const [section, setSection] = useState(initialSection);
   const current = SECTIONS.find((s) => s.id === section)!;
   return (
@@ -51,6 +57,8 @@ export function Settings({ accounts, appearance, onAppearance, initialSection = 
         <NotificationSettings accounts={accounts} />
       ) : section === "privacy" ? (
         <PrivacySettings />
+      ) : section === "rules" ? (
+        <RulesSettings accounts={accounts} initialAccountId={activeAccountId} request={rulesRequest} />
       ) : section === "appearance" ? (
         <AppearanceSettings appearance={appearance} onChange={onAppearance} />
       ) : (

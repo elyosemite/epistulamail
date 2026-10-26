@@ -17,6 +17,7 @@ Epistula connects your accounts, downloads what you need to read and stores it i
 - **Opens instantly, even offline.** Recent mail is downloaded in the background and opens from disk.
 - **Blocks tracking.** Remote images (the "spy pixels" that tell senders you opened their email) stay blocked until you allow them.
 - **Conversations that read well.** Each reply in its own card, with quoted text tucked away.
+- **Organizes itself.** Rules move, archive or flag mail as it arrives, with a live preview before you save and undo afterwards.
 - **Tells you only what matters.** Windows notifications, a tray icon, quiet hours and a history behind the bell.
 - **Security you can check.** A public threat model, and tests that fail if any content shows up in the logs.
 
@@ -56,6 +57,7 @@ What works today:
 - Compose, reply, reply all and forward, with drafts saved encrypted.
 - Folders and labels, flags with due dates, and move, archive, delete and mark as read for one message or many, including drag and drop onto a folder.
 - Search, a command bar, and background sync with a per-account interval.
+- Rules that organize mail as it arrives: move, archive, delete, label, mark as read, star, flag with a due date, silence or always notify. Each rule reads as a sentence, shows a live preview of the mail it would catch before you save it, and everything it does can be undone from its history. Start from a template or straight from a message ("always move mail from this sender").
 
 **Staying informed**
 
@@ -96,7 +98,7 @@ Export a whole account to an encrypted file, keep it wherever you like (an exter
 
 ### Real email management
 
-Full-text local search, offline included. Rules and filters. Snoozing messages. A unified view across accounts. Signatures, templates and scheduled send. Other providers (Outlook, Yahoo, iCloud and generic IMAP). Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
+Full-text local search, offline included. Rules that also run on the server, with the app closed. Snoozing messages. A unified view across accounts. Signatures, templates and scheduled send. Other providers (Outlook, Yahoo, iCloud and generic IMAP). Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
 
 ## How your information is handled
 

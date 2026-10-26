@@ -1,6 +1,7 @@
 // Composição de DS: header.html (.commandbar, segunda linha do bloco do header), menus.html (.menu "Mover para" com
 // .menu__search, .menu__form e .menu__empty; menu de resposta; menu "Sinalizar" com .menu-item__meta), modais.html
 // (.folder-picker)
+import type { QuickIntent } from "../features/rules/RuleDialogs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { canReceive, folderIcon } from "../lib/folders";
 import { dueFor, FOLLOWUP_CHOICES, shortDate } from "../lib/followup";
@@ -12,7 +13,7 @@ import { FolderPicker } from "../ui/FolderPicker";
 import { Icon } from "../ui/Icon";
 import { anchorBelow, MenuHeading, MenuItem, MenuPanel, MenuSeparator, type Anchor } from "../ui/Menu";
 
-type OpenMenu = { kind: "move" | "reply" | "flag"; anchor: Anchor } | null;
+type OpenMenu = { kind: "move" | "reply" | "flag" | "more"; anchor: Anchor } | null;
 
 interface CommandBarProps {
   account: Account;
@@ -35,6 +36,8 @@ interface CommandBarProps {
   onReply: (kind: Exclude<DraftKind, "new">) => void;
   onToggleRead: () => void;
   onFollowup: (change: FollowupAction) => void;
+  /** "Criar regra…" e os atalhos de uma ação (US12, CA5), a partir da mensagem aberta. */
+  onRule: (intent: QuickIntent) => void;
 }
 
 /** Atalhos de teclado da barra (fora de campos de texto). */
@@ -44,7 +47,7 @@ function isTyping(target: EventTarget | null): boolean {
 
 /** Barra de comandos: novo e-mail, excluir, arquivar, mover, responder, lida e sinalizar. */
 export function CommandBar(props: CommandBarProps) {
-  const { account, folders, sourceFolderId, targets, roleOf, readOnly, inert, onNew, onDelete, onArchive, onMove, onCreateAndMove, onReply, onToggleRead, onFollowup } = props;
+  const { account, folders, sourceFolderId, targets, roleOf, readOnly, inert, onNew, onDelete, onArchive, onMove, onCreateAndMove, onReply, onToggleRead, onFollowup, onRule } = props;
   const [menu, setMenu] = useState<OpenMenu>(null);
   const [picker, setPicker] = useState(false);
   const [recent, setRecent] = useState<Folder[]>([]);
@@ -178,6 +181,15 @@ export function CommandBar(props: CommandBarProps) {
             onClick={() => onFollowup(flagged ? { action: "clear" } : { action: "set", due: null })}
             onMenu={(b) => setMenu({ kind: "flag", anchor: anchorBelow(b) })}
           />
+          <CommandButton
+            icon="more"
+            label="Mais"
+            tip={single ? "Mais ações" : "Selecione uma conversa só para criar uma regra"}
+            menu
+            expanded={menu?.kind === "more"}
+            disabled={disabled || !single}
+            onClick={(b) => setMenu({ kind: "more", anchor: anchorBelow(b) })}
+          />
         </CommandGroup>
       </CommandToolbar>
 
@@ -222,6 +234,14 @@ export function CommandBar(props: CommandBarProps) {
           {createError && <div className="menu__empty" role="alert">{createError}</div>}
           <MenuSeparator />
           <MenuItem label="Selecionar outra pasta…" icon="folder-move" onSelect={() => { close(); setPicker(true); }} />
+        </MenuPanel>
+      )}
+
+      {menu?.kind === "more" && single && (
+        <MenuPanel label="Mais" anchor={menu.anchor} onClose={close}>
+          <MenuItem label="Criar regra…" icon="filter" onSelect={() => { close(); onRule("rule"); }} />
+          <MenuItem label={`Sempre mover de ${single.fromName || single.fromAddress} para…`} icon="folder-move" onSelect={() => { close(); onRule("always-move"); }} />
+          <MenuItem label={`Excluir tudo de ${single.fromName || single.fromAddress}…`} icon="trash" onSelect={() => { close(); onRule("delete-all"); }} />
         </MenuPanel>
       )}
 

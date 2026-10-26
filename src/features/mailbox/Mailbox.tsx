@@ -1,6 +1,9 @@
 // Composição de layout: Header (com a CommandBar), NavigationBlock (FoldersColumn + EmailListColumn) e ContentColumn.
 // DS: toasts.html (desfazer e erros), mensagens.html (.section-message "Você saiu desta conta" / "Reconecte esta conta" /
 // busca local), modais.html (confirmar exclusão definitiva na Lixeira)
+import { QuickRuleDialog, type QuickIntent } from "../rules/RuleDialogs";
+import type { RulesRequest } from "../rules/RulesSettings";
+import { emailsLabel } from "../../lib/rules";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { bucketLabel, flagDates, visibleBuckets } from "../../lib/flagged";
 import { canReceive } from "../../lib/folders";
@@ -24,6 +27,7 @@ import {
   type MessageFlags,
   type MessageHeader,
   type Moved,
+  type RuleSuggestions,
 } from "../../lib/tauri";
 import { CommandBar } from "../../layout/CommandBar";
 import { ContentColumn } from "../../layout/ContentColumn";
@@ -59,6 +63,8 @@ interface MailboxProps {
   onReconnect: () => void;
   onReaderOpenChange: (open: boolean) => void;
   appRequest?: MailboxRequest | null;
+  /** "Mais opções" de "Criar regra": abre o editor completo nas Configurações (US12, CA5). */
+  onOpenRules: (request: RulesRequest) => void;
 }
 
 const FALLBACK = { kind: "ImapConnection" as const, message: "Tente de novo em instantes." };
@@ -88,7 +94,7 @@ interface Removal {
   failedTitle: (count: number) => string;
 }
 
-export function Mailbox({ account, initialFolderId, query, settingsOpen, renderHeader, density, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange, appRequest }: MailboxProps) {
+export function Mailbox({ account, initialFolderId, query, settingsOpen, renderHeader, density, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange, appRequest, onOpenRules }: MailboxProps) {
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [folder, setFolder] = useState<Folder | null>(null);
   const [pager, setPager] = useState<Pager>(firstPage);
@@ -399,6 +405,18 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
 
   const selected = items.find((m) => m.id === selectedId) ?? null;
   const targets = useMemo(() => commandTargets(checked, items, selectedId), [checked, items, selectedId]);
+
+  // "Criar regra…" a partir da mensagem (US12, CA5): as sugestões vêm do backend.
+  const [quickRule, setQuickRule] = useState<{ intent: QuickIntent; suggestions: RuleSuggestions } | null>(null);
+  const startRule = async (intent: QuickIntent) => {
+    const message = targets.length === 1 ? targets[0] : null;
+    if (!message) return;
+    try {
+      setQuickRule({ intent, suggestions: await api.ruleSuggestions(message.id) });
+    } catch {
+      toast({ kind: "error", title: "Não foi possível criar a regra", description: "Tente de novo em instantes." });
+    }
+  };
   const allFolders = useMemo(() => folders ?? [], [folders]);
   const sourceFolderId = crossFolder ? null : folder?.id ?? null;
   const roleOf = useCallback(
@@ -693,7 +711,26 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           onReply={onReply}
           onToggleRead={onToggleRead}
           onFollowup={(change) => void onFollowup(change)}
+          onRule={(intent) => void startRule(intent)}
         />,
+      )}
+      {quickRule && (
+        <QuickRuleDialog
+          suggestions={quickRule.suggestions}
+          folders={allFolders}
+          intent={quickRule.intent}
+          onCreate={async (name, spec, applyExisting) => {
+            const saved = await api.saveRule(account.id, null, name, true, spec);
+            let applied = 0;
+            if (applyExisting) applied = await api.runRuleNow(account.id, saved.id, quickRule.suggestions.folderId).catch(() => 0);
+            toast({ kind: "success", title: `Regra "${saved.name}" criada`, description: applyExisting ? `Aplicada a ${emailsLabel(applied)} que já estavam aqui.` : undefined });
+          }}
+          onMore={(name, spec) => {
+            setQuickRule(null);
+            onOpenRules({ accountId: account.id, draft: { name, spec } });
+          }}
+          onClose={() => setQuickRule(null)}
+        />
       )}
       <NavigationBlock>
         <FoldersColumn

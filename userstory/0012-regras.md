@@ -145,7 +145,17 @@ O que o Epistula faz diferente, pela usabilidade:
 - **Conflito com o mover manual:** a mensagem que o usuário está movendo (pendente) é ignorada pelas regras.
 - **Marcadores:** copiar para pasta duplica a mensagem em servidores sem marcadores; o texto da ação diz isso nesses casos.
 
-### 8. Fora do escopo
+### 8. Implementação (26 out 2026)
+
+- **Backend:** migração 0007 (`rule`, `rule_run`, `rule_hit`, `message.list_id`); `rules.rs` (motor puro: condições, "todas"/"qualquer uma", exceções, ordem, "parar", a primeira ação de pasta vence, regra encoberta); `rule_runner.rs` (aplicar ao sincronizar, prévia, rodar agora, limpeza diária, desfazer, sugestões); `LIST-ID` e `LIST-UNSUBSCRIBE` no `HEADER_QUERY`; `notify::after_inbox_sync` recebe o que as regras silenciaram e o que avisa sempre; `notify::bell` para os lotes grandes e os erros.
+- **Ao sincronizar:** a primeira sincronização de cada pasta não passa pelas regras (CA3). Mover, arquivar e excluir entram na fila do mover com prazo imediato (sem os 6 s do "Desfazer" manual, porque o desfazer é pelo histórico).
+- **Desfazer (CA6):** o que ainda não saiu da origem tem o movimento cancelado; o que já está no destino volta por um movimento novo; o que foi arquivado (está só em "Todos os e-mails") volta por cópia para a origem, porque sair de "Todos" apagaria a mensagem no servidor; lida e estrela voltam ao que eram. Marcadores (cópias) não são desfeitos.
+- **Frontend:** Configurações → Regras (`features/rules/`): lista com a frase (L58, L59), arrastar ou Alt+↑/↓, menu (Editar, Rodar agora, Duplicar, Subir, Descer, Excluir), modelos no estado vazio e em "Nova regra" (L62), editor com prévia ao vivo e aviso de regra encoberta (L60, L61), histórico com desfazer (L63). Barra de comandos: "Mais" → "Criar regra…", "Sempre mover de…", "Excluir tudo de…" (CA5). Toast "Regras organizaram N e-mails" com "Ver" e "Desfazer".
+- **Simplificações:** o editor escolhe no máximo uma pasta extra além da Caixa de entrada (o formato aceita várias); "Duplicar" para outra conta abre o editor com as pastas a escolher de novo; "Rodar agora" mostra o resultado no fim, sem barra de progresso.
+- **Testes:** 155 no Rust e 78 no frontend passam; clippy, typecheck e build sem avisos.
+- **Falta (manual, com o servidor real):** regra agindo numa sincronização, "Notificar sempre" no Não perturbe, desfazer de um arquivamento e a limpeza diária.
+
+### 9. Fora do escopo
 
 - Encaminhar e responder automaticamente (D5).
 - Regras no servidor (D7).

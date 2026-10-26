@@ -187,6 +187,77 @@ export interface OfflineSettings {
   outsideBytes: number;
 }
 
+/** Regras (US12): campo, operador e valor de uma condição. */
+export type RuleField =
+  | "from" | "from_domain" | "to" | "cc" | "to_or_cc" | "only_to_me" | "subject" | "snippet" | "list" | "has_files"
+  | "size_over_kb" | "seen" | "flagged" | "older_than_days" | "not_newest_from_sender";
+export type RuleOp = "contains" | "not_contains" | "is" | "starts_with" | "ends_with" | "yes" | "no" | "over";
+
+export interface RuleCondition {
+  field: RuleField;
+  op: RuleOp;
+  value: string;
+}
+
+export type RuleAction =
+  | { kind: "move"; folder: string }
+  | { kind: "archive" }
+  | { kind: "delete" }
+  | { kind: "copy"; folder: string }
+  | { kind: "mark_read" }
+  | { kind: "star" }
+  | { kind: "followup"; days: number }
+  | { kind: "silence" }
+  | { kind: "notify_always" };
+
+export interface RuleSpec {
+  v: number;
+  /** Pastas além da Caixa de entrada onde a regra roda ao sincronizar (D2). */
+  folders: string[];
+  matchAll: boolean;
+  conditions: RuleCondition[];
+  exceptions: RuleCondition[];
+  actions: RuleAction[];
+  stop: boolean;
+}
+
+export interface Rule {
+  id: number;
+  name: string;
+  enabled: boolean;
+  spec: RuleSpec;
+  /** Desligada por erro ("folder_missing"). */
+  problem: string | null;
+  hits30d: number;
+}
+
+export interface RulePreview {
+  checked: number;
+  count: number;
+  sample: Array<{ from: string; subject: string; date: string }>;
+  shadowed: { ruleName: string; count: number } | null;
+}
+
+export interface RuleRun {
+  id: number;
+  ruleName: string;
+  /** Segundos desde 1970. */
+  at: number;
+  origin: "sync" | "manual" | "cleanup";
+  summary: { moved?: number; archived?: number; deleted?: number; copied?: number; read?: number; starred?: number; followup?: number; folder?: string } | null;
+  count: number;
+  undone: boolean;
+}
+
+export interface RuleSuggestions {
+  fromName: string;
+  fromAddress: string;
+  domain: string;
+  listId: string | null;
+  subject: string;
+  folderId: string;
+}
+
 /** Link cujo texto mostra um domínio e leva a outro (US10, CA8). */
 export interface MisleadingLink {
   shown: string;
@@ -478,6 +549,19 @@ export const api = {
   /** Apaga deste computador os dados de uma conta de que você saiu. */
   deleteAccountData: (accountId: string) => call<void>("delete_account_data", { accountId }),
   rotateDbKey: () => call<void>("rotate_db_key"),
+  listRules: (accountId: string) => call<Rule[]>("list_rules", { accountId }),
+  saveRule: (accountId: string, ruleId: number | null, name: string, enabled: boolean, spec: RuleSpec) =>
+    call<Rule>("save_rule", { accountId, ruleId, name, enabled, spec }),
+  deleteRule: (accountId: string, ruleId: number) => call<void>("delete_rule", { accountId, ruleId }),
+  setRuleEnabled: (accountId: string, ruleId: number, enabled: boolean) => call<Rule>("set_rule_enabled", { accountId, ruleId, enabled }),
+  reorderRules: (accountId: string, ruleIds: number[]) => call<Rule[]>("reorder_rules", { accountId, ruleIds }),
+  /** Prévia sem rede; `all` conta a pasta inteira (para "Rodar agora"). */
+  previewRule: (accountId: string, ruleId: number | null, spec: RuleSpec, folderId: string | null = null, all = false) =>
+    call<RulePreview>("preview_rule", { accountId, ruleId, spec, folderId, all }),
+  runRuleNow: (accountId: string, ruleId: number, folderId: string | null) => call<number>("run_rule_now", { accountId, ruleId, folderId }),
+  ruleHistory: (accountId: string) => call<RuleRun[]>("rule_history", { accountId }),
+  undoRuleRun: (accountId: string, runId: number) => call<number>("undo_rule_run", { accountId, runId }),
+  ruleSuggestions: (messageId: string) => call<RuleSuggestions>("rule_suggestions", { messageId }),
 };
 
 /** Eventos emitidos pelo backend (US3). */
@@ -498,6 +582,8 @@ export interface BackendEvents {
   "tray-compose": null;
   /** Bloqueio, desbloqueio ou senha ligada e desligada (US10). */
   "lock-changed": LockStatus;
+  /** Regras agiram depois de uma sincronização (US12, CA6). */
+  "rules-applied": { accountId: string; count: number; moved: number; archived: number; deleted: number; runIds: number[] };
 }
 
 export function onBackendEvent<K extends keyof BackendEvents>(name: K, handler: (payload: BackendEvents[K]) => void): () => void {

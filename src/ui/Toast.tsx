@@ -11,6 +11,10 @@ interface ToastInput {
   title: string;
   description?: string;
   action?: { label: string; onClick: () => void };
+  /** Mais de uma ação (ex.: "Ver" e "Desfazer" das regras, US12). */
+  actions?: Array<{ label: string; onClick: () => void }>;
+  /** Ícone do sprite no lugar do ícone do tipo. */
+  icon?: string;
 }
 
 interface ToastItem extends ToastInput {
@@ -44,13 +48,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div className="toast-region" aria-live="polite">
         {toasts.map((t) => (
           <div key={t.id} className={["toast", t.kind !== "success" && `toast--${t.kind}`].filter(Boolean).join(" ")} role={t.kind === "error" ? "alert" : "status"}>
-            <Icon name={ICON[t.kind]} />
+            <Icon name={t.icon ?? ICON[t.kind]} />
             <div>
               <p className="toast__title">{t.title}</p>
               {t.description && <p className="toast__desc">{t.description}</p>}
-              {t.action && (
+              {(t.action || t.actions) && (
                 <div className="toast__actions">
-                  <button type="button" onClick={() => { dismiss(t.id); t.action!.onClick(); }}>{t.action.label}</button>
+                  {[...(t.action ? [t.action] : []), ...(t.actions ?? [])].map((a) => (
+                    <button key={a.label} type="button" onClick={() => { dismiss(t.id); a.onClick(); }}>{a.label}</button>
+                  ))}
                 </div>
               )}
             </div>

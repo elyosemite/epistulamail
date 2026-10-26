@@ -23,6 +23,8 @@ import { NotificationBell } from "./layout/NotificationBell";
 import { pickActive, visibleAccounts } from "./lib/accounts";
 import { applyAppearance, cachedAppearance, parseAppearance } from "./lib/appearance";
 import { LIST_DEFAULT } from "./lib/listWidth";
+import { appliedText, emailsLabel } from "./lib/rules";
+import type { RulesRequest } from "./features/rules/RulesSettings";
 import { api, onBackendEvent, type Account, type Appearance, type Connected, type NoticeTarget } from "./lib/tauri";
 import { AppBar } from "./ui/AppBar";
 import { Banner } from "./ui/Banner";
@@ -54,6 +56,8 @@ function Shell() {
   const [listWidth, setListWidth] = useState(LIST_DEFAULT);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState("general");
+  const [rulesRequest, setRulesRequest] = useState<RulesRequest | null>(null);
+  const rulesRequests = useRef(0);
   const [bellOpen, setBellOpen] = useState(false);
   // Pedido ao Mailbox: abrir uma pasta e mensagem (notificação) ou começar um e-mail (bandeja).
   const [request, setRequest] = useState<MailboxRequest | null>(null);
@@ -138,9 +142,39 @@ function Shell() {
   );
 
   const openSettings = useCallback((section = "general") => {
+    setRulesRequest(null);
     setSettingsSection(section);
     setSettingsOpen(true);
   }, []);
+
+  // Regras (US12): o editor ou o histórico abertos de fora das Configurações.
+  const openRules = useCallback((request: RulesRequest) => {
+    rulesRequests.current += 1;
+    setRulesRequest(request);
+    setSettingsSection("rules");
+    setSettingsOpen(true);
+  }, []);
+
+  // Aviso depois de uma sincronização em que regras agiram (CA6), com "Ver" e "Desfazer".
+  useEffect(() => onBackendEvent("rules-applied", (e) => {
+    toast({
+      kind: "info",
+      icon: "filter",
+      title: `Regras organizaram ${emailsLabel(e.count)}`,
+      description: appliedText(e),
+      actions: [
+        { label: "Ver", onClick: () => openRules({ accountId: e.accountId, history: true }) },
+        {
+          label: "Desfazer",
+          onClick: () => {
+            Promise.all(e.runIds.map((id) => api.undoRuleRun(e.accountId, id)))
+              .then((n) => toast({ kind: "success", title: `${emailsLabel(n.reduce((a, b) => a + b, 0))} voltaram para onde estavam` }))
+              .catch(() => toast({ kind: "error", title: "Não foi possível desfazer", description: "Tente pelo histórico das regras." }));
+          },
+        },
+      ],
+    });
+  }), [toast, openRules]);
 
   // Clique numa notificação (do Windows ou do sino): a conta, a pasta e a mensagem; "Reconecte" abre o login.
   const accountsRef = useRef(accounts);
@@ -332,6 +366,7 @@ function Shell() {
           onReconnect={() => setView({ kind: "reconnect", account: active })}
           onReaderOpenChange={onReaderOpenChange}
           appRequest={request}
+          onOpenRules={openRules}
         />
       )}
       {showMail && appearance.showReader && (
@@ -344,11 +379,13 @@ function Shell() {
       )}
       {settingsOpen && (
         <Settings
-          key={settingsSection}
+          key={rulesRequest ? `rules-${rulesRequests.current}` : settingsSection}
           accounts={accounts}
           appearance={appearance}
           onAppearance={changeAppearance}
           initialSection={settingsSection}
+          activeAccountId={active.id}
+          rulesRequest={rulesRequest}
           onClose={() => setSettingsOpen(false)}
         />
       )}
