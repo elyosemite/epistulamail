@@ -171,6 +171,8 @@ pub fn delete_key(conn: &Connection, fingerprint: &str) -> Result<(), AppError> 
 pub struct CryptoSettings {
     /// Impressão digital da minha chave usada por esta conta.
     pub pgp_key: Option<String>,
+    /// SHA-256 do meu certificado S/MIME usado por esta conta (US14).
+    pub smime_cert: Option<String>,
     /// Mensagens novas começam criptografadas.
     pub encrypt_new: bool,
     /// Ligar o cadeado sozinho quando todos os destinatários tiverem chave.
@@ -189,6 +191,7 @@ impl Default for CryptoSettings {
     fn default() -> Self {
         CryptoSettings {
             pgp_key: None,
+            smime_cert: None,
             encrypt_new: false,
             auto_encrypt: true,
             sign_unencrypted: false,
@@ -217,6 +220,16 @@ pub fn set_crypto_settings(conn: &Connection, account_id: &str, settings: &Crypt
     if let Some(fp) = &settings.pgp_key {
         let mine: bool = conn
             .query_row("SELECT secret_key IS NOT NULL FROM pgp_key WHERE fingerprint = ?1", [fp], |r| r.get(0))
+            .optional()
+            .map_err(sql_error("criptografia"))?
+            .unwrap_or(false);
+        if !mine {
+            return Err(AppError::InvalidInput);
+        }
+    }
+    if let Some(fp) = &settings.smime_cert {
+        let mine: bool = conn
+            .query_row("SELECT private_key IS NOT NULL FROM smime_cert WHERE fingerprint = ?1", [fp], |r| r.get(0))
             .optional()
             .map_err(sql_error("criptografia"))?
             .unwrap_or(false);

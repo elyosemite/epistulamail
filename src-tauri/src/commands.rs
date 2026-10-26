@@ -889,7 +889,8 @@ pub async fn get_crypto_settings(state: State<'_, AppState>, account_id: String)
 pub async fn set_crypto_settings(state: State<'_, AppState>, account_id: String, settings: pgp_store::CryptoSettings) -> Result<pgp_store::CryptoSettings, AppError> {
     let id = self::account_id(&account_id)?;
     let fp = settings.pgp_key.as_deref().map(self::fingerprint).transpose()?;
-    state.db.call(move |c| pgp_store::set_crypto_settings(c, &id, &pgp_store::CryptoSettings { pgp_key: fp, ..settings })).await
+    let cert = settings.smime_cert.as_deref().map(self::fingerprint).transpose()?;
+    state.db.call(move |c| pgp_store::set_crypto_settings(c, &id, &pgp_store::CryptoSettings { pgp_key: fp, smime_cert: cert, ..settings })).await
 }
 
 /// Quais destinatários têm chave aceita (CA6), para o cadeado de cada um no composer.
@@ -899,7 +900,146 @@ pub async fn recipients_key_status(state: State<'_, AppState>, addresses: Vec<St
         return Err(AppError::InvalidInput);
     }
     let addresses: Vec<String> = addresses.into_iter().map(|a| a.trim().to_lowercase()).collect();
-    state.db.call(move |c| crate::e2ee::recipient_status(c, &addresses)).await
+    let roots = crate::smime::system_roots();
+    state.db.call(move |c| crate::e2ee::recipient_status(c, &addresses, roots)).await
+}
+
+// ---------------------------------------------------------------- S/MIME (US14)
+
+#[tauri::command]
+pub async fn list_smime_certs(state: State<'_, AppState>) -> Result<Vec<crate::smime_store::SmimeCertRow>, AppError> {
+    let roots = crate::smime::system_roots();
+    let stored = state.db.call(|c| crate::smime_store::list_certs(c)).await?;
+    tokio::task::spawn_blocking(move || stored.iter().map(|s| s.row(roots)).collect()).await.map_err(|_| AppError::Storage)
+}
+
+#[tauri::command]
+pub async fn list_smime_requests(state: State<'_, AppState>) -> Result<Vec<crate::smime_store::SmimeRequestRow>, AppError> {
+    state.db.call(|c| crate::smime_store::list_requests(c)).await
+}
+
+/// Gera o par de chaves e o CSR para o e-mail da conta (CA1). O pedido fica aguardando o certificado.
+#[tauri::command]
+pub async fn create_smime_request(
+    state: State<'_, AppState>,
+    account_id: String,
+    kind: crate::smime::CertKind,
+    name: String,
+    organization: Option<String>,
+    country: Option<String>,
+) -> Result<crate::smime_store::SmimeRequestRow, AppError> {
+    let id = self::account_id(&account_id)?;
+    let lookup = id.clone();
+    let account = state.db.call(move |c| store::require_account(c, &lookup)).await?;
+    let email = account.email.trim().to_lowercase();
+    let short = |v: Option<String>, max: usize| v.map(|t| t.trim().chars().filter(|c| !c.is_control()).take(max).collect::<String>()).filter(|t| !t.is_empty());
+    let (name, organization, country) = (name.trim().chars().filter(|c| !c.is_control()).take(64).collect::<String>(), short(organization, 64), short(country, 2));
+    let (n, o, k, e) = (name.clone(), organization.clone(), country.clone(), email.clone());
+    // RSA 3072 leva alguns segundos: fora das threads do runtime.
+    let request = tokio::task::spawn_blocking(move || {
+        crate::smime::generate_request(kind, &crate::smime::Subject { name: &n, email: &e, organization: o.as_deref(), country: k.as_deref() })
+    })
+    .await
+    .map_err(|_| AppError::Storage)??;
+    let row = state
+        .db
+        .call(move |c| {
+            let new = crate::smime_store::NewRequest {
+                account_id: &id,
+                email: &email,
+                name: &name,
+                organization: organization.as_deref(),
+                country: country.as_deref(),
+                algorithm: kind.label(),
+            };
+            crate::smime_store::insert_request(c, &new, &request)
+        })
+        .await?;
+    tracing::info!(kind = ?kind, "pedido de certificado S/MIME criado");
+    Ok(row)
+}
+
+#[tauri::command]
+pub async fn delete_smime_request(state: State<'_, AppState>, id: i64) -> Result<(), AppError> {
+    state.db.call(move |c| crate::smime_store::delete_request(c, id)).await
+}
+
+/// Importa certificados (texto PEM, ou o arquivo binário em base64): o emitido para um pedido, um
+/// PKCS#12 com a senha ou o certificado de um contato. O meu passa a ser o da conta do mesmo e-mail que
+/// ainda não tiver um.
+#[tauri::command]
+pub async fn import_smime(state: State<'_, AppState>, data: String, binary: bool, password: Option<String>) -> Result<Vec<crate::smime_store::SmimeCertRow>, AppError> {
+    use base64::Engine;
+    if data.len() > 4 * 1024 * 1024 {
+        return Err(AppError::InvalidInput);
+    }
+    let bytes = if binary { base64::engine::general_purpose::STANDARD.decode(data.trim()).map_err(|_| AppError::InvalidInput)? } else { data.into_bytes() };
+    let password = password.map(zeroize::Zeroizing::new);
+    let stored = state
+        .db
+        .call(move |c| {
+            let stored = crate::e2ee::import_smime(c, &bytes, password.as_deref().map(String::as_str))?;
+            for s in stored.iter().filter(|s| s.private_key.is_some()) {
+                let emails = crate::smime::emails(&s.cert);
+                for account in store::list_accounts(c)? {
+                    let settings = pgp_store::crypto_settings(c, &account.id)?;
+                    if settings.smime_cert.is_none() && emails.contains(&account.email.trim().to_lowercase()) {
+                        let fp = crate::smime::fingerprint(&s.cert);
+                        pgp_store::set_crypto_settings(c, &account.id, &pgp_store::CryptoSettings { smime_cert: Some(fp), ..settings })?;
+                    }
+                }
+            }
+            Ok(stored)
+        })
+        .await?;
+    tracing::info!(count = stored.len(), "certificados S/MIME importados");
+    let roots = crate::smime::system_roots();
+    Ok(stored.iter().map(|s| s.row(roots)).collect())
+}
+
+/// O certificado público em PEM (`.cer`), para mandar a quem quiser cifrar para você.
+#[tauri::command]
+pub async fn export_smime_cert(state: State<'_, AppState>, fingerprint: String) -> Result<String, AppError> {
+    let fp = self::fingerprint(&fingerprint)?;
+    let stored = state.db.call(move |c| crate::smime_store::get_cert(c, &fp)).await?.ok_or(AppError::InvalidId)?;
+    crate::smime::cert_pem(&stored.cert)
+}
+
+/// Meu certificado com a chave e a cadeia, num PKCS#12 protegido pela senha dada (em base64).
+#[tauri::command]
+pub async fn export_smime_pkcs12(state: State<'_, AppState>, fingerprint: String, password: String) -> Result<String, AppError> {
+    use base64::Engine;
+    let fp = self::fingerprint(&fingerprint)?;
+    let password = zeroize::Zeroizing::new(password);
+    let stored = state.db.call(move |c| crate::smime_store::get_cert(c, &fp)).await?.ok_or(AppError::InvalidId)?;
+    let der = tokio::task::spawn_blocking(move || {
+        let key = crate::smime::private_key_from_der(stored.private_key.as_ref().ok_or(AppError::InvalidId)?)?;
+        crate::smime::export_pkcs12(&crate::smime::info(&stored.cert).subject, &key, &stored.cert, &stored.chain, &password)
+    })
+    .await
+    .map_err(|_| AppError::Storage)??;
+    tracing::info!("certificado S/MIME exportado com a chave");
+    Ok(base64::engine::general_purpose::STANDARD.encode(der))
+}
+
+/// Exclui um certificado. Um meu em uso por alguma conta deixa de ser usado.
+#[tauri::command]
+pub async fn delete_smime_cert(state: State<'_, AppState>, fingerprint: String) -> Result<(), AppError> {
+    let fp = self::fingerprint(&fingerprint)?;
+    state
+        .db
+        .call(move |c| {
+            for account in store::list_accounts(c)? {
+                let s = pgp_store::crypto_settings(c, &account.id)?;
+                if s.smime_cert.as_deref() == Some(fp.as_str()) {
+                    pgp_store::set_crypto_settings(c, &account.id, &pgp_store::CryptoSettings { smime_cert: None, ..s })?;
+                }
+            }
+            crate::smime_store::delete_cert(c, &fp)
+        })
+        .await?;
+    tracing::info!("certificado S/MIME excluído");
+    Ok(())
 }
 
 /// Busca a chave de um e-mail na internet (D5: a interface pede permissão antes) e a guarda como
@@ -1362,11 +1502,13 @@ pub struct SendRequest {
     pub body: String,
     #[serde(default)]
     pub keep_attachments: Vec<usize>,
-    /// Criptografar e assinar com OpenPGP (US13).
+    /// Criptografar e assinar (US13); `technology` "smime" usa S/MIME (US14), o resto OpenPGP.
     #[serde(default)]
     pub encrypt: bool,
     #[serde(default)]
     pub sign: bool,
+    #[serde(default)]
+    pub technology: Option<String>,
 }
 
 /// Valida e agenda o envio para depois do prazo do "Desfazer". O resultado chega pelo evento
@@ -1399,11 +1541,20 @@ pub async fn send_message(app: AppHandle, state: State<'_, AppState>, request: S
     // Mensagem criptografada é sempre assinada (US13, CA1).
     outgoing.encrypt = request.encrypt;
     outgoing.sign = request.sign || request.encrypt;
-    // Sem a chave de algum destinatário, o erro aparece já, e não depois do prazo do "Desfazer".
+    outgoing.smime = match request.technology.as_deref() {
+        None | Some("openpgp") => false,
+        Some("smime") => true,
+        Some(_) => return Err(AppError::InvalidInput),
+    };
+    // Sem a chave ou o certificado de algum destinatário, o erro aparece já, e não depois do prazo do "Desfazer".
     if outgoing.encrypt || outgoing.sign {
         let recipients: Vec<String> = outgoing.to.iter().chain(&outgoing.cc).chain(&outgoing.bcc).map(|m| m.email.to_string().to_lowercase()).collect();
-        let encrypt = outgoing.encrypt;
-        state.db.call(move |c| crate::e2ee::send_keys(c, &id, &recipients, encrypt).map(|_| ())).await?;
+        let (encrypt, smime) = (outgoing.encrypt, outgoing.smime);
+        let roots = crate::smime::system_roots();
+        state
+            .db
+            .call(move |c| if smime { crate::e2ee::smime_keys(c, &id, &recipients, encrypt, roots).map(|_| ()) } else { crate::e2ee::send_keys(c, &id, &recipients, encrypt).map(|_| ()) })
+            .await?;
     }
     Ok(send::schedule(&app, outgoing))
 }

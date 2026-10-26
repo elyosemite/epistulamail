@@ -142,7 +142,7 @@ Aqui o risco "colher agora, decifrar depois" é maior que no TLS (US11): **o pro
   - O rPGP não define validade ao gerar: as chaves novas saem sem validade, o assistente não pergunta, e "Mudar validade…" e "Revogar…" ainda não existem.
   - O cadeado na lista (`message.crypto`) e o assunto decifrado na lista (D7) ainda não são preenchidos na sincronização; a lista mostra o que o servidor tem ("..." para assunto protegido).
   - Chaves por Autocrypt só entram ao abrir a mensagem, não ao sincronizar.
-  - "Tecnologia preferida" fica escondida até a US14 (S/MIME), porque hoje só há OpenPGP.
+  - "Tecnologia preferida" voltou com a US14 (S/MIME).
   - O aviso de "contato trocou de chave" ainda não existe.
 - **Testes:** 174 no Rust e 88 no frontend passam; clippy, typecheck e build sem avisos.
 - **Falta (manual):** trocar mensagens com o Thunderbird e o Kleopatra (cifrada, assinada, Autocrypt e chave anexada), restaurar um backup em outro computador, a busca WKD num domínio real, e conferir que salvar arquivo e ler a área de transferência funcionam no WebView2.

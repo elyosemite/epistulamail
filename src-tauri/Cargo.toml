@@ -52,6 +52,11 @@ sha1 = "0.10"
 rsa = { version = "0.9", default-features = false }
 chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 tauri-plugin-single-instance = "2"
+# S/MIME (US14, D2 da US13): o mesmo OpenSSL que o SQLCipher já compila (CMS, PKCS#12, X.509, CSR).
+openssl = "0.10"
+# Duas funções do CMS que o crate `openssl` não expõe (quem assinou e os certificados que vieram junto).
+openssl-sys = "0.9"
+foreign-types = "0.3"
 
 [dev-dependencies]
 proptest = "1"
@@ -59,6 +64,8 @@ tempfile = "3"
 
 [target."cfg(windows)".dependencies]
 tauri-winrt-notification = "0.8.1"
+# Raízes de confiança do Windows para o S/MIME (US14, D6 da US13).
+schannel = "0.1"
 # Tirar o app dos relatórios de erro do Windows (US10, CA5).
 windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_ErrorReporting", "Win32_System_StationsAndDesktops"] }
 

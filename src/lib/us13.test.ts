@@ -6,6 +6,7 @@ const FP = "7A3F91C20BD455E8A1C06B2DEE41C8F03D9E2F17";
 
 const settings: CryptoSettings = {
   pgpKey: FP,
+  smimeCert: null,
   encryptNew: false,
   autoEncrypt: true,
   signUnencrypted: false,
@@ -55,7 +56,7 @@ describe("US13 · chaves", () => {
 
 describe("US13 · leitura", () => {
   const sec = (s: Partial<MessageSecurity>): MessageSecurity => ({
-    technology: "openpgp", encrypted: true, decrypted: true, postQuantum: false, signature: { state: "unsigned" }, signerAcceptance: null, ...s,
+    technology: "openpgp", encrypted: true, decrypted: true, postQuantum: false, signature: { state: "unsigned" }, signerAcceptance: null, certificate: null, ...s,
   });
 
   it("verde só com assinatura boa e chave conferida", () => {
@@ -73,7 +74,7 @@ describe("US13 · leitura", () => {
 });
 
 describe("US13 · composer", () => {
-  const status = [{ address: "ana@x.com", hasKey: true, postQuantum: false }, { address: "rafael@x.com", hasKey: false, postQuantum: false }];
+  const status = [{ address: "ana@x.com", hasKey: true, postQuantum: false, hasCertificate: false }, { address: "rafael@x.com", hasKey: false, postQuantum: false, hasCertificate: false }];
 
   it("liga sozinho quando todos têm chave", () => {
     expect(composeSecurity(settings, true, ["Ana <ana@x.com>"], status, {}, false)).toEqual({ encrypt: true, sign: true, missing: [] });

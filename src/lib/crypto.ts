@@ -1,5 +1,6 @@
-// Criptografia de ponta a ponta (US13): selos de leitura, rótulos do chaveiro, impressão digital e o cadeado do composer.
-import type { CryptoSettings, MessageSecurity, PgpAcceptance, PgpKey, PgpKeyKind, RecipientKey } from "./tauri";
+// Criptografia de ponta a ponta (US13, US14): selos de leitura, rótulos do chaveiro e dos certificados, impressão digital e
+// o cadeado do composer.
+import type { CryptoSettings, CryptoTechnology, MessageSecurity, PgpAcceptance, PgpKey, PgpKeyKind, RecipientKey, SmimeCert, SmimeCertKind } from "./tauri";
 
 /** "7A3F 91C2 0BD4 …": a impressão digital em grupos de 4. */
 export function fingerprintGroups(fingerprint: string): string[] {
@@ -63,26 +64,37 @@ export interface Badge {
   icon: string;
 }
 
-/** Selos de uma mensagem aberta (CA7). Verde só para assinatura boa com chave conferida. */
+/** Selo da assinatura boa: OpenPGP pela aceitação da chave; S/MIME pela cadeia e pelo e-mail do certificado (US14). */
+function goodSignature(s: MessageSecurity): Badge {
+  if (s.technology === "smime") {
+    const c = s.certificate;
+    if (!c || c.trust === "untrusted") return { text: "Assinada · emissor não confiável", tone: "warning", icon: "signature" };
+    if (c.trust === "expired") return { text: "Assinada · certificado vencido", tone: "warning", icon: "signature" };
+    if (!c.emailMatches) return { text: "Assinada · certificado de outro e-mail", tone: "warning", icon: "signature" };
+    return { text: "Assinatura verificada", tone: "success", icon: "badge-check" };
+  }
+  return s.signerAcceptance === "verified"
+    ? { text: "Assinatura verificada", tone: "success", icon: "badge-check" }
+    : { text: s.signerAcceptance === "unverified" ? "Assinada · chave aceita sem conferir" : "Assinada · chave ainda não aceita", tone: "info", icon: "signature" };
+}
+
+/** Selos de uma mensagem aberta (CA7). Verde só para assinatura boa com chave conferida ou certificado confiável. */
 export function securityBadges(s: MessageSecurity): Badge[] {
   const out: Badge[] = [];
+  const signature = s.signature.state === "good" ? goodSignature(s) : null;
   if (s.encrypted) {
     out.push(
       s.decrypted
-        ? { text: s.postQuantum ? "Criptografada · pós-quântica" : "Criptografada", tone: s.signature.state === "good" && s.signerAcceptance === "verified" ? "success" : "info", icon: "lock" }
+        ? { text: s.postQuantum ? "Criptografada · pós-quântica" : "Criptografada", tone: signature?.tone === "success" ? "success" : "info", icon: "lock" }
         : { text: "Não foi possível abrir", tone: "warning", icon: "lock" },
     );
   }
   switch (s.signature.state) {
     case "good":
-      out.push(
-        s.signerAcceptance === "verified"
-          ? { text: "Assinatura verificada", tone: "success", icon: "badge-check" }
-          : { text: s.signerAcceptance === "unverified" ? "Assinada · chave aceita sem conferir" : "Assinada · chave ainda não aceita", tone: "info", icon: "signature" },
-      );
+      out.push(signature!);
       break;
     case "unknown_key":
-      out.push({ text: "Assinada · chave desconhecida", tone: "info", icon: "signature" });
+      out.push({ text: s.technology === "smime" ? "Assinada · certificado desconhecido" : "Assinada · chave desconhecida", tone: "info", icon: "signature" });
       break;
     case "bad":
       out.push({ text: "Assinatura inválida", tone: "danger", icon: "error" });
@@ -105,6 +117,30 @@ export interface ComposeSecurity {
   missing: string[];
 }
 
+/** Com S/MIME, vale o certificado; com OpenPGP, a chave. */
+export const hasCredential = (s: RecipientKey, technology: CryptoTechnology) => (technology === "smime" ? s.hasCertificate : s.hasKey);
+
+/**
+ * Tecnologia do envio (US14, CA3): a que a conta tem; com as duas, a preferida, e no "automático" a que todos os destinatários
+ * têm (OpenPGP no empate). A escolha do usuário no composer vale sobre tudo, desde que a conta tenha a credencial.
+ */
+export function pickTechnology(
+  settings: CryptoSettings | null,
+  recipients: string[],
+  status: RecipientKey[],
+  choice?: CryptoTechnology,
+): CryptoTechnology | null {
+  const pgp = !!settings?.pgpKey;
+  const smime = !!settings?.smimeCert;
+  if (!settings || (!pgp && !smime)) return null;
+  if (!pgp || !smime) return pgp ? "openpgp" : "smime";
+  if (choice) return choice;
+  if (settings.technology !== "auto") return settings.technology;
+  const addresses = recipients.map(addressOf).filter(Boolean);
+  const all = (t: CryptoTechnology) => addresses.length > 0 && addresses.every((a) => status.some((s) => s.address === a && hasCredential(s, t)));
+  return !all("openpgp") && all("smime") ? "smime" : "openpgp";
+}
+
 /**
  * O cadeado começa como a conta manda, liga sozinho quando todos têm chave (se a conta pedir) e sempre liga na resposta a uma
  * mensagem criptografada. A escolha do usuário (`choice`) vale sobre tudo isso. Sem chave minha, nada liga.
@@ -116,9 +152,10 @@ export function composeSecurity(
   status: RecipientKey[],
   choice: { encrypt?: boolean; sign?: boolean },
   replyingToEncrypted: boolean,
+  technology: CryptoTechnology = "openpgp",
 ): ComposeSecurity {
   if (!settings || !hasOwnKey) return { encrypt: false, sign: false, missing: [] };
-  const known = new Map(status.map((s) => [s.address, s.hasKey]));
+  const known = new Map(status.map((s) => [s.address, hasCredential(s, technology)]));
   const addresses = recipients.map(addressOf).filter(Boolean);
   const allHaveKeys = addresses.length > 0 && addresses.every((a) => known.get(a) === true);
   const automatic = settings.encryptNew || replyingToEncrypted || (settings.autoEncrypt && allHaveKeys);
@@ -140,3 +177,47 @@ export function keyDate(seconds: number | null): string {
   if (seconds === null) return "Sem validade";
   return new Date(seconds * 1000).toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" }).replace(".", "").replace(/ de /g, " ");
 }
+
+// ---------------------------------------------------------------- S/MIME (US14)
+
+export const CERT_KINDS: Array<{ value: SmimeCertKind; label: string }> = [
+  { value: "rsa3072", label: "RSA 3072 (recomendado, aceito por todas as autoridades)" },
+  { value: "p256", label: "ECDSA P-256" },
+];
+
+export const COUNTRIES = [
+  { value: "BR", label: "Brasil (BR)" },
+  { value: "PT", label: "Portugal (PT)" },
+  { value: "AO", label: "Angola (AO)" },
+  { value: "MZ", label: "Moçambique (MZ)" },
+  { value: "US", label: "Estados Unidos (US)" },
+  { value: "", label: "Não informar" },
+];
+
+/** Situação de um certificado no gerenciador (lozenge). */
+export function certStatus(cert: SmimeCert, now = Date.now() / 1000): { text: string; tone: "success" | "inprogress" | "default" | "removed" } {
+  if (cert.notAfter <= now) return { text: "Vencido", tone: "removed" };
+  if (cert.notBefore > now) return { text: "Ainda não vale", tone: "default" };
+  if (cert.trust !== "trusted") return { text: "Emissor não confiável", tone: "default" };
+  return cert.mine ? { text: "Meu", tone: "success" } : { text: "Confiável", tone: "success" };
+}
+
+export function certUsage(cert: SmimeCert): string {
+  if (cert.canSign && cert.canEncrypt) return "Assinar e criptografar";
+  if (cert.canSign) return "Só assinar";
+  if (cert.canEncrypt) return "Só criptografar";
+  return "Sem uso para e-mail";
+}
+
+export const TRUST_LABEL: Record<SmimeCert["trust"], string> = {
+  trusted: "Confiável (raiz no Windows)",
+  expired: "Vencida",
+  untrusted: "Não confiável: a raiz não está no Windows",
+};
+
+export const CERT_ORIGIN: Record<SmimeCert["origin"], string> = {
+  request: "Pedido feito neste computador",
+  imported: "Importado de um arquivo",
+  pkcs12: "Importado com a chave (.p12)",
+  message: "Assinatura de uma mensagem",
+};

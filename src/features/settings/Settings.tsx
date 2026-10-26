@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Account, Appearance } from "../../lib/tauri";
 import { CryptoSettings } from "../crypto/CryptoSettings";
+import { CertManager } from "../crypto/CertManager";
 import { KeyManager } from "../crypto/KeyManager";
 import { EmptyState } from "../../ui/EmptyState";
 import { ManagerSheet, SettingsSheet, SettingsTitle, type SettingsSection } from "../../ui/SettingsSheet";
@@ -39,23 +40,27 @@ interface SettingsProps {
   activeAccountId: string;
   /** Editor ou histórico das regras pedidos de fora ("Mais opções", "Ver"). */
   rulesRequest?: RulesRequest | null;
-  /** Abre direto no gerenciador de chaves, numa chave ("Ver no gerenciador de chaves" da leitura, US13). */
-  keysRequest?: { fingerprint: string | null } | null;
+  /** Abre direto no gerenciador de chaves (US13) ou de certificados (US14), numa chave ("Ver no gerenciador" da leitura). */
+  keysRequest?: { fingerprint: string | null; technology?: "openpgp" | "smime" } | null;
   onClose: () => void;
 }
 
 /** Configurações (US5, CA6): seções à esquerda, opções da seção à direita. Abrem em Geral (US7, CA4). */
 export function Settings({ accounts, appearance, onAppearance, initialSection = "general", activeAccountId, rulesRequest, keysRequest, onClose }: SettingsProps) {
   const [section, setSection] = useState(keysRequest ? "crypto" : initialSection);
-  const [manager, setManager] = useState<{ accountId: string; fingerprint: string | null } | null>(
-    keysRequest ? { accountId: activeAccountId, fingerprint: keysRequest.fingerprint } : null,
+  const [manager, setManager] = useState<{ accountId: string; fingerprint: string | null; technology: "openpgp" | "smime" } | null>(
+    keysRequest ? { accountId: activeAccountId, fingerprint: keysRequest.fingerprint, technology: keysRequest.technology ?? "openpgp" } : null,
   );
   const current = SECTIONS.find((s) => s.id === section)!;
   const managerAccount = manager && (accounts.find((a) => a.id === manager.accountId) ?? accounts[0]);
   if (managerAccount) {
     return (
-      <ManagerSheet title="Chaves OpenPGP" onBack={() => setManager(null)} onClose={onClose}>
-        <KeyManager account={managerAccount} initialKey={manager.fingerprint} />
+      <ManagerSheet title={manager.technology === "smime" ? "Certificados S/MIME" : "Chaves OpenPGP"} onBack={() => setManager(null)} onClose={onClose}>
+        {manager.technology === "smime" ? (
+          <CertManager account={managerAccount} initialCert={manager.fingerprint} />
+        ) : (
+          <KeyManager account={managerAccount} initialKey={manager.fingerprint} />
+        )}
       </ManagerSheet>
     );
   }
@@ -76,7 +81,9 @@ export function Settings({ accounts, appearance, onAppearance, initialSection = 
       ) : section === "rules" ? (
         <RulesSettings accounts={accounts} initialAccountId={activeAccountId} request={rulesRequest} />
       ) : section === "crypto" ? (
-        <CryptoSettings accounts={accounts} initialAccountId={activeAccountId} onManageKeys={(accountId) => setManager({ accountId, fingerprint: null })} />
+        <CryptoSettings accounts={accounts} initialAccountId={activeAccountId} onManageKeys={(accountId) => setManager({ accountId, fingerprint: null, technology: "openpgp" })}
+          onManageCerts={(accountId) => setManager({ accountId, fingerprint: null, technology: "smime" })}
+        />
       ) : section === "appearance" ? (
         <AppearanceSettings appearance={appearance} onChange={onAppearance} />
       ) : (

@@ -84,9 +84,10 @@ export interface SendRequest {
   body: string;
   /** Encaminhar: posições dos anexos da original que vão junto. */
   keepAttachments: number[];
-  /** OpenPGP (US13): cifrar implica assinar. */
+  /** OpenPGP (US13) ou S/MIME (US14): cifrar implica assinar. */
   encrypt: boolean;
   sign: boolean;
+  technology: CryptoTechnology;
 }
 
 export interface ProviderInfo {
@@ -213,9 +214,13 @@ export interface PgpKey {
   mine: boolean;
 }
 
+export type CryptoTechnology = "openpgp" | "smime";
+
 /** Configurações → Criptografia, por conta (CA1). */
 export interface CryptoSettings {
   pgpKey: string | null;
+  /** SHA-256 do meu certificado S/MIME (US14). */
+  smimeCert: string | null;
   encryptNew: boolean;
   autoEncrypt: boolean;
   signUnencrypted: boolean;
@@ -230,6 +235,57 @@ export interface RecipientKey {
   address: string;
   hasKey: boolean;
   postQuantum: boolean;
+  /** Certificado S/MIME confiável, que serve para cifrar (US14). */
+  hasCertificate: boolean;
+}
+
+/** S/MIME (US14): pedido de certificado. */
+export type SmimeCertKind = "rsa3072" | "p256";
+export type SmimeTrust = "trusted" | "expired" | "untrusted";
+
+export interface SmimeCert {
+  /** SHA-256, hexadecimal maiúsculo. */
+  fingerprint: string;
+  subject: string;
+  organization: string | null;
+  emails: string[];
+  issuer: string;
+  serial: string;
+  algorithm: string;
+  /** Segundos desde 1970. */
+  notBefore: number;
+  notAfter: number;
+  canSign: boolean;
+  canEncrypt: boolean;
+  selfSigned: boolean;
+  origin: "request" | "imported" | "pkcs12" | "message";
+  addedAt: number;
+  /** Tem a chave privada. */
+  mine: boolean;
+  trust: SmimeTrust;
+  /** Titulares da cadeia, do emissor até a raiz. */
+  chain: string[];
+}
+
+export interface SmimeRequest {
+  id: number;
+  accountId: string;
+  email: string;
+  name: string;
+  organization: string | null;
+  country: string | null;
+  algorithm: string;
+  csrPem: string;
+  createdAt: number;
+}
+
+/** Certificado de quem assinou uma mensagem S/MIME. */
+export interface CertCheck {
+  subject: string;
+  issuer: string;
+  trust: SmimeTrust;
+  emailMatches: boolean;
+  notAfter: number;
 }
 
 export type Verification =
@@ -240,12 +296,13 @@ export type Verification =
 
 /** Segurança de uma mensagem aberta (CA7). */
 export interface MessageSecurity {
-  technology: "openpgp";
+  technology: CryptoTechnology;
   encrypted: boolean;
   decrypted: boolean;
   postQuantum: boolean;
   signature: Verification;
   signerAcceptance: PgpAcceptance | null;
+  certificate: CertCheck | null;
 }
 
 /** Regras (US12): campo, operador e valor de uma condição. */
@@ -508,7 +565,10 @@ export type AppErrorKind =
   | "WeakPassword"
   | "NoKeyForMessage"
   | "NoOwnKey"
-  | "MissingRecipientKey";
+  | "MissingRecipientKey"
+  | "NoOwnCertificate"
+  | "MissingRecipientCertificate"
+  | "CertificateEmailMismatch";
 
 export interface AppError {
   kind: AppErrorKind;
@@ -641,6 +701,17 @@ export const api = {
   recipientsKeyStatus: (addresses: string[]) => call<RecipientKey[]>("recipients_key_status", { addresses }),
   /** Busca na internet (WKD e keys.openpgp.org): só depois de o usuário permitir (D5). */
   searchPgpKey: (email: string) => call<PgpKey[]>("search_pgp_key", { email }),
+  listSmimeCerts: () => call<SmimeCert[]>("list_smime_certs"),
+  listSmimeRequests: () => call<SmimeRequest[]>("list_smime_requests"),
+  createSmimeRequest: (accountId: string, kind: SmimeCertKind, name: string, organization: string | null, country: string | null) =>
+    call<SmimeRequest>("create_smime_request", { accountId, kind, name, organization, country }),
+  deleteSmimeRequest: (id: number) => call<void>("delete_smime_request", { id }),
+  /** Texto PEM, ou o arquivo binário em base64 (`binary`); `password` para PKCS#12. */
+  importSmime: (data: string, binary: boolean, password: string | null = null) => call<SmimeCert[]>("import_smime", { data, binary, password }),
+  exportSmimeCert: (fingerprint: string) => call<string>("export_smime_cert", { fingerprint }),
+  /** PKCS#12 em base64. */
+  exportSmimePkcs12: (fingerprint: string, password: string) => call<string>("export_smime_pkcs12", { fingerprint, password }),
+  deleteSmimeCert: (fingerprint: string) => call<void>("delete_smime_cert", { fingerprint }),
 };
 
 /** Eventos emitidos pelo backend (US3). */

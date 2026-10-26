@@ -1,8 +1,9 @@
-// Cadeado do composer (US13, CA6): configurações da conta, chaves dos destinatários e a busca na internet consentida (D5).
+// Cadeado do composer (US13, CA6): configurações da conta, chaves e certificados dos destinatários, a tecnologia (US14) e a
+// busca na internet consentida (D5).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { composeSecurity } from "../../lib/crypto";
+import { composeSecurity, hasCredential, pickTechnology } from "../../lib/crypto";
 import { parseRecipient } from "../../lib/recipients";
-import { api, type CryptoSettings, type PgpKey, type RecipientKey } from "../../lib/tauri";
+import { api, type CryptoSettings, type CryptoTechnology, type PgpKey, type RecipientKey } from "../../lib/tauri";
 
 const STATUS_DELAY_MS = 300;
 
@@ -10,6 +11,7 @@ export function useComposeSecurity(accountId: string, recipients: string[], repl
   const [settings, setSettings] = useState<CryptoSettings | null>(null);
   const [status, setStatus] = useState<RecipientKey[]>([]);
   const [choice, setChoice] = useState<{ encrypt?: boolean; sign?: boolean }>({});
+  const [technologyChoice, setTechnology] = useState<CryptoTechnology | undefined>();
   const [found, setFound] = useState<PgpKey[]>([]);
   const [searching, setSearching] = useState(false);
   const searched = useRef(new Set<string>());
@@ -35,9 +37,12 @@ export function useComposeSecurity(accountId: string, recipients: string[], repl
     return () => clearTimeout(t);
   }, [refresh]);
 
-  const hasOwnKey = !!settings?.pgpKey;
-  const security = composeSecurity(settings, hasOwnKey, recipients, status, choice, replyingToEncrypted);
-  const keys = useMemo(() => (security.encrypt ? new Map(status.map((s) => [s.address, s.hasKey])) : null), [security.encrypt, status]);
+  const technology = pickTechnology(settings, recipients, status, technologyChoice);
+  const security = composeSecurity(settings, technology !== null, recipients, status, choice, replyingToEncrypted, technology ?? "openpgp");
+  const keys = useMemo(
+    () => (security.encrypt && technology ? new Map(status.map((s) => [s.address, hasCredential(s, technology)])) : null),
+    [security.encrypt, status, technology],
+  );
 
   /** Busca as chaves que faltam (WKD e keys.openpgp.org). Chamar só com o consentimento. */
   const search = useCallback(async (missing: string[]) => {
@@ -60,10 +65,10 @@ export function useComposeSecurity(accountId: string, recipients: string[], repl
   // "Sempre": busca sozinha, uma vez por endereço.
   const missingKey = security.missing.join(",");
   useEffect(() => {
-    if (settings?.searchOnline !== "always") return;
+    if (settings?.searchOnline !== "always" || technology !== "openpgp") return;
     const pending = security.missing.filter((a) => !searched.current.has(a));
     if (pending.length > 0) void search(pending);
-  }, [settings?.searchOnline, missingKey, search]);
+  }, [settings?.searchOnline, missingKey, search, technology]);
 
   const accept = useCallback(async (fingerprints: string[]) => {
     await Promise.all(fingerprints.map((fp) => api.setPgpAcceptance(fp, "unverified")));
@@ -74,7 +79,11 @@ export function useComposeSecurity(accountId: string, recipients: string[], repl
   const foundForMissing = found.filter((k) => k.acceptance === "undecided" && security.missing.some((a) => k.emails.includes(a)));
 
   return {
-    enabled: hasOwnKey,
+    enabled: technology !== null,
+    technology,
+    /** A conta tem as duas: o composer mostra "Trocar". */
+    canSwitch: !!settings?.pgpKey && !!settings?.smimeCert,
+    setTechnology,
     settings,
     security,
     keys,
@@ -82,7 +91,7 @@ export function useComposeSecurity(accountId: string, recipients: string[], repl
     search,
     searching,
     searchedAll: security.missing.every((a) => searched.current.has(a)),
-    found: foundForMissing,
+    found: technology === "openpgp" ? foundForMissing : [],
     accept,
   };
 }

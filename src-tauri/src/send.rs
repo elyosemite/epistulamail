@@ -52,17 +52,20 @@ pub struct Outgoing {
     pub body: String,
     /// Posições (em `attachments()` da original) dos anexos que o encaminhamento leva.
     pub keep_attachments: Vec<usize>,
-    /// Criptografar e assinar com OpenPGP (US13, CA6).
+    /// Criptografar e assinar (US13, CA6), com OpenPGP ou, com `smime`, com S/MIME (US14).
     pub encrypt: bool,
     pub sign: bool,
+    pub smime: bool,
 }
 
 /// O que a criptografia precisa para montar a mensagem (US13).
 pub struct Crypto {
     pub encrypt: bool,
     pub sign: bool,
-    /// Minha chave e as dos destinatários; só quando cifra ou assina.
+    /// Minha chave e as dos destinatários; só quando cifra ou assina com OpenPGP.
     pub keys: Option<crate::e2ee::SendKeys>,
+    /// Meu certificado e os dos destinatários; só quando cifra ou assina com S/MIME.
+    pub smime: Option<crate::e2ee::SmimeKeys>,
     /// Minha chave pública (binária), para o Autocrypt e o anexo.
     pub own_public: Option<Vec<u8>>,
     pub settings: crate::pgp_store::CryptoSettings,
@@ -107,7 +110,7 @@ pub fn validate(
     }
     // Quebras de linha no assunto viram espaço (a lettre codifica o resto).
     let subject = subject.chars().map(|c| if c.is_control() { ' ' } else { c }).collect::<String>().trim().to_owned();
-    Ok(Outgoing { account_id, kind, original, to, cc, bcc, subject, body, keep_attachments, encrypt: false, sign: false })
+    Ok(Outgoing { account_id, kind, original, to, cc, bcc, subject, body, keep_attachments, encrypt: false, sign: false, smime: false })
 }
 
 /// Agenda o envio para depois do prazo do "Desfazer" e devolve o id para cancelar.
@@ -219,7 +222,8 @@ pub fn build(from: Mailbox, outgoing: &Outgoing, original: Option<&[u8]>) -> Res
 /// Monta a mensagem, cifrada, assinada ou com Autocrypt quando `crypto` pede.
 pub fn build_with(from: Mailbox, outgoing: &Outgoing, original: Option<&[u8]>, crypto: Option<&Crypto>) -> Result<Message, AppError> {
     let encrypting = crypto.is_some_and(|c| c.encrypt);
-    let hide_subject = encrypting && crypto.is_some_and(|c| c.settings.encrypt_subject);
+    // S/MIME mantém o assunto: Outlook e Apple Mail não leem o assunto protegido (D2 da US14).
+    let hide_subject = encrypting && crypto.is_some_and(|c| c.settings.encrypt_subject && c.smime.is_none());
     let from_address = from.email.to_string();
     let outer_subject = if hide_subject { crate::pgp_mime::HIDDEN_SUBJECT.to_owned() } else { outgoing.subject.clone() };
     let mut builder = Message::builder().message_id(Some(new_message_id(&from))).from(from).subject(outer_subject).date_now();
@@ -283,6 +287,24 @@ pub fn build_with(from: Mailbox, outgoing: &Outgoing, original: Option<&[u8]>, c
         }
         crate::pgp_mime::Inner::Multi(mixed)
     };
+    if let Some((c, keys)) = crypto.and_then(|c| c.smime.as_ref().map(|k| (c, k))) {
+        // Assinada sempre que cifrada; cifrar envolve a parte já assinada (RFC 8551, seção 3.7).
+        let signed = crate::pgp_mime::canonical(&inner.formatted());
+        let signature = crate::smime::sign_detached(&signed, &keys.cert, &keys.key, &keys.chain)?;
+        let entity = crate::smime_mime::signed_entity(&signed, &signature);
+        let result = if c.encrypt {
+            let der = crate::smime::encrypt(&entity.bytes(), &keys.recipients)?;
+            let (content_type, body, [(name, value)]) = crate::smime_mime::enveloped_entity(&der);
+            builder.header(content_type).raw_header(lettre::message::header::HeaderValue::new(lettre::message::header::HeaderName::new_from_ascii_str(name), value.to_owned())).body(body)
+        } else {
+            let (content_type, body) = entity.into_lettre();
+            builder.header(content_type).body(body)
+        };
+        return result.map_err(|e| {
+            tracing::warn!(error = %e, "mensagem não pôde ser montada");
+            AppError::InvalidInput
+        });
+    }
     let result = match crypto.and_then(|c| c.keys.as_ref().map(|k| (c, k))) {
         Some((c, keys)) if c.encrypt => {
             let mut body = inner.formatted();
@@ -312,23 +334,26 @@ pub fn build_with(from: Mailbox, outgoing: &Outgoing, original: Option<&[u8]>, c
 /// Configurações e chaves da conta para o envio. Cifrar sem a chave de algum destinatário falha
 /// antes de qualquer coisa sair (US13, regra 3).
 async fn load_crypto(state: &AppState, outgoing: &Outgoing) -> Result<Crypto, AppError> {
-    let (id, encrypt, sign) = (outgoing.account_id.clone(), outgoing.encrypt, outgoing.sign);
+    let (id, encrypt, sign, smime) = (outgoing.account_id.clone(), outgoing.encrypt, outgoing.sign, outgoing.smime);
+    let roots = crate::smime::system_roots();
     let recipients: Vec<String> = outgoing.to.iter().chain(&outgoing.cc).chain(&outgoing.bcc).map(|m| m.email.to_string().to_lowercase()).collect();
     let loaded = state
         .db
         .call(move |c| {
             let settings = crate::pgp_store::crypto_settings(c, &id)?;
-            let keys = if encrypt || sign { Some(crate::e2ee::send_keys(c, &id, &recipients, encrypt)?) } else { None };
+            let wants = encrypt || sign;
+            let keys = if wants && !smime { Some(crate::e2ee::send_keys(c, &id, &recipients, encrypt)?) } else { None };
+            let certs = if wants && smime { Some(crate::e2ee::smime_keys(c, &id, &recipients, encrypt, roots)?) } else { None };
             let own_public = match &settings.pgp_key {
                 Some(fp) => crate::pgp_store::public_key(c, fp)?,
                 None => None,
             };
-            Ok((settings, keys, own_public))
+            Ok((settings, keys, certs, own_public))
         })
         .await?;
-    let (settings, keys, own_public) = loaded;
-    tracing::info!(encrypt, sign, "envio com OpenPGP preparado");
-    Ok(Crypto { encrypt, sign, keys, own_public, settings })
+    let (settings, keys, certs, own_public) = loaded;
+    tracing::info!(encrypt, sign, smime, "envio com criptografia preparado");
+    Ok(Crypto { encrypt, sign, keys, smime: certs, own_public, settings })
 }
 
 async fn deliver(state: &AppState, outgoing: &Outgoing) -> Result<(), AppError> {
@@ -466,5 +491,26 @@ x";
     fn thread_headers_without_message_id() {
         assert_eq!(thread_headers(b"Subject: s\r\n\r\nx"), None);
         assert_eq!(thread_headers(b"Message-ID: <a@b>\r\n\r\nx"), Some(("<a@b>".into(), "<a@b>".into())));
+    }
+    #[test]
+    fn smime_message_is_signed_inside_the_envelope_and_keeps_the_subject() {
+        use crate::smime::tests::{person, test_ca};
+        use crate::smime::{self, CertKind, Checked};
+        use crate::smime_mime::{self, Found};
+        let (ca, ca_key) = test_ca();
+        let (me, my_key) = person("eu@x.com", CertKind::Rsa3072, &ca, &ca_key);
+        let (ana, ana_key) = person("ana@lumen.com.br", CertKind::P256, &ca, &ca_key);
+        let keys = crate::e2ee::SmimeKeys { cert: me.clone(), key: my_key, chain: vec![ca.clone()], recipients: vec![ana.clone(), me.clone()] };
+        let crypto = Crypto { encrypt: true, sign: true, keys: None, smime: Some(keys), own_public: None, settings: crate::pgp_store::CryptoSettings::default() };
+        let from = Mailbox::new(None, "eu@x.com".parse().unwrap());
+        let raw = build_with(from, &outgoing(DraftKind::New), None, Some(&crypto)).unwrap().formatted();
+        let text = String::from_utf8_lossy(&raw);
+        assert!(text.contains("smime-type=enveloped-data") && !text.contains("Oi, Ana"));
+        assert!(text.contains("Subject: Re: Contrato"), "o assunto fica no S/MIME");
+        let Found::Enveloped(der) = smime_mime::find(&raw) else { panic!("esperava cifrada") };
+        let inner = smime::decrypt(&der, &[(ana, ana_key)]).unwrap();
+        let Found::Signed { content, signature, .. } = smime_mime::find(&inner) else { panic!("esperava assinada por dentro") };
+        assert!(matches!(smime::verify(&signature, Some(&content), &[]), Checked::Good { .. }));
+        assert!(String::from_utf8_lossy(&content).contains("Oi, Ana."));
     }
 }

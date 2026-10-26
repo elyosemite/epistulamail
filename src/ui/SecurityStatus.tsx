@@ -7,7 +7,9 @@ import { Fingerprint } from "./Fingerprint";
 import { Icon } from "./Icon";
 import { MenuPanel, anchorBelow, type Anchor } from "./Menu";
 
-const TECH = { openpgp: "OpenPGP" } as const;
+const TECH = { openpgp: "OpenPGP", smime: "S/MIME" } as const;
+
+const TRUST = { trusted: "Confiável (raiz no Windows)", expired: "Vencida", untrusted: "Não confiável: a raiz não está no Windows" } as const;
 
 /** Selos de segurança abaixo do remetente; clicar abre os detalhes. */
 export function SecurityStatus({ security, onManageKeys }: { security: MessageSecurity; onManageKeys?: () => void }) {
@@ -41,18 +43,32 @@ export function SecurityStatus({ security, onManageKeys }: { security: MessageSe
               <dd style={{ margin: 0 }}>{security.encrypted ? (security.decrypted ? (security.postQuantum ? "Pós-quântica (ML-KEM-768 + X25519)" : "Sim") : "Sim, mas nenhuma das suas chaves abre") : "Não"}</dd>
               <dt style={{ color: "var(--color-text-subtlest)" }}>Assinatura</dt>
               <dd style={{ margin: 0 }}>
-                {signature.state === "good" ? "Confere" : signature.state === "bad" ? "Não confere: o conteúdo pode ter sido alterado" : signature.state === "unknown_key" ? "A chave de quem assinou não está aqui" : "Sem assinatura"}
+                {signature.state === "good"
+                  ? "Confere"
+                  : signature.state === "bad"
+                    ? "Não confere: o conteúdo pode ter sido alterado"
+                    : signature.state === "unknown_key"
+                      ? security.technology === "smime" ? "O certificado de quem assinou não veio junto" : "A chave de quem assinou não está aqui"
+                      : "Sem assinatura"}
               </dd>
+              {signature.state === "good" && security.certificate && (
+                <>
+                  <dt style={{ color: "var(--color-text-subtlest)" }}>Certificado</dt>
+                  <dd style={{ margin: 0 }}>{security.certificate.subject}{security.certificate.emailMatches ? "" : " (de outro e-mail)"}</dd>
+                  <dt style={{ color: "var(--color-text-subtlest)" }}>Emissor</dt><dd style={{ margin: 0 }}>{security.certificate.issuer}</dd>
+                  <dt style={{ color: "var(--color-text-subtlest)" }}>Cadeia</dt><dd style={{ margin: 0 }}>{TRUST[security.certificate.trust]}</dd>
+                </>
+              )}
               {signature.state === "good" && (
                 <>
-                  <dt style={{ color: "var(--color-text-subtlest)" }}>Chave</dt><dd style={{ margin: 0 }}><Fingerprint value={signature.fingerprint} compact /></dd>
+                  <dt style={{ color: "var(--color-text-subtlest)" }}>{security.technology === "smime" ? "SHA-256" : "Chave"}</dt><dd style={{ margin: 0 }}><Fingerprint value={signature.fingerprint} compact /></dd>
                 </>
               )}
             </dl>
             {onManageKeys && (
               <button className="btn btn--subtle" type="button" style={{ justifySelf: "start" }} onClick={() => { setAnchor(null); onManageKeys(); }}>
                 <Icon name="key" />
-                Ver no gerenciador de chaves
+                {security.technology === "smime" ? "Ver no gerenciador de certificados" : "Ver no gerenciador de chaves"}
               </button>
             )}
           </div>

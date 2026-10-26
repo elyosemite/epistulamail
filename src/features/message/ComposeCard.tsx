@@ -138,6 +138,7 @@ export function ComposeCard({ account, kind, messageId, originalAttachments = []
         keepAttachments: kept,
         encrypt,
         sign,
+        technology: crypto.technology ?? "openpgp",
       });
       onSent(sendId);
     } catch (error) {
@@ -180,6 +181,8 @@ export function ComposeCard({ account, kind, messageId, originalAttachments = []
               <ComposeSecurityBar
                 encrypt={encrypt}
                 sign={sign}
+                technology={crypto.technology ?? "openpgp"}
+                onSwitch={crypto.canSwitch ? () => crypto.setTechnology(crypto.technology === "smime" ? "openpgp" : "smime") : undefined}
                 onEncrypt={(on) => crypto.setChoice((c) => ({ ...c, encrypt: on }))}
                 onSign={(on) => crypto.setChoice((c) => ({ ...c, sign: on }))}
               />
@@ -231,6 +234,20 @@ function removeAddresses(value: ComposeValue, addresses: string[]): ComposeValue
 /** Aviso com o cadeado ligado e destinatários sem chave: buscar (o clique é o consentimento), aceitar o que achou, enviar sem criptografia ou tirar. */
 function MissingKeys({ missing, crypto, onRemove }: { missing: string[]; crypto: ReturnType<typeof useComposeSecurity>; onRemove: () => void }) {
   const one = missing.length === 1;
+  if (crypto.technology === "smime") {
+    const actions = [
+      ...(crypto.canSwitch ? [{ label: "Usar OpenPGP", onClick: () => crypto.setTechnology("openpgp") }] : []),
+      { label: "Enviar sem criptografia", onClick: () => crypto.setChoice((c) => ({ ...c, encrypt: false })) },
+      { label: one ? "Tirar este destinatário" : "Tirar estes destinatários", onClick: onRemove },
+    ];
+    return (
+      <div style={{ margin: "0 var(--space-200) var(--space-150)" }}>
+        <SectionMessage appearance="warning" title={one ? `${missing[0]} não tem certificado S/MIME` : `${missing.length} destinatários não têm certificado S/MIME`} actions={actions}>
+          Sem um certificado confiável, a mensagem não pode ser criptografada para ninguém. O certificado chega sozinho quando a pessoa manda uma mensagem assinada com S/MIME, ou pode ser importado no gerenciador de certificados.
+        </SectionMessage>
+      </div>
+    );
+  }
   const actions: Array<{ label: string; onClick: () => void }> = [];
   if (crypto.found.length > 0) {
     actions.push({ label: one ? "Aceitar a chave encontrada" : "Aceitar as chaves encontradas", onClick: () => void crypto.accept(crypto.found.map((k) => k.fingerprint)) });

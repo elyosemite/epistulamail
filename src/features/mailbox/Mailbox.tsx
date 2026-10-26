@@ -66,7 +66,7 @@ interface MailboxProps {
   /** "Mais opções" de "Criar regra": abre o editor completo nas Configurações (US12, CA5). */
   onOpenRules: (request: RulesRequest) => void;
   /** Gerenciador de chaves OpenPGP nas Configurações (US13). */
-  onManageKeys: (fingerprint: string | null) => void;
+  onManageKeys: (fingerprint: string | null, technology?: "openpgp" | "smime") => void;
 }
 
 const FALLBACK = { kind: "ImapConnection" as const, message: "Tente de novo em instantes." };

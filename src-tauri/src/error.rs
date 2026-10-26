@@ -71,6 +71,12 @@ pub enum AppError {
     NoOwnKey,
     #[error("Algum destinatário não tem chave aceita. Busque a chave dele ou envie sem criptografia.")]
     MissingRecipientKey,
+    #[error("Escolha um certificado S/MIME para esta conta em Configurações → Criptografia.")]
+    NoOwnCertificate,
+    #[error("Algum destinatário não tem certificado S/MIME confiável. Envie sem criptografia ou tire o destinatário.")]
+    MissingRecipientCertificate,
+    #[error("O certificado foi emitido para outro e-mail, não para o do pedido.")]
+    CertificateEmailMismatch,
 }
 
 impl AppError {
@@ -109,6 +115,9 @@ impl AppError {
             AppError::NoKeyForMessage => "NoKeyForMessage",
             AppError::NoOwnKey => "NoOwnKey",
             AppError::MissingRecipientKey => "MissingRecipientKey",
+            AppError::NoOwnCertificate => "NoOwnCertificate",
+            AppError::MissingRecipientCertificate => "MissingRecipientCertificate",
+            AppError::CertificateEmailMismatch => "CertificateEmailMismatch",
         }
     }
 }

@@ -75,6 +75,7 @@ O que funciona hoje:
 - Quem não tem chave aparece antes do envio, com a escolha de buscar a chave na internet (só quando você manda), enviar sem criptografia ou tirar o destinatário.
 - A leitura mostra se a mensagem veio criptografada e se a assinatura confere, com a aceitação da chave no estilo do Thunderbird (ainda não, aceita, verificada, rejeitada).
 - Um gerenciador de chaves com busca, importação de arquivo, da área de transferência ou da internet, exportação e backup protegido por senha. Chaves que chegam por Autocrypt ou anexadas ficam como "ainda não aceita".
+- S/MIME também, para quem usa Outlook, Apple Mail ou o certificado da empresa: peça um certificado (o par de chaves nasce no seu computador e só o pedido vai para a autoridade certificadora), importe o emitido ou um `.p12` e guarde os certificados de quem manda mensagens assinadas. A confiança segue as raízes do Windows. Um script de CA de teste deixa experimentar sem comprar nada.
 
 **Avisos**
 

@@ -58,7 +58,7 @@ function Shell() {
   const [settingsSection, setSettingsSection] = useState("general");
   const [rulesRequest, setRulesRequest] = useState<RulesRequest | null>(null);
   const rulesRequests = useRef(0);
-  const [keysRequest, setKeysRequest] = useState<{ fingerprint: string | null } | null>(null);
+  const [keysRequest, setKeysRequest] = useState<{ fingerprint: string | null; technology?: "openpgp" | "smime" } | null>(null);
   const [bellOpen, setBellOpen] = useState(false);
   // Pedido ao Mailbox: abrir uma pasta e mensagem (notificação) ou começar um e-mail (bandeja).
   const [request, setRequest] = useState<MailboxRequest | null>(null);
@@ -159,10 +159,10 @@ function Shell() {
   }, []);
 
   // Gerenciador de chaves aberto da leitura (US13): a folha abre direto nele.
-  const openKeys = useCallback((fingerprint: string | null) => {
+  const openKeys = useCallback((fingerprint: string | null, technology: "openpgp" | "smime" = "openpgp") => {
     rulesRequests.current += 1;
     setRulesRequest(null);
-    setKeysRequest({ fingerprint });
+    setKeysRequest({ fingerprint, technology });
     setSettingsSection("crypto");
     setSettingsOpen(true);
   }, []);

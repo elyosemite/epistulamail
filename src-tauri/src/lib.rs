@@ -28,6 +28,9 @@ mod sanitize;
 mod send;
 mod secrets;
 mod session;
+mod smime;
+mod smime_mime;
+mod smime_store;
 mod store;
 mod sync;
 mod tray;
@@ -295,6 +298,14 @@ pub fn run() {
             commands::set_crypto_settings,
             commands::recipients_key_status,
             commands::search_pgp_key,
+            commands::list_smime_certs,
+            commands::list_smime_requests,
+            commands::create_smime_request,
+            commands::delete_smime_request,
+            commands::import_smime,
+            commands::export_smime_cert,
+            commands::export_smime_pkcs12,
+            commands::delete_smime_cert,
             commands::list_rules,
             commands::save_rule,
             commands::delete_rule,

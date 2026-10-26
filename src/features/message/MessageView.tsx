@@ -32,7 +32,7 @@ interface MessageViewProps {
   onAccessLost: () => void;
   onBack: () => void;
   /** Gerenciador de chaves aberto da leitura (US13). */
-  onManageKeys: (fingerprint: string | null) => void;
+  onManageKeys: (fingerprint: string | null, technology?: "openpgp" | "smime") => void;
 }
 
 /** A conversa da mensagem escolhida na lista (US8, CA6), com a resposta ou o encaminhamento. */

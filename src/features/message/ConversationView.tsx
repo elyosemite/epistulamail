@@ -29,7 +29,7 @@ interface ConversationViewProps {
   onAccessLost: () => void;
   onOpenLink: (url: string, text: string) => void;
   /** Gerenciador de chaves, numa chave ou na lista (US13). */
-  onManageKeys: (fingerprint: string | null) => void;
+  onManageKeys: (fingerprint: string | null, technology?: "openpgp" | "smime") => void;
 }
 
 /** As mensagens da conversa, da mais antiga para a mais nova, em cards (D2 e D3). */
@@ -94,7 +94,7 @@ interface ConversationCardProps {
   onLoaded: (id: string, flags: MessageFlags) => void;
   onAccessLost: () => void;
   onOpenLink: (url: string, text: string) => void;
-  onManageKeys: (fingerprint: string | null) => void;
+  onManageKeys: (fingerprint: string | null, technology?: "openpgp" | "smime") => void;
 }
 
 /** Uma mensagem aberta: o corpo vem de `get_message` (que também a marca como lida). */
@@ -191,7 +191,7 @@ function ConversationCard({ message, avatar, onView, onLoaded, onAccessLost, onO
         status={view.security && (
           <SecurityStatus
             security={view.security}
-            onManageKeys={() => onManageKeys(view.security?.signature.state === "good" ? view.security.signature.fingerprint : null)}
+            onManageKeys={() => onManageKeys(view.security?.signature.state === "good" ? view.security.signature.fingerprint : null, view.security?.technology)}
           />
         )}
       />
@@ -204,7 +204,7 @@ function ConversationCard({ message, avatar, onView, onLoaded, onAccessLost, onO
         <SectionMessage
           appearance="warning"
           title="Nenhuma das suas chaves abre esta mensagem"
-          actions={[{ label: "Adicionar chave…", onClick: () => onManageKeys(null) }]}
+          actions={[{ label: view.security.technology === "smime" ? "Importar certificado…" : "Adicionar chave…", onClick: () => onManageKeys(null, view.security?.technology) }]}
         >
           Ela foi criptografada para uma chave que não está neste computador. Se você tem um backup, restaure-o.
         </SectionMessage>
