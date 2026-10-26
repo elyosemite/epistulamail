@@ -15,7 +15,7 @@ Continuação da US7. Duas partes:
 
 ### 2. Regra do design system (obrigatória)
 
-Vale a seção 2 da US1. As peças novas estão no rascunho `design-system/rascunho-us8.html`, que precisa ser aprovado antes de entrar no DS e no app.
+Vale a seção 2 da US1. As peças novas passaram pelo rascunho `design-system/rascunho-us8.html`, aprovado em 25 out 2026 e incorporado ao DS (components.css e as páginas leitura, threads, header, modais e toasts); o rascunho foi apagado.
 
 ### 3. Lacunas no design system
 
