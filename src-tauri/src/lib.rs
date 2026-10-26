@@ -4,6 +4,7 @@ mod db;
 mod error;
 mod imap_client;
 mod keys;
+mod links;
 mod lock;
 mod mailbox;
 mod message;

@@ -2,13 +2,14 @@
 // (.section-message de erro), carregamento.html (skeleton da leitura), vazios.html (.empty), composicao.html (.compose--inline:
 // resposta abaixo da conversa, encaminhamento acima), menus.html (.lozenge de prazo em .reader__labels)
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { api, isAccessLost, isAppError, type Account, type AppError, type ConversationMessage, type DraftKind, type MessageFlags, type MessageView as View } from "../../lib/tauri";
+import { api, isAccessLost, isAppError, type Account, type AppError, type ConversationMessage, type DraftKind, type MessageFlags, type MessageView as View, type MisleadingLink } from "../../lib/tauri";
 import { EmptyState } from "../../ui/EmptyState";
 import { Reader, ReaderSkeleton } from "../../ui/Reader";
 import { SectionMessage } from "../../ui/SectionMessage";
 import { useToast } from "../../ui/Toast";
 import { ComposeCard } from "./ComposeCard";
 import { ConversationView } from "./ConversationView";
+import { LinkCheckDialog } from "./LinkCheckDialog";
 
 /** Card de resposta ou encaminhamento aberto no painel de leitura. */
 export interface ComposeState {
@@ -59,11 +60,27 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
     return () => { signal.cancelled = true; };
   }, [messageId, load]);
 
-  const openLink = useCallback((url: string) => {
-    api.openExternalLink(url).catch(() =>
-      toast({ kind: "warning", title: "Este link não pode ser aberto", description: "Só links da web e de e-mail saem do Epistula." }),
-    );
+  // Link que leva a outro domínio espera a confirmação (US10, CA8).
+  const [misleading, setMisleading] = useState<{ url: string; text: string; warning: MisleadingLink } | null>(null);
+  const openLink = useCallback((url: string, text: string, confirmed = false) => {
+    api.openExternalLink(url, text, confirmed)
+      .then((result) => {
+        if (result.warning) setMisleading({ url, text, warning: result.warning });
+      })
+      .catch(() =>
+        toast({ kind: "warning", title: "Este link não pode ser aberto", description: "Só links da web e de e-mail saem do Epistula." }),
+      );
   }, [toast]);
+  const linkDialog = misleading && (
+    <LinkCheckDialog
+      link={misleading.warning}
+      onOpen={() => {
+        openLink(misleading.url, misleading.text, true);
+        setMisleading(null);
+      }}
+      onClose={() => setMisleading(null)}
+    />
+  );
 
   if (compose?.kind === "new") {
     return (
@@ -123,6 +140,7 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
         onOpenLink={openLink}
       />
       {compose && compose.kind !== "forward" && card}
+      {linkDialog}
     </Reader>
   );
 }

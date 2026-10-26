@@ -154,8 +154,11 @@ Cada item é uma entrega separada, na ordem sugerida.
 - **Item 12:** feito. `System.Volume.BitLockerProtection` do volume do banco, lido pelo PowerShell sem administrador; aviso só quando desligado ou suspenso.
 - **Item 13:** feito. "E-mails fora do período" com o tamanho e "Apagar", que tira os corpos (os cabeçalhos ficam), compacta e troca a chave.
 - **Item 14:** feito. "Apagar também os e-mails desta conta" ao sair (o botão vira "Sair e apagar") e "Apagar" em Privacidade só nas contas de que o usuário saiu: apaga a conta e tudo que pende dela, tira do índice do cofre, compacta e troca a chave. Em contas em uso o "Apagar" não existe, porque o download em segundo plano traria o conteúdo de volta.
-- **Testes:** 138 no Rust e 67 no frontend passam; clippy e typecheck sem avisos.
-- **Próximos:** itens 15 (links) e 16 (confirmação de leitura); teste manual do bloqueio e do WebView2 no app real.
+- **Item 15:** feito. `links.rs`: tira `utm_*`, `fbclid`, `gclid`, `dclid`, `gbraid`, `wbraid`, `msclkid`, `yclid`, `twclid`, `igshid`, `mc_cid`, `mc_eid`, `_hsenc`, `_hsmi` e `mkt_tok` (os outros parâmetros ficam, para não quebrar links de confirmação); quando o texto do link parece um endereço de outro domínio (inclusive o domínio verdadeiro usado como subdomínio do golpe), `open_external_link` devolve o aviso sem abrir e o `LinkCheckDialog` (L55) mostra os dois endereços. O log não leva o endereço, só quantos parâmetros saíram.
+- **Item 16:** feito. Teste que responde a uma mensagem com `Disposition-Notification-To` e confere que nada da confirmação sai, e que nenhum módulo monta o relatório da RFC 8098.
+- **Item 17:** feito (READMEs e esta story).
+- **Testes:** 143 no Rust e 68 no frontend passam; clippy e typecheck sem avisos.
+- **Falta (manual, com o app real):** bloquear e desbloquear com contas conectadas, bloqueio junto com o Windows, "Esqueci a senha", conferir que nada do e-mail fica na pasta do WebView2 e o aviso do BitLocker.
 
 ### 7. Riscos técnicos
 

@@ -358,6 +358,28 @@ mod tests {
     }
 
     #[test]
+    fn read_receipts_are_never_sent() {
+        // US10, CA8: responder a quem pediu confirmação de leitura não confirma nada.
+        let original = b"Message-ID: <abc@lumen.com.br>
+Disposition-Notification-To: rastreio@lumen.com.br
+Subject: Contrato
+
+x";
+        let m = build(from(), &outgoing(DraftKind::Reply), Some(original)).unwrap();
+        let text = String::from_utf8_lossy(&m.formatted()).to_ascii_lowercase();
+        assert!(!text.contains("disposition-notification"), "{text}");
+        assert!(!text.contains("rastreio@lumen.com.br"));
+        // Nenhum módulo do app monta uma confirmação de leitura (o relatório da RFC 8098).
+        let report = ["multipart", "/report"].concat();
+        let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/src");
+        for entry in std::fs::read_dir(dir).unwrap() {
+            let path = entry.unwrap().path();
+            let source = std::fs::read_to_string(&path).unwrap().to_ascii_lowercase();
+            assert!(!source.contains(&report), "{} monta {report}", path.display());
+        }
+    }
+
+    #[test]
     fn thread_headers_without_message_id() {
         assert_eq!(thread_headers(b"Subject: s\r\n\r\nx"), None);
         assert_eq!(thread_headers(b"Message-ID: <a@b>\r\n\r\nx"), Some(("<a@b>".into(), "<a@b>".into())));

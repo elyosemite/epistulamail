@@ -187,6 +187,18 @@ export interface OfflineSettings {
   outsideBytes: number;
 }
 
+/** Link cujo texto mostra um domínio e leva a outro (US10, CA8). */
+export interface MisleadingLink {
+  shown: string;
+  target: string;
+  targetHost: string;
+}
+
+export interface LinkOpened {
+  opened: boolean;
+  warning: MisleadingLink | null;
+}
+
 /** Senha do Epistula e bloqueio (US10, CA2 e CA3). */
 export interface LockStatus {
   locked: boolean;
@@ -401,7 +413,9 @@ export const api = {
   getMessage: (messageId: string, allowRemoteImages: boolean) => call<MessageView>("get_message", { messageId, allowRemoteImages }),
   setFlags: (messageIds: string[], change: Partial<MessageFlags>) =>
     call<FlagResult[]>("set_flags", { messageIds, seen: change.seen ?? null, flagged: change.flagged ?? null }),
-  openExternalLink: (url: string) => call<void>("open_external_link", { url }),
+  /** Abre sem rastreamento; se o texto do link mostra outro domínio, devolve o aviso sem abrir (US10, CA8). */
+  openExternalLink: (url: string, text: string | null = null, confirmed = false) =>
+    call<LinkOpened>("open_external_link", { url, text, confirmed }),
   searchMessages: (accountId: string, query: string) => call<SearchPage>("search_messages", { accountId, query }),
   moveMessages: (messageIds: string[], targetFolderId: string) => call<Moved>("move_messages", { messageIds, targetFolderId }),
   deleteMessages: (messageIds: string[]) => call<Moved>("delete_messages", { messageIds }),

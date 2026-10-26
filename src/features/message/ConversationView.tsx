@@ -25,7 +25,7 @@ interface ConversationViewProps {
   onSelectedView: (view: MessageView) => void;
   onLoaded: (id: string, flags: MessageFlags) => void;
   onAccessLost: () => void;
-  onOpenLink: (url: string) => void;
+  onOpenLink: (url: string, text: string) => void;
 }
 
 /** As mensagens da conversa, da mais antiga para a mais nova, em cards (D2 e D3). */
@@ -88,7 +88,7 @@ interface ConversationCardProps {
   onView?: (view: MessageView) => void;
   onLoaded: (id: string, flags: MessageFlags) => void;
   onAccessLost: () => void;
-  onOpenLink: (url: string) => void;
+  onOpenLink: (url: string, text: string) => void;
 }
 
 /** Uma mensagem aberta: o corpo vem de `get_message` (que também a marca como lida). */

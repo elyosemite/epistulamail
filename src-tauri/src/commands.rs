@@ -16,6 +16,7 @@ use crate::session::{AppState, Connected, Lane};
 use crate::compose::{self, Template};
 use crate::mailbox::{self, Role};
 use crate::store::{self, Account, AccountStatus, Draft, DraftContent, DraftKind, FolderRow, Followup, FollowupChange};
+use crate::links;
 use crate::privacy::{self, LockStatus};
 use crate::{moves, send, sync};
 use zeroize::Zeroizing;
@@ -1397,15 +1398,33 @@ pub fn external_link(url: &str) -> Result<Url, AppError> {
     }
 }
 
-/// Abre um link do corpo da mensagem no navegador (ou cliente de e-mail) do sistema.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LinkOpened {
+    pub opened: bool,
+    /// O texto do link mostra outro domínio: só abre com `confirmed` (US10, CA8).
+    pub warning: Option<links::Misleading>,
+}
+
+/// Abre um link do corpo da mensagem no navegador (ou cliente de e-mail) do sistema, sem os
+/// parâmetros de rastreamento (US10, D8). `text` é o texto do link: se ele mostra outro domínio, o
+/// link só abre depois de o usuário confirmar (`confirmed`).
 #[tauri::command]
-pub fn open_external_link(app: AppHandle, url: String) -> Result<(), AppError> {
-    let parsed = external_link(&url)?;
-    tracing::info!(scheme = parsed.scheme(), "abrindo link externo");
+pub fn open_external_link(app: AppHandle, url: String, text: Option<String>, confirmed: Option<bool>) -> Result<LinkOpened, AppError> {
+    let mut parsed = external_link(&url)?;
+    let removed = links::strip_tracking(&mut parsed);
+    if confirmed != Some(true) {
+        if let Some(warning) = text.as_deref().and_then(|t| links::misleading(t, &parsed)) {
+            tracing::info!("link leva a outro domínio; pedindo confirmação");
+            return Ok(LinkOpened { opened: false, warning: Some(warning) });
+        }
+    }
+    tracing::info!(scheme = parsed.scheme(), tracking_removed = removed, "abrindo link externo");
     app.opener().open_url(parsed.as_str(), None::<&str>).map_err(|e| {
         tracing::warn!(error = %e, "não foi possível abrir o link");
         AppError::UnsupportedLink
-    })
+    })?;
+    Ok(LinkOpened { opened: true, warning: None })
 }
 
 #[cfg(test)]

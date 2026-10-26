@@ -10,7 +10,8 @@ import { useCallback, useEffect, useRef } from "react";
 interface MessageFrameProps {
   html: string;
   title: string;
-  onOpenLink: (url: string) => void;
+  /** `text`: o texto do link, para o backend conferir se ele mostra outro domínio (US10, CA8). */
+  onOpenLink: (url: string, text: string) => void;
 }
 
 export function MessageFrame({ html, title, onOpenLink }: MessageFrameProps) {
@@ -39,7 +40,7 @@ export function MessageFrame({ html, title, onOpenLink }: MessageFrameProps) {
     doc.addEventListener("click", (event) => {
       const target = event.target instanceof Element ? event.target.closest("a[href]") : null;
       event.preventDefault();
-      if (target) onOpenLink(target.getAttribute("href") ?? "");
+      if (target) onOpenLink(target.getAttribute("href") ?? "", target.textContent ?? "");
     });
     doc.addEventListener("submit", (event) => event.preventDefault());
   }, [onOpenLink, resize]);

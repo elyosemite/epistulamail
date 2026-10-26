@@ -34,3 +34,11 @@ describe("US10 · senha do Epistula e bloqueio", () => {
     expect(isLockShortcut(key({ ctrlKey: true, shiftKey: true, altKey: true }))).toBe(false);
   });
 });
+
+describe("US10 · link que leva a outro endereço", () => {
+  it("destaca só o domínio de destino", async () => {
+    const { splitHost } = await import("../features/message/LinkCheckDialog");
+    expect(splitHost("https://meubanco-seguro.xyz/entrar", "meubanco-seguro.xyz")).toEqual(["https://", "meubanco-seguro.xyz", "/entrar"]);
+    expect(splitHost("https://x.com/", "")).toEqual(["https://x.com/", "", ""]);
+  });
+});
