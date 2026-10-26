@@ -53,15 +53,24 @@ a { color: var(--color-link); }
 .site-h2 { margin: 0 0 var(--space-200); font: var(--font-weight-bold) var(--site-title)/1.1 var(--font-family-heading); letter-spacing: var(--letter-spacing-hero); text-wrap: balance; }
 .site-lead { margin: 0; max-width: 60ch; color: var(--color-text-subtle); font: var(--font-body-large); font-size: calc(var(--font-size-body-large) * 1.125); line-height: 1.6; text-wrap: pretty; }
 
-/* ---------- Hero: texto à esquerda, o app à direita ---------- */
+/* ---------- Hero: o texto centralizado em cima, a imagem do app embaixo ---------- */
 .site-hero { border-bottom: var(--border-width) solid var(--color-border); overflow: hidden; }
-.site-hero__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: var(--space-800); align-items: center; padding-block: var(--space-1000); }
-.site-hero h1 { margin: 0 0 var(--space-300); font: var(--font-weight-bold) var(--site-display)/1.02 var(--font-family-heading); letter-spacing: -0.035em; text-wrap: balance; }
+.site-hero__intro { display: grid; justify-items: center; text-align: center; padding-block: var(--space-1000) var(--space-800); }
+.site-hero h1 { margin: 0 0 var(--space-300); max-width: 18ch; font: var(--font-weight-bold) var(--site-display)/1.02 var(--font-family-heading); letter-spacing: -0.035em; text-wrap: balance; }
+.site-hero .site-lead { margin-inline: auto; }
 .site-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-150); margin-top: var(--space-500); }
-.site-facts { display: flex; flex-wrap: wrap; gap: var(--space-100) var(--space-400); margin: var(--space-600) 0 0; padding: 0; list-style: none; }
+.site-hero__intro .site-hero__actions { justify-content: center; }
+.site-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-100) var(--space-400); margin: var(--space-600) 0 0; padding: 0; list-style: none; }
 .site-facts li { display: flex; align-items: center; gap: var(--space-100); font: var(--font-weight-medium) var(--font-size-label)/var(--line-height-label) var(--font-family-code); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtle); }
 .site-facts .i { color: var(--color-icon-brand); }
-@media (max-width: 60rem) { .site-hero__grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-600); } }
+/* A imagem sobe do pé da seção, cortada pela borda de baixo (como se o app continuasse). */
+.site-hero__media { display: flex; justify-content: center; max-width: calc(var(--site-width) + var(--space-1000)); }
+.site-hero__image {
+  display: block; width: 100%; height: auto;
+  border: var(--border-width) solid var(--color-border); border-bottom: 0;
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+  box-shadow: var(--shadow-overlay);
+}
 
 /* ---------- "Foto" do app feita em HTML: a moldura recorta um trecho ampliado ---------- */
 .site-shot {
@@ -75,11 +84,6 @@ a { color: var(--color-link); }
 .site-shot__panel { border-radius: var(--radius-large); background: var(--color-surface); overflow: hidden; }
 .site-shot::after { content: ""; position: absolute; inset: auto 0 0 0; height: var(--space-600); background: linear-gradient(to bottom, transparent, var(--color-canvas)); }
 .site-shot--plain::after { display: none; }
-
-/* App em miniatura no hero: coluna de contas, pastas, lista e leitura. */
-.site-mini { display: grid; grid-template-columns: auto 11rem minmax(0, 1fr); gap: var(--space-100); padding: var(--space-100); min-width: 44rem; }
-.site-mini .account-rail { border-radius: var(--radius-large); background: var(--color-surface); }
-.site-mini .sidebar { border-radius: var(--radius-large); background: var(--color-surface); border: 0; }
 
 /* ---------- Recursos: linhas de duas colunas que alternam ---------- */
 .site-features { display: grid; gap: var(--space-1000); }

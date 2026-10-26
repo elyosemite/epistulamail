@@ -35,56 +35,22 @@
 <main id="conteudo">
   <!-- ================================================================== hero -->
   <section class="site-hero" id="topo">
-    <div class="site-container site-hero__grid">
-      <div>
-        <p class="site-eyebrow">Cliente de e-mail para desktop · código aberto</p>
-        <h1>Seus e-mails no seu computador. Cifrados.</h1>
-        <p class="site-lead">O Epistula baixa o que você precisa ler e guarda num banco local protegido por AES-256. Sem conta Epistula, sem nuvem Epistula e sem ninguém do nosso lado lendo o que você recebe.</p>
-        <div class="site-hero__actions">
-          <a class="btn btn--primary" href="#comecar"><svg class="i"><use href="#i-download"/></svg>Como instalar</a>
-          <a class="btn" href="#recursos">Ver os recursos</a>
-        </div>
-        <ul class="site-facts" aria-label="Em poucas palavras">
-          <li><svg class="i i--sm"><use href="#i-lock"/></svg>AES-256 no disco</li>
-          <li><svg class="i i--sm"><use href="#i-key"/></svg>OpenPGP e S/MIME</li>
-          <li><svg class="i i--sm"><use href="#i-shield"/></svg>Sem conta, sem nuvem</li>
-        </ul>
+    <div class="site-container site-hero__intro">
+      <p class="site-eyebrow">Cliente de e-mail para desktop · código aberto</p>
+      <h1>Seus e-mails no seu computador. Cifrados.</h1>
+      <p class="site-lead">O Epistula baixa o que você precisa ler e guarda num banco local protegido por AES-256. Sem conta Epistula, sem nuvem Epistula e sem ninguém do nosso lado lendo o que você recebe.</p>
+      <div class="site-hero__actions">
+        <a class="btn btn--primary" href="#comecar"><svg class="i"><use href="#i-download"/></svg>Como instalar</a>
+        <a class="btn" href="#recursos">Ver os recursos</a>
       </div>
-
-      <figure class="site-shot" style="margin:0" aria-label="O Epistula com duas contas, a Caixa de entrada e uma conversa aberta">
-        <div class="site-shot__zoom" aria-hidden="true">
-          <div class="site-mini">
-            <nav class="account-rail">
-              <div class="account-rail__list" role="list">
-                <div role="listitem"><span class="account-rail__item" aria-current="true"><span class="avatar avatar--lg avatar--purple">T</span><span class="badge badge--primary account-rail__badge">12</span><span class="account-rail__name">Trabalho</span></span></div>
-                <div role="listitem"><span class="account-rail__item"><span class="avatar avatar--lg">P</span><span class="account-rail__name">Pessoal</span></span></div>
-                <div role="listitem"><span class="account-rail__item"><span class="avatar avatar--lg avatar--archive"><svg class="i"><use href="#i-archive"/></svg></span><span class="account-rail__name">Arquivo</span></span></div>
-              </div>
-            </nav>
-            <nav class="sidebar">
-              <div class="nav-group">
-                <span class="nav-item has-unread" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></span>
-                <span class="nav-item"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></span>
-                <span class="nav-item"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span>
-                <span class="nav-item"><svg class="i"><use href="#i-file"/></svg><span class="nav-item__text">Rascunhos</span></span>
-              </div>
-              <div class="nav-group">
-                <div class="nav-heading">Marcadores</div>
-                <span class="nav-item"><span class="dot" style="--lb-fg:var(--color-label-purple-text)"></span><span class="nav-item__text">Jurídico</span></span>
-                <span class="nav-item"><span class="dot" style="--lb-fg:var(--color-label-green-text)"></span><span class="nav-item__text">Financeiro</span></span>
-              </div>
-            </nav>
-            <div class="site-shot__panel">
-              <div class="thread-list">
-                <div class="thread is-unread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">Segue a versão 3 com os ajustes da cláusula 7.2. Preciso do retorno até sexta.</div></div>
-                <div class="thread is-unread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Paulo Henrique</span></div><div class="thread__meta"><span class="thread__date">09:15</span></div><div class="thread__subject"><span class="thread__subject-text">Fotos da obra, semana 42</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-image"/></svg></span></div><div class="thread__snippet">A fachada já está pintada e a calçada fica pronta na segunda.</div></div>
-                <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Equipe Lumen</span></div><div class="thread__meta"><span class="thread__date">20 out</span></div><div class="thread__subject"><span class="thread__subject-text">Ata da reunião de planejamento</span></div><div class="thread__snippet">Segue a ata com as decisões e os responsáveis.</div></div>
-                <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Banco Atlântico</span></div><div class="thread__meta"><span class="thread__date">19 out</span></div><div class="thread__subject"><span class="thread__subject-text">Seu extrato de outubro está disponível</span></div><div class="thread__snippet">O extrato da conta corrente já pode ser consultado.</div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </figure>
+      <ul class="site-facts" aria-label="Em poucas palavras">
+        <li><svg class="i i--sm"><use href="#i-lock"/></svg>AES-256 no disco</li>
+        <li><svg class="i i--sm"><use href="#i-key"/></svg>OpenPGP e S/MIME</li>
+        <li><svg class="i i--sm"><use href="#i-shield"/></svg>Sem conta, sem nuvem</li>
+      </ul>
+    </div>
+    <div class="site-container site-hero__media">
+      <img class="site-hero__image" src="images/epistula-caixa-de-entrada.png" width="2366" height="1361" alt="O Epistula com três contas, pastas e marcadores, a lista de mensagens e uma newsletter aberta no painel de leitura">
     </div>
   </section>
 
