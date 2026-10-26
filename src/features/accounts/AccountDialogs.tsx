@@ -77,7 +77,7 @@ export function AccountSettingsDialog({ account, isNew, onSave, onClose }: Accou
   );
 }
 
-/** Sair da conta (CA6): os dados ficam no computador, por isso aviso e não perigo. */
+/** Sair da conta (CA6): a conta sai da coluna, mas os dados ficam no computador, por isso aviso e não perigo. */
 export function SignOutDialog({ account, onConfirm, onClose }: { account: Account; onConfirm: () => Promise<void>; onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   return (
@@ -107,8 +107,8 @@ export function SignOutDialog({ account, onConfirm, onClose }: { account: Accoun
         </>
       }
     >
-      <p>O Epistula deixa de acessar <b>{account.email}</b>. As mensagens já salvas continuam neste computador e você pode lê-las sem entrar.</p>
-      <p>Nada muda no Gmail.</p>
+      <p>O Epistula deixa de acessar <b>{account.email}</b> e a conta sai da coluna de contas. As mensagens já salvas continuam neste computador, cifradas, e voltam quando você entrar de novo com o mesmo e-mail.</p>
+      <p>Nada muda na sua conta de e-mail.</p>
     </Modal>
   );
 }

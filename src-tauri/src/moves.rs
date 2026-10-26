@@ -87,6 +87,9 @@ pub async fn run_due(app: &AppHandle) {
         }
     }
     for (account_id, (ids, mut folder_ids)) in failed {
+        let n = ids.len();
+        let title = if n == 1 { "1 conversa não foi movida".to_owned() } else { format!("{n} conversas não foram movidas") };
+        crate::notify::failure(app, &account_id, title, "O servidor recusou. Elas voltaram para a pasta de origem.".into(), String::new());
         folder_ids.sort();
         folder_ids.dedup();
         let _ = app.emit("moves-finished", MovesFinished { account_id, failed: ids, folder_ids });

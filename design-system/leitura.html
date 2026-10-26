@@ -98,7 +98,56 @@
           <div><dt>Corpo HTML</dt><dd>Sempre dentro de <code>.message__frame</code>: um <code>&lt;iframe sandbox&gt;</code> sem <code>allow-scripts</code>, com o HTML já sanitizado e uma CSP própria. O fundo usa <code>--color-surface-paper</code>, claro nos dois temas, porque e-mails HTML são desenhados para papel branco. A altura é definida pelo app depois de medir o conteúdo; o mínimo é 8rem.</dd></div>
           <div><dt>Texto puro</dt><dd>Fica em <code>.message__body</code>, um <code>&lt;p&gt;</code> por parágrafo, sem quadro.</dd></div>
         </dl>
-      </section>
+        <h3 class="sub">Conversa em cards <code>.conversation</code> <code>.message--card</code> (US8)</h3>
+      <div class="stage stage--flush">
+        <article class="reader reader--fluid">
+          <div class="reader__head"><h3 class="reader__subject">Revisão do contrato: Fornecedor Lumen</h3></div>
+          <div class="conversation">
+            <div class="message--collapsed" tabindex="0" role="button" aria-expanded="false" data-open="first"><span class="avatar avatar--sm avatar--magenta" aria-hidden="true">MC</span><span class="snip"><b style="color:var(--color-text);font-weight:600">Marina Couto</b> · Segue a versão 3 do contrato com os ajustes da cláusula 7.2.</span><span class="message__time">23 out</span></div>
+            <button class="conversation__more" type="button" aria-expanded="false"><span class="badge">3</span>mensagens anteriores</button>
+            <div hidden style="display:contents">
+              <div class="message--collapsed" tabindex="0" role="button"><span class="avatar avatar--sm avatar--teal" aria-hidden="true">RD</span><span class="snip"><b style="color:var(--color-text);font-weight:600">Rafael Dias</b> · Marina, mandei as observações do financeiro em anexo.</span><span class="message__time">24 out</span></div>
+              <div class="message--collapsed" tabindex="0" role="button"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">YM</span><span class="snip"><b style="color:var(--color-text);font-weight:600">Você</b> · Combinado. Fico no aguardo da versão final.</span><span class="message__time">24 out</span></div>
+              <div class="message--collapsed" tabindex="0" role="button"><span class="avatar avatar--sm avatar--teal" aria-hidden="true">RD</span><span class="snip"><b style="color:var(--color-text);font-weight:600">Rafael Dias</b> · Ajustei a planilha de custos, está no drive.</span><span class="message__time">24 out</span></div>
+            </div>
+            <div class="message--collapsed" tabindex="0" role="button"><span class="avatar avatar--sm avatar--magenta" aria-hidden="true">MC</span><span class="snip"><b style="color:var(--color-text);font-weight:600">Marina Couto</b> · Perfeito, a cláusula 7.2 ficou ótima. Só falta a sua assinatura.</span><span class="message__time">Ontem</span></div>
+
+            <div class="message message--card" aria-label="Mensagem de Paulo Henrique">
+              <div class="message__head">
+                <span class="avatar avatar--lg avatar--green" aria-hidden="true">PH</span>
+                <div style="min-width:0"><div class="message__from">Paulo Henrique <span class="message__addr">&lt;paulo@lumen.com.br&gt;</span></div><button class="message__to" type="button">para mim, Marina, Rafael<svg class="i i--sm"><use href="#i-chevron-down"/></svg></button></div>
+                <div class="message__time">Hoje, 09:15 <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Responder" data-tip="Responder"><svg class="i"><use href="#i-reply"/></svg></button></div>
+              </div>
+              <div class="message__body">
+                <p>Pessoal, o jurídico da Lumen aprovou a versão 3. Podemos assinar na sexta.</p>
+                <p>Abraço,<br>Paulo</p>
+              </div>
+              <button class="btn btn--subtle btn--compact message__quote-toggle" type="button" aria-expanded="false" data-tip="Mostrar o texto citado">…</button>
+              <div class="message__quote" hidden>
+                <p style="margin-top:0">Em 24 de out. de 2026, às 18:10, Marina Couto escreveu:</p>
+                <p>&gt; Perfeito, a cláusula 7.2 ficou ótima. Só falta a sua assinatura.</p>
+              </div>
+              <div class="attachments">
+                <div class="attachment attachment--static"><span class="attachment__icon attachment__icon--pdf"><svg class="i i--lg"><use href="#i-file"/></svg></span><span style="min-width:0;display:grid"><span class="attachment__name">Contrato_Lumen_assinado.pdf</span><span class="attachment__meta">PDF · 1,9 MB</span></span></div>
+              </div>
+              <div class="reply-bar">
+                <button class="btn" type="button"><svg class="i"><use href="#i-reply"/></svg>Responder</button>
+                <button class="btn" type="button"><svg class="i"><use href="#i-reply-all"/></svg>Responder a todos</button>
+                <button class="btn" type="button"><svg class="i"><use href="#i-forward"/></svg>Encaminhar</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <dl class="guidance">
+        <div><dt>Ordem</dt><dd>Da mais antiga para a mais nova; a mais recente fica embaixo, aberta, perto dos botões de resposta.</dd></div>
+        <div><dt>Abertas e recolhidas</dt><dd>Abertas: a mais recente e as não lidas (<code>.message.message--card</code>). As outras ficam em <code>.message--collapsed</code>, uma linha com avatar, remetente, começo do texto e data. Clique ou <kbd>Enter</kbd> abre.</dd></div>
+        <div><dt>Muitas mensagens</dt><dd>Com mais de 4 recolhidas seguidas, as do meio viram <code>.conversation__more</code> ("3 mensagens anteriores"), que mostra todas.</dd></div>
+        <div><dt>Texto citado</dt><dd>Em cada card, o que a mensagem repete das anteriores fica no "…" (<code>.message__quote-toggle</code>). Cada card mostra só o que aquela pessoa escreveu.</dd></div>
+        <div><dt>Você</dt><dd>Mensagens enviadas por você entram na conversa como "Você", com a sua foto.</dd></div>
+      </dl>
+
+            </section>
   </main>
 </div>
 <script src="docs.js"></script>

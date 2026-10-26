@@ -3,6 +3,7 @@
 //     --color-bg-neutral-subtle-hovered (US5); sidebar.html · .drag-ghost--follow (US6)
 // DS: carregamento.html · linhas .thread com .skeleton; etiquetas.html · .label (pasta na busca); menus.html · .lozenge de prazo
 // DS: threads.html "Densidade" (US7) · .thread-list (Confortável), --standard (Padrão), --compact; .thread__snippet, .thread__icons
+// DS: threads.html "Lista por conversa" (US8, L48) · .thread__count ao lado dos participantes
 import type { Density } from "../lib/tauri";
 import { forwardRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { IconButton } from "./Button";
@@ -44,6 +45,8 @@ interface ThreadRowProps {
   snippet?: string;
   hasFiles?: boolean;
   hasImages?: boolean;
+  /** Mensagens da conversa (só com 2 ou mais). */
+  count?: number;
 }
 
 const stop = (fn: () => void) => (event: MouseEvent) => {
@@ -52,7 +55,7 @@ const stop = (fn: () => void) => (event: MouseEvent) => {
 };
 
 export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function ThreadRow(
-  { from, subject, date, unread, starred, open, checked, onOpen, onCheck, onKeyDown, onPointerDown, onToggleStar, onToggleRead, badge, folder, snippet, hasFiles, hasImages },
+  { from, subject, date, unread, starred, open, checked, onOpen, onCheck, onKeyDown, onPointerDown, onToggleStar, onToggleRead, badge, folder, snippet, hasFiles, hasImages, count },
   ref,
 ) {
   const cls = ["thread", unread && "is-unread", checked && "is-checked", open && "is-open"].filter(Boolean).join(" ");
@@ -63,7 +66,7 @@ export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function Thr
       role="listitem"
       tabIndex={0}
       aria-current={open || undefined}
-      aria-label={`${checked ? "Marcada, " : ""}${unread ? "Não lida, " : ""}${starred ? "com estrela, " : ""}${from}, ${subject}${hasFiles ? ", com anexos" : ""}${hasImages ? ", com imagens" : ""}, ${date}`}
+      aria-label={`${checked ? "Marcada, " : ""}${unread ? "Não lida, " : ""}${starred ? "com estrela, " : ""}${from}, ${count ? `${count} mensagens, ` : ""}${subject}${hasFiles ? ", com anexos" : ""}${hasImages ? ", com imagens" : ""}, ${date}`}
       onClick={onOpen}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
@@ -97,7 +100,10 @@ export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function Thr
           <Icon name="star" />
         </span>
       )}
-      <div className="thread__from"><span className="thread__from-name">{from}</span></div>
+      <div className="thread__from">
+        <span className="thread__from-name">{from}</span>
+        {count !== undefined && count > 1 && <span className="thread__count">{count}</span>}
+      </div>
       <div className="thread__meta">
         {badge}
         <span className="thread__date">{date}</span>

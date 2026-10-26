@@ -49,6 +49,11 @@ export function accountShortcut(event: Pick<KeyboardEvent, "ctrlKey" | "metaKey"
   return Number.isInteger(n) && n >= 1 && n <= 9 ? n - 1 : null;
 }
 
+/** Contas na coluna: a de que o usuário saiu some (25 out 2026); os dados ficam e voltam ao entrar de novo. */
+export function visibleAccounts(accounts: Account[]): Account[] {
+  return accounts.filter((a) => a.status !== "signed_out");
+}
+
 /** Conta a abrir depois de carregar a lista: a atual se ainda existir, senão a primeira. */
 export function pickActive(accounts: Account[], current: string | null): string | null {
   if (current && accounts.some((a) => a.id === current)) return current;

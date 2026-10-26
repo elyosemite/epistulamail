@@ -776,6 +776,8 @@ kbd, .kbd {
 }
 .setting-list__bulk { display: flex; align-items: center; gap: var(--space-100); }
 .setting-list__row { grid-template-columns: auto auto minmax(0, 1fr) 13rem; }
+/* L49 · Linha com um toggle no fim (notificações por conta) */
+.setting-list__row--toggle { grid-template-columns: auto minmax(0, 1fr) auto; }
 .setting-list__row + .setting-list__row { border-top: var(--border-width) solid var(--color-border); }
 .setting-list__row.is-checked { background: var(--color-bg-selected); }
 .setting-list__name { display: grid; min-width: 0; }
@@ -871,6 +873,34 @@ html.is-grabbing, html.is-grabbing * { cursor: grabbing !important; user-select:
 .account-trigger:hover .avatar, .account-trigger.is-hover .avatar { box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-border-bold); }
 .account-trigger[aria-expanded="true"] .avatar { box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-border-selected); }
 .account-trigger:focus-visible { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 2px; }
+
+/* L52 · Sino no header: botão com contador e o painel das notificações recentes */
+.bell { position: relative; }
+.bell__count { position: absolute; top: 0; right: 0; min-width: 1.125rem; padding-inline: var(--space-050); box-shadow: 0 0 0 2px var(--color-surface); pointer-events: none; }
+.notice-panel { width: 23rem; max-width: calc(100vw - 2 * var(--space-200)); padding-block: 0; }
+.notice-panel__head { display: flex; align-items: center; gap: var(--space-100); padding: var(--space-150) var(--space-200) var(--space-100); }
+.notice-panel__title { flex: 1; margin: 0; font: var(--font-card); color: var(--color-text); }
+.notice-panel__list { display: grid; max-height: 24rem; overflow: auto; }
+.notice {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-150); align-items: start;
+  padding: var(--space-150) var(--space-200); border: 0; border-top: var(--border-width) solid var(--color-border);
+  background: transparent; color: var(--color-text-subtle); font: var(--font-body-small); text-align: left; cursor: pointer;
+}
+.notice:hover, .notice.is-hover { background: var(--color-bg-neutral-subtle-hovered); }
+.notice:focus-visible { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: -2px; }
+.notice__body { min-width: 0; }
+.notice__title { display: block; font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); color: var(--color-text); }
+.notice__text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.notice__time { color: var(--color-text-subtlest); white-space: nowrap; }
+.notice.is-unread::before { content: ""; position: absolute; left: var(--space-075); top: calc(var(--space-150) + 8px); width: 6px; height: 6px; border-radius: 50%; background: var(--color-icon-brand); }
+/* Ícone do tipo de aviso num círculo: neutro, vermelho (falha) ou amarelo (atenção) */
+.notice__icon { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--color-bg-neutral); color: var(--color-icon); }
+.notice__icon--danger { background: var(--color-bg-danger); color: var(--color-icon-danger); }
+.notice__icon--warning { background: var(--color-bg-warning); color: var(--color-icon-warning); }
+.notice-panel__foot { display: flex; align-items: center; gap: var(--space-100); padding: var(--space-100) var(--space-200); border-top: var(--border-width) solid var(--color-border); }
+.notice-panel__foot label { font: var(--font-body-small); color: var(--color-text-subtle); }
+.notice-panel__foot .btn--link { margin-left: auto; }
+.notice-panel .empty { padding-block: var(--space-300); }
 
 /* L40 · Menu da conta: (1) foto, nome, e-mail e informações; (2) preferências; (3) sair */
 .account-menu { width: 21rem; max-width: calc(100vw - 2 * var(--space-200)); padding-block: var(--space-050); }
@@ -1115,6 +1145,30 @@ html.is-grabbing, html.is-grabbing * { cursor: grabbing !important; user-select:
 }
 .message--collapsed:hover { background: var(--color-bg-neutral-subtle-hovered); }
 .message--collapsed .snip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text-subtlest); }
+.message--collapsed .snip b { color: var(--color-text); font-weight: var(--font-weight-semibold); }
+
+/* L46 · Conversa em cards: recolhidas numa linha (.message--collapsed) e abertas uma abaixo da outra */
+.conversation { display: grid; gap: var(--space-100); }
+/* Sem caixa própria: a única caixa é a do corpo (.message__frame). Mensagens abertas seguidas ficam separadas por uma linha. */
+.message.message--card { padding-block: var(--space-100); }
+.message--card + .message--card { padding-top: var(--space-200); border-top: var(--border-width) solid var(--color-border); }
+.message--collapsed { position: relative; }
+.message--collapsed.is-unread::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--color-icon-brand); position: absolute; margin-left: -10px; }
+.message--collapsed:focus-visible { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 2px; }
+.conversation__more {
+  display: flex; align-items: center; gap: var(--space-150);
+  padding: var(--space-050) var(--space-150);
+  border: 0; background: transparent; color: var(--color-text-subtle); font: var(--font-body-small); cursor: pointer;
+}
+.conversation__more::before, .conversation__more::after { content: ""; flex: 1; height: 1px; background: var(--color-border); }
+.conversation__more:hover { color: var(--color-text); }
+.conversation__more:focus-visible { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 2px; }
+.conversation__more .badge { flex: none; }
+
+/* L47 · Texto citado de cada mensagem recolhido no "…" (mesma forma do .compose__quote-toggle) */
+.message__quote-toggle { justify-self: start; padding-inline: var(--space-100); letter-spacing: .1em; }
+.message--card .reply-bar { padding-top: var(--space-050); }
+.message--card > .message__quote { margin-inline: 0; }
 .reply-bar { display: flex; gap: var(--space-100); flex-wrap: wrap; }
 
 /* ==========================================================================

@@ -97,6 +97,46 @@
           <div><dt>Configurações</dt><dd>No header em blocos, o botão de configurações (ícone <code>settings</code>, <code>.btn--subtle.btn--icon</code>, tooltip "Configurações (Ctrl+,)") fica logo à direita da busca, dentro de <code>.appbar__search</code>. Com as configurações abertas, ele fica com <code>aria-pressed="true"</code>.</dd></div>
           <div><dt>Menus</dt><dd>Comando com menu e ação principal usa <code>.btn-split</code> (Responder a todos, Sinalizar); comando só com menu leva o chevron no próprio botão (Mover para).</dd></div>
         </dl>
+        <h3 class="sub">Sino de notificações <code>.bell</code> <code>.notice-panel</code> (US8)</h3>
+        <p>Ao lado da foto, na extrema direita do header. O número mostra quantas notificações você ainda não viu; clicar abre as recentes, as mesmas que saíram no Windows (inclusive as guardadas durante o Não perturbe).</p>
+        <div class="stage stage--flush scroll-x">
+        <header class="appbar" style="min-width:36rem;border-radius:var(--radius-large)">
+          <span class="appbar__brand"><span class="wordmark wordmark--sm"><span class="wordmark__glyph" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</span></span>
+          <div class="appbar__search"><div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar em Trabalho" aria-label="Buscar"><kbd>/</kbd></div></div>
+          <div class="appbar__actions appbar__end">
+            <button class="btn btn--subtle btn--icon" type="button" aria-pressed="true" aria-label="Pastas" data-tip="Esconder pastas (Ctrl+B)"><svg class="i"><use href="#i-sidebar-left"/></svg></button>
+            <button class="btn btn--subtle btn--icon" type="button" aria-pressed="true" aria-label="Leitura" data-tip="Esconder leitura (Ctrl+Alt+B)"><svg class="i"><use href="#i-sidebar-right"/></svg></button>
+            <button class="btn btn--subtle btn--icon bell" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Notificações, 2 não vistas" data-tip="Notificações"><svg class="i"><use href="#i-bell"/></svg><span class="badge badge--primary bell__count" aria-hidden="true">2</span></button>
+            <button class="account-trigger" type="button" aria-label="Conta: Trabalho" data-tip="Conta (Alt+A)"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T</span></button>
+          </div>
+        </header>
+      </div>
+      <h3 class="sub">Estados do sino e do painel</h3>
+      <div style="display:grid;gap:var(--space-300);grid-template-columns:repeat(auto-fit,minmax(24rem,1fr));align-items:start">
+        <figure class="state"><div class="row" style="gap:var(--space-200)">
+          <button class="btn btn--subtle btn--icon bell" type="button" aria-label="Notificações"><svg class="i"><use href="#i-bell"/></svg></button>
+          <button class="btn btn--subtle btn--icon bell" type="button" aria-label="Notificações, 2 não vistas"><svg class="i"><use href="#i-bell"/></svg><span class="badge badge--primary bell__count" aria-hidden="true">2</span></button>
+          <button class="btn btn--subtle btn--icon bell" type="button" aria-label="Notificações, mais de 9 não vistas"><svg class="i"><use href="#i-bell"/></svg><span class="badge badge--primary bell__count" aria-hidden="true">9+</span></button>
+          <button class="btn btn--subtle btn--icon bell" type="button" aria-label="Notificações, Não perturbe ligado" data-tip="Notificações (Não perturbe)"><svg class="i"><use href="#i-bell-off"/></svg></button>
+        </div><figcaption><b>Sino</b>sem nada novo · 2 não vistas · mais de 9 · Não perturbe ligado</figcaption></figure>
+        <figure class="state" style="justify-items:stretch"><div class="menu notice-panel" role="dialog" aria-label="Notificações">
+            <div class="notice-panel__head"><h3 class="notice-panel__title">Notificações</h3><button class="btn btn--subtle btn--compact" type="button">Marcar todas como vistas</button></div>
+            <div class="notice-panel__list" role="list">
+              <button class="notice is-unread" type="button" role="listitem"><span class="avatar avatar--green" aria-hidden="true">PH</span><span class="notice__body"><span class="notice__title">Paulo Henrique respondeu</span><span class="notice__text">Re: Revisão do contrato: Fornecedor Lumen · Trabalho</span></span><span class="notice__time">09:15</span></button>
+              <button class="notice is-unread" type="button" role="listitem"><span class="notice__icon" aria-hidden="true"><svg class="i i--sm"><use href="#i-inbox"/></svg></span><span class="notice__body"><span class="notice__title">5 e-mails novos em Trabalho</span><span class="notice__text">Marina Couto, Rafael Dias, Banco Atlântico e mais 2</span></span><span class="notice__time">08:40</span></button>
+              <button class="notice" type="button" role="listitem"><span class="notice__icon" aria-hidden="true"><svg class="i i--sm"><use href="#i-flag"/></svg></span><span class="notice__body"><span class="notice__title">3 sinalizadas vencem hoje</span><span class="notice__text">Revisão do contrato: Fornecedor Lumen e mais 2 · Trabalho</span></span><span class="notice__time">09:00</span></button>
+              <button class="notice" type="button" role="listitem"><span class="notice__icon notice__icon--warning" aria-hidden="true"><svg class="i i--sm"><use href="#i-log-in"/></svg></span><span class="notice__body"><span class="notice__title">Reconecte Família</span><span class="notice__text">Entre de novo para continuar recebendo e-mails.</span></span><span class="notice__time">Ontem</span></button>
+            </div>
+            <div class="notice-panel__foot"><input type="checkbox" class="toggle" id="dnd-open" aria-label="Não perturbe por 1 hora"><label for="dnd-open">Não perturbe por 1 hora</label><button class="btn btn--link btn--compact" type="button">Configurações</button></div>
+          </div><figcaption><b>Painel aberto</b>as mais recentes primeiro; o ponto azul marca as ainda não vistas</figcaption></figure>
+        <figure class="state" style="justify-items:stretch"><div class="menu notice-panel" role="dialog" aria-label="Notificações"><div class="notice-panel__head"><h3 class="notice-panel__title">Notificações</h3></div><div class="empty"><p class="empty__title">Nada novo por aqui</p><p class="empty__desc">Os avisos dos últimos 7 dias aparecem aqui.</p></div><div class="notice-panel__foot"><input type="checkbox" class="toggle" id="dnd-empty" aria-label="Não perturbe por 1 hora"><label for="dnd-empty">Não perturbe por 1 hora</label><button class="btn btn--link btn--compact" type="button">Configurações</button></div></div><figcaption><b>Vazio</b></figcaption></figure>
+      </div>
+      <dl class="guidance">
+        <div><dt>Onde</dt><dd>No fim do header, entre os botões das colunas e a foto da conta. Atalho <kbd>Alt</kbd>+<kbd>N</kbd>.</dd></div>
+        <div><dt>Contador</dt><dd><code>.badge--primary</code> sobre o sino com as notificações ainda não vistas (até "9+"). Abrir o painel marca todas como vistas. Em Não perturbe, o ícone vira <code>bell-off</code>.</dd></div>
+        <div><dt>Painel</dt><dd>As notificações dos últimos 7 dias, de todas as contas, com o mesmo texto que saiu no Windows. Clicar leva à conta e à mensagem, como clicar na notificação. Embaixo, "Não perturbe por 1 hora" e o atalho para Configurações → Notificações.</dd></div>
+        <div><dt>Privacidade</dt><dd>Com "Só a conta", o painel também não mostra remetente nem assunto. A lista fica no banco cifrado e some depois de 7 dias.</dd></div>
+      </dl>
       </section>
   </main>
 </div>

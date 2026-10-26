@@ -148,6 +148,8 @@ impl AppState {
 
     pub fn emit_accounts_changed(&self) {
         let _ = self.app.emit("accounts-updated", ());
+        // Tooltip da bandeja e ponto na barra de tarefas acompanham as não lidas (US8).
+        crate::tray::refresh(&self.app);
     }
 
     /// Sessão em memória da conta, criada na primeira vez a partir do banco.
@@ -207,6 +209,10 @@ impl AppState {
         let _ = self.db.call(move |c| store::set_status(c, &id, AccountStatus::NeedsReauth)).await;
         let _ = self.app.emit("account-status", AccountEvent { account_id: handle.id.clone() });
         self.emit_accounts_changed();
+        let id = handle.id.clone();
+        if let Ok(account) = self.db.call(move |c| store::require_account(c, &id)).await {
+            crate::notify::reauth(&self.app, &account.id, &account.display_name, &account.email);
+        }
     }
 
     /// Access token válido da conta, renovando pelo refresh token quando necessário.

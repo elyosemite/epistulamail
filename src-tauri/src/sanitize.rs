@@ -24,6 +24,22 @@ const TAGS: &[&str] = &[
 
 const GENERIC_ATTRIBUTES: &[&str] = &["style", "align", "dir", "lang", "title"];
 
+/// Classes que marcam o texto citado nos clientes de e-mail mais comuns (US8, D3). São as únicas
+/// classes mantidas; o quadro da mensagem as esconde até o usuário pedir.
+const QUOTE_CLASSES: &[(&str, &[&str])] = &[
+    ("div", &["gmail_quote", "gmail_quote_container", "gmail_attr", "moz-cite-prefix", "protonmail_quote", "yahoo_quoted"]),
+    ("blockquote", &["gmail_quote", "protonmail_quote"]),
+];
+
+/// CSS que esconde o texto citado. O frontend o retira do documento para mostrar a citação.
+pub const QUOTE_HIDE_CSS: &str = "/*quote*/.gmail_quote,.gmail_quote_container,.gmail_attr,.moz-cite-prefix,.protonmail_quote,.yahoo_quoted,blockquote[type=cite]{display:none!important}/*quote*/";
+
+/// O HTML limpo tem texto citado marcado.
+pub fn has_quote(clean_html: &str) -> bool {
+    let lower = clean_html.to_ascii_lowercase();
+    QUOTE_CLASSES.iter().flat_map(|(_, c)| c.iter()).any(|c| lower.contains(&format!("class=\"{c}"))) || lower.contains("type=\"cite\"")
+}
+
 const TAG_ATTRIBUTES: &[(&str, &[&str])] = &[
     ("a", &["href", "name"]),
     ("img", &["src", "alt", "width", "height"]),
@@ -35,6 +51,7 @@ const TAG_ATTRIBUTES: &[(&str, &[&str])] = &[
     ("colgroup", &["span", "width"]),
     ("font", &["color", "face", "size"]),
     ("ol", &["start", "type"]),
+    ("blockquote", &["type"]),
     ("li", &["value"]),
 ];
 
@@ -82,6 +99,7 @@ pub fn sanitize_email_html(input: &str, allow_remote_images: bool) -> SanitizedH
                 .map(|(tag, attrs)| (*tag, attrs.iter().copied().collect::<HashSet<_>>()))
                 .collect(),
         )
+        .allowed_classes(QUOTE_CLASSES.iter().map(|(tag, classes)| (*tag, classes.iter().copied().collect::<HashSet<_>>())).collect())
         .url_schemes(["http", "https", "mailto", "data"].into_iter().collect())
         .url_relative(UrlRelative::Deny)
         .link_rel(Some("noopener noreferrer"))
@@ -101,6 +119,7 @@ pub fn sanitize_email_html(input: &str, allow_remote_images: bool) -> SanitizedH
                 }
             }
             ("a", "href") => (!value.trim_start().to_ascii_lowercase().starts_with("data:")).then_some(Cow::Borrowed(value)),
+            ("blockquote", "type") => value.eq_ignore_ascii_case("cite").then_some(Cow::Borrowed("cite")),
             (_, "style") => filter_style(value).map(Cow::Owned),
             _ => Some(Cow::Borrowed(value)),
         });
@@ -117,7 +136,7 @@ pub fn email_document(clean_html: &str, allow_remote_images: bool) -> String {
     format!(
         "<!doctype html><html><head><meta charset=\"utf-8\">\
 <meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src {img_src}; font-src data:\">\
-<style>html,body{{margin:0}}html{{overflow-y:hidden;overflow-x:auto}}body{{padding:16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:14px;line-height:1.5;overflow-wrap:anywhere}}img{{max-width:100%;height:auto}}table{{max-width:100%}}::-webkit-scrollbar{{width:12px;height:12px}}::-webkit-scrollbar-track,::-webkit-scrollbar-corner{{background:transparent}}::-webkit-scrollbar-thumb{{border:3px solid transparent;border-radius:999px;background:#B3B9C4 padding-box}}::-webkit-scrollbar-thumb:hover{{background-color:#8590A2}}</style>\
+<style>html,body{{margin:0}}html{{overflow-y:hidden;overflow-x:auto}}body{{padding:16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:14px;line-height:1.5;overflow-wrap:anywhere}}img{{max-width:100%;height:auto}}table{{max-width:100%}}::-webkit-scrollbar{{width:12px;height:12px}}::-webkit-scrollbar-track,::-webkit-scrollbar-corner{{background:transparent}}::-webkit-scrollbar-thumb{{border:3px solid transparent;border-radius:999px;background:#B3B9C4 padding-box}}::-webkit-scrollbar-thumb:hover{{background-color:#8590A2}}{QUOTE_HIDE_CSS}</style>\
 </head><body>{clean_html}</body></html>"
     )
 }
@@ -152,6 +171,20 @@ mod tests {
             }
         }
         assert!(!has_event_handler(&out), "atributo de evento em {out}");
+    }
+
+    #[test]
+    fn quoted_text_is_marked_and_hidden_but_other_classes_go_away() {
+        let html = r#"<div class="evil gmail_quote" onclick="x">Em 23, Marina escreveu:<blockquote type="cite" class="x">antigo</blockquote></div><p class="moz-cite-prefix">p</p><blockquote type="other">b</blockquote>"#;
+        let out = sanitize_email_html(html, false).html;
+        assert!(out.contains(r#"class="gmail_quote""#), "{out}");
+        assert!(!out.contains("evil") && !out.contains("onclick"));
+        assert!(out.contains(r#"<blockquote type="cite""#), "{out}");
+        assert!(!out.contains(r#"type="other""#), "{out}");
+        assert!(!out.contains("moz-cite-prefix"), "a classe só vale em div");
+        assert!(has_quote(&out));
+        assert!(!has_quote(&sanitize_email_html("<p>sem citação</p>", false).html));
+        assert!(email_document(&out, false).contains(QUOTE_HIDE_CSS));
     }
 
     #[test]

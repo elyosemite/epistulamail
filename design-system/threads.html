@@ -109,6 +109,17 @@
         <dl class="guidance">
           <div><dt>Só cabeçalho</dt><dd><code>.thread-list--headers</code> é para listas sem seleção em massa, quando só os cabeçalhos estão disponíveis: sem checkbox e sem prévia. A estrela é a primeira coluna, mesmo apagada, para manter o alinhamento. Ações rápidas (<code>.thread__actions</code>) são opcionais: com elas, a data dá lugar às ações no hover; sem elas, a data fica. Combina com <code>.thread-list--compact</code>.</dd></div>
         </dl>
+        <h3 class="sub">Lista por conversa <code>.thread__count</code> (US8)</h3>
+      <div class="stage stage--flush" style="max-width:30rem">
+        <div class="thread-list thread-list--standard" role="list" aria-label="Conversas">
+          <div class="thread is-unread" role="listitem" tabindex="0" aria-label="Não lida, Marina, Rafael, Paulo, 6 mensagens, Revisão do contrato: Fornecedor Lumen, 09:15"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar" tabindex="-1"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina, Rafael, Paulo</span><span class="thread__count">6</span></div><div class="thread__meta"><span class="thread__date">09:15</span></div><div class="thread__subject"><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span><span class="thread__icons" aria-hidden="true"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
+          <div class="thread" role="listitem" tabindex="0"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar" tabindex="-1"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Paulo Henrique, você</span><span class="thread__count">2</span></div><div class="thread__meta"><span class="thread__date">Ontem</span></div><div class="thread__subject"><span class="thread__subject-text">Almoço de sexta?</span></div></div>
+          <div class="thread" role="listitem" tabindex="0"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar" tabindex="-1"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Banco Atlântico</span></div><div class="thread__meta"><span class="thread__date">21 out</span></div><div class="thread__subject"><span class="thread__subject-text">Seu extrato de outubro está disponível</span></div></div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Uma linha por conversa</dt><dd>Data da mensagem mais recente, quantidade em <code>.thread__count</code> (só com 2 ou mais) e os participantes ("você" para as suas). Em negrito se alguma mensagem não foi lida.</dd></div>
+      </dl>
       </section>
   </main>
 </div>

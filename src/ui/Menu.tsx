@@ -6,7 +6,8 @@ import { Icon } from "./Icon";
 
 const MARGIN = 8;
 // Setas percorrem itens, campos, botões das linhas do menu da conta e a opção escolhida de cada .segmented.
-const NAVIGABLE = ".menu-item:not(:disabled):not([hidden]), .menu input, .account-menu__line .btn:not(:disabled), .menu .segmented [aria-checked=\"true\"]";
+// No painel do sino (US8), também as notificações e os botões do topo e do rodapé.
+const NAVIGABLE = ".menu-item:not(:disabled):not([hidden]), .menu input, .account-menu__line .btn:not(:disabled), .menu .segmented [aria-checked=\"true\"], .notice, .notice-panel .btn";
 
 export type Anchor = { x: number; y: number };
 
@@ -22,11 +23,13 @@ interface MenuPanelProps {
   wide?: boolean;
   /** Classe extra (ex.: `account-menu`). */
   className?: string;
+  /** `dialog` para um painel que não é uma lista de comandos (o do sino). */
+  role?: "menu" | "dialog";
   onClose: () => void;
   children: ReactNode;
 }
 
-export function MenuPanel({ label, anchor, wide, className, onClose, children }: MenuPanelProps) {
+export function MenuPanel({ label, anchor, wide, className, role = "menu", onClose, children }: MenuPanelProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState(anchor);
   const closeRef = useRef(onClose);
@@ -82,7 +85,7 @@ export function MenuPanel({ label, anchor, wide, className, onClose, children }:
     <div
       ref={ref}
       className={["menu", wide && "menu--wide", className].filter(Boolean).join(" ")}
-      role="menu"
+      role={role}
       aria-label={label}
       style={{ position: "fixed", left: position.x, top: position.y, zIndex: "var(--z-layer)" }}
       onKeyDown={onKeyDown}

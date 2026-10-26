@@ -6,11 +6,13 @@ import { EmptyState } from "../../ui/EmptyState";
 import { SettingsSheet, SettingsTitle, type SettingsSection } from "../../ui/SettingsSheet";
 import { AppearanceSettings } from "./AppearanceSettings";
 import { GeneralSettings } from "./GeneralSettings";
+import { NotificationSettings } from "./NotificationSettings";
 import { SyncSettings } from "./SyncSettings";
 
 const SECTIONS: SettingsSection[] = [
   { id: "general", label: "Geral", icon: "sliders" },
   { id: "appearance", label: "Aparência", icon: "palette" },
+  { id: "notifications", label: "Notificações", icon: "bell" },
   { id: "account", label: "Conta", icon: "user" },
   { id: "email", label: "E-mail", icon: "mail" },
 ];
@@ -23,12 +25,14 @@ interface SettingsProps {
   accounts: Account[];
   appearance: Appearance;
   onAppearance: (change: Partial<Appearance>) => void;
+  /** Seção ao abrir; sem ela, Geral. O sino abre em Notificações (US8, CA7). */
+  initialSection?: string;
   onClose: () => void;
 }
 
-/** Configurações (US5, CA6): seções à esquerda, opções da seção à direita. Abrem sempre em Geral (US7, CA4). */
-export function Settings({ accounts, appearance, onAppearance, onClose }: SettingsProps) {
-  const [section, setSection] = useState("general");
+/** Configurações (US5, CA6): seções à esquerda, opções da seção à direita. Abrem em Geral (US7, CA4). */
+export function Settings({ accounts, appearance, onAppearance, initialSection = "general", onClose }: SettingsProps) {
+  const [section, setSection] = useState(initialSection);
   const current = SECTIONS.find((s) => s.id === section)!;
   return (
     <SettingsSheet sections={SECTIONS} current={section} onSection={setSection} onClose={onClose}>
@@ -37,6 +41,8 @@ export function Settings({ accounts, appearance, onAppearance, onClose }: Settin
         <GeneralSettings appearance={appearance} onChange={onAppearance} />
       ) : section === "email" ? (
         <SyncSettings accounts={accounts} />
+      ) : section === "notifications" ? (
+        <NotificationSettings accounts={accounts} />
       ) : section === "appearance" ? (
         <AppearanceSettings appearance={appearance} onChange={onAppearance} />
       ) : (

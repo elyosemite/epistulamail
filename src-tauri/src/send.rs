@@ -119,6 +119,8 @@ pub fn schedule(app: &AppHandle, outgoing: Outgoing) -> String {
         }
         if ok {
             after_sent(&app, &state, &outgoing).await;
+        } else if let Err(e) = &result {
+            crate::notify::failure(&app, &account_id, "A mensagem não foi enviada".into(), e.to_string(), "O texto ficou no rascunho.".into());
         }
         let _ = app.emit("send-finished", SendFinished { send_id: id, account_id, ok, error: result.err() });
     });

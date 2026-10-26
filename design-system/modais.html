@@ -186,6 +186,61 @@
         <dl class="guidance">
           <div><dt>Seção inicial</dt><dd>As Configurações abrem sempre em <b>Geral</b>, que reúne as opções da lista: densidade (<code>.segmented</code>) e as colunas visíveis (<code>.toggle</code>), as mesmas do menu da conta e dos botões do header.</dd></div>
         </dl>
+        <h3 class="sub">Configurações → Notificações (US8)</h3>
+        <div class="stage stage--flush scroll-x">
+        <div style="display:flex;height:70rem;min-width:56rem;padding:var(--space-100);background:var(--color-canvas)">
+          <div class="settings-sheet" role="dialog" aria-modal="false" aria-labelledby="st">
+            <div class="settings-sheet__head">
+              <svg class="i"><use href="#i-settings"/></svg>
+              <h2 class="modal__title" id="st">Configurações</h2>
+              <button class="btn btn--subtle btn--icon" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button>
+            </div>
+            <div class="settings">
+              <div class="settings__nav" role="tablist" aria-orientation="vertical" aria-label="Seções">
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-sliders"/></svg><span class="nav-item__text">Geral</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-palette"/></svg><span class="nav-item__text">Aparência</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="true"><svg class="i"><use href="#i-bell"/></svg><span class="nav-item__text">Notificações</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-user"/></svg><span class="nav-item__text">Conta</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-mail"/></svg><span class="nav-item__text">E-mail</span></button>
+              </div>
+              <div class="settings__panel" role="tabpanel" style="overflow:auto">
+                <h3 class="settings__title">Notificações</h3>
+                <div class="settings__group">
+                  <h4 class="settings__group-title">Avisar quando</h4>
+                  <div class="setting"><div><div class="setting__label">Chegar um e-mail novo</div><p class="setting__desc">Na Caixa de entrada. Mais de 3 de uma vez viram um resumo.</p></div><input type="checkbox" class="toggle" checked aria-label="Chegar um e-mail novo"></div>
+                  <div class="setting"><div><div class="setting__label">Alguém responder um e-mail seu</div><p class="setting__desc">Avisa mesmo com os e-mails novos desligados.</p></div><input type="checkbox" class="toggle" checked aria-label="Alguém responder um e-mail seu"></div>
+                  <div class="setting"><div><div class="setting__label" id="due">Uma sinalizada vencer</div><p class="setting__desc">Um aviso por dia com as que vencem hoje e as atrasadas.</p></div><div class="row" style="gap:var(--space-100);flex-wrap:nowrap"><span class="select"><select aria-labelledby="due"><option>8:00</option><option selected>9:00</option><option>10:00</option><option>12:00</option><option>18:00</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span><input type="checkbox" class="toggle" checked aria-label="Uma sinalizada vencer"></div></div>
+                  <div class="setting"><div><div class="setting__label">Um envio ou um mover falhar</div><p class="setting__desc">Quando a janela não está em foco.</p></div><input type="checkbox" class="toggle" checked aria-label="Um envio ou um mover falhar"></div>
+                  <div class="setting"><div><div class="setting__label">Uma conta precisar reconectar</div></div><input type="checkbox" class="toggle" checked aria-label="Uma conta precisar reconectar"></div>
+                  <div class="setting"><div><div class="setting__label">Ficar sem conexão por mais de 1 hora</div></div><input type="checkbox" class="toggle" aria-label="Ficar sem conexão por mais de 1 hora"></div>
+                </div>
+                <div class="settings__group">
+                  <h4 class="settings__group-title">Contas</h4>
+                  <div class="setting-list">
+                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--purple" aria-hidden="true">T</span><div class="setting-list__name"><span class="setting-list__title">Trabalho</span><span class="setting-list__sub">joao.silva.empresa@gmail.com</span></div><input type="checkbox" class="toggle" checked aria-label="Notificações de Trabalho"></div>
+                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar" aria-hidden="true">P</span><div class="setting-list__name"><span class="setting-list__title">Pessoal</span><span class="setting-list__sub">joao.silva@gmail.com</span></div><input type="checkbox" class="toggle" checked aria-label="Notificações de Pessoal"></div>
+                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--orange" aria-hidden="true">F</span><div class="setting-list__name"><span class="setting-list__title">Família</span><span class="setting-list__sub">familia.silva@gmail.com</span></div><input type="checkbox" class="toggle" aria-label="Notificações de Família"></div>
+                  </div>
+                </div>
+                <div class="settings__group">
+                  <h4 class="settings__group-title">Privacidade</h4>
+                  <div class="setting"><div><div class="setting__label" id="priv">O que aparece na notificação</div><p class="setting__desc">As notificações aparecem na tela bloqueada e ficam na Central de Notificações do Windows.</p></div>
+                    <div class="segmented" role="radiogroup" aria-labelledby="priv"><button class="btn btn--compact" type="button" role="radio" aria-checked="true">Remetente e assunto</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Só a conta</button></div></div>
+                </div>
+                <div class="settings__group">
+                  <h4 class="settings__group-title">Não perturbe</h4>
+                  <div class="setting"><div><div class="setting__label" id="dnd">Silenciar todo dia</div><p class="setting__desc">Ao terminar, um resumo do que chegou.</p></div><div class="row" style="gap:var(--space-100);flex-wrap:nowrap"><span class="select"><select aria-label="Das"><option selected>22:00</option><option>23:00</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span><span style="color:var(--color-text-subtle)">às</span><span class="select"><select aria-label="Até"><option selected>7:00</option><option>8:00</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span><input type="checkbox" class="toggle" checked aria-labelledby="dnd"></div></div>
+                </div>
+                <div class="settings__group">
+                  <h4 class="settings__group-title">Ao fechar a janela</h4>
+                  <div class="setting"><div><div class="setting__label">Continuar na bandeja do sistema</div><p class="setting__desc">Para receber notificações com a janela fechada. Para sair, use Sair no ícone da bandeja.</p></div><input type="checkbox" class="toggle" checked aria-label="Continuar na bandeja do sistema"></div>
+                  <div class="setting"><div><div class="setting__label">Abrir o Epistula ao iniciar o Windows</div><p class="setting__desc">Abre direto na bandeja, sem mostrar a janela.</p></div><input type="checkbox" class="toggle" aria-label="Abrir o Epistula ao iniciar o Windows"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 </div>

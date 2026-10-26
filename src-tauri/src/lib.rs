@@ -7,6 +7,7 @@ mod mailbox;
 mod message;
 mod oauth;
 mod moves;
+mod notify;
 mod photo;
 mod preview;
 mod provider;
@@ -17,6 +18,7 @@ mod secrets;
 mod session;
 mod store;
 mod sync;
+mod tray;
 
 use std::path::Path;
 
@@ -148,7 +150,26 @@ pub fn run() {
     tracing_subscriber::fmt().with_max_level(tracing::Level::INFO).with_target(false).init();
 
     let app = tauri::Builder::default()
+        // Abrir o app de novo (com ele na bandeja) só traz a janela que já existe (US8).
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| notify::bring_to_front(app)))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_autostart::Builder::new().args(["--minimized"]).build())
+        .on_window_event(|window, event| {
+            // Fechar a janela a esconde na bandeja, para as notificações continuarem (US8, CA5).
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let app = window.app_handle().clone();
+                if app.state::<notify::Notifier>().settings().tray_on_close {
+                    api.prevent_close();
+                    let _ = window.hide();
+                    tauri::async_runtime::spawn(async move {
+                        let state = app.state::<AppState>();
+                        if matches!(state.db.call(|c| store::take_tray_hint(c)).await, Ok(true)) {
+                            notify::tray_hint(&app);
+                        }
+                    });
+                }
+            }
+        })
         .setup(|app| {
             let dir = app.path().app_data_dir()?;
             let db = open_database(&dir).map_err(|e| {
@@ -169,6 +190,15 @@ pub fn run() {
                 tracing::info!(ms = started.elapsed().as_millis() as u64, "inicialização concluída");
             });
             sync::start_periodic(app.handle());
+            app.manage(notify::Notifier::default());
+            notify::start(app.handle());
+            tray::create(app.handle())?;
+            // Aberto com o Windows (D8): fica só na bandeja. Senão, a janela aparece.
+            if !std::env::args().any(|a| a == "--minimized") {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                }
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -212,6 +242,12 @@ pub fn run() {
             commands::cancel_send,
             commands::account_overview,
             commands::sync_account,
+            commands::get_conversation,
+            commands::get_notify_settings,
+            commands::set_notify_settings,
+            commands::list_notices,
+            commands::mark_notices_seen,
+            commands::set_snooze,
         ])
         .build(tauri::generate_context!());
 

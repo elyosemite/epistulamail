@@ -1,7 +1,7 @@
 //! Repositório do banco local (US3, CA2). Consultas sempre parametrizadas. Nenhuma função registra
 //! em log endereço, nome de conta, nome de pasta, assunto, corpo ou nome de anexo.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use serde::Serialize;
@@ -555,6 +555,38 @@ pub struct ApplyReport {
     pub upserted: usize,
     pub flags_changed: usize,
     pub removed: usize,
+    /// Mensagens que não existiam no banco (para as notificações, US8).
+    pub new_ids: Vec<i64>,
+}
+
+/// Conversa da mensagem (US8): a do pai, se ele já está no banco; senão a raiz dos cabeçalhos.
+/// `''` quando a mensagem não tem nenhum id (fica sozinha).
+fn thread_for(conn: &Connection, account_id: &str, fields: &HeaderFields) -> Result<String, AppError> {
+    if let Some(parent) = &fields.in_reply_to {
+        let found: Option<String> = conn
+            .query_row(
+                "SELECT thread_id FROM message WHERE account_id = ?1 AND msgid = ?2 AND thread_id IS NOT NULL AND thread_id <> '' LIMIT 1",
+                params![account_id, parent],
+                |r| r.get(0),
+            )
+            .optional()
+            .map_err(sql_error("conversa"))?;
+        if let Some(t) = found {
+            return Ok(t);
+        }
+    }
+    Ok(crate::message::thread_root(fields).unwrap_or_default())
+}
+
+/// `In-Reply-To` e `References`, separados por espaço, sem repetir.
+fn refs_of(fields: &HeaderFields) -> String {
+    let mut out: Vec<&str> = Vec::new();
+    for id in fields.in_reply_to.iter().chain(fields.references.iter()) {
+        if !out.contains(&id.as_str()) {
+            out.push(id);
+        }
+    }
+    out.join(" ")
 }
 
 pub fn apply_snapshot(conn: &mut Connection, folder_id: i64, snap: &Snapshot) -> Result<ApplyReport, AppError> {
@@ -567,9 +599,11 @@ pub fn apply_snapshot(conn: &mut Connection, folder_id: i64, snap: &Snapshot) ->
         }
         let mut upsert = tx
             .prepare_cached(
-                "INSERT INTO message (account_id, dedupe_key, subject, from_name, from_address, to_json, cc_json, date, size, seen, flagged, has_attachments)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
-                 ON CONFLICT (account_id, dedupe_key) DO UPDATE SET seen = excluded.seen, flagged = excluded.flagged, in_transit_since = NULL
+                "INSERT INTO message (account_id, dedupe_key, subject, from_name, from_address, to_json, cc_json, date, size, seen, flagged, has_attachments, msgid, refs, thread_id)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
+                 ON CONFLICT (account_id, dedupe_key) DO UPDATE SET seen = excluded.seen, flagged = excluded.flagged, in_transit_since = NULL,
+                    msgid = coalesce(message.msgid, excluded.msgid), refs = coalesce(message.refs, excluded.refs),
+                    thread_id = coalesce(message.thread_id, excluded.thread_id)
                  RETURNING id",
             )
             .map_err(sql_error("sincronização"))?;
@@ -587,11 +621,17 @@ pub fn apply_snapshot(conn: &mut Connection, folder_id: i64, snap: &Snapshot) ->
                  WHERE m.account_id = ?1 AND m.dedupe_key = ?2 AND mf.folder_id = ?3 AND mf.uid <> ?4 LIMIT 1",
             )
             .map_err(sql_error("sincronização"))?;
+        let mut exists = tx
+            .prepare_cached("SELECT 1 FROM message WHERE account_id = ?1 AND dedupe_key = ?2")
+            .map_err(sql_error("sincronização"))?;
         for h in &snap.headers {
             let mut key = dedupe_key(&folder, snap.uidvalidity, h);
             if twin.exists(params![folder.account_id, key, folder_id, h.uid]).map_err(sql_error("sincronização"))? {
                 key = uid_key(&folder, snap.uidvalidity, h.uid);
             }
+            let is_new = !exists.exists(params![folder.account_id, key]).map_err(sql_error("sincronização"))?;
+            let thread = thread_for(&tx, &folder.account_id, &h.fields)?;
+            let msgid = h.fields.message_id.as_deref().map(crate::message::normalize_id);
             let to = serde_json::to_string(&h.fields.to).unwrap_or_else(|_| "[]".into());
             let cc = serde_json::to_string(&h.fields.cc).unwrap_or_else(|_| "[]".into());
             let date = h.fields.date.clone().or_else(|| h.internal_date.clone()).unwrap_or_default();
@@ -610,12 +650,18 @@ pub fn apply_snapshot(conn: &mut Connection, folder_id: i64, snap: &Snapshot) ->
                         h.flags.seen,
                         h.flags.flagged,
                         h.fields.has_attachments,
+                        msgid,
+                        refs_of(&h.fields),
+                        thread,
                     ],
                     |r| r.get(0),
                 )
                 .map_err(sql_error("sincronização"))?;
             link.execute(params![id, folder_id, h.uid]).map_err(sql_error("sincronização"))?;
             report.upserted += 1;
+            if is_new && !snap.reset {
+                report.new_ids.push(id);
+            }
         }
 
         let mut flags = tx
@@ -732,6 +778,28 @@ pub struct ListedMessage {
     pub snippet: Option<String>,
     pub has_files: bool,
     pub has_images: bool,
+    /// Conversa (US8): o `thread_id`, ou `#<id>` para a mensagem sozinha.
+    pub thread_key: String,
+    /// Resumo da conversa, só na lista da pasta.
+    pub thread: Option<ThreadSummary>,
+}
+
+/// Uma linha por conversa na lista (US8, D1): quantas mensagens, quem participou e o estado geral.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThreadSummary {
+    pub count: u32,
+    pub unread: bool,
+    pub flagged: bool,
+    /// Remetentes na ordem em que entraram na conversa, sem repetir.
+    pub participants: Vec<Participant>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Participant {
+    pub name: String,
+    pub mine: bool,
 }
 
 fn listed_from(r: &Row<'_>) -> rusqlite::Result<ListedMessage> {
@@ -747,13 +815,62 @@ fn listed_from(r: &Row<'_>) -> rusqlite::Result<ListedMessage> {
         snippet: r.get(10)?,
         has_files: r.get(11)?,
         has_images: r.get(12)?,
+        thread_key: r.get(13)?,
+        thread: None,
     })
 }
 
 /// Sem a prévia (estrutura ainda não lida), o clipe segue o palpite do cabeçalho (`multipart/mixed`).
 const LISTED_COLUMNS: &str = "mf.uid, m.subject, m.from_name, m.from_address, m.date, m.seen, m.flagged,
     fu.message_id IS NOT NULL, fu.due_date, fu.completed_at,
-    m.snippet, CASE WHEN m.snippet IS NULL THEN m.has_attachments ELSE m.has_files END, m.has_images";
+    m.snippet, CASE WHEN m.snippet IS NULL THEN m.has_attachments ELSE m.has_files END, m.has_images,
+    CASE WHEN m.thread_id IS NULL OR m.thread_id = '' THEN '#' || m.id ELSE m.thread_id END";
+
+/// Há na mesma pasta uma mensagem mais nova da mesma conversa (e que não está saindo dela).
+const NEWER_IN_THREAD: &str = "m.thread_id IS NOT NULL AND m.thread_id <> '' AND EXISTS (
+        SELECT 1 FROM message m2 JOIN message_folder mf2 ON mf2.message_id = m2.id
+        WHERE m2.account_id = m.account_id AND m2.thread_id = m.thread_id AND mf2.folder_id = mf.folder_id AND mf2.uid > mf.uid
+          AND NOT EXISTS (SELECT 1 FROM pending_move pm2 WHERE pm2.from_folder_id = mf2.folder_id AND pm2.from_uid = mf2.uid))";
+
+/// Resumo de cada conversa (fora Lixeira e Spam), para a lista. `own` é o e-mail da conta.
+pub fn thread_summaries(conn: &Connection, account_id: &str, own: &str, keys: &[String]) -> Result<HashMap<String, ThreadSummary>, AppError> {
+    let own = own.trim().to_lowercase();
+    let mut st = conn
+        .prepare_cached(
+            "SELECT m.from_name, m.from_address, m.seen, m.flagged FROM message m
+             WHERE m.account_id = ?1 AND m.thread_id = ?2
+               AND EXISTS (SELECT 1 FROM message_folder mf JOIN folder f ON f.id = mf.folder_id
+                           WHERE mf.message_id = m.id AND f.role NOT IN ('trash', 'spam'))
+             ORDER BY m.date",
+        )
+        .map_err(sql_error("conversa"))?;
+    let mut out = HashMap::new();
+    for key in keys.iter().filter(|k| !k.starts_with('#')) {
+        if out.contains_key(key) {
+            continue;
+        }
+        let rows = st
+            .query_map(params![account_id, key], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?, r.get::<_, bool>(2)?, r.get::<_, bool>(3)?)))
+            .map_err(sql_error("conversa"))?;
+        let mut summary = ThreadSummary { count: 0, unread: false, flagged: false, participants: Vec::new() };
+        let mut seen_addresses: Vec<String> = Vec::new();
+        for row in rows {
+            let (name, address, seen, flagged) = row.map_err(sql_error("conversa"))?;
+            summary.count += 1;
+            summary.unread |= !seen;
+            summary.flagged |= flagged;
+            let address = address.trim().to_lowercase();
+            if !seen_addresses.contains(&address) {
+                summary.participants.push(Participant { name: if name.trim().is_empty() { address.clone() } else { name.trim().to_owned() }, mine: address == own });
+                seen_addresses.push(address);
+            }
+        }
+        if summary.count > 0 {
+            out.insert(key.clone(), summary);
+        }
+    }
+    Ok(out)
+}
 
 /// Página da pasta em ordem decrescente de UID, a partir de `before` (exclusivo).
 pub fn list_page(conn: &Connection, folder_id: i64, before: Option<u32>, limit: u32) -> Result<Vec<ListedMessage>, AppError> {
@@ -765,6 +882,7 @@ pub fn list_page(conn: &Connection, folder_id: i64, before: Option<u32>, limit: 
                  LEFT JOIN message_followup fu ON fu.message_id = m.id
                  WHERE mf.folder_id = ?1 AND mf.uid < ?2
                    AND NOT EXISTS (SELECT 1 FROM pending_move pm WHERE pm.from_folder_id = mf.folder_id AND pm.from_uid = mf.uid)
+                   AND NOT ({NEWER_IN_THREAD})
                  ORDER BY mf.uid DESC LIMIT ?3"
             ),
         )
@@ -821,6 +939,338 @@ pub fn save_body(conn: &mut Connection, message_id: i64, raw: &[u8], attachments
     )
     .map_err(sql_error("corpo"))?;
     tx.commit().map_err(sql_error("corpo"))
+}
+
+// ---------------------------------------------------------------- conversas (US8)
+
+/// Uma mensagem da conversa: onde ela está (pasta e UID), a linha da lista e se é sua.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ConversationItem {
+    pub folder_id: i64,
+    pub message_id: i64,
+    pub message: ListedMessage,
+    pub mine: bool,
+}
+
+/// Todas as mensagens da conversa de `message_id`, da mais antiga para a mais nova, uma vez cada,
+/// na primeira pasta da sidebar em que estão. Lixeira e Spam ficam de fora (a não ser a própria).
+pub fn conversation(conn: &Connection, account_id: &str, own: &str, message_id: i64) -> Result<Vec<ConversationItem>, AppError> {
+    let thread: Option<String> = conn
+        .query_row("SELECT thread_id FROM message WHERE id = ?1 AND account_id = ?2", params![message_id, account_id], |r| r.get(0))
+        .optional()
+        .map_err(sql_error("conversa"))?
+        .ok_or(AppError::MessageNotFound)?;
+    let visible = "(f.role NOT IN ('trash', 'spam') OR m.id = ?3)";
+    let mut st = conn
+        .prepare_cached(&format!(
+            "SELECT {LISTED_COLUMNS}, mf.folder_id, m.id, lower(m.from_address) = ?4
+             FROM message m
+             JOIN message_folder mf ON mf.message_id = m.id
+             JOIN folder f ON f.id = mf.folder_id
+             LEFT JOIN message_followup fu ON fu.message_id = m.id
+             WHERE m.account_id = ?1 AND (m.id = ?3 OR (?2 <> '' AND m.thread_id = ?2)) AND {visible}
+               AND f.position = (SELECT min(f.position) FROM message_folder mf JOIN folder f ON f.id = mf.folder_id WHERE mf.message_id = m.id AND {visible})
+             ORDER BY m.date, m.id"
+        ))
+        .map_err(sql_error("conversa"))?;
+    let thread = thread.unwrap_or_default();
+    let rows = st
+        .query_map(params![account_id, thread, message_id, own.trim().to_lowercase()], |r| {
+            Ok(ConversationItem { message: listed_from(r)?, folder_id: r.get(14)?, message_id: r.get(15)?, mine: r.get(16)? })
+        })
+        .map_err(sql_error("conversa"))?;
+    let mut out: Vec<ConversationItem> = rows.collect::<Result<_, _>>().map_err(sql_error("conversa"))?;
+    out.dedup_by_key(|i| i.message_id);
+    Ok(out)
+}
+
+/// Os UIDs dados e os das outras mensagens das mesmas conversas na mesma pasta (US8: agir sobre
+/// uma linha da lista age sobre a conversa inteira dela na pasta).
+pub fn with_thread_uids(conn: &Connection, folder_id: i64, uids: &[u32]) -> Result<Vec<u32>, AppError> {
+    let mut st = conn
+        .prepare_cached(
+            "SELECT mf2.uid FROM message_folder mf
+             JOIN message m ON m.id = mf.message_id
+             JOIN message m2 ON m2.account_id = m.account_id AND m2.thread_id = m.thread_id
+             JOIN message_folder mf2 ON mf2.message_id = m2.id AND mf2.folder_id = mf.folder_id
+             WHERE mf.folder_id = ?1 AND mf.uid = ?2 AND m.thread_id IS NOT NULL AND m.thread_id <> ''
+               AND NOT EXISTS (SELECT 1 FROM pending_move pm WHERE pm.from_folder_id = mf2.folder_id AND pm.from_uid = mf2.uid)",
+        )
+        .map_err(sql_error("conversa"))?;
+    let mut out: Vec<u32> = uids.to_vec();
+    for uid in uids {
+        let rows = st.query_map(params![folder_id, uid], |r| r.get::<_, u32>(0)).map_err(sql_error("conversa"))?;
+        for row in rows {
+            let other = row.map_err(sql_error("conversa"))?;
+            if !out.contains(&other) {
+                out.push(other);
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// UIDs da pasta cujas mensagens ainda não têm a conversa (salvas antes da US8).
+pub fn uids_without_thread(conn: &Connection, folder_id: i64, limit: u32) -> Result<Vec<u32>, AppError> {
+    let mut st = conn
+        .prepare_cached(
+            "SELECT mf.uid FROM message_folder mf JOIN message m ON m.id = mf.message_id
+             WHERE mf.folder_id = ?1 AND m.thread_id IS NULL ORDER BY mf.uid DESC LIMIT ?2",
+        )
+        .map_err(sql_error("conversa"))?;
+    let rows = st.query_map(params![folder_id, limit], |r| r.get::<_, u32>(0)).map_err(sql_error("conversa"))?;
+    rows.collect::<Result<_, _>>().map_err(sql_error("conversa"))
+}
+
+/// Grava os cabeçalhos da conversa buscados depois (mensagens salvas antes da US8).
+pub fn save_threads(conn: &mut Connection, folder_id: i64, items: &[(u32, HeaderFields)]) -> Result<(), AppError> {
+    let folder = get_folder(conn, folder_id)?.ok_or(AppError::InvalidId)?;
+    let tx = conn.transaction().map_err(sql_error("conversa"))?;
+    for (uid, fields) in items {
+        let thread = thread_for(&tx, &folder.account_id, fields)?;
+        tx.execute(
+            "UPDATE message SET msgid = ?3, refs = ?4, thread_id = ?5
+             WHERE id = (SELECT message_id FROM message_folder WHERE folder_id = ?1 AND uid = ?2) AND thread_id IS NULL",
+            params![folder_id, uid, fields.message_id.as_deref().map(crate::message::normalize_id), refs_of(fields), thread],
+        )
+        .map_err(sql_error("conversa"))?;
+    }
+    tx.commit().map_err(sql_error("conversa"))
+}
+
+/// Das mensagens dadas, as que respondem a um e-mail enviado pela conta (`own`): `In-Reply-To` ou
+/// `References` com o `Message-ID` de uma mensagem cujo remetente é a própria conta.
+pub fn replies_to_me(conn: &Connection, account_id: &str, own: &str, ids: &[i64]) -> Result<Vec<i64>, AppError> {
+    let own = own.trim().to_lowercase();
+    let mut refs_of_message = conn.prepare_cached("SELECT refs FROM message WHERE id = ?1 AND account_id = ?2").map_err(sql_error("conversa"))?;
+    let mut mine = conn
+        .prepare_cached("SELECT 1 FROM message WHERE account_id = ?1 AND msgid = ?2 AND lower(from_address) = ?3 LIMIT 1")
+        .map_err(sql_error("conversa"))?;
+    let mut out = Vec::new();
+    for &id in ids {
+        let refs: Option<String> = refs_of_message.query_row(params![id, account_id], |r| r.get(0)).optional().map_err(sql_error("conversa"))?.flatten();
+        let Some(refs) = refs else { continue };
+        for token in refs.split_whitespace() {
+            if mine.exists(params![account_id, token, own]).map_err(sql_error("conversa"))? {
+                out.push(id);
+                break;
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// O que a notificação de um e-mail novo mostra (US8). Só para o módulo de notificações.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NewMail {
+    pub folder_id: i64,
+    pub uid: u32,
+    pub from_name: String,
+    pub from_address: String,
+    pub subject: String,
+    pub snippet: Option<String>,
+    pub seen: bool,
+}
+
+pub fn new_mail(conn: &Connection, folder_id: i64, ids: &[i64]) -> Result<Vec<NewMail>, AppError> {
+    let mut st = conn
+        .prepare_cached(
+            "SELECT mf.uid, m.from_name, m.from_address, m.subject, m.snippet, m.seen
+             FROM message m JOIN message_folder mf ON mf.message_id = m.id WHERE m.id = ?1 AND mf.folder_id = ?2",
+        )
+        .map_err(sql_error("notificação"))?;
+    let mut out = Vec::new();
+    for &id in ids {
+        if let Some(m) = st
+            .query_row(params![id, folder_id], |r| {
+                Ok(NewMail { folder_id, uid: r.get(0)?, from_name: r.get(1)?, from_address: r.get(2)?, subject: r.get(3)?, snippet: r.get(4)?, seen: r.get(5)? })
+            })
+            .optional()
+            .map_err(sql_error("notificação"))?
+        {
+            out.push(m);
+        }
+    }
+    Ok(out)
+}
+
+// ---------------------------------------------------------------- notificações (US8, CA4)
+
+/// Preferências de notificação e da bandeja. Valem para o app; `accounts_off` lista as contas
+/// silenciadas.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NotifySettings {
+    pub new_mail: bool,
+    pub replies: bool,
+    pub due: bool,
+    /// Hora do aviso diário dos prazos (0–23).
+    pub due_hour: u32,
+    pub failures: bool,
+    pub reauth: bool,
+    pub offline: bool,
+    /// `"full"`: remetente e assunto; `"account"`: só a conta.
+    pub privacy: String,
+    pub quiet: bool,
+    pub quiet_from: u32,
+    pub quiet_to: u32,
+    pub tray_on_close: bool,
+    pub autostart: bool,
+    pub accounts_off: Vec<String>,
+}
+
+impl Default for NotifySettings {
+    fn default() -> Self {
+        NotifySettings {
+            new_mail: true,
+            replies: true,
+            due: true,
+            due_hour: 9,
+            failures: true,
+            reauth: true,
+            offline: false,
+            privacy: "full".into(),
+            quiet: true,
+            quiet_from: 22,
+            quiet_to: 7,
+            tray_on_close: true,
+            autostart: false,
+            accounts_off: Vec::new(),
+        }
+    }
+}
+
+const APP_NOTIFY: &str = "notify";
+const SETTING_NOTIFY_OFF: &str = "notify_off";
+
+pub fn notify_settings(conn: &Connection) -> Result<NotifySettings, AppError> {
+    let mut settings: NotifySettings = app_setting(conn, APP_NOTIFY)?.and_then(|v| serde_json::from_str(&v).ok()).unwrap_or_default();
+    let mut st = conn
+        .prepare_cached("SELECT account_id FROM account_setting WHERE key = ?1 AND value = '1'")
+        .map_err(sql_error("notificação"))?;
+    let rows = st.query_map([SETTING_NOTIFY_OFF], |r| r.get::<_, String>(0)).map_err(sql_error("notificação"))?;
+    settings.accounts_off = rows.collect::<Result<_, _>>().map_err(sql_error("notificação"))?;
+    Ok(settings)
+}
+
+pub fn set_notify_settings(conn: &mut Connection, settings: &NotifySettings) -> Result<NotifySettings, AppError> {
+    let valid_hour = |h: u32| h < 24;
+    if !["full", "account"].contains(&settings.privacy.as_str()) || ![settings.due_hour, settings.quiet_from, settings.quiet_to].iter().all(|h| valid_hour(*h)) {
+        return Err(AppError::InvalidInput);
+    }
+    let tx = conn.transaction().map_err(sql_error("notificação"))?;
+    let stored = NotifySettings { accounts_off: Vec::new(), ..settings.clone() };
+    set_app_setting(&tx, APP_NOTIFY, &serde_json::to_string(&stored).map_err(|_| AppError::InvalidInput)?)?;
+    tx.execute("DELETE FROM account_setting WHERE key = ?1", [SETTING_NOTIFY_OFF]).map_err(sql_error("notificação"))?;
+    for id in &settings.accounts_off {
+        require_account(&tx, id)?;
+        tx.execute("INSERT INTO account_setting (account_id, key, value) VALUES (?1, ?2, '1')", params![id, SETTING_NOTIFY_OFF])
+            .map_err(sql_error("notificação"))?;
+    }
+    tx.commit().map_err(sql_error("notificação"))?;
+    notify_settings(conn)
+}
+
+/// "A primeira vez que a janela fecha" (aviso da bandeja) já foi mostrada.
+pub fn take_tray_hint(conn: &Connection) -> Result<bool, AppError> {
+    if app_setting(conn, "tray_hint_shown")?.is_some() {
+        return Ok(false);
+    }
+    set_app_setting(conn, "tray_hint_shown", "1")?;
+    Ok(true)
+}
+
+/// Não lidas da Caixa de entrada de todas as contas ativas (tooltip da bandeja e ponto na barra).
+pub fn inbox_unread_total(conn: &Connection) -> Result<u32, AppError> {
+    conn.query_row(
+        "SELECT coalesce(sum(f.unread), 0) FROM folder f JOIN account a ON a.id = f.account_id WHERE f.role = 'inbox' AND a.status = 'active'",
+        [],
+        |r| r.get(0),
+    )
+    .map_err(sql_error("contas"))
+}
+
+// ---------------------------------------------------------------- sino (US8, CA7)
+
+/// Por quanto tempo o sino guarda as notificações (D12).
+pub const NOTICE_DAYS: i64 = 7;
+const NOTICE_LIMIT: u32 = 100;
+
+/// Uma notificação a guardar no histórico do sino.
+#[derive(Debug, Clone)]
+pub struct NewNotice {
+    pub account_id: Option<String>,
+    pub kind: String,
+    pub title: String,
+    pub line1: String,
+    pub line2: String,
+    /// Remetente, para o avatar. Só com a privacidade "Remetente e assunto".
+    pub sender: Option<String>,
+    pub target: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Notice {
+    pub id: i64,
+    pub account_id: Option<String>,
+    pub kind: String,
+    pub title: String,
+    pub line1: String,
+    pub line2: String,
+    pub sender: Option<String>,
+    pub target: Option<serde_json::Value>,
+    pub created_at: i64,
+    pub seen: bool,
+}
+
+/// Guarda as notificações e apaga as mais antigas que o prazo do sino.
+pub fn add_notices(conn: &mut Connection, notices: &[NewNotice], at: i64) -> Result<(), AppError> {
+    let tx = conn.transaction().map_err(sql_error("sino"))?;
+    {
+        let mut st = tx
+            .prepare_cached("INSERT INTO notice (account_id, kind, title, line1, line2, sender, target, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)")
+            .map_err(sql_error("sino"))?;
+        for n in notices {
+            let target = n.target.as_ref().map(|t| t.to_string());
+            st.execute(params![n.account_id, n.kind, n.title, n.line1, n.line2, n.sender, target, at]).map_err(sql_error("sino"))?;
+        }
+    }
+    tx.execute("DELETE FROM notice WHERE created_at < ?1", [at - NOTICE_DAYS * 86_400]).map_err(sql_error("sino"))?;
+    tx.commit().map_err(sql_error("sino"))
+}
+
+/// As notificações dos últimos 7 dias, das mais novas para as mais antigas.
+pub fn list_notices(conn: &Connection, at: i64) -> Result<Vec<Notice>, AppError> {
+    let mut st = conn
+        .prepare_cached(
+            "SELECT id, account_id, kind, title, line1, line2, sender, target, created_at, seen FROM notice
+             WHERE created_at >= ?1 ORDER BY created_at DESC, id DESC LIMIT ?2",
+        )
+        .map_err(sql_error("sino"))?;
+    let rows = st
+        .query_map(params![at - NOTICE_DAYS * 86_400, NOTICE_LIMIT], |r| {
+            Ok(Notice {
+                id: r.get(0)?,
+                account_id: r.get(1)?,
+                kind: r.get(2)?,
+                title: r.get(3)?,
+                line1: r.get(4)?,
+                line2: r.get(5)?,
+                sender: r.get(6)?,
+                target: r.get::<_, Option<String>>(7)?.and_then(|t| serde_json::from_str(&t).ok()),
+                created_at: r.get(8)?,
+                seen: r.get(9)?,
+            })
+        })
+        .map_err(sql_error("sino"))?;
+    rows.collect::<Result<_, _>>().map_err(sql_error("sino"))
+}
+
+/// Abrir o painel ou "Marcar todas como vistas".
+pub fn mark_notices_seen(conn: &Connection) -> Result<(), AppError> {
+    conn.execute("UPDATE notice SET seen = 1 WHERE seen = 0", []).map_err(sql_error("sino"))?;
+    Ok(())
 }
 
 // ---------------------------------------------------------------- prévia da lista (US7, CA7)
@@ -926,7 +1376,7 @@ pub fn search(conn: &Connection, account_id: &str, query: &str) -> Result<Vec<Se
         .map_err(sql_error("busca"))?;
     let rows = st
         .query_map(params![account_id, pattern, SEARCH_LIMIT + 1], |r| {
-            Ok(SearchHit { message: listed_from(r)?, folder_id: r.get(13)?, folder_name: r.get(14)? })
+            Ok(SearchHit { message: listed_from(r)?, folder_id: r.get(14)?, folder_name: r.get(15)? })
         })
         .map_err(sql_error("busca"))?;
     rows.collect::<Result<_, _>>().map_err(sql_error("busca"))
@@ -1027,7 +1477,7 @@ pub fn flagged(conn: &Connection, account_id: &str, bucket: FlagBucket, dates: &
         .map_err(sql_error("sinalizadas"))?;
     let rows = st
         .query_map(params![account_id, dates.today, dates.week_end, bucket_name(bucket), SEARCH_LIMIT + 1], |r| {
-            Ok(SearchHit { message: listed_from(r)?, folder_id: r.get(13)?, folder_name: r.get(14)? })
+            Ok(SearchHit { message: listed_from(r)?, folder_id: r.get(14)?, folder_name: r.get(15)? })
         })
         .map_err(sql_error("sinalizadas"))?;
     rows.collect::<Result<_, _>>().map_err(sql_error("sinalizadas"))
@@ -1403,7 +1853,7 @@ pub fn incoming_moves(conn: &Connection, folder_id: i64) -> Result<Vec<(i64, Lis
             LISTED_COLUMNS.replace("mf.uid", "pm.from_uid")
         ))
         .map_err(sql_error("mover"))?;
-    let rows = st.query_map([folder_id], |r| Ok((r.get(13)?, listed_from(r)?))).map_err(sql_error("mover"))?;
+    let rows = st.query_map([folder_id], |r| Ok((r.get(14)?, listed_from(r)?))).map_err(sql_error("mover"))?;
     rows.collect::<Result<_, _>>().map_err(sql_error("mover"))
 }
 
@@ -1712,6 +2162,8 @@ pub(crate) mod tests {
                 to: vec![Person { name: String::new(), address: "eu@exemplo.com".into() }],
                 cc: vec![],
                 message_id: Some(message_id.into()),
+                in_reply_to: None,
+                references: vec![],
                 has_attachments: false,
             },
             internal_date: None,
@@ -2395,6 +2847,34 @@ pub(crate) mod tests {
             let m = message_by_uid(c, inbox.id, 1).unwrap().unwrap();
             save_body(c, m.id, b"Subject: s\r\n\r\nCorpo salvo.", &[]).unwrap();
             assert_eq!(list_page(c, inbox.id, None, 50).unwrap()[2].snippet.as_deref(), Some("Corpo salvo."));
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn notices_keep_seven_days_newest_first() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let note = |title: &str| NewNotice {
+                account_id: Some(a.id.clone()),
+                kind: "mail".into(),
+                title: title.into(),
+                line1: "Contrato".into(),
+                line2: String::new(),
+                sender: Some("Marina".into()),
+                target: Some(serde_json::json!({ "accountId": a.id })),
+            };
+            let day = 86_400;
+            add_notices(c, &[note("velha")], 1_000_000).unwrap();
+            add_notices(c, &[note("ontem"), note("hoje")], 1_000_000 + 7 * day).unwrap();
+            let now = 1_000_000 + 8 * day;
+            let list = list_notices(c, now).unwrap();
+            assert_eq!(list.iter().map(|n| n.title.as_str()).collect::<Vec<_>>(), ["hoje", "ontem"], "a de 8 dias atrás sai");
+            assert!(list.iter().all(|n| !n.seen) && list[0].target.is_some());
+            mark_notices_seen(c).unwrap();
+            assert!(list_notices(c, now).unwrap().iter().all(|n| n.seen));
             Ok(())
         })
         .unwrap();

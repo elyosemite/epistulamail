@@ -37,6 +37,11 @@ import { SectionMessage } from "../../ui/SectionMessage";
 import { useToast } from "../../ui/Toast";
 import { MessageView, type ComposeState } from "../message/MessageView";
 
+/** Pedido do App (US8): abrir a pasta e a mensagem de uma notificação, ou começar um e-mail pela bandeja. */
+export type MailboxRequest =
+  | { nonce: number; kind: "open"; accountId: string; folderId: string | null; messageId: string | null }
+  | { nonce: number; kind: "compose" };
+
 interface MailboxProps {
   account: Account;
   initialFolderId: string | null;
@@ -53,6 +58,7 @@ interface MailboxProps {
   onAccessLost: () => void;
   onReconnect: () => void;
   onReaderOpenChange: (open: boolean) => void;
+  appRequest?: MailboxRequest | null;
 }
 
 const FALLBACK = { kind: "ImapConnection" as const, message: "Tente de novo em instantes." };
@@ -67,6 +73,11 @@ export function DueBadge({ followup }: { followup: Followup | null }) {
   return <Lozenge appearance={TONE[label.tone]}>{label.text}</Lozenge>;
 }
 
+/** A pasta pedida ou, sem ela, a Caixa de entrada. */
+function allFoldersOf(folders: Folder[], folderId: string | null): Folder | undefined {
+  return folders.find((f) => f.id === folderId) ?? folders.find((f) => f.role === "inbox");
+}
+
 /** O que sai da lista numa ação em lote, como executar e o aviso de falha parcial. */
 interface Removal {
   messages: MessageHeader[];
@@ -75,7 +86,7 @@ interface Removal {
   failedTitle: (count: number) => string;
 }
 
-export function Mailbox({ account, initialFolderId, query, settingsOpen, renderHeader, density, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange }: MailboxProps) {
+export function Mailbox({ account, initialFolderId, query, settingsOpen, renderHeader, density, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange, appRequest }: MailboxProps) {
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [folder, setFolder] = useState<Folder | null>(null);
   const [pager, setPager] = useState<Pager>(firstPage);
@@ -102,7 +113,9 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
   pagerRef.current = pager;
   const folderRef = useRef(folder);
   folderRef.current = folder;
-  const initialRef = useRef(initialFolderId);
+  const initialRef = useRef(appRequest?.kind === "open" && appRequest.accountId === account.id && appRequest.folderId ? appRequest.folderId : initialFolderId);
+  // Mensagem a abrir quando a pasta pedida terminar de carregar (notificação, US8).
+  const pendingOpen = useRef<string | null>(null);
   // Callbacks do App em refs: se mudarem de identidade a cada render do App, os efeitos de
   // carregar a pasta não podem rodar de novo (isso fechava a mensagem recém-aberta).
   const accessLostRef = useRef(onAccessLost);
@@ -117,6 +130,8 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
   const crossFolder = searching || flagBucket !== null;
   const searchingRef = useRef(crossFolder);
   searchingRef.current = crossFolder;
+  const flagBucketRef = useRef(flagBucket);
+  flagBucketRef.current = flagBucket;
   const toastRef = useRef(toast);
   toastRef.current = toast;
 
@@ -183,11 +198,37 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
     if (!folder || crossFolder) return;
     const page = firstPage();
     setPager(page);
-    select(null);
+    select(pendingOpen.current);
+    pendingOpen.current = null;
     void loadPage(folder, page);
     folderChangeRef.current(folder.id);
     // Só ao trocar de pasta ou ao sair da busca e das sinalizadas: o objeto `folder` muda também com os contadores.
   }, [folder?.id, crossFolder, loadPage, select]);
+
+  // Pedidos do App (US8): a pasta e a mensagem de uma notificação; "Novo e-mail" da bandeja. Fica depois do efeito
+  // de trocar de pasta, que roda primeiro e limpa a seleção.
+  const handled = useRef<number | null>(null);
+  useEffect(() => {
+    if (!appRequest || handled.current === appRequest.nonce) return;
+    if (appRequest.kind === "compose") {
+      handled.current = appRequest.nonce;
+      setCompose({ kind: "new", messageId: null });
+      readerOpenRef.current(true);
+      return;
+    }
+    if (appRequest.accountId !== account.id || folders === null) return;
+    handled.current = appRequest.nonce;
+    const target = allFoldersOf(folders, appRequest.folderId);
+    if (!target) return;
+    const wasFlagged = flagBucketRef.current !== null;
+    setFlagBucket(null);
+    if (wasFlagged || searchingRef.current || folderRef.current?.id !== target.id) {
+      pendingOpen.current = appRequest.messageId;
+      setFolder(target);
+    } else {
+      select(appRequest.messageId);
+    }
+  }, [appRequest, account.id, folders, select]);
 
   // Quantidades das sinalizadas por prazo, na data local de hoje.
   const loadFlagCounts = useCallback(() => {

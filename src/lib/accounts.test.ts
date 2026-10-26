@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountInitial, accountShortcut, avatarColorClass, pickActive, railLabel, railTip, unreadBadge } from "./accounts";
+import { accountInitial, accountShortcut, avatarColorClass, pickActive, railLabel, railTip, unreadBadge, visibleAccounts } from "./accounts";
 import type { Account } from "./tauri";
 
 const account = (over: Partial<Account> = {}): Account => ({
@@ -70,5 +70,13 @@ describe("contas", () => {
     expect(pickActive(list, "b")).toBe("b");
     expect(pickActive(list, "sumiu")).toBe("a");
     expect(pickActive([], "a")).toBeNull();
+  });
+});
+
+describe("conta de que o usuário saiu", () => {
+  it("some da coluna de contas", () => {
+    const base = { provider: "gmail", email: "a@x.com", displayName: "A", color: "blue" as const, position: 0, unread: null, lastFolderId: null, listWidth: null, photo: null };
+    const list = [{ ...base, id: "1", status: "active" as const }, { ...base, id: "2", status: "signed_out" as const }, { ...base, id: "3", status: "needs_reauth" as const }];
+    expect(visibleAccounts(list).map((a) => a.id)).toEqual(["1", "3"]);
   });
 });

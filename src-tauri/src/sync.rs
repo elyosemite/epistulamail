@@ -163,6 +163,7 @@ pub async fn sync_folder(state: &AppState, handle: &AccountHandle, folder_id: i6
     })
     .await?;
     fill_previews(state, handle, folder_id).await;
+    fill_threads(state, handle, folder_id).await;
     tracing::info!(
         role = folder.role.as_str(),
         reset,
@@ -173,6 +174,38 @@ pub async fn sync_folder(state: &AppState, handle: &AccountHandle, folder_id: i6
         "pasta sincronizada"
     );
     Ok(report)
+}
+
+/// Conversas completadas por sincronização, para as mensagens salvas antes da US8.
+const THREAD_BATCH: u32 = 500;
+
+/// Lê os cabeçalhos de resposta das mensagens que ainda não têm conversa. Falhar aqui não falha a sincronização.
+async fn fill_threads(state: &AppState, handle: &AccountHandle, folder_id: i64) {
+    let wanted = state
+        .db
+        .call(move |c| Ok((store::get_folder(c, folder_id)?, store::uids_without_thread(c, folder_id, THREAD_BATCH)?)))
+        .await;
+    let Ok((Some(folder), uids)) = wanted else { return };
+    let Some(uidvalidity) = folder.uidvalidity.filter(|_| !uids.is_empty()) else { return };
+    let mailbox = folder.imap_name.clone();
+    let fetched = imap_client::with_session(state, handle, Lane::Sync, |s| {
+        let (mailbox, uids) = (mailbox.clone(), uids.clone());
+        async move {
+            imap_client::select_checked(s, &mailbox, uidvalidity).await?;
+            imap_client::thread_headers(s, &uids).await
+        }
+        .boxed()
+    })
+    .await;
+    match fetched {
+        Ok(items) => {
+            let count = items.len();
+            if state.db.call(move |c| store::save_threads(c, folder_id, &items)).await.is_ok() {
+                tracing::info!(role = folder.role.as_str(), count, "conversas completadas");
+            }
+        }
+        Err(e) => tracing::info!(kind = e.kind(), "conversas ficaram para a próxima sincronização"),
+    }
 }
 
 /// Prévias buscadas por sincronização, das mais novas para as mais antigas (US7, D2).
@@ -294,6 +327,7 @@ fn report_outcome(state: &AppState, account_id: &str, result: &Result<(), AppErr
         }
     };
     let _ = state.app.emit("sync-status", SyncStatus { account_id: account_id.to_owned(), online });
+    crate::notify::connection(&state.app, account_id, online);
 }
 
 /// Sincroniza uma pasta (se não houver outra sincronização dela em andamento) e avisa o frontend.
@@ -302,9 +336,17 @@ pub async fn run_folder_sync(state: &AppState, account_id: &str, folder_id: i64)
     if !handle.try_begin_sync(folder_id) {
         return Ok(());
     }
-    let result = sync_folder(state, &handle, folder_id).await.map(|_| ());
+    let synced = sync_folder(state, &handle, folder_id).await;
     handle.end_sync(folder_id);
+    let result = synced.as_ref().map(|_| ()).map_err(Clone::clone);
     report_outcome(state, account_id, &result);
+    // E-mails novos da Caixa de entrada viram notificação (US8, CA1).
+    if let Ok(report) = synced {
+        let is_inbox = state.db.call(move |c| Ok(store::get_folder(c, folder_id)?.is_some_and(|f| f.role == crate::mailbox::Role::Inbox))).await.unwrap_or(false);
+        if is_inbox {
+            crate::notify::after_inbox_sync(&state.app, account_id, folder_id, report.new_ids).await;
+        }
+    }
     if result.is_ok() {
         let folder_key = FolderKey { account: account_id.to_owned(), folder: folder_id }.encode();
         let _ = state.app.emit("mailbox-updated", MailboxUpdated { account_id: account_id.to_owned(), folder_id: folder_key });

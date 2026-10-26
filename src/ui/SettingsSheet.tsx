@@ -1,6 +1,7 @@
 // DS: modais.html "Configurações" · .app-shell__sheet, .settings-sheet (__head), .settings, .settings__nav (tablist vertical
 //     de .nav-item), .settings__panel, .settings__title, .settings__group, .settings__group-title, .setting (__label, __desc),
-//     .setting-list (__head, .is-selecting, __bulk, __row, .is-checked, .is-disabled, __name, __title, __sub)
+//     .setting-list (__head, .is-selecting, __bulk, __row, .is-checked, .is-disabled, __name, __title, __sub),
+//     .setting-list__row--toggle (US8, L49: linha com um toggle no fim)
 // Cobre as duas colunas, sem cobrir a coluna de contas nem o header (D2). Esc fecha; o foco volta para onde estava.
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { IconButton } from "./Button";
@@ -113,7 +114,7 @@ export function Setting({ labelId, label, description, children }: { labelId: st
 export const SettingNote = ({ children }: { children: ReactNode }) => <p className="setting__desc">{children}</p>;
 
 /** Lista com uma linha por item e um cabeçalho que vira barra de ação em lote com seleção. */
-export function SettingList({ head, children }: { head: ReactNode; children: ReactNode }) {
+export function SettingList({ head, children }: { head?: ReactNode; children: ReactNode }) {
   return (
     <div className="setting-list">
       {head}
@@ -166,6 +167,20 @@ export function SettingListRow({ checked, disabled, checkLabel, onCheck, media, 
   return (
     <div className={cls}>
       <input type="checkbox" className="checkbox" aria-label={checkLabel} checked={checked} disabled={disabled} onChange={onCheck} />
+      {media}
+      <div className="setting-list__name">
+        <span className="setting-list__title">{title}</span>
+        <span className="setting-list__sub">{subtitle}</span>
+      </div>
+      {control}
+    </div>
+  );
+}
+
+/** Linha com avatar, nome e um toggle no fim, sem seleção (notificações por conta, US8). */
+export function SettingToggleRow({ media, title, subtitle, control }: { media: ReactNode; title: string; subtitle: string; control: ReactNode }) {
+  return (
+    <div className="setting-list__row setting-list__row--toggle">
       {media}
       <div className="setting-list__name">
         <span className="setting-list__title">{title}</span>

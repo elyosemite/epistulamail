@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use futures::FutureExt;
 use reqwest::Url;
 use serde::Serialize;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_opener::OpenerExt;
 
 use crate::error::AppError;
@@ -232,6 +232,17 @@ pub async fn list_messages(app: AppHandle, state: State<'_, AppState>, folder_id
 
     let has_more = rows.len() > PAGE_SIZE as usize || (!folder.complete && active && !rows.is_empty());
     rows.truncate(PAGE_SIZE as usize);
+    // Uma linha por conversa (US8, D1): quantidade, participantes e o estado da conversa inteira.
+    let keys: Vec<String> = rows.iter().map(|m| m.thread_key.clone()).collect();
+    let (account_id, own) = (key.account.clone(), account.email.clone());
+    let mut summaries = state.db.call(move |c| store::thread_summaries(c, &account_id, &own, &keys)).await?;
+    for m in rows.iter_mut() {
+        m.thread = summaries.remove(&m.thread_key).filter(|s| s.count > 1);
+        // A linha mostra o estado da conversa: não lida se alguma não foi lida, com estrela se alguma tem.
+        if let Some(t) = &m.thread {
+            m.flags = MessageFlags { seen: !t.unread, flagged: t.flagged };
+        }
+    }
     let next_cursor = match (has_more, rows.last(), folder.uidvalidity) {
         (true, Some(last), Some(v)) => Some(Cursor { account: key.account.clone(), folder: folder.id, uid_validity: v, before: last.uid }.encode()),
         _ => None,
@@ -277,6 +288,7 @@ fn header_of(account_id: &str, folder_id: i64, m: store::ListedMessage, folder: 
         snippet: m.snippet.filter(|s| !s.is_empty()),
         has_files: m.has_files,
         has_images: m.has_images,
+        thread: m.thread,
         folder_name: folder,
         folder_id: in_results.then(|| FolderKey { account: account_id.to_owned(), folder: folder_id }.encode()),
     }
@@ -325,31 +337,37 @@ pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_r
     }
     let handle = state.handle(&key.account).await?;
 
-    // Corpo já salvo: abre sem rede. Marcar como lida precisa do servidor; sem conexão, fica para depois.
+    // Corpo já salvo: abre sem rede. A mensagem aparece na hora como lida e o servidor recebe o "lida" em
+    // seguida, sem segurar a tela; se ele não receber, a próxima sincronização traz o estado do servidor.
     if let Some(raw) = cached {
         let mut view = message::build_view(&raw, key.encode(), stored.flags, None, allow_remote_images);
         if !stored.flags.seen && account.status == AccountStatus::Active {
-            let mailbox = folder.imap_name.clone();
-            let v = folder.uidvalidity.unwrap_or(0);
-            let marked = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
-                let mailbox = mailbox.clone();
-                async move {
-                    imap_client::select_checked(s, &mailbox, v).await?;
-                    imap_client::store_flags(s, &[uid], Some(true), None).await
+            let id = stored.id;
+            let local = MessageFlags { seen: true, ..stored.flags };
+            state.db.call(move |c| store::set_local_flags(c, id, local)).await?;
+            view.flags = local;
+            state.emit_accounts_changed();
+            let app = state.app.clone();
+            let (mailbox, v) = (folder.imap_name.clone(), folder.uidvalidity.unwrap_or(0));
+            tauri::async_runtime::spawn(async move {
+                let state = app.state::<AppState>();
+                let marked = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
+                    let mailbox = mailbox.clone();
+                    async move {
+                        imap_client::select_checked(s, &mailbox, v).await?;
+                        imap_client::store_flags(s, &[uid], Some(true), None).await
+                    }
+                    .boxed()
+                })
+                .await;
+                match marked.map(|m| m.get(&uid).copied()) {
+                    Ok(Some(flags)) => {
+                        let _ = state.db.call(move |c| store::set_local_flags(c, id, flags)).await;
+                    }
+                    Ok(None) => {}
+                    Err(e) => tracing::info!(kind = e.kind(), "o \"lida\" fica para a próxima sincronização"),
                 }
-                .boxed()
-            })
-            .await;
-            match marked.map(|m| m.get(&uid).copied()) {
-                Ok(Some(flags)) => {
-                    let id = stored.id;
-                    state.db.call(move |c| store::set_local_flags(c, id, flags)).await?;
-                    view.flags = flags;
-                    state.emit_accounts_changed();
-                }
-                Ok(None) => {}
-                Err(e) => tracing::info!(kind = e.kind(), "mensagem salva aberta sem marcar como lida"),
-            }
+            });
         }
         return Ok(view);
     }
@@ -418,6 +436,13 @@ pub async fn set_flags(state: State<'_, AppState>, message_ids: Vec<String>, see
     for k in &keys {
         groups.entry(k.folder).or_default().push(k.uid);
     }
+    // Lida, não lida e estrela numa linha da lista valem para a conversa na pasta (US8).
+    let wanted: Vec<(i64, Vec<u32>)> = groups.into_iter().collect();
+    let groups: BTreeMap<i64, Vec<u32>> = state
+        .db
+        .call(move |c| wanted.into_iter().map(|(f, uids)| Ok((f, store::with_thread_uids(c, f, &uids)?))).collect::<Result<_, AppError>>())
+        .await?;
+    let mut groups = groups;
     let id = account_id.clone();
     let folder_ids: Vec<i64> = groups.keys().copied().collect();
     let (account, folders) = state
@@ -572,6 +597,106 @@ pub async fn set_appearance(state: State<'_, AppState>, change: store::Appearanc
     state.db.call(move |c| store::set_appearance(c, &change)).await
 }
 
+// ---------------------------------------------------------------- conversa (US8, CA6)
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConversationMessage {
+    #[serde(flatten)]
+    pub header: MessageHeader,
+    /// Enviada pela própria conta ("Você").
+    pub mine: bool,
+}
+
+/// As mensagens da conversa da mensagem aberta, da mais antiga para a mais nova. O corpo de cada
+/// uma continua vindo de `get_message`. A mensagem aberta volta com o mesmo id.
+#[tauri::command]
+pub async fn get_conversation(state: State<'_, AppState>, message_id: String) -> Result<Vec<ConversationMessage>, AppError> {
+    let key = MessageKey::decode(&message_id)?;
+    let k = key.clone();
+    let (account, row, items) = state
+        .db
+        .call(move |c| {
+            let account = store::require_account(c, &k.account)?;
+            let folder = store::folder_of_account(c, &k.account, k.folder)?;
+            let row = store::message_for_key(c, folder.id, k.uid)?.ok_or(AppError::MessageNotFound)?.id;
+            let items = store::conversation(c, &k.account, &account.email, row)?;
+            Ok((account, row, items))
+        })
+        .await?;
+    let messages: Vec<ConversationMessage> = items
+        .into_iter()
+        .map(|i| {
+            let mut header = header_of(&account.id, i.folder_id, i.message, None);
+            if i.message_id == row {
+                header.id = key.encode();
+            }
+            ConversationMessage { header, mine: i.mine }
+        })
+        .collect();
+    tracing::info!(count = messages.len(), "conversa aberta");
+    Ok(messages)
+}
+
+// ---------------------------------------------------------------- notificações (US8, CA4)
+
+#[tauri::command]
+pub async fn get_notify_settings(state: State<'_, AppState>) -> Result<store::NotifySettings, AppError> {
+    state.db.call(|c| store::notify_settings(c)).await
+}
+
+/// Salva as preferências, atualiza o que o módulo de notificações usa e liga ou desliga a abertura
+/// com o Windows.
+#[tauri::command]
+pub async fn set_notify_settings(app: AppHandle, state: State<'_, AppState>, settings: store::NotifySettings) -> Result<store::NotifySettings, AppError> {
+    let saved = state.db.call(move |c| store::set_notify_settings(c, &settings)).await?;
+    app.state::<crate::notify::Notifier>().set_settings(saved.clone());
+    use tauri_plugin_autostart::ManagerExt;
+    let autolaunch = app.autolaunch();
+    let result = if saved.autostart { autolaunch.enable() } else { autolaunch.disable() };
+    if let Err(e) = result {
+        tracing::warn!(error = %e, "não foi possível mudar a abertura com o Windows");
+    }
+    tracing::info!(autostart = saved.autostart, tray = saved.tray_on_close, "notificações ajustadas");
+    Ok(saved)
+}
+
+// ---------------------------------------------------------------- sino (US8, CA7)
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NoticeList {
+    pub items: Vec<store::Notice>,
+    pub unseen: usize,
+    /// Não perturbe em efeito agora (horário ou 1 hora): o sino fica riscado.
+    pub quiet: bool,
+    /// "Não perturbe por 1 hora" ligado.
+    pub snoozed: bool,
+}
+
+#[tauri::command]
+pub async fn list_notices(app: AppHandle, state: State<'_, AppState>) -> Result<NoticeList, AppError> {
+    let at = store::now();
+    let items = state.db.call(move |c| store::list_notices(c, at)).await?;
+    let n = app.state::<crate::notify::Notifier>();
+    Ok(NoticeList { unseen: items.iter().filter(|i| !i.seen).count(), items, quiet: n.quiet_now(), snoozed: n.snoozed() })
+}
+
+#[tauri::command]
+pub async fn mark_notices_seen(state: State<'_, AppState>) -> Result<(), AppError> {
+    state.db.call(|c| store::mark_notices_seen(c)).await
+}
+
+/// "Não perturbe por 1 hora" do sino; o mesmo da bandeja.
+#[tauri::command]
+pub async fn set_snooze(app: AppHandle, on: bool) -> Result<bool, AppError> {
+    let on = app.state::<crate::notify::Notifier>().set_snooze(on);
+    crate::tray::sync_snooze(&app);
+    let _ = app.emit("notices-updated", ());
+    tracing::info!(on, "não perturbe do sino");
+    Ok(on)
+}
+
 // ---------------------------------------------------------------- menu da conta (US7, CA6)
 
 #[derive(Debug, Serialize)]
@@ -628,7 +753,11 @@ async fn resolve_messages(state: &AppState, message_ids: &[String]) -> Result<(A
             let account = store::require_account(c, &account_id)?;
             let folders = groups
                 .into_iter()
-                .map(|(f, uids)| Ok((store::folder_of_account(c, &account_id, f)?, uids)))
+                .map(|(f, uids)| {
+                    let folder = store::folder_of_account(c, &account_id, f)?;
+                    let uids = store::with_thread_uids(c, folder.id, &uids)?;
+                    Ok((folder, uids))
+                })
                 .collect::<Result<Vec<_>, AppError>>()?;
             Ok((account, folders))
         })

@@ -23,7 +23,9 @@ const CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
 const OPERATION_TIMEOUT: Duration = Duration::from_secs(60);
 pub const MAX_MESSAGE_BYTES: u32 = 25 * 1024 * 1024;
 const HEADER_QUERY: &str =
-    "(UID FLAGS INTERNALDATE RFC822.SIZE BODY.PEEK[HEADER.FIELDS (FROM TO CC SUBJECT DATE MESSAGE-ID CONTENT-TYPE)])";
+    "(UID FLAGS INTERNALDATE RFC822.SIZE BODY.PEEK[HEADER.FIELDS (FROM TO CC SUBJECT DATE MESSAGE-ID IN-REPLY-TO REFERENCES CONTENT-TYPE)])";
+/// Só os cabeçalhos da conversa, para completar mensagens salvas antes da US8.
+const THREAD_QUERY: &str = "(UID BODY.PEEK[HEADER.FIELDS (MESSAGE-ID IN-REPLY-TO REFERENCES)])";
 
 type TlsStream = async_native_tls::TlsStream<TcpStream>;
 pub type ImapSession = async_imap::Session<TlsStream>;
@@ -292,6 +294,19 @@ pub async fn search_uids(session: &mut ImapSession, from: u32, to: Option<u32>) 
         .collect();
     uids.sort_unstable();
     Ok(uids)
+}
+
+/// Cabeçalhos da conversa dos UIDs (US8), para as mensagens salvas antes de a conversa existir.
+pub async fn thread_headers(session: &mut ImapSession, uids: &[u32]) -> Result<Vec<(u32, HeaderFields)>, AppError> {
+    if uids.is_empty() {
+        return Ok(Vec::new());
+    }
+    let fetches = collect(session.uid_fetch(uid_set(uids), THREAD_QUERY).await.map_err(imap_error("uid fetch"))?, "uid fetch").await?;
+    let parser = MessageParser::default();
+    Ok(fetches
+        .iter()
+        .filter_map(|f| Some((f.uid?, f.header().and_then(|raw| message::parse_header_fields(&parser, raw)).unwrap_or_default())))
+        .collect())
 }
 
 // ---------------------------------------------------------------- prévia da lista (US7, D2)

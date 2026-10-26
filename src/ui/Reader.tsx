@@ -44,14 +44,16 @@ interface MessageHeadProps {
   summary?: string;
   /** Linhas do `.message__recipients` exibidas ao expandir (De, Para, Cc, Data). */
   recipients?: RecipientRow[];
+  /** Outro avatar no lugar das iniciais (ex.: a foto da conta nas mensagens suas, US8). */
+  avatar?: ReactNode;
 }
 
-export function MessageHead({ fromName, fromAddress, time, summary, recipients }: MessageHeadProps) {
+export function MessageHead({ fromName, fromAddress, time, summary, recipients, avatar }: MessageHeadProps) {
   const [expanded, setExpanded] = useState(false);
   const listId = useId();
   return (
     <div className="message__head">
-      <Avatar name={fromName || fromAddress} seed={fromAddress} size="lg" />
+      {avatar ?? <Avatar name={fromName || fromAddress} seed={fromAddress} size="lg" />}
       <div style={{ minWidth: 0 }}>
         <div className="message__from">
           {fromName || fromAddress}

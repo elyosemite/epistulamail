@@ -134,9 +134,83 @@ export interface MessageHeader {
   snippet?: string;
   hasFiles: boolean;
   hasImages: boolean;
+  /** Só na lista da pasta, com 2 ou mais mensagens: a conversa desta linha (US8, D1). */
+  thread?: ThreadSummary;
   /** Só em resultados de busca: a pasta da mensagem. */
   folderName?: string;
   folderId?: string;
+}
+
+/** Uma linha da lista por conversa (US8, D1): quantas mensagens, quem participa e o estado do todo. */
+export interface ThreadSummary {
+  count: number;
+  unread: boolean;
+  flagged: boolean;
+  /** Remetentes na ordem em que entraram na conversa, sem repetir. */
+  participants: Array<{ name: string; mine: boolean }>;
+}
+
+/** Mensagem da conversa aberta (US8, CA6), da mais antiga para a mais nova. */
+export interface ConversationMessage extends MessageHeader {
+  /** Enviada pela própria conta ("Você"). */
+  mine: boolean;
+}
+
+/** Notificações (US8, CA4). Horas cheias de 0 a 23. */
+export interface NotifySettings {
+  newMail: boolean;
+  replies: boolean;
+  due: boolean;
+  dueHour: number;
+  failures: boolean;
+  reauth: boolean;
+  offline: boolean;
+  /** "full": remetente e assunto; "account": só a conta (D5). */
+  privacy: "full" | "account";
+  quiet: boolean;
+  quietFrom: number;
+  quietTo: number;
+  trayOnClose: boolean;
+  autostart: boolean;
+  /** Contas sem notificação. */
+  accountsOff: string[];
+}
+
+/** Para onde o clique numa notificação leva. */
+export interface NoticeTarget {
+  accountId: string;
+  /** Sem ela, a Caixa de entrada da conta. */
+  folderId: string | null;
+  messageId: string | null;
+  /** Abrir o login da conta ("Reconecte"). */
+  reconnect?: boolean;
+}
+
+export type NoticeKind = "mail" | "reply" | "summary" | "due" | "failure" | "reauth" | "offline" | "info";
+
+/** Uma notificação no histórico do sino (US8, CA7), com o texto que saiu no Windows. */
+export interface Notice {
+  id: number;
+  accountId: string | null;
+  kind: NoticeKind;
+  title: string;
+  line1: string;
+  line2: string;
+  /** Remetente, para o avatar (só com a privacidade "Remetente e assunto"). */
+  sender: string | null;
+  target: NoticeTarget | null;
+  /** Segundos desde 1970. */
+  createdAt: number;
+  seen: boolean;
+}
+
+export interface NoticeList {
+  items: Notice[];
+  unseen: number;
+  /** Não perturbe em efeito agora (horário ou 1 hora). */
+  quiet: boolean;
+  /** "Não perturbe por 1 hora" ligado. */
+  snoozed: boolean;
 }
 
 export interface SearchPage {
@@ -212,6 +286,8 @@ export interface MessageView {
   body: MessageBody;
   blockedRemoteImages: number;
   attachments: AttachmentInfo[];
+  /** O HTML tem texto citado, escondido até o "…" (US8, D3). */
+  hasQuote: boolean;
 }
 
 export interface FlagResult {
@@ -323,6 +399,12 @@ export const api = {
   setDefaultSyncInterval: (minutes: SyncMinutes) => call<SyncSettings>("set_default_sync_interval", { minutes }),
   setAccountSyncInterval: (accountIds: string[], minutes: SyncMinutes, useDefault: boolean) =>
     call<SyncSettings>("set_account_sync_interval", { accountIds, minutes, useDefault }),
+  getConversation: (messageId: string) => call<ConversationMessage[]>("get_conversation", { messageId }),
+  getNotifySettings: () => call<NotifySettings>("get_notify_settings"),
+  setNotifySettings: (settings: NotifySettings) => call<NotifySettings>("set_notify_settings", { settings }),
+  listNotices: () => call<NoticeList>("list_notices"),
+  markNoticesSeen: () => call<void>("mark_notices_seen"),
+  setSnooze: (on: boolean) => call<boolean>("set_snooze", { on }),
 };
 
 /** Eventos emitidos pelo backend (US3). */
@@ -335,6 +417,12 @@ export interface BackendEvents {
   /** Mover que o servidor recusou: as mensagens voltaram para a origem (US7, D1). */
   "moves-finished": { accountId: string; failed: string[]; folderIds: string[] };
   "send-finished": { sendId: string; accountId: string; ok: boolean; error: AppError | null };
+  /** Histórico do sino ou Não perturbe mudaram (US8, CA7). */
+  "notices-updated": null;
+  /** Clique numa notificação do Windows (US8, CA1). */
+  "open-target": NoticeTarget;
+  /** "Novo e-mail" no menu da bandeja (US8, CA5). */
+  "tray-compose": null;
 }
 
 export function onBackendEvent<K extends keyof BackendEvents>(name: K, handler: (payload: BackendEvents[K]) => void): () => void {

@@ -2,10 +2,12 @@
 // US7: o header tem a marca à esquerda, a busca e, na extrema direita, os botões das colunas e a foto da conta (menu
 // da conta com configurações, tema, densidade e sair). DS: espacamento.html (.app-shell--blocks, __banner, __center,
 // __resizer, .has-reader, --no-folders, --no-reader; --no-sidebar antes da primeira conta), modais.html (configurações)
+// US8: o sino de notificações fica entre os botões das colunas e a foto (header.html, L52); clicar numa notificação, no
+// Windows ou no sino, abre a conta e a mensagem; "Novo e-mail" na bandeja abre a composição.
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AccountSettingsDialog, SignOutDialog } from "./features/accounts/AccountDialogs";
 import { AddAccount, ConnectFlow } from "./features/accounts/AddAccount";
-import { Mailbox } from "./features/mailbox/Mailbox";
+import { Mailbox, type MailboxRequest } from "./features/mailbox/Mailbox";
 import { Settings } from "./features/settings/Settings";
 import { AccountsBar } from "./layout/AccountsBar";
 import { AppLayout } from "./layout/AppLayout";
@@ -15,10 +17,11 @@ import { ColumnToggles } from "./layout/ColumnToggles";
 import { Header } from "./layout/Header";
 import { HeaderBrand } from "./layout/HeaderBrand";
 import { HeaderSearch } from "./layout/HeaderSearch";
-import { pickActive } from "./lib/accounts";
+import { NotificationBell } from "./layout/NotificationBell";
+import { pickActive, visibleAccounts } from "./lib/accounts";
 import { applyAppearance, cachedAppearance, parseAppearance } from "./lib/appearance";
 import { LIST_DEFAULT } from "./lib/listWidth";
-import { api, onBackendEvent, type Account, type Appearance, type Connected } from "./lib/tauri";
+import { api, onBackendEvent, type Account, type Appearance, type Connected, type NoticeTarget } from "./lib/tauri";
 import { AppBar } from "./ui/AppBar";
 import { Banner } from "./ui/Banner";
 import { Resizer } from "./ui/Resizer";
@@ -46,6 +49,11 @@ function Shell() {
   const [query, setQuery] = useState("");
   const [listWidth, setListWidth] = useState(LIST_DEFAULT);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsSection, setSettingsSection] = useState("general");
+  const [bellOpen, setBellOpen] = useState(false);
+  // Pedido ao Mailbox: abrir uma pasta e mensagem (notificação) ou começar um e-mail (bandeja).
+  const [request, setRequest] = useState<MailboxRequest | null>(null);
+  const requestCount = useRef(0);
   const [appearance, setAppearance] = useState<Appearance>(cachedAppearance);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -55,7 +63,7 @@ function Shell() {
 
   const reload = useCallback(async () => {
     try {
-      const list = await api.listAccounts();
+      const list = visibleAccounts(await api.listAccounts());
       setAccounts(list);
       setActiveId((current) => pickActive(list, current));
       setLoadError(null);
@@ -124,6 +132,38 @@ function Shell() {
     [reload, select, toast],
   );
 
+  const openSettings = useCallback((section = "general") => {
+    setSettingsSection(section);
+    setSettingsOpen(true);
+  }, []);
+
+  // Clique numa notificação (do Windows ou do sino): a conta, a pasta e a mensagem; "Reconecte" abre o login.
+  const accountsRef = useRef(accounts);
+  accountsRef.current = accounts;
+  const openTarget = useCallback((target: NoticeTarget) => {
+    const account = accountsRef.current?.find((a) => a.id === target.accountId);
+    if (!account) return;
+    setActiveId(account.id);
+    setQuery("");
+    setSettingsOpen(false);
+    setDialog(null);
+    if (target.reconnect) return setView({ kind: "reconnect", account });
+    setView({ kind: "mail" });
+    setRequest({ nonce: ++requestCount.current, kind: "open", accountId: account.id, folderId: target.folderId, messageId: target.messageId });
+  }, []);
+
+  useEffect(() => {
+    const offs = [
+      onBackendEvent("open-target", openTarget),
+      onBackendEvent("tray-compose", () => {
+        setView({ kind: "mail" });
+        setSettingsOpen(false);
+        setRequest({ nonce: ++requestCount.current, kind: "compose" });
+      }),
+    ];
+    return () => offs.forEach((off) => off());
+  }, [openTarget]);
+
   const onFolderChange = useCallback((accountId: string, folderId: string) => {
     lastFolder.current.set(accountId, folderId);
     void api.setLastFolder(folderId).catch(() => undefined);
@@ -149,12 +189,13 @@ function Shell() {
   const toggleReader = useCallback(() => changeAppearance({ showReader: !appearanceRef.current.showReader }), [changeAppearance]);
 
   // "/" ou Ctrl+E levam à busca; Ctrl+, abre e fecha as configurações; Ctrl+B e Ctrl+Alt+B mostram e escondem
-  // as pastas e a leitura; Alt+A abre o menu da conta (US7). Com um modal aberto, nenhum vale.
+  // as pastas e a leitura; Alt+A abre o menu da conta (US7); Alt+N abre o sino (US8). Com um modal aberto, nenhum vale.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (document.querySelector(".blanket")) return;
       if ((e.ctrlKey || e.metaKey) && e.key === ",") {
         e.preventDefault();
+        setSettingsSection("general");
         setSettingsOpen((open) => !open);
         return;
       }
@@ -167,6 +208,11 @@ function Shell() {
       if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === "a") {
         e.preventDefault();
         setAccountMenuOpen((open) => !open);
+        return;
+      }
+      if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        setBellOpen((open) => !open);
         return;
       }
       const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ["INPUT", "TEXTAREA"].includes(e.target.tagName));
@@ -218,6 +264,7 @@ function Shell() {
       end={
         <>
           <ColumnToggles showFolders={appearance.showFolders} showReader={appearance.showReader} onToggleFolders={toggleFolders} onToggleReader={toggleReader} />
+          <NotificationBell open={bellOpen} onOpenChange={setBellOpen} onOpenTarget={openTarget} onSettings={() => openSettings("notifications")} />
           <AccountMenu
             account={active}
             appearance={appearance}
@@ -225,7 +272,7 @@ function Shell() {
             open={accountMenuOpen}
             onOpenChange={setAccountMenuOpen}
             onAppearance={changeAppearance}
-            onSettings={() => setSettingsOpen(true)}
+            onSettings={() => openSettings()}
             onSignOut={() => setDialog({ kind: "sign-out", account: active })}
           />
         </>
@@ -278,6 +325,7 @@ function Shell() {
           onAccessLost={onAccessLost}
           onReconnect={() => setView({ kind: "reconnect", account: active })}
           onReaderOpenChange={onReaderOpenChange}
+          appRequest={request}
         />
       )}
       {showMail && appearance.showReader && (
@@ -289,7 +337,14 @@ function Shell() {
         />
       )}
       {settingsOpen && (
-        <Settings accounts={accounts} appearance={appearance} onAppearance={changeAppearance} onClose={() => setSettingsOpen(false)} />
+        <Settings
+          key={settingsSection}
+          accounts={accounts}
+          appearance={appearance}
+          onAppearance={changeAppearance}
+          initialSection={settingsSection}
+          onClose={() => setSettingsOpen(false)}
+        />
       )}
       {dialog?.kind === "settings" && (
         <AccountSettingsDialog
@@ -308,7 +363,7 @@ function Shell() {
           onConfirm={async () => {
             try {
               await api.signOutAccount(dialog.account.id);
-              toast({ kind: "info", title: `Você saiu de ${dialog.account.displayName}`, description: "As mensagens salvas continuam neste computador." });
+              toast({ kind: "info", title: `Você saiu de ${dialog.account.displayName}`, description: "Entre de novo com o mesmo e-mail para ver as mensagens salvas." });
             } catch {
               toast({ kind: "error", title: "Não foi possível sair da conta", description: "Tente de novo em instantes." });
             }

@@ -240,7 +240,7 @@ O SQLCipher fica abaixo de 1 ms nas ações do dia a dia e protege o arquivo int
 
 **D3.** E2EE: continua pendente (US2).
 
-**D4. Ao sair, os dados locais: decidido em 23 out 2026 — manter.** Sair encerra o acesso e apaga os segredos, mas as mensagens ficam no banco cifrado (CA6). Uma opção separada para apagar os dados de uma conta do computador, se for desejada, fica para outra story.
+**D4. Ao sair, os dados locais: decidido em 23 out 2026 — manter.** Atualização de 25 out 2026: a conta de que o usuário saiu some da coluna de contas; os dados continuam cifrados no banco e voltam ao entrar de novo com o mesmo e-mail. Sair encerra o acesso e apaga os segredos, mas as mensagens ficam no banco cifrado (CA6). Uma opção separada para apagar os dados de uma conta do computador, se for desejada, fica para outra story.
 
 **D5. Quanto guardar: decidido em 23 out 2026 — as 2.000 mensagens mais recentes de cada pasta na primeira sincronização, mais as que o usuário abrir ou paginar depois.** Sem limite de idade nem de tamanho total. Corpos são baixados ao abrir.
 

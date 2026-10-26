@@ -33,6 +33,9 @@ pub struct MessageHeader {
     pub snippet: Option<String>,
     pub has_files: bool,
     pub has_images: bool,
+    /// Só na lista da pasta (US8): a conversa desta linha, com quantidade e participantes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thread: Option<crate::store::ThreadSummary>,
     /// Só nos resultados de busca: a pasta onde a mensagem está.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub folder_name: Option<String>,
@@ -151,7 +154,32 @@ pub struct HeaderFields {
     pub to: Vec<Person>,
     pub cc: Vec<Person>,
     pub message_id: Option<String>,
+    /// `In-Reply-To` e `References` (US8): ligam a mensagem à conversa.
+    pub in_reply_to: Option<String>,
+    pub references: Vec<String>,
     pub has_attachments: bool,
+}
+
+/// Ids de mensagem sem `<>` e em minúsculas, para comparar.
+pub fn normalize_id(id: &str) -> String {
+    id.trim().trim_start_matches('<').trim_end_matches('>').trim().to_lowercase()
+}
+
+fn header_ids(value: &mail_parser::HeaderValue<'_>) -> Vec<String> {
+    match value {
+        mail_parser::HeaderValue::Text(t) => vec![normalize_id(t)],
+        mail_parser::HeaderValue::TextList(list) => list.iter().map(|t| normalize_id(t)).collect(),
+        _ => Vec::new(),
+    }
+    .into_iter()
+    .filter(|id| !id.is_empty())
+    .collect()
+}
+
+/// Raiz da conversa (US8): o primeiro id de `References`; sem ele, o `In-Reply-To`; sem os dois, a
+/// própria mensagem. Funciona com qualquer provedor, sem extensão do servidor.
+pub fn thread_root(fields: &HeaderFields) -> Option<String> {
+    fields.references.first().cloned().or_else(|| fields.in_reply_to.clone()).or_else(|| fields.message_id.as_deref().map(normalize_id))
 }
 
 /// Decodifica os cabeçalhos da lista (inclusive encoded-words RFC 2047).
@@ -169,6 +197,8 @@ pub fn parse_header_fields(parser: &MessageParser, raw: &[u8]) -> Option<HeaderF
         to: people(message.to()),
         cc: people(message.cc()),
         message_id: message.message_id().map(|id| id.trim().to_owned()).filter(|id| !id.is_empty()),
+        in_reply_to: header_ids(message.in_reply_to()).into_iter().next(),
+        references: header_ids(message.references()),
         has_attachments,
     })
 }
@@ -219,6 +249,8 @@ pub struct MessageView {
     pub body: Body,
     pub blocked_remote_images: usize,
     pub attachments: Vec<AttachmentInfo>,
+    /// O HTML tem texto citado marcado e escondido (US8, D3). No texto puro, o frontend procura as linhas com `>`.
+    pub has_quote: bool,
 }
 
 fn people(address: Option<&Address>) -> Vec<Person> {
@@ -253,16 +285,19 @@ pub fn build_view(raw: &[u8], id: String, flags: MessageFlags, internal_date: Op
             body: Body::None,
             blocked_remote_images: 0,
             attachments: Vec::new(),
+            has_quote: false,
         };
     };
 
     let from = message.from().and_then(|a| a.first());
     let mut blocked_remote_images = 0;
+    let mut has_quote = false;
     let body = match message.html_part(0) {
         Some(part) if part.is_text_html() => {
             let source = message.body_html(0).unwrap_or_default();
             let clean = sanitize::sanitize_email_html(&source, allow_remote_images);
             blocked_remote_images = clean.blocked_remote_images;
+            has_quote = sanitize::has_quote(&clean.html);
             Body::Html { html: sanitize::email_document(&clean.html, allow_remote_images) }
         }
         _ => match message.body_text(0) {
@@ -307,6 +342,7 @@ pub fn build_view(raw: &[u8], id: String, flags: MessageFlags, internal_date: Op
         body,
         blocked_remote_images,
         attachments,
+        has_quote,
     }
 }
 
@@ -383,10 +419,23 @@ JVBERi0xLjQK\r\n\
         assert_eq!(h.from_name, "João Silva");
         assert_eq!(h.from_address, "joao@lumen.com.br");
         assert_eq!(h.subject, "Revisão do contrato");
-        assert!(h.date.unwrap().starts_with("2026-10-23T10:42:00"));
+        assert!(h.date.as_deref().unwrap().starts_with("2026-10-23T10:42:00"));
         assert_eq!(h.to, vec![Person { name: "Yuri".into(), address: "yuri@gmail.com".into() }]);
         assert_eq!(h.message_id.as_deref(), Some("abc@lumen"));
         assert!(h.has_attachments);
+        assert_eq!(thread_root(&h).as_deref(), Some("abc@lumen"), "sem resposta, a raiz é ela mesma");
+    }
+
+    #[test]
+    fn replies_point_to_the_conversation_root() {
+        let raw = b"Message-ID: <C@x>\r\nIn-Reply-To: <B@x>\r\nReferences: <A@X>\r\n <B@x>\r\nSubject: Re: s\r\n\r\n";
+        let h = parse_header_fields(&MessageParser::default(), raw).unwrap();
+        assert_eq!(h.in_reply_to.as_deref(), Some("b@x"));
+        assert_eq!(h.references, vec!["a@x".to_owned(), "b@x".to_owned()]);
+        assert_eq!(thread_root(&h).as_deref(), Some("a@x"));
+        let only_parent = parse_header_fields(&MessageParser::default(), b"Message-ID: <C@x>\r\nIn-Reply-To: <B@x>\r\n\r\n").unwrap();
+        assert_eq!(thread_root(&only_parent).as_deref(), Some("b@x"));
+        assert_eq!(thread_root(&HeaderFields::default()), None);
     }
 
     #[test]
