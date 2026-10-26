@@ -17,6 +17,8 @@ mod preview;
 mod privacy;
 mod provider;
 mod providers;
+mod rule_runner;
+mod rules;
 mod sanitize;
 mod send;
 mod secrets;
@@ -203,6 +205,7 @@ pub fn run() {
             app.manage(offline::Downloader::default());
             offline::start(app.handle());
             privacy::watch_windows_lock(app.handle());
+            rule_runner::start_cleanup(app.handle());
             notify::start(app.handle());
             tray::create(app.handle())?;
             // Aberto com o Windows (D8): fica só na bandeja. Senão, a janela aparece.
@@ -276,6 +279,16 @@ pub fn run() {
             commands::disk_encryption,
             commands::delete_account_data,
             commands::purge_outside_period,
+            commands::list_rules,
+            commands::save_rule,
+            commands::delete_rule,
+            commands::set_rule_enabled,
+            commands::reorder_rules,
+            commands::preview_rule,
+            commands::run_rule_now,
+            commands::rule_history,
+            commands::undo_rule_run,
+            commands::rule_suggestions,
         ])
         .build(tauri::generate_context!());
 

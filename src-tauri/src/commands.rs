@@ -17,6 +17,7 @@ use crate::compose::{self, Template};
 use crate::mailbox::{self, Role};
 use crate::store::{self, Account, AccountStatus, Draft, DraftContent, DraftKind, FolderRow, Followup, FollowupChange};
 use crate::links;
+use crate::{rule_runner, rules};
 use crate::privacy::{self, LockStatus};
 use crate::{moves, send, sync};
 use zeroize::Zeroizing;
@@ -755,6 +756,81 @@ pub async fn purge_outside_period(app: AppHandle, state: State<'_, AppState>) ->
 #[tauri::command]
 pub async fn rotate_db_key(state: State<'_, AppState>) -> Result<(), AppError> {
     privacy::rotate_key(&state).await
+}
+
+// ---------------------------------------------------------------- regras (US12)
+
+#[tauri::command]
+pub async fn list_rules(state: State<'_, AppState>, account_id: String) -> Result<Vec<store::RuleRow>, AppError> {
+    let id = self::account_id(&account_id)?;
+    state.db.call(move |c| store::list_rules(c, &id)).await
+}
+
+/// Cria (sem `rule_id`) ou muda uma regra. Pastas de destino têm de ser da conta.
+#[tauri::command]
+pub async fn save_rule(state: State<'_, AppState>, account_id: String, rule_id: Option<i64>, name: String, enabled: bool, spec: rules::RuleSpec) -> Result<store::RuleRow, AppError> {
+    let id = self::account_id(&account_id)?;
+    for key in spec.folders.iter().chain(spec.actions.iter().filter_map(|a| match a {
+        rules::Action::Move { folder } | rules::Action::Copy { folder } => Some(folder),
+        _ => None,
+    })) {
+        if FolderKey::decode(key)?.account != id {
+            return Err(AppError::InvalidId);
+        }
+    }
+    let saved = state.db.call(move |c| store::save_rule(c, &id, rule_id, &name, enabled, &spec)).await?;
+    tracing::info!(new = rule_id.is_none(), "regra salva");
+    Ok(saved)
+}
+
+#[tauri::command]
+pub async fn delete_rule(state: State<'_, AppState>, account_id: String, rule_id: i64) -> Result<(), AppError> {
+    let id = self::account_id(&account_id)?;
+    state.db.call(move |c| store::delete_rule(c, &id, rule_id)).await
+}
+
+#[tauri::command]
+pub async fn set_rule_enabled(state: State<'_, AppState>, account_id: String, rule_id: i64, enabled: bool) -> Result<store::RuleRow, AppError> {
+    let id = self::account_id(&account_id)?;
+    state.db.call(move |c| store::set_rule_enabled(c, &id, rule_id, enabled)).await
+}
+
+#[tauri::command]
+pub async fn reorder_rules(state: State<'_, AppState>, account_id: String, rule_ids: Vec<i64>) -> Result<Vec<store::RuleRow>, AppError> {
+    let id = self::account_id(&account_id)?;
+    state.db.call(move |c| store::reorder_rules(c, &id, &rule_ids)).await
+}
+
+/// Prévia do editor (CA2); `all` conta a pasta inteira, para "Rodar agora".
+#[tauri::command]
+pub async fn preview_rule(state: State<'_, AppState>, account_id: String, rule_id: Option<i64>, spec: rules::RuleSpec, folder_id: Option<String>, all: Option<bool>) -> Result<rule_runner::Preview, AppError> {
+    let id = self::account_id(&account_id)?;
+    rule_runner::preview(&state, id, rule_id, spec, folder_id, all == Some(true)).await
+}
+
+#[tauri::command]
+pub async fn run_rule_now(state: State<'_, AppState>, account_id: String, rule_id: i64, folder_id: Option<String>) -> Result<usize, AppError> {
+    let id = self::account_id(&account_id)?;
+    rule_runner::run_now(&state, id, rule_id, folder_id).await
+}
+
+#[tauri::command]
+pub async fn rule_history(state: State<'_, AppState>, account_id: String) -> Result<Vec<store::RuleRunRow>, AppError> {
+    let id = self::account_id(&account_id)?;
+    state.db.call(move |c| store::rule_history(c, &id)).await
+}
+
+#[tauri::command]
+pub async fn undo_rule_run(state: State<'_, AppState>, account_id: String, run_id: i64) -> Result<usize, AppError> {
+    let id = self::account_id(&account_id)?;
+    rule_runner::undo(&state, id, run_id).await
+}
+
+/// Sugestões para criar uma regra a partir de uma mensagem (CA5).
+#[tauri::command]
+pub async fn rule_suggestions(state: State<'_, AppState>, message_id: String) -> Result<rule_runner::RuleSuggestions, AppError> {
+    let key = MessageKey::decode(&message_id)?;
+    state.db.call(move |c| rule_runner::suggestions(c, &key.account, key.folder, key.uid)).await
 }
 
 // ---------------------------------------------------------------- privacidade (US10)

@@ -350,15 +350,18 @@ pub async fn run_folder_sync(state: &AppState, account_id: &str, folder_id: i64)
     if !handle.try_begin_sync(folder_id) {
         return Ok(());
     }
+    // Na primeira sincronização da pasta, as regras não mexem no que já estava lá (US12, CA3).
+    let first = state.db.call(move |c| Ok(store::get_folder(c, folder_id)?.is_none_or(|f| f.last_sync_at.is_none()))).await.unwrap_or(true);
     let synced = sync_folder(state, &handle, folder_id).await;
     handle.end_sync(folder_id);
     let result = synced.as_ref().map(|_| ()).map_err(Clone::clone);
     report_outcome(state, account_id, &result);
-    // E-mails novos da Caixa de entrada viram notificação (US8, CA1).
+    // E-mails novos passam pelas regras (US12) e, na Caixa de entrada, viram notificação (US8, CA1).
     if let Ok(report) = synced {
+        let rules = if first { Default::default() } else { crate::rule_runner::on_new_mail(state, account_id, folder_id, &report.new_ids).await };
         let is_inbox = state.db.call(move |c| Ok(store::get_folder(c, folder_id)?.is_some_and(|f| f.role == crate::mailbox::Role::Inbox))).await.unwrap_or(false);
         if is_inbox {
-            crate::notify::after_inbox_sync(&state.app, account_id, folder_id, report.new_ids).await;
+            crate::notify::after_inbox_sync(&state.app, account_id, folder_id, report.new_ids, rules).await;
         }
     }
     if result.is_ok() {

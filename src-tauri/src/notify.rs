@@ -265,7 +265,13 @@ fn account_on(settings: &NotifySettings, account_id: &str) -> bool {
 }
 
 /// Depois de sincronizar a Caixa de entrada: notifica os não lidos que chegaram (CA1).
-pub async fn after_inbox_sync(app: &AppHandle, account_id: &str, folder_id: i64, new_ids: Vec<i64>) {
+pub async fn after_inbox_sync(app: &AppHandle, account_id: &str, folder_id: i64, new_ids: Vec<i64>, rules: crate::rule_runner::NewMailOutcome) {
+    // Regras (US12, CA3): o que saiu da Caixa de entrada não avisa; "Notificar sempre" avisa já.
+    let always: Vec<i64> = new_ids.iter().copied().filter(|i| rules.always.contains(i)).collect();
+    let new_ids: Vec<i64> = new_ids.into_iter().filter(|i| !rules.silent.contains(i) && !rules.always.contains(i)).collect();
+    if !always.is_empty() {
+        urgent(app, account_id, folder_id, always).await;
+    }
     let Some(n) = notifier(app) else { return };
     let settings = n.settings();
     let first = n.inner.lock().map(|mut i| i.started.insert(account_id.to_owned())).unwrap_or(false);
@@ -339,6 +345,39 @@ fn deliver(app: &AppHandle, account_name: &str, notes: Vec<Note>, mails: usize, 
         return;
     }
     tracing::info!(count = notes.len(), "notificações mostradas");
+    for note in notes {
+        show(app, note);
+    }
+}
+
+/// Aviso só no sino, sem notificação do Windows (regras, US12).
+pub fn bell(app: &AppHandle, account_id: &str, title: &str, line1: String) {
+    let note = Note {
+        kind: "info",
+        sender: None,
+        title: title.to_owned(),
+        line1,
+        line2: String::new(),
+        target: Some(Target { account_id: account_id.to_owned(), folder_id: None, message_id: None, reconnect: false }),
+    };
+    record(app, std::slice::from_ref(&note));
+}
+
+/// "Notificar sempre" (US12, D6): mostra mesmo no Não perturbe, no horário de silêncio e com os
+/// e-mails novos desligados.
+async fn urgent(app: &AppHandle, account_id: &str, folder_id: i64, ids: Vec<i64>) {
+    let Some(n) = notifier(app) else { return };
+    let settings = n.settings();
+    let state = app.state::<AppState>();
+    let id = account_id.to_owned();
+    let loaded = state.db.call(move |c| Ok((store::require_account(c, &id)?, store::new_mail(c, folder_id, &ids)?))).await;
+    let Ok((account, mails)) = loaded else { return };
+    let notes = new_mail_notes(&settings, account_id, &account.display_name, &mails, &HashSet::new());
+    if notes.is_empty() {
+        return;
+    }
+    record(app, &notes);
+    tracing::info!(count = notes.len(), "notificações de regra mostradas mesmo no silêncio");
     for note in notes {
         show(app, note);
     }

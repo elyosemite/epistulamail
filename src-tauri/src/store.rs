@@ -599,11 +599,11 @@ pub fn apply_snapshot(conn: &mut Connection, folder_id: i64, snap: &Snapshot) ->
         }
         let mut upsert = tx
             .prepare_cached(
-                "INSERT INTO message (account_id, dedupe_key, subject, from_name, from_address, to_json, cc_json, date, size, seen, flagged, has_attachments, msgid, refs, thread_id)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
+                "INSERT INTO message (account_id, dedupe_key, subject, from_name, from_address, to_json, cc_json, date, size, seen, flagged, has_attachments, msgid, refs, thread_id, list_id)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)
                  ON CONFLICT (account_id, dedupe_key) DO UPDATE SET seen = excluded.seen, flagged = excluded.flagged, in_transit_since = NULL,
                     msgid = coalesce(message.msgid, excluded.msgid), refs = coalesce(message.refs, excluded.refs),
-                    thread_id = coalesce(message.thread_id, excluded.thread_id)
+                    thread_id = coalesce(message.thread_id, excluded.thread_id), list_id = coalesce(excluded.list_id, message.list_id)
                  RETURNING id",
             )
             .map_err(sql_error("sincronização"))?;
@@ -653,6 +653,7 @@ pub fn apply_snapshot(conn: &mut Connection, folder_id: i64, snap: &Snapshot) ->
                         msgid,
                         refs_of(&h.fields),
                         thread,
+                        h.fields.list_id,
                     ],
                     |r| r.get(0),
                 )
@@ -1272,6 +1273,299 @@ pub fn list_notices(conn: &Connection, at: i64) -> Result<Vec<Notice>, AppError>
 pub fn mark_notices_seen(conn: &Connection) -> Result<(), AppError> {
     conn.execute("UPDATE notice SET seen = 1 WHERE seen = 0", []).map_err(sql_error("sino"))?;
     Ok(())
+}
+
+// ---------------------------------------------------------------- regras (US12)
+
+/// Uma regra como a lista e o editor a mostram.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RuleRow {
+    pub id: i64,
+    pub name: String,
+    pub enabled: bool,
+    pub spec: crate::rules::RuleSpec,
+    /// Motivo de estar desligada por erro ("folder_missing").
+    pub problem: Option<String>,
+    /// E-mails afetados nos últimos 30 dias (sem os lotes desfeitos).
+    pub hits_30d: u32,
+}
+
+const RULE_SELECT: &str = "SELECT r.id, r.name, r.enabled, r.spec, r.problem,
+        (SELECT coalesce(sum(count), 0) FROM rule_run rr WHERE rr.rule_id = r.id AND rr.undone = 0 AND rr.at >= ?2)
+     FROM rule r";
+
+fn rule_from_row(r: &rusqlite::Row<'_>) -> rusqlite::Result<(i64, String, bool, String, Option<String>, i64)> {
+    Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?))
+}
+
+fn to_rule_row((id, name, enabled, spec, problem, hits): (i64, String, bool, String, Option<String>, i64)) -> Option<RuleRow> {
+    // Uma regra com o formato ilegível (versão futura) fica de fora em vez de quebrar a lista.
+    let spec = serde_json::from_str(&spec).ok()?;
+    Some(RuleRow { id, name, enabled, spec, problem, hits_30d: hits.max(0) as u32 })
+}
+
+const THIRTY_DAYS: i64 = 30 * 24 * 3600;
+
+pub fn list_rules(conn: &Connection, account_id: &str) -> Result<Vec<RuleRow>, AppError> {
+    let mut st = conn
+        .prepare_cached(&format!("{RULE_SELECT} WHERE r.account_id = ?1 ORDER BY r.position, r.id"))
+        .map_err(sql_error("regras"))?;
+    let rows = st.query_map(params![account_id, now() - THIRTY_DAYS], rule_from_row).map_err(sql_error("regras"))?;
+    Ok(rows.collect::<Result<Vec<_>, _>>().map_err(sql_error("regras"))?.into_iter().filter_map(to_rule_row).collect())
+}
+
+pub fn get_rule(conn: &Connection, account_id: &str, rule_id: i64) -> Result<RuleRow, AppError> {
+    conn.query_row(&format!("{RULE_SELECT} WHERE r.account_id = ?1 AND r.id = ?3"), params![account_id, now() - THIRTY_DAYS, rule_id], rule_from_row)
+        .optional()
+        .map_err(sql_error("regras"))?
+        .and_then(to_rule_row)
+        .ok_or(AppError::InvalidId)
+}
+
+/// Grava uma regra nova (no fim da lista) ou muda uma existente. Salvar limpa o erro anterior.
+pub fn save_rule(conn: &Connection, account_id: &str, rule_id: Option<i64>, name: &str, enabled: bool, spec: &crate::rules::RuleSpec) -> Result<RuleRow, AppError> {
+    let name = name.trim();
+    if name.is_empty() || name.chars().count() > crate::rules::MAX_NAME_CHARS {
+        return Err(AppError::InvalidInput);
+    }
+    spec.validate()?;
+    let json = serde_json::to_string(spec).map_err(|_| AppError::InvalidInput)?;
+    let id = match rule_id {
+        Some(id) => {
+            let changed = conn
+                .execute(
+                    "UPDATE rule SET name = ?3, enabled = ?4, spec = ?5, problem = NULL, updated_at = ?6 WHERE id = ?1 AND account_id = ?2",
+                    params![id, account_id, name, enabled, json, now()],
+                )
+                .map_err(sql_error("regras"))?;
+            if changed == 0 {
+                return Err(AppError::InvalidId);
+            }
+            id
+        }
+        None => {
+            let position: i64 = conn
+                .query_row("SELECT coalesce(max(position), -1) + 1 FROM rule WHERE account_id = ?1", [account_id], |r| r.get(0))
+                .map_err(sql_error("regras"))?;
+            conn.execute(
+                "INSERT INTO rule (account_id, name, position, enabled, spec, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
+                params![account_id, name, position, enabled, json, now()],
+            )
+            .map_err(sql_error("regras"))?;
+            conn.last_insert_rowid()
+        }
+    };
+    get_rule(conn, account_id, id)
+}
+
+pub fn delete_rule(conn: &Connection, account_id: &str, rule_id: i64) -> Result<(), AppError> {
+    conn.execute("DELETE FROM rule WHERE id = ?1 AND account_id = ?2", params![rule_id, account_id]).map_err(sql_error("regras"))?;
+    Ok(())
+}
+
+pub fn set_rule_enabled(conn: &Connection, account_id: &str, rule_id: i64, enabled: bool) -> Result<RuleRow, AppError> {
+    conn.execute(
+        "UPDATE rule SET enabled = ?3, problem = CASE WHEN ?3 THEN NULL ELSE problem END, updated_at = ?4 WHERE id = ?1 AND account_id = ?2",
+        params![rule_id, account_id, enabled, now()],
+    )
+    .map_err(sql_error("regras"))?;
+    get_rule(conn, account_id, rule_id)
+}
+
+/// Desliga a regra por um erro que o usuário precisa resolver (CA9).
+pub fn set_rule_problem(conn: &Connection, rule_id: i64, problem: &str) -> Result<(), AppError> {
+    conn.execute("UPDATE rule SET enabled = 0, problem = ?2 WHERE id = ?1", params![rule_id, problem]).map_err(sql_error("regras"))?;
+    Ok(())
+}
+
+/// Nova ordem das regras da conta: os ids na ordem em que devem rodar (os que faltarem vão para o fim).
+pub fn reorder_rules(conn: &mut Connection, account_id: &str, ids: &[i64]) -> Result<Vec<RuleRow>, AppError> {
+    let tx = conn.transaction().map_err(sql_error("regras"))?;
+    let current: Vec<i64> = {
+        let mut st = tx.prepare("SELECT id FROM rule WHERE account_id = ?1 ORDER BY position, id").map_err(sql_error("regras"))?;
+        let rows = st.query_map([account_id], |r| r.get(0)).map_err(sql_error("regras"))?;
+        rows.collect::<Result<_, _>>().map_err(sql_error("regras"))?
+    };
+    let ordered = ids.iter().filter(|id| current.contains(id)).chain(current.iter().filter(|id| !ids.contains(id)));
+    for (position, id) in ordered.enumerate() {
+        tx.execute("UPDATE rule SET position = ?2 WHERE id = ?1", params![id, position as i64]).map_err(sql_error("regras"))?;
+    }
+    tx.commit().map_err(sql_error("regras"))?;
+    list_rules(conn, account_id)
+}
+
+/// Regras ligadas da conta, na ordem.
+pub fn active_rules(conn: &Connection, account_id: &str) -> Result<Vec<crate::rules::Rule>, AppError> {
+    Ok(list_rules(conn, account_id)?
+        .into_iter()
+        .filter(|r| r.enabled && r.problem.is_none())
+        .map(|r| crate::rules::Rule { id: r.id, name: r.name, spec: r.spec })
+        .collect())
+}
+
+/// Os fatos de e-mails da pasta para as regras: os `ids` pedidos, ou os `limit` mais recentes
+/// (todos, sem limite). Ficam de fora os que estão sendo movidos (CA9).
+pub fn rule_facts(conn: &Connection, folder_id: i64, ids: Option<&[i64]>, limit: Option<u32>, today: chrono::NaiveDate) -> Result<Vec<crate::rules::Facts>, AppError> {
+    let mut sql = String::from(
+        "SELECT m.id, mf.uid, m.from_name, m.from_address, m.to_json, m.cc_json, m.subject, m.snippet, m.list_id, m.has_files, m.size, m.seen, m.flagged, m.date
+         FROM message_folder mf JOIN message m ON m.id = mf.message_id
+         WHERE mf.folder_id = ?1
+           AND NOT EXISTS (SELECT 1 FROM pending_move pm WHERE pm.from_folder_id = mf.folder_id AND pm.from_uid = mf.uid)",
+    );
+    if let Some(ids) = ids {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        sql.push_str(&format!(" AND m.id IN ({})", ids.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",")));
+    }
+    sql.push_str(" ORDER BY m.date DESC, mf.uid DESC");
+    if let Some(limit) = limit {
+        sql.push_str(&format!(" LIMIT {limit}"));
+    }
+    let mut st = conn.prepare(&sql).map_err(sql_error("regras"))?;
+    let rows = st
+        .query_map([folder_id], |r| {
+            let to: String = r.get(4)?;
+            let cc: String = r.get(5)?;
+            let date: String = r.get(13)?;
+            let age = date.get(..10).and_then(|d| chrono::NaiveDate::parse_from_str(d, "%Y-%m-%d").ok()).map_or(0, |d| (today - d).num_days().max(0) as u32);
+            Ok(crate::rules::Facts {
+                message_id: r.get(0)?,
+                folder_id,
+                uid: r.get(1)?,
+                from_name: r.get(2)?,
+                from_address: r.get(3)?,
+                to: serde_json::from_str(&to).unwrap_or_default(),
+                cc: serde_json::from_str(&cc).unwrap_or_default(),
+                subject: r.get(6)?,
+                snippet: r.get(7)?,
+                list_id: r.get(8)?,
+                has_files: r.get(9)?,
+                size: r.get::<_, i64>(10)?.max(0) as u32,
+                seen: r.get(11)?,
+                flagged: r.get(12)?,
+                age_days: age,
+                newest_from_sender: false,
+            })
+        })
+        .map_err(sql_error("regras"))?;
+    let mut facts: Vec<crate::rules::Facts> = rows.collect::<Result<_, _>>().map_err(sql_error("regras"))?;
+    // Mais recente de cada remetente (a lista já vem do mais novo para o mais antigo).
+    let mut seen_senders = HashSet::new();
+    for f in &mut facts {
+        f.newest_from_sender = seen_senders.insert(crate::rules::fold(&f.from_address));
+    }
+    Ok(facts)
+}
+
+/// O que uma regra fez com um e-mail, para desfazer.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RuleHit {
+    pub message_id: i64,
+    pub from_folder_id: i64,
+    pub to_folder_id: Option<i64>,
+    pub seen_before: bool,
+    pub flagged_before: bool,
+}
+
+pub fn record_rule_run(conn: &mut Connection, account_id: &str, rule_id: i64, rule_name: &str, origin: &str, summary: &str, hits: &[RuleHit]) -> Result<i64, AppError> {
+    let tx = conn.transaction().map_err(sql_error("histórico de regras"))?;
+    tx.execute(
+        "INSERT INTO rule_run (account_id, rule_id, rule_name, at, origin, summary, count) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        params![account_id, rule_id, rule_name, now(), origin, summary, hits.len() as i64],
+    )
+    .map_err(sql_error("histórico de regras"))?;
+    let run_id = tx.last_insert_rowid();
+    for h in hits {
+        tx.execute(
+            "INSERT OR IGNORE INTO rule_hit (run_id, message_id, from_folder_id, to_folder_id, seen_before, flagged_before) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![run_id, h.message_id, h.from_folder_id, h.to_folder_id, h.seen_before, h.flagged_before],
+        )
+        .map_err(sql_error("histórico de regras"))?;
+    }
+    tx.commit().map_err(sql_error("histórico de regras"))?;
+    Ok(run_id)
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RuleRunRow {
+    pub id: i64,
+    pub rule_name: String,
+    pub at: i64,
+    pub origin: String,
+    /// JSON com as contagens por ação e o nome da pasta de destino.
+    pub summary: serde_json::Value,
+    pub count: u32,
+    pub undone: bool,
+}
+
+/// Lotes dos últimos 30 dias (D8), do mais novo para o mais antigo.
+pub fn rule_history(conn: &Connection, account_id: &str) -> Result<Vec<RuleRunRow>, AppError> {
+    let mut st = conn
+        .prepare_cached("SELECT id, rule_name, at, origin, summary, count, undone FROM rule_run WHERE account_id = ?1 AND at >= ?2 ORDER BY at DESC, id DESC LIMIT 500")
+        .map_err(sql_error("histórico de regras"))?;
+    let rows = st
+        .query_map(params![account_id, now() - THIRTY_DAYS], |r| {
+            let summary: String = r.get(4)?;
+            Ok(RuleRunRow {
+                id: r.get(0)?,
+                rule_name: r.get(1)?,
+                at: r.get(2)?,
+                origin: r.get(3)?,
+                summary: serde_json::from_str(&summary).unwrap_or(serde_json::Value::Null),
+                count: r.get::<_, i64>(5)?.max(0) as u32,
+                undone: r.get(6)?,
+            })
+        })
+        .map_err(sql_error("histórico de regras"))?;
+    rows.collect::<Result<_, _>>().map_err(sql_error("histórico de regras"))
+}
+
+/// O lote e o que ele fez, para desfazer; só lotes da conta e ainda não desfeitos.
+pub fn rule_run_hits(conn: &Connection, account_id: &str, run_id: i64) -> Result<Vec<RuleHit>, AppError> {
+    let open: bool = conn
+        .query_row("SELECT undone = 0 FROM rule_run WHERE id = ?1 AND account_id = ?2", params![run_id, account_id], |r| r.get(0))
+        .optional()
+        .map_err(sql_error("histórico de regras"))?
+        .ok_or(AppError::InvalidId)?;
+    if !open {
+        return Ok(Vec::new());
+    }
+    let mut st = conn
+        .prepare_cached("SELECT message_id, from_folder_id, to_folder_id, seen_before, flagged_before FROM rule_hit WHERE run_id = ?1")
+        .map_err(sql_error("histórico de regras"))?;
+    let rows = st
+        .query_map([run_id], |r| Ok(RuleHit { message_id: r.get(0)?, from_folder_id: r.get(1)?, to_folder_id: r.get(2)?, seen_before: r.get(3)?, flagged_before: r.get(4)? }))
+        .map_err(sql_error("histórico de regras"))?;
+    rows.collect::<Result<_, _>>().map_err(sql_error("histórico de regras"))
+}
+
+pub fn mark_rule_run_undone(conn: &Connection, run_id: i64) -> Result<(), AppError> {
+    conn.execute("UPDATE rule_run SET undone = 1 WHERE id = ?1", [run_id]).map_err(sql_error("histórico de regras"))?;
+    Ok(())
+}
+
+/// Lotes com mais de 30 dias saem do histórico (D8).
+pub fn prune_rule_runs(conn: &Connection) -> Result<usize, AppError> {
+    conn.execute("DELETE FROM rule_run WHERE at < ?1", [now() - THIRTY_DAYS]).map_err(sql_error("histórico de regras"))
+}
+
+/// Onde a mensagem está numa pasta (UID), ou `None`.
+pub fn uid_in_folder(conn: &Connection, message_id: i64, folder_id: i64) -> Result<Option<u32>, AppError> {
+    conn.query_row("SELECT uid FROM message_folder WHERE message_id = ?1 AND folder_id = ?2", params![message_id, folder_id], |r| r.get(0))
+        .optional()
+        .map_err(sql_error("regras"))
+}
+
+/// Dia da última limpeza das regras (CA8), "AAAA-MM-DD".
+pub fn rules_cleanup_day(conn: &Connection) -> Result<Option<String>, AppError> {
+    app_setting(conn, "rules_cleanup_day")
+}
+
+pub fn set_rules_cleanup_day(conn: &Connection, day: &str) -> Result<(), AppError> {
+    set_app_setting(conn, "rules_cleanup_day", day)
 }
 
 // ---------------------------------------------------------------- privacidade (US10)
@@ -2357,6 +2651,7 @@ pub(crate) mod tests {
                 in_reply_to: None,
                 references: vec![],
                 has_attachments: false,
+                list_id: None,
             },
             internal_date: None,
             size: 1000,
@@ -2509,6 +2804,63 @@ pub(crate) mod tests {
             assert_eq!(search(c, &a.id, "100%").unwrap().len(), 1);
             assert_eq!(search(c, &a.id, "_").unwrap().len(), 0, "_ é literal");
             assert_eq!(search(c, &a.id, "remetente@exemplo").unwrap().len(), 2);
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn rules_are_saved_ordered_and_counted() {
+        use crate::rules::{Action, Condition, Field, Op, RuleSpec};
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let spec = RuleSpec { v: 1, folders: vec![], match_all: true, conditions: vec![Condition { field: Field::Subject, op: Op::Contains, value: "fatura".into() }], exceptions: vec![], actions: vec![Action::Star], stop: false };
+            let r1 = save_rule(c, &a.id, None, "Faturas", true, &spec).unwrap();
+            let r2 = save_rule(c, &a.id, None, "Outra", true, &spec).unwrap();
+            assert_eq!(list_rules(c, &a.id).unwrap().iter().map(|r| r.id).collect::<Vec<_>>(), vec![r1.id, r2.id]);
+            assert_eq!(reorder_rules(c, &a.id, &[r2.id]).unwrap().iter().map(|r| r.id).collect::<Vec<_>>(), vec![r2.id, r1.id]);
+            assert!(save_rule(c, &a.id, None, " ", true, &spec).is_err(), "nome vazio");
+            assert!(save_rule(c, "outra-conta", Some(r1.id), "x", true, &spec).is_err(), "regra de outra conta");
+
+            set_rule_problem(c, r1.id, "folder_missing").unwrap();
+            assert_eq!(active_rules(c, &a.id).unwrap().len(), 1, "desligada por erro não roda");
+            assert!(set_rule_enabled(c, &a.id, r1.id, true).unwrap().problem.is_none(), "ligar de novo limpa o erro");
+
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            apply_snapshot(c, inbox.id, &snapshot(1..=2)).unwrap();
+            let m = message_by_uid(c, inbox.id, 1).unwrap().unwrap();
+            let hit = RuleHit { message_id: m.id, from_folder_id: inbox.id, to_folder_id: None, seen_before: false, flagged_before: false };
+            let run = record_rule_run(c, &a.id, r1.id, "Faturas", "sync", "{\"starred\":1}", std::slice::from_ref(&hit)).unwrap();
+            assert_eq!(get_rule(c, &a.id, r1.id).unwrap().hits_30d, 1);
+            assert_eq!(rule_run_hits(c, &a.id, run).unwrap(), vec![hit]);
+            mark_rule_run_undone(c, run).unwrap();
+            assert!(rule_run_hits(c, &a.id, run).unwrap().is_empty(), "desfeito não volta");
+            assert_eq!(get_rule(c, &a.id, r1.id).unwrap().hits_30d, 0, "lote desfeito não conta");
+            delete_rule(c, &a.id, r1.id).unwrap();
+            assert_eq!(rule_history(c, &a.id).unwrap()[0].rule_name, "Faturas", "o histórico sobrevive à regra");
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn rule_facts_skip_moving_messages_and_mark_newest_sender() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            let trash = folder(c, &a.id, "Lixeira", Role::Trash);
+            apply_snapshot(c, inbox.id, &snapshot(1..=3)).unwrap();
+            let today = chrono::NaiveDate::from_ymd_opt(2026, 10, 26).unwrap();
+            let facts = rule_facts(c, inbox.id, None, None, today).unwrap();
+            assert_eq!(facts.len(), 3);
+            assert!(facts[0].newest_from_sender && !facts[1].newest_from_sender, "mesmo remetente: só o mais novo");
+            assert_eq!(facts[0].age_days, 22, "4 de outubro até 26");
+            create_pending_moves(c, &a.id, "lote", &[(inbox.id, 3)], trash.id, now() + 60).unwrap();
+            assert_eq!(rule_facts(c, inbox.id, None, None, today).unwrap().len(), 2, "sendo movida fica de fora");
+            let only = rule_facts(c, inbox.id, Some(&[facts[1].message_id]), None, today).unwrap();
+            assert_eq!(only.len(), 1);
             Ok(())
         })
         .unwrap();

@@ -23,7 +23,7 @@ const CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
 const OPERATION_TIMEOUT: Duration = Duration::from_secs(60);
 pub const MAX_MESSAGE_BYTES: u32 = 25 * 1024 * 1024;
 const HEADER_QUERY: &str =
-    "(UID FLAGS INTERNALDATE RFC822.SIZE BODY.PEEK[HEADER.FIELDS (FROM TO CC SUBJECT DATE MESSAGE-ID IN-REPLY-TO REFERENCES CONTENT-TYPE)])";
+    "(UID FLAGS INTERNALDATE RFC822.SIZE BODY.PEEK[HEADER.FIELDS (FROM TO CC SUBJECT DATE MESSAGE-ID IN-REPLY-TO REFERENCES CONTENT-TYPE LIST-ID LIST-UNSUBSCRIBE)])";
 /// Só os cabeçalhos da conversa, para completar mensagens salvas antes da US8.
 const THREAD_QUERY: &str = "(UID BODY.PEEK[HEADER.FIELDS (MESSAGE-ID IN-REPLY-TO REFERENCES)])";
 
@@ -438,6 +438,11 @@ pub async fn move_uids(session: &mut ImapSession, uids: &[u32], target: &str) ->
     }
     session.uid_copy(&set, target).await.map_err(imap_error("uid copy"))?;
     expunge_uids(session, uids).await
+}
+
+/// Copia os UIDs da pasta selecionada para `target` (marcador das regras, US12).
+pub async fn copy_uids(session: &mut ImapSession, uids: &[u32], target: &str) -> Result<(), AppError> {
+    session.uid_copy(&uid_set(uids), target).await.map_err(imap_error("uid copy"))
 }
 
 /// Cria a pasta (nome já em UTF-7 modificado). `NO` do servidor costuma ser nome repetido.

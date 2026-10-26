@@ -158,6 +158,25 @@ pub struct HeaderFields {
     pub in_reply_to: Option<String>,
     pub references: Vec<String>,
     pub has_attachments: bool,
+    /// Lista de e-mails (US12): o `List-Id`, ou "-" quando só há `List-Unsubscribe`.
+    pub list_id: Option<String>,
+}
+
+/// `List-Id: Nome <id.lista.exemplo>` vira `id.lista.exemplo`; sem `List-Id` mas com
+/// `List-Unsubscribe`, "-" (é de uma lista, sem nome).
+fn list_id_of(message: &mail_parser::Message<'_>) -> Option<String> {
+    let raw = message.header_raw("List-Id").map(str::trim).filter(|v| !v.is_empty());
+    if let Some(raw) = raw {
+        let inner = match (raw.rfind('<'), raw.rfind('>')) {
+            (Some(a), Some(b)) if a < b => &raw[a + 1..b],
+            _ => raw,
+        };
+        let id = inner.trim().to_lowercase();
+        if !id.is_empty() {
+            return Some(id.chars().take(200).collect());
+        }
+    }
+    message.header_raw("List-Unsubscribe").is_some().then(|| "-".to_owned())
 }
 
 /// Ids de mensagem sem `<>` e em minúsculas, para comparar.
@@ -200,6 +219,7 @@ pub fn parse_header_fields(parser: &MessageParser, raw: &[u8]) -> Option<HeaderF
         in_reply_to: header_ids(message.in_reply_to()).into_iter().next(),
         references: header_ids(message.references()),
         has_attachments,
+        list_id: list_id_of(&message),
     })
 }
 
@@ -433,6 +453,14 @@ JVBERi0xLjQK\r\n\
         assert_eq!(h.message_id.as_deref(), Some("abc@lumen"));
         assert!(h.has_attachments);
         assert_eq!(thread_root(&h).as_deref(), Some("abc@lumen"), "sem resposta, a raiz é ela mesma");
+    }
+
+    #[test]
+    fn mailing_lists_are_recognized() {
+        let parse = |raw: &[u8]| parse_header_fields(&MessageParser::default(), raw).unwrap().list_id;
+        assert_eq!(parse(b"List-Id: Ofertas da Loja <Ofertas.Loja.com.br>\r\nSubject: s\r\n\r\n").as_deref(), Some("ofertas.loja.com.br"));
+        assert_eq!(parse(b"List-Unsubscribe: <mailto:sair@loja.com>\r\nSubject: s\r\n\r\n").as_deref(), Some("-"), "só o descadastro");
+        assert_eq!(parse(b"Subject: s\r\n\r\n"), None);
     }
 
     #[test]
