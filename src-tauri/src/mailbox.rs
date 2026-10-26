@@ -166,7 +166,7 @@ pub fn decode_mailbox_name(raw: &str) -> String {
         } else {
             match MODIFIED_BASE64.decode(encoded) {
                 Ok(bytes) if bytes.len() % 2 == 0 => {
-                    let units: Vec<u16> = bytes.chunks_exact(2).map(|c| u16::from_be_bytes([c[0], c[1]])).collect();
+                    let units: Vec<u16> = bytes.as_chunks::<2>().0.iter().map(|c| u16::from_be_bytes(*c)).collect();
                     out.push_str(&String::from_utf16_lossy(&units));
                 }
                 _ => out.push_str(&rest[start..start + 1 + end + 1]),

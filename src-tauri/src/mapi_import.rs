@@ -562,7 +562,7 @@ impl Props for MsgProps {
 }
 
 fn utf16(bytes: &[u8]) -> String {
-    let units: Vec<u16> = bytes.chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+    let units: Vec<u16> = bytes.as_chunks::<2>().0.iter().map(|c| u16::from_le_bytes(*c)).collect();
     String::from_utf16_lossy(&units)
 }
 
@@ -590,7 +590,7 @@ fn read_storage_props<F: Read + std::io::Seek>(cf: &mut cfb::CompoundFile<F>, st
         } else if is_stream && name == "__properties_version1.0" {
             let mut data = Vec::new();
             cf.open_stream(&path).map_err(|_| Failure::Unreadable)?.take(1 << 20).read_to_end(&mut data).map_err(|_| Failure::Unreadable)?;
-            for entry in data.get(header..).unwrap_or_default().chunks_exact(16) {
+            for entry in data.get(header..).unwrap_or_default().as_chunks::<16>().0 {
                 let kind = u16::from_le_bytes([entry[0], entry[1]]);
                 let id = u16::from_le_bytes([entry[2], entry[3]]);
                 let value = &entry[8..16];
