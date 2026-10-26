@@ -58,7 +58,7 @@ fn sender_of(raw: &[u8]) -> Option<String> {
 }
 
 /// Chaves que chegam numa mensagem: o cabeçalho Autocrypt do remetente e anexos `application/pgp-keys`.
-fn incoming_keys(raw: &[u8], sender: &str) -> Vec<(SignedPublicKey, &'static str)> {
+pub(crate) fn incoming_keys(raw: &[u8], sender: &str) -> Vec<(SignedPublicKey, &'static str)> {
     let Some(message) = MessageParser::default().parse(raw) else { return Vec::new() };
     let mut out = Vec::new();
     if let Some(value) = message.header_raw("Autocrypt") {
@@ -114,49 +114,24 @@ pub async fn open(state: &AppState, raw: Vec<u8>) -> Opened {
     let Ok((signer_bytes, secret_bytes)) = loaded else { return Opened { raw, security: None, subject: None } };
     let result = tokio::task::spawn_blocking(move || {
         let signers: Vec<SignedPublicKey> = signer_bytes.iter().filter_map(|b| openpgp::public_from_bytes(b).ok()).collect();
-        match found {
-            Found::Encrypted(cipher) => {
-                let secrets: Vec<SignedSecretKey> = secret_bytes.iter().filter_map(|b| openpgp::secret_from_bytes(b).ok()).collect();
-                match openpgp::decrypt(&cipher, &secrets, &signers) {
-                    Ok(out) => {
-                        let subject = pgp_mime::protected_subject(&out.data);
-                        let shown = pgp_mime::rebuild(&raw, &out.data).unwrap_or(raw);
-                        let security = Security {
-                            technology: "openpgp",
-                            encrypted: true,
-                            decrypted: true,
-                            post_quantum: out.post_quantum,
-                            signature: out.verification,
-                            signer_acceptance: None,
-                            certificate: None,
-                        };
-                        Opened { raw: shown, security: Some(security), subject }
-                    }
-                    Err(_) => Opened {
-                        raw,
-                        security: Some(Security {
-                            technology: "openpgp",
-                            encrypted: true,
-                            decrypted: false,
-                            post_quantum: false,
-                            signature: Verification::Unsigned,
-                            signer_acceptance: None,
-                            certificate: None,
-                        }),
-                        subject: None,
-                    },
-                }
-            }
-            Found::Signed { content, signature } => {
-                let verification = openpgp::verify_detached(&content, &signature, &signers);
-                let security = Security { technology: "openpgp", encrypted: false, decrypted: false, post_quantum: false, signature: verification, signer_acceptance: None, certificate: None };
-                Opened { raw, security: Some(security), subject: None }
-            }
-            Found::None => Opened { raw, security: None, subject: None },
-        }
+        let secrets: Vec<SignedSecretKey> = secret_bytes.iter().filter_map(|b| openpgp::secret_from_bytes(b).ok()).collect();
+        read_pgp(raw, &sender, found, &signers, &secrets)
     })
     .await;
-    let Ok(mut opened) = result else { return Opened { raw: Vec::new(), security: None, subject: None } };
+    let Ok((mut opened, inside)) = result else { return Opened { raw: Vec::new(), security: None, subject: None } };
+    if !inside.is_empty() {
+        let _ = state
+            .db
+            .call(move |c| {
+                for (key, origin) in &inside {
+                    if let Ok(bytes) = openpgp::public_bytes(key) {
+                        pgp_store::upsert_key(c, &openpgp::info(key), &bytes, None, origin)?;
+                    }
+                }
+                Ok(())
+            })
+            .await;
+    }
     // Aceitação da chave que assinou, para o selo (verde só com a chave conferida).
     if let Some(Security { signature: Verification::Good { fingerprint }, .. }) = &opened.security {
         let fp = fingerprint.clone();
@@ -169,6 +144,35 @@ pub async fn open(state: &AppState, raw: Vec<u8>) -> Opened {
         tracing::info!(encrypted = sec.encrypted, decrypted = sec.decrypted, signed = !matches!(sec.signature, Verification::Unsigned), "mensagem com OpenPGP aberta");
     }
     opened
+}
+
+/// Decifra e verifica uma mensagem OpenPGP. Devolve também as chaves do remetente que estavam dentro
+/// da parte cifrada (o anexo `application/pgp-keys`), que de fora não aparecem.
+pub(crate) fn read_pgp(raw: Vec<u8>, sender: &str, found: Found, signers: &[SignedPublicKey], secrets: &[SignedSecretKey]) -> (Opened, Vec<(SignedPublicKey, &'static str)>) {
+    let security = |encrypted, decrypted, post_quantum, signature| Security { technology: "openpgp", encrypted, decrypted, post_quantum, signature, signer_acceptance: None, certificate: None };
+    match found {
+        Found::Encrypted(cipher) => {
+            let Ok(mut out) = openpgp::decrypt(&cipher, secrets, signers) else {
+                return (Opened { raw, security: Some(security(true, false, false, Verification::Unsigned)), subject: None }, Vec::new());
+            };
+            let subject = pgp_mime::protected_subject(&out.data);
+            let shown = pgp_mime::rebuild(&raw, &out.data).unwrap_or(raw);
+            let inside: Vec<_> = incoming_keys(&shown, sender).into_iter().filter(|(_, origin)| *origin == "attachment").collect();
+            // Primeira mensagem de alguém, assinada com a chave que veio anexada: confere com ela.
+            if matches!(out.verification, Verification::UnknownKey { .. }) && !inside.is_empty() {
+                let more: Vec<SignedPublicKey> = signers.iter().cloned().chain(inside.iter().map(|(k, _)| k.clone())).collect();
+                if let Ok(again) = openpgp::decrypt(&cipher, secrets, &more) {
+                    out.verification = again.verification;
+                }
+            }
+            (Opened { raw: shown, security: Some(security(true, true, out.post_quantum, out.verification)), subject }, inside)
+        }
+        Found::Signed { content, signature } => {
+            let verification = openpgp::verify_detached(&content, &signature, signers);
+            (Opened { raw, security: Some(security(false, false, false, verification)), subject: None }, Vec::new())
+        }
+        Found::None => (Opened { raw, security: None, subject: None }, Vec::new()),
+    }
 }
 
 // ---------------------------------------------------------------- S/MIME na leitura (US14, CA3)

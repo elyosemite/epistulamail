@@ -145,6 +145,11 @@ Aqui o risco "colher agora, decifrar depois" é maior que no TLS (US11): **o pro
   - "Tecnologia preferida" voltou com a US14 (S/MIME).
   - O aviso de "contato trocou de chave" ainda não existe.
 - **Testes:** 174 no Rust e 88 no frontend passam; clippy, typecheck e build sem avisos.
+- **Correções (26 out 2026, testes do envio e da leitura completos):**
+  - O cabeçalho Autocrypt saía codificado inteiro (`=?utf-8?b?…?=`) porque a lettre tratava as dobras do valor como texto; ninguém conseguia ler a chave. Agora vai dobrado como foi montado, só quando o endereço e o valor são ASCII visível (sem injeção de cabeçalho).
+  - A chave anexada a uma mensagem cifrada fica dentro da parte cifrada e não era guardada. Agora a leitura guarda a chave do remetente que vem lá dentro e, na primeira mensagem de alguém, confere a assinatura com ela.
+  - A parte `multipart/signed` vai pré-codificada, como no S/MIME, para a lettre nunca recodificar os bytes assinados.
+  - Testes novos: a mensagem que o envio monta (cifrada com assunto protegido, Autocrypt e chave anexada; só assinada com acentos) é lida de volta pela leitura completa (`e2ee::read_pgp`). 189 testes no Rust.
 - **Falta (manual):** trocar mensagens com o Thunderbird e o Kleopatra (cifrada, assinada, Autocrypt e chave anexada), restaurar um backup em outro computador, a busca WKD num domínio real, e conferir que salvar arquivo e ler a área de transferência funcionam no WebView2.
 
 ### 10. Fora do escopo

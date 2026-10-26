@@ -82,8 +82,10 @@ pub fn signed_body(signed_part: &[u8], armored_sig: &str) -> (ContentType, Body)
     raw.extend_from_slice(format!("\r\n--{boundary}--\r\n").as_bytes());
     let content_type = ContentType::parse(&format!("multipart/signed; micalg=pgp-sha512; protocol=\"application/pgp-signature\"; boundary=\"{boundary}\""))
         .expect("tipo montado aqui");
-    let body = Body::new_with_encoding(raw, lettre::message::header::ContentTransferEncoding::SevenBit).unwrap_or_else(Body::new);
-    (content_type, body)
+    // Os bytes assinados não podem ser recodificados: a parte veio da lettre já codificada (ASCII) e a
+    // assinatura está em armadura, então o corpo inteiro já é 7 bits (como no S/MIME).
+    debug_assert!(raw.is_ascii());
+    (content_type, Body::dangerous_pre_encoded(raw, ContentTransferEncoding::SevenBit))
 }
 
 /// Os bytes que vão ser assinados: a parte em formato canônico (fim de linha CRLF, sem o CRLF final).
@@ -106,8 +108,17 @@ pub fn autocrypt_value(address: &str, public_key: &[u8]) -> String {
     format!("addr={}; prefer-encrypt=mutual; keydata=\r\n {}", address.trim().to_lowercase(), folded.join("\r\n "))
 }
 
+/// O valor já vem dobrado: `HeaderValue::new` trataria as quebras de linha como texto e codificaria o
+/// cabeçalho inteiro (`=?utf-8?b?…?=`), que ninguém leria. Só passa pré-codificado o que é ASCII
+/// visível e sem quebra fora das dobras, para não abrir injeção de cabeçalho pelo endereço.
 pub fn autocrypt_header(address: &str, public_key: &[u8]) -> HeaderValue {
-    HeaderValue::new(HeaderName::new_from_ascii_str("Autocrypt"), autocrypt_value(address, public_key))
+    let name = HeaderName::new_from_ascii_str("Autocrypt");
+    let value = autocrypt_value(address, public_key);
+    let safe = address.bytes().all(|b| b.is_ascii_graphic() && b != b';') && value.split("\r\n ").all(|line| line.bytes().all(|b| b.is_ascii_graphic() || b == b' '));
+    if !safe {
+        return HeaderValue::new(name, value);
+    }
+    HeaderValue::dangerous_new_pre_encoded(name, value.clone(), value)
 }
 
 /// Chave de um cabeçalho Autocrypt recebido: só se o `addr` for o remetente.
@@ -278,6 +289,13 @@ mod tests {
         let value = autocrypt_value("Eu@X.com", &bytes);
         assert_eq!(autocrypt_key(&value, "eu@x.com"), Some(bytes.clone()));
         assert_eq!(autocrypt_key(&value, "outro@x.com"), None, "chave de outro endereço não vale");
+        // Passando pela lettre, o cabeçalho sai dobrado como foi montado, não codificado.
+        let raw = lettre::Message::builder().from("eu@x.com".parse().unwrap()).to("ana@x.com".parse().unwrap()).raw_header(autocrypt_header("eu@x.com", &bytes)).body(String::from("Oi")).unwrap().formatted();
+        let parsed = MessageParser::default().parse(&raw).unwrap();
+        assert_eq!(parsed.header_raw("Autocrypt").and_then(|v| autocrypt_key(v, "eu@x.com")), Some(bytes));
+        // Um endereço com quebra de linha não vira cabeçalho novo.
+        let injected = lettre::Message::builder().from("eu@x.com".parse().unwrap()).to("ana@x.com".parse().unwrap()).raw_header(autocrypt_header("eu@x.com\r\nBcc: golpe@x.com", b"k")).body(String::from("Oi")).unwrap().formatted();
+        assert!(!String::from_utf8_lossy(&injected).contains("\r\nBcc:"));
     }
 
     #[test]

@@ -513,4 +513,76 @@ x";
         assert!(matches!(smime::verify(&signature, Some(&content), &[]), Checked::Good { .. }));
         assert!(String::from_utf8_lossy(&content).contains("Oi, Ana."));
     }
+
+    fn pgp_crypto(encrypt: bool, me: &pgp::composed::SignedSecretKey, ana: &pgp::composed::SignedPublicKey) -> Crypto {
+        let recipients = if encrypt { vec![ana.clone(), me.to_public_key()] } else { Vec::new() };
+        let settings = crate::pgp_store::CryptoSettings { attach_key: true, autocrypt: true, encrypt_subject: true, ..Default::default() };
+        let own_public = Some(crate::openpgp::public_bytes(&me.to_public_key()).unwrap());
+        Crypto { encrypt, sign: true, keys: Some(crate::e2ee::SendKeys { mine: me.clone(), recipients }), smime: None, own_public, settings }
+    }
+
+    #[test]
+    fn openpgp_message_hides_subject_and_reads_back_with_the_attached_key() {
+        use crate::openpgp::{self, KeyKind, Verification};
+        let me = openpgp::generate(KeyKind::Curve25519, "Eu", "eu@x.com").unwrap();
+        let ana = openpgp::generate(KeyKind::Curve25519, "Ana", "ana@lumen.com.br").unwrap();
+        let from = Mailbox::new(None, "eu@x.com".parse().unwrap());
+        let mut o = outgoing(DraftKind::New);
+        o.body = "Olá, Ana. Revisão até sexta.".into();
+        let raw = build_with(from, &o, None, Some(&pgp_crypto(true, &me, &ana.to_public_key()))).unwrap().formatted();
+        let text = String::from_utf8_lossy(&raw);
+        assert!(text.contains("multipart/encrypted") && text.contains("Subject: ..."), "{text}");
+        assert!(!text.contains("Contrato") && !text.contains("Revis") && !text.contains("OpenPGP_0x"), "assunto, corpo e anexo vão cifrados");
+        // De fora, só a chave do Autocrypt; o anexo com a chave está dentro da parte cifrada.
+        assert_eq!(crate::e2ee::incoming_keys(&raw, "eu@x.com").iter().map(|(_, o)| *o).collect::<Vec<_>>(), ["autocrypt"]);
+
+        // Ana lê sem conhecer a minha chave: a assinatura confere com a chave anexada, que ela guarda.
+        let found = crate::pgp_mime::find(&raw);
+        let (opened, inside) = crate::e2ee::read_pgp(raw.clone(), "eu@x.com", found.clone(), &[], std::slice::from_ref(&ana));
+        let sec = opened.security.unwrap();
+        assert!(sec.encrypted && sec.decrypted);
+        let fp = openpgp::info(&me.to_public_key()).fingerprint;
+        assert_eq!(sec.signature, Verification::Good { fingerprint: fp.clone() });
+        assert_eq!(opened.subject.as_deref(), Some("Re: Contrato  Bcc: invasor@x.com"));
+        assert_eq!(inside.len(), 1);
+        assert_eq!(openpgp::info(&inside[0].0).fingerprint, fp);
+        let parsed = MessageParser::default().parse(&opened.raw).unwrap();
+        assert!(parsed.body_text(0).is_some_and(|t| t.contains("Olá, Ana. Revisão até sexta.")));
+        assert_eq!(parsed.from().and_then(|f| f.first()).and_then(|a| a.address()), Some("eu@x.com"));
+
+        // A minha cópia em Enviados abre com a minha chave; quem não está entre os destinatários não abre.
+        assert!(crate::e2ee::read_pgp(raw.clone(), "eu@x.com", found.clone(), &[], std::slice::from_ref(&me)).0.security.unwrap().decrypted);
+        let other = openpgp::generate(KeyKind::Curve25519, "Outro", "outro@x.com").unwrap();
+        let (closed, inside) = crate::e2ee::read_pgp(raw.clone(), "eu@x.com", found.clone(), &[], &[other]);
+        assert!(!closed.security.unwrap().decrypted && inside.is_empty());
+        // A chave anexada de outra pessoa não vale para quem diz ser o remetente.
+        let (_, inside) = crate::e2ee::read_pgp(raw, "golpe@x.com", found, &[], std::slice::from_ref(&ana));
+        assert!(inside.is_empty());
+    }
+
+    #[test]
+    fn openpgp_signed_message_keeps_accents_and_verifies_after_sending() {
+        use crate::openpgp::{self, KeyKind, Verification};
+        let me = openpgp::generate(KeyKind::Curve25519, "Eu", "eu@x.com").unwrap();
+        let ana = openpgp::generate(KeyKind::Curve25519, "Ana", "ana@lumen.com.br").unwrap().to_public_key();
+        let from = Mailbox::new(None, "eu@x.com".parse().unwrap());
+        let mut o = outgoing(DraftKind::New);
+        o.body = "Olá, Ana.\nAção: revisão até sexta — às 10h.\n".into();
+        let raw = build_with(from, &o, None, Some(&pgp_crypto(false, &me, &ana))).unwrap().formatted();
+        assert!(raw.is_ascii(), "a mensagem assinada vai em 7 bits");
+        let text = String::from_utf8_lossy(&raw);
+        assert!(text.contains("multipart/signed") && text.contains("Subject: Re: Contrato"), "só assinada, o assunto fica");
+        assert!(text.contains("OpenPGP_0x"), "a minha chave vai anexada");
+        let found = crate::pgp_mime::find(&raw);
+        let (opened, _) = crate::e2ee::read_pgp(raw.clone(), "eu@x.com", found, &[me.to_public_key()], &[]);
+        let sec = opened.security.unwrap();
+        assert!(!sec.encrypted);
+        assert!(matches!(sec.signature, Verification::Good { .. }), "{:?}", sec.signature);
+        let parsed = MessageParser::default().parse(&opened.raw).unwrap();
+        assert!(parsed.body_text(0).is_some_and(|t| t.contains("Ação: revisão até sexta — às 10h.")));
+        // Sem a chave, assinatura de chave desconhecida; e a anexada chega de fora.
+        let (unknown, _) = crate::e2ee::read_pgp(raw.clone(), "eu@x.com", crate::pgp_mime::find(&raw), &[], &[]);
+        assert!(matches!(unknown.security.unwrap().signature, Verification::UnknownKey { .. }));
+        assert!(crate::e2ee::incoming_keys(&raw, "eu@x.com").iter().any(|(_, o)| *o == "attachment"));
+    }
 }
