@@ -34,6 +34,8 @@ interface ThreadRowProps {
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
   /** Começo de um possível arraste para uma pasta (US6, CA5: eventos de ponteiro). */
   onPointerDown?: (event: PointerEvent<HTMLDivElement>) => void;
+  /** Ponteiro entrou ou saiu da linha (pré-busca, US9). */
+  onHover?: (inside: boolean) => void;
   /** Sem estes callbacks a linha é somente leitura (estrela apagada, sem ações no hover). */
   onToggleStar?: () => void;
   onToggleRead?: () => void;
@@ -55,7 +57,7 @@ const stop = (fn: () => void) => (event: MouseEvent) => {
 };
 
 export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function ThreadRow(
-  { from, subject, date, unread, starred, open, checked, onOpen, onCheck, onKeyDown, onPointerDown, onToggleStar, onToggleRead, badge, folder, snippet, hasFiles, hasImages, count },
+  { from, subject, date, unread, starred, open, checked, onOpen, onCheck, onKeyDown, onPointerDown, onHover, onToggleStar, onToggleRead, badge, folder, snippet, hasFiles, hasImages, count },
   ref,
 ) {
   const cls = ["thread", unread && "is-unread", checked && "is-checked", open && "is-open"].filter(Boolean).join(" ");
@@ -70,6 +72,8 @@ export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function Thr
       onClick={onOpen}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
+      onPointerEnter={onHover && (() => onHover(true))}
+      onPointerLeave={onHover && (() => onHover(false))}
     >
       <input
         type="checkbox"

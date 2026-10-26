@@ -215,7 +215,7 @@ pub async fn list_messages(app: AppHandle, state: State<'_, AppState>, folder_id
 
     // Paginando além do que está salvo: traz o próximo bloco do servidor (sem rede, segue com o que há).
     if cursor.is_some() && rows.len() <= PAGE_SIZE as usize && !folder.complete && active {
-        match sync::fetch_older(&state, &handle, &folder).await {
+        match sync::fetch_older(&state, &handle, &folder, sync::OLDER_BATCH, Lane::Interactive).await {
             Ok(_) => {
                 let id = folder.id;
                 let (f, r) = state
@@ -661,6 +661,51 @@ pub async fn set_notify_settings(app: AppHandle, state: State<'_, AppState>, set
     Ok(saved)
 }
 
+// ---------------------------------------------------------------- download em segundo plano (US9)
+
+/// Pré-busca (CA3): as próximas mensagens da lista, as da conversa e a linha sob o mouse. Volta na
+/// hora; o download acontece em segundo plano.
+#[tauri::command]
+pub async fn prefetch_messages(app: AppHandle, message_ids: Vec<String>) -> Result<(), AppError> {
+    let mut keys: BTreeMap<String, Vec<(i64, u32)>> = BTreeMap::new();
+    for id in message_ids.iter().take(crate::offline::PREFETCH_LIMIT) {
+        let key = MessageKey::decode(id)?;
+        keys.entry(key.account).or_default().push((key.folder, key.uid));
+    }
+    for (account_id, keys) in keys {
+        crate::offline::prefetch(&app, account_id, keys);
+    }
+    Ok(())
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OfflineSettings {
+    /// "30", "90", "all" ou "none" (CA4).
+    pub days: String,
+    /// Tamanho do banco local (todas as contas), em bytes.
+    pub local_bytes: u64,
+}
+
+fn local_bytes(app: &AppHandle) -> u64 {
+    app.path().app_data_dir().ok().and_then(|dir| std::fs::metadata(dir.join(crate::db::FILE_NAME)).ok()).map_or(0, |m| m.len())
+}
+
+#[tauri::command]
+pub async fn get_offline_settings(app: AppHandle, state: State<'_, AppState>) -> Result<OfflineSettings, AppError> {
+    let days = state.db.call(|c| store::offline_days(c)).await?;
+    Ok(OfflineSettings { days, local_bytes: local_bytes(&app) })
+}
+
+/// Trocar o período não apaga nada já salvo (D4); um período maior acorda a fila na hora.
+#[tauri::command]
+pub async fn set_offline_days(app: AppHandle, state: State<'_, AppState>, days: String) -> Result<OfflineSettings, AppError> {
+    let days = state.db.call(move |c| store::set_offline_days(c, &days)).await?;
+    crate::offline::wake(&app);
+    tracing::info!(days = days.as_str(), "período de download ajustado");
+    Ok(OfflineSettings { days, local_bytes: local_bytes(&app) })
+}
+
 // ---------------------------------------------------------------- sino (US8, CA7)
 
 #[derive(Debug, Serialize)]
@@ -712,13 +757,7 @@ pub struct AccountOverview {
 pub async fn account_overview(app: AppHandle, state: State<'_, AppState>, account_id: String) -> Result<AccountOverview, AppError> {
     let id = self::account_id(&account_id)?;
     let counts = state.db.call(move |c| store::account_overview(c, &id)).await?;
-    let local_bytes = app
-        .path()
-        .app_data_dir()
-        .ok()
-        .and_then(|dir| std::fs::metadata(dir.join(crate::db::FILE_NAME)).ok())
-        .map_or(0, |m| m.len());
-    Ok(AccountOverview { counts, local_bytes })
+    Ok(AccountOverview { counts, local_bytes: local_bytes(&app) })
 }
 
 /// "Sincronizar agora" do menu da conta: lista de pastas e Caixa de entrada.

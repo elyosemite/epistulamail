@@ -18,13 +18,14 @@ interface EmailItemProps {
   onCheck: (range: boolean) => void;
   onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
   onPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
+  onHover?: (inside: boolean) => void;
   onToggleStar: () => void;
   onToggleRead: () => void;
 }
 
 /** Um e-mail na lista. */
 export const EmailItem = forwardRef<HTMLDivElement, EmailItemProps>(function EmailItem(
-  { message, open, checked, folderName, badge, onOpen, onCheck, onKeyDown, onPointerDown, onToggleStar, onToggleRead },
+  { message, open, checked, folderName, badge, onOpen, onCheck, onKeyDown, onPointerDown, onHover, onToggleStar, onToggleRead },
   ref,
 ) {
   return (
@@ -42,6 +43,7 @@ export const EmailItem = forwardRef<HTMLDivElement, EmailItemProps>(function Ema
       onCheck={onCheck}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
+      onHover={onHover}
       onToggleStar={onToggleStar}
       onToggleRead={onToggleRead}
       badge={badge}

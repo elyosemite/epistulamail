@@ -35,6 +35,13 @@ export function ConversationView({ account, selectedId, messages, onSelectedView
   const parts = useMemo(() => conversationLayout(messages, open, showAll), [messages, open, showAll]);
   const expand = (id: string) => setOpen((current) => new Set(current).add(id));
 
+  // As recolhidas já vão sendo baixadas, para abrir na hora quando o usuário clicar (US9, CA3).
+  useEffect(() => {
+    const closed = messages.filter((m) => !open.has(m.id)).map((m) => m.id);
+    if (closed.length > 0) void api.prefetchMessages(closed).catch(() => undefined);
+    // Só ao carregar a conversa.
+  }, [messages]);
+
   const avatarOf = (m: ConversationMessage, size: "sm" | "lg") =>
     m.mine ? (
       <AccountAvatar initial={accountInitial(account.displayName)} colorClass={avatarColorClass(account.color)} photo={account.photo} size={size} />

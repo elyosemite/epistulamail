@@ -16,8 +16,12 @@ use crate::message::FolderKey;
 use crate::session::{AccountHandle, AppState, Lane};
 use crate::store::{self, AccountStatus, ApplyReport, FolderRow, Snapshot};
 
-/// Primeira sincronização de uma pasta: as 2.000 mensagens mais recentes (D5).
+/// Primeira sincronização de uma pasta: as 2.000 mensagens mais recentes (D5 da US3).
 pub const INITIAL_WINDOW: u32 = 2000;
+/// Cabeçalhos que vêm primeiro, para a lista aparecer logo (US9, CA1 e D3).
+pub const FIRST_HEADERS: u32 = 200;
+/// O resto da janela chega em pacotes deste tamanho, em segundo plano.
+pub const BACKFILL_BATCH: u32 = 250;
 /// Mensagens mais antigas buscadas por vez quando o usuário pagina além do que está salvo.
 pub const OLDER_BATCH: u32 = 100;
 const FETCH_CHUNK: u32 = 250;
@@ -38,9 +42,19 @@ impl From<&FolderRow> for SavedState {
     }
 }
 
-/// Intervalo de sequência da primeira sincronização (as `INITIAL_WINDOW` mais recentes).
+/// Intervalo de sequência da primeira leitura de uma pasta: as `FIRST_HEADERS` mais recentes. O
+/// resto, até `INITIAL_WINDOW`, vem depois em pacotes (`backfill_batch`).
 pub fn initial_window(exists: u32) -> Option<(u32, u32)> {
-    imap_client::page_range(exists, INITIAL_WINDOW)
+    imap_client::page_range(exists, FIRST_HEADERS)
+}
+
+/// Quantas mensagens antigas buscar no próximo pacote da primeira sincronização, ou `None` quando a
+/// pasta já tem a janela inteira (ou a pasta inteira, se for menor). Continua de onde parou.
+pub fn backfill_batch(stored: u32, folder: &FolderRow) -> Option<u32> {
+    if folder.complete || folder.oldest_uid.is_none() || stored >= INITIAL_WINDOW {
+        return None;
+    }
+    Some(BACKFILL_BATCH.min(INITIAL_WINDOW - stored))
 }
 
 /// Divide `start..=end` em blocos de até `size`.
@@ -240,14 +254,14 @@ async fn fill_previews(state: &AppState, handle: &AccountHandle, folder_id: i64)
     }
 }
 
-/// Traz do servidor o próximo bloco de mensagens mais antigas que as salvas. Devolve quantas vieram.
-pub async fn fetch_older(state: &AppState, handle: &AccountHandle, folder: &FolderRow) -> Result<usize, AppError> {
+/// Traz do servidor o próximo bloco de `batch` mensagens mais antigas que as salvas. Devolve quantas vieram.
+pub async fn fetch_older(state: &AppState, handle: &AccountHandle, folder: &FolderRow, batch: u32, lane: Lane) -> Result<usize, AppError> {
     let (Some(oldest), Some(uidvalidity)) = (folder.oldest_uid, folder.uidvalidity) else { return Ok(0) };
     if folder.complete {
         return Ok(0);
     }
     let mailbox = folder.imap_name.clone();
-    let headers = imap_client::with_session(state, handle, Lane::Interactive, |s| {
+    let headers = imap_client::with_session(state, handle, lane, |s| {
         let mailbox = mailbox.clone();
         async move {
             imap_client::select_checked(s, &mailbox, uidvalidity).await.map_err(|e| match e {
@@ -258,8 +272,8 @@ pub async fn fetch_older(state: &AppState, handle: &AccountHandle, folder: &Fold
                 return Ok((Vec::new(), true));
             }
             let uids = imap_client::search_uids(s, 1, Some(oldest - 1)).await?;
-            let complete = uids.len() <= OLDER_BATCH as usize;
-            let batch: Vec<u32> = uids.iter().rev().take(OLDER_BATCH as usize).copied().collect();
+            let complete = uids.len() <= batch as usize;
+            let batch: Vec<u32> = uids.iter().rev().take(batch as usize).copied().collect();
             if batch.is_empty() {
                 return Ok((Vec::new(), true));
             }
@@ -351,8 +365,40 @@ pub async fn run_folder_sync(state: &AppState, account_id: &str, folder_id: i64)
         let folder_key = FolderKey { account: account_id.to_owned(), folder: folder_id }.encode();
         let _ = state.app.emit("mailbox-updated", MailboxUpdated { account_id: account_id.to_owned(), folder_id: folder_key });
         state.emit_accounts_changed();
+        // O resto da primeira sincronização e, em seguida, o conteúdo em segundo plano (US9).
+        backfill(state, account_id, folder_id).await;
+        crate::offline::wake(&state.app);
     }
     result
+}
+
+/// Completa a primeira sincronização da pasta até `INITIAL_WINDOW`, um pacote por vez, avisando a
+/// lista a cada pacote (US9, CA1). Cede a vez a uma sincronização da mesma pasta em andamento.
+async fn backfill(state: &AppState, account_id: &str, folder_id: i64) {
+    let Ok(handle) = state.handle(account_id).await else { return };
+    loop {
+        let loaded = state.db.call(move |c| Ok((store::get_folder(c, folder_id)?, store::stored_in_folder(c, folder_id)?))).await;
+        let Ok((Some(folder), stored)) = loaded else { return };
+        let Some(batch) = backfill_batch(stored, &folder) else { return };
+        if !handle.try_begin_sync(folder_id) {
+            return;
+        }
+        let fetched = fetch_older(state, &handle, &folder, batch, Lane::Sync).await;
+        handle.end_sync(folder_id);
+        match fetched {
+            Ok(n) => {
+                let folder_key = FolderKey { account: account_id.to_owned(), folder: folder_id }.encode();
+                let _ = state.app.emit("mailbox-updated", MailboxUpdated { account_id: account_id.to_owned(), folder_id: folder_key });
+                if n == 0 {
+                    return;
+                }
+            }
+            Err(e) => {
+                tracing::info!(kind = e.kind(), "primeira sincronização continua na próxima vez");
+                return;
+            }
+        }
+    }
 }
 
 pub fn spawn_folder_sync(app: &AppHandle, account_id: String, folder_id: i64) {
@@ -527,9 +573,42 @@ mod tests {
     /// Primeira sincronização simulada de uma pasta com 5.000 mensagens: o banco fica com
     /// exatamente as 2.000 mais recentes e a pasta não é marcada como completa.
     #[test]
-    fn initial_sync_of_5000_messages_keeps_the_2000_most_recent() {
+    fn first_sync_shows_200_and_backfills_in_batches_up_to_2000() {
         let exists = 5000;
         let (start, end) = initial_window(exists).unwrap();
+        assert_eq!((start, end), (4801, 5000), "as 200 mais recentes primeiro");
+        let headers: Vec<_> = (start..=end).map(|seq| header(seq * 10, &format!("<{seq}@x>"), "s", false)).collect();
+        let snap = Snapshot {
+            reset: true,
+            uidvalidity: 1,
+            uidnext: Some(exists * 10 + 1),
+            total: exists,
+            oldest_uid: headers.iter().map(|h| h.uid).min(),
+            complete: Some(false),
+            headers,
+            ..Default::default()
+        };
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            store::apply_snapshot(c, inbox.id, &snap).unwrap();
+            let f = store::get_folder(c, inbox.id).unwrap().unwrap();
+            assert_eq!(backfill_batch(store::stored_in_folder(c, inbox.id).unwrap(), &f), Some(250));
+            assert_eq!(backfill_batch(1900, &f), Some(100), "o último pacote só completa a janela");
+            assert_eq!(backfill_batch(2000, &f), None);
+            assert_eq!(backfill_batch(10, &store::FolderRow { complete: true, ..f.clone() }), None, "pasta pequena já inteira");
+            assert_eq!(backfill_batch(0, &store::FolderRow { oldest_uid: None, ..f }), None, "nunca sincronizada");
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn initial_sync_of_5000_messages_keeps_the_2000_most_recent() {
+        let exists = 5000;
+        // A janela inteira, depois de todos os pacotes da primeira sincronização.
+        let (start, end) = imap_client::page_range(exists, INITIAL_WINDOW).unwrap();
         // Servidor simulado: sequência N tem UID 10 * N.
         let headers: Vec<_> = chunks(start, end, FETCH_CHUNK)
             .into_iter()

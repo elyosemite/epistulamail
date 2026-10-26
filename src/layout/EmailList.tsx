@@ -1,8 +1,9 @@
 // DS: threads.html · .thread-list (linha padrão com checkbox); teclado: J/K ou setas, Enter, X, S, Shift+U, Ctrl+A, Esc
 // DS: sidebar.html · arrastar para uma pasta com html.is-grabbing e .drag-ghost--follow (US6, CA5)
+// US9: parar o mouse numa linha por meio segundo já baixa a mensagem em segundo plano.
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { conversations } from "../lib/selection";
-import type { Density, MessageHeader } from "../lib/tauri";
+import { api, type Density, type MessageHeader } from "../lib/tauri";
 import { DragGhost, ThreadList } from "../ui/Thread";
 import { EmailItem } from "./EmailItem";
 
@@ -38,12 +39,21 @@ interface EmailListProps extends DragHandlers {
   onToggleRead: (message: MessageHeader) => void;
 }
 
+/** Parar o mouse numa linha por este tempo já baixa a mensagem (US9, CA3). */
+const HOVER_PREFETCH_MS = 500;
+
 const folderAt = (x: number, y: number) => document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-drop-folder]")?.dataset.dropFolder ?? null;
 
 /** A lista de e-mails da pasta (ou da busca, ou de um prazo das sinalizadas). */
 export function EmailList(props: EmailListProps) {
   const { label, items, density, openId, checked, showFolder, canDrag, renderBadge, onOpen, onCheck, onCheckAll, onClearChecked, onToggleStar, onToggleRead } = props;
   const rows = useRef(new Map<string, HTMLDivElement>());
+  const hoverTimer = useRef<number | undefined>(undefined);
+  const hover = (id: string, inside: boolean) => {
+    window.clearTimeout(hoverTimer.current);
+    if (inside) hoverTimer.current = window.setTimeout(() => void api.prefetchMessages([id]).catch(() => undefined), HOVER_PREFETCH_MS);
+  };
+  useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
   const [press, setPress] = useState<{ id: string; x: number; y: number } | null>(null);
   const [drag, setDrag] = useState<{ ids: string[]; x: number; y: number } | null>(null);
   // Depois de arrastar, o clique que o navegador dispara ao soltar não abre a mensagem.
@@ -153,6 +163,7 @@ export function EmailList(props: EmailListProps) {
             onCheck={(range) => onCheck(m.id, range)}
             onKeyDown={(e) => onKeyDown(e, index)}
             onPointerDown={(e) => pointerDown(e, m)}
+            onHover={(inside) => hover(m.id, inside)}
             onToggleStar={() => onToggleStar(m)}
             onToggleRead={() => onToggleRead(m)}
           />

@@ -63,6 +63,8 @@ interface MailboxProps {
 
 const FALLBACK = { kind: "ImapConnection" as const, message: "Tente de novo em instantes." };
 const SEARCH_DELAY_MS = 250;
+/** Mensagens baixadas antes, depois da aberta: as que o usuário deve abrir em seguida (US9, CA3). */
+const PREFETCH_NEXT = 3;
 
 const TONE = { today: "moved", future: "default", overdue: "overdue", done: "success" } as const;
 
@@ -164,6 +166,12 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
 
   const select = useCallback((id: string | null) => {
     setSelectedId(id);
+    if (id) {
+      const items = itemsRef.current;
+      const at = items.findIndex((m) => m.id === id);
+      const next = at < 0 ? [] : items.slice(at + 1, at + 1 + PREFETCH_NEXT).map((m) => m.id);
+      if (next.length > 0) void api.prefetchMessages(next).catch(() => undefined);
+    }
     setCompose((c) => (c?.kind === "new" ? c : null));
     readerOpenRef.current(id !== null);
   }, []);

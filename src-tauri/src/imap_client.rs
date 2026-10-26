@@ -371,6 +371,22 @@ pub async fn fetch_raw(session: &mut ImapSession, uid: u32) -> Result<RawMessage
     Ok(RawMessage { raw: raw.to_vec(), flags, internal_date })
 }
 
+/// Corpos completos dos UIDs na pasta já selecionada, sem marcar como lidas (`BODY.PEEK`, US9).
+/// Os que passam do limite de 25 MB ou não vieram ficam de fora.
+pub async fn fetch_raw_many(session: &mut ImapSession, uids: &[u32]) -> Result<Vec<(u32, Vec<u8>)>, AppError> {
+    if uids.is_empty() {
+        return Ok(Vec::new());
+    }
+    let fetched = collect(session.uid_fetch(uid_set(uids), "(UID BODY.PEEK[])").await.map_err(imap_error("uid fetch"))?, "uid fetch").await?;
+    Ok(fetched
+        .iter()
+        .filter_map(|f| {
+            let (uid, body) = (f.uid?, f.body()?);
+            (body.len() <= MAX_MESSAGE_BYTES as usize).then(|| (uid, body.to_vec()))
+        })
+        .collect())
+}
+
 /// Comandos `STORE` para as mudanças pedidas. `None` deixa a flag como está.
 pub fn store_commands(seen: Option<bool>, flagged: Option<bool>) -> Vec<&'static str> {
     let mut commands = Vec::new();

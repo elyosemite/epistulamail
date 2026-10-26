@@ -17,7 +17,7 @@ Pedido em 25 out 2026. Hoje:
 
 ### 2. Regra do design system (obrigatória)
 
-Toda peça nova de interface (a opção em Configurações → E-mail e o espaço ocupado) passa primeiro por um rascunho em `design-system/rascunho-us9.html`, só com tokens, para aprovação.
+Toda peça nova de interface passaria primeiro por um rascunho. A opção em Configurações → E-mail usa só peças que o DS já tem (`.settings__group`, `.setting`, `.select`, como em modais.html), então não houve rascunho.
 
 ### 3. Critérios de aceite
 
@@ -58,11 +58,11 @@ Toda peça nova de interface (a opção em Configurações → E-mail e o espaç
 
 ### 5. Decisões
 
-- **D1 (pendente, recomendo 30 dias):** período padrão do download em segundo plano.
-- **D2 (pendente, recomendo 2 MB):** tamanho máximo de uma mensagem baixada em segundo plano. Acima disso (quase sempre anexos grandes), só ao abrir.
-- **D3 (pendente, recomendo 200 e depois 250):** quantos cabeçalhos vêm primeiro e o tamanho dos pacotes seguintes.
-- **D4 (pendente, recomendo não apagar):** ao escolher um período menor, os e-mails já salvos fora dele continuam no computador. A alternativa é apagar os corpos antigos para liberar espaço.
-- **D5 (pendente, recomendo não agora):** baixar os anexos separados do texto (só o texto em segundo plano). Economiza espaço, mas exige guardar as partes da mensagem separadamente.
+- **D1 (aprovada em 25 out 2026: 30 dias):** período padrão do download em segundo plano.
+- **D2 (aprovada em 25 out 2026: 2 MB):** tamanho máximo de uma mensagem baixada em segundo plano. Acima disso (quase sempre anexos grandes), só ao abrir.
+- **D3 (aprovada em 25 out 2026: 200 e depois 250):** quantos cabeçalhos vêm primeiro e o tamanho dos pacotes seguintes.
+- **D4 (aprovada em 25 out 2026: não apagar):** ao escolher um período menor, os e-mails já salvos fora dele continuam no computador. A alternativa é apagar os corpos antigos para liberar espaço.
+- **D5 (aprovada em 25 out 2026: não agora):** baixar os anexos separados do texto (só o texto em segundo plano). Economiza espaço, mas exige guardar as partes da mensagem separadamente.
 
 ### 6. Riscos técnicos
 
@@ -70,7 +70,15 @@ Toda peça nova de interface (a opção em Configurações → E-mail e o espaç
 - **Limites do servidor:** muitos downloads seguidos podem ser limitados pelo provedor. A fila usa pacotes pequenos, uma conexão por conta e espera um pouco ao receber erro de limite.
 - **Concorrência com a sincronização:** a fila e a sincronização usam o mesmo banco; gravar corpo e cabeçalho da mesma mensagem precisa continuar consistente (o mesmo `message_id`).
 
-### 7. Fora do escopo
+### 7. Implementação (25 out 2026)
+
+- `sync.rs`: a primeira leitura traz `FIRST_HEADERS` (200); `backfill` completa até 2000 em pacotes de `BACKFILL_BATCH` (250), avisando a lista a cada pacote e continuando de onde parou (conta o que já está salvo).
+- `offline.rs`: fila por conta (`Downloader`, acordada ao fim de cada sincronização e a cada 2 min), lotes de 25 com `BODY.PEEK[]` na conexão de sincronização, até 2 MB e no período escolhido; `prefetch` para o comando `prefetch_messages`.
+- `store.rs`: `bodies_to_download` (ordem Caixa de entrada, Enviados, outras, "Todos"; sem Lixeira e Spam), `bodies_for_keys`, `offline_days`.
+- Frontend: ao abrir, as 3 seguintes da lista; na conversa, as recolhidas; meio segundo com o mouse numa linha; Configurações → E-mail → "Ler sem conexão".
+- Falta o teste manual com o servidor real (tempo da primeira sincronização e uso de disco).
+
+### 8. Fora do escopo
 
 - Busca no conteúdo completo dos e-mails (só cabeçalhos e prévia, como hoje).
 - Download de anexos para abrir ou salvar.

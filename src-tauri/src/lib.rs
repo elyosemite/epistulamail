@@ -8,6 +8,7 @@ mod message;
 mod oauth;
 mod moves;
 mod notify;
+mod offline;
 mod photo;
 mod preview;
 mod provider;
@@ -191,6 +192,8 @@ pub fn run() {
             });
             sync::start_periodic(app.handle());
             app.manage(notify::Notifier::default());
+            app.manage(offline::Downloader::default());
+            offline::start(app.handle());
             notify::start(app.handle());
             tray::create(app.handle())?;
             // Aberto com o Windows (D8): fica só na bandeja. Senão, a janela aparece.
@@ -248,6 +251,9 @@ pub fn run() {
             commands::list_notices,
             commands::mark_notices_seen,
             commands::set_snooze,
+            commands::prefetch_messages,
+            commands::get_offline_settings,
+            commands::set_offline_days,
         ])
         .build(tauri::generate_context!());
 

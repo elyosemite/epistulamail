@@ -7,6 +7,7 @@ import { SettingsSheet, SettingsTitle, type SettingsSection } from "../../ui/Set
 import { AppearanceSettings } from "./AppearanceSettings";
 import { GeneralSettings } from "./GeneralSettings";
 import { NotificationSettings } from "./NotificationSettings";
+import { OfflineSettings } from "./OfflineSettings";
 import { SyncSettings } from "./SyncSettings";
 
 const SECTIONS: SettingsSection[] = [
@@ -40,7 +41,10 @@ export function Settings({ accounts, appearance, onAppearance, initialSection = 
       {section === "general" ? (
         <GeneralSettings appearance={appearance} onChange={onAppearance} />
       ) : section === "email" ? (
-        <SyncSettings accounts={accounts} />
+        <>
+          <OfflineSettings />
+          <SyncSettings accounts={accounts} />
+        </>
       ) : section === "notifications" ? (
         <NotificationSettings accounts={accounts} />
       ) : section === "appearance" ? (

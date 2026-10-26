@@ -1273,6 +1273,111 @@ pub fn mark_notices_seen(conn: &Connection) -> Result<(), AppError> {
     Ok(())
 }
 
+// ---------------------------------------------------------------- download em segundo plano (US9)
+
+/// "Baixar e-mails para ler sem conexão" (CA4): últimos 30 ou 90 dias, tudo ou só ao abrir (D1: 30).
+pub const OFFLINE_CHOICES: &[&str] = &["30", "90", "all", "none"];
+pub const OFFLINE_DEFAULT: &str = "30";
+const APP_OFFLINE: &str = "offline_days";
+
+pub fn offline_days(conn: &Connection) -> Result<String, AppError> {
+    Ok(app_setting(conn, APP_OFFLINE)?.filter(|v| OFFLINE_CHOICES.contains(&v.as_str())).unwrap_or_else(|| OFFLINE_DEFAULT.to_owned()))
+}
+
+pub fn set_offline_days(conn: &Connection, choice: &str) -> Result<String, AppError> {
+    if !OFFLINE_CHOICES.contains(&choice) {
+        return Err(AppError::InvalidInput);
+    }
+    set_app_setting(conn, APP_OFFLINE, choice)?;
+    Ok(choice.to_owned())
+}
+
+/// Desde que data baixar ("AAAA-MM-DD"): `Some(None)` é tudo; `None` é não baixar nada antes de abrir.
+pub fn offline_since(choice: &str, today: chrono::NaiveDate) -> Option<Option<String>> {
+    let days = match choice {
+        "none" => return None,
+        "all" => return Some(None),
+        n => n.parse::<i64>().ok()?,
+    };
+    Some(Some((today - chrono::Duration::days(days)).format("%Y-%m-%d").to_string()))
+}
+
+/// Uma mensagem cujo corpo falta baixar, com o lugar de onde buscar.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BodyTarget {
+    pub message_id: i64,
+    pub folder_id: i64,
+    pub uid: u32,
+}
+
+/// O próximo lote do download em segundo plano (CA2): mensagens sem corpo salvo, até `max_size`
+/// bytes e desde `since`, todas da mesma pasta. Ordem: Caixa de entrada, Enviados, as outras pastas
+/// na ordem da coluna e "Todos" por último (repete as outras); dentro da pasta, das mais novas para as
+/// mais antigas. Lixeira, Spam e mensagens sendo movidas ficam de fora; `skip` são as já tentadas.
+pub fn bodies_to_download(
+    conn: &Connection,
+    account_id: &str,
+    since: Option<&str>,
+    max_size: u32,
+    limit: usize,
+    skip: &HashSet<i64>,
+) -> Result<Vec<BodyTarget>, AppError> {
+    let mut st = conn
+        .prepare_cached(
+            "SELECT m.id, mf.folder_id, mf.uid FROM message m
+             JOIN message_folder mf ON mf.message_id = m.id
+             JOIN folder f ON f.id = mf.folder_id
+             WHERE m.account_id = ?1 AND m.body_state = 'none' AND m.size <= ?2 AND (?3 IS NULL OR m.date >= ?3)
+               AND f.role NOT IN ('trash', 'spam')
+               AND NOT EXISTS (SELECT 1 FROM pending_move pm WHERE pm.from_folder_id = mf.folder_id AND pm.from_uid = mf.uid)
+             ORDER BY CASE f.role WHEN 'inbox' THEN 0 WHEN 'sent' THEN 1 WHEN 'all' THEN 3 ELSE 2 END, f.position, m.date DESC, mf.uid DESC
+             LIMIT ?4",
+        )
+        .map_err(sql_error("download"))?;
+    let window = (limit + skip.len()).saturating_mul(4).max(100) as i64;
+    let rows = st
+        .query_map(params![account_id, max_size, since, window], |r| Ok(BodyTarget { message_id: r.get(0)?, folder_id: r.get(1)?, uid: r.get(2)? }))
+        .map_err(sql_error("download"))?;
+    let mut out: Vec<BodyTarget> = Vec::new();
+    for row in rows {
+        let t = row.map_err(sql_error("download"))?;
+        if skip.contains(&t.message_id) || out.iter().any(|o| o.message_id == t.message_id) {
+            continue;
+        }
+        if out.first().is_some_and(|first| first.folder_id != t.folder_id) {
+            continue;
+        }
+        out.push(t);
+        if out.len() >= limit {
+            break;
+        }
+    }
+    Ok(out)
+}
+
+/// Das mensagens pedidas (pasta, UID), as que ainda não têm corpo e cabem em `max_size` (CA3).
+pub fn bodies_for_keys(conn: &Connection, account_id: &str, keys: &[(i64, u32)], max_size: u32) -> Result<Vec<BodyTarget>, AppError> {
+    let mut st = conn
+        .prepare_cached(
+            "SELECT m.id FROM message_folder mf JOIN message m ON m.id = mf.message_id
+             WHERE mf.folder_id = ?1 AND mf.uid = ?2 AND m.account_id = ?3 AND m.body_state = 'none' AND m.size <= ?4",
+        )
+        .map_err(sql_error("download"))?;
+    let mut out = Vec::new();
+    for &(folder_id, uid) in keys {
+        let id: Option<i64> = st.query_row(params![folder_id, uid, account_id, max_size], |r| r.get(0)).optional().map_err(sql_error("download"))?;
+        if let Some(message_id) = id.filter(|id| !out.iter().any(|t: &BodyTarget| t.message_id == *id)) {
+            out.push(BodyTarget { message_id, folder_id, uid });
+        }
+    }
+    Ok(out)
+}
+
+/// Mensagens da pasta salvas no banco (a primeira sincronização completa até `INITIAL_WINDOW`, CA1).
+pub fn stored_in_folder(conn: &Connection, folder_id: i64) -> Result<u32, AppError> {
+    conn.query_row("SELECT count(*) FROM message_folder WHERE folder_id = ?1", [folder_id], |r| r.get(0)).map_err(sql_error("pasta"))
+}
+
 // ---------------------------------------------------------------- prévia da lista (US7, CA7)
 
 /// UIDs da pasta, dos mais novos para os mais antigos, cuja prévia ainda não foi buscada.
@@ -2847,6 +2952,62 @@ pub(crate) mod tests {
             let m = message_by_uid(c, inbox.id, 1).unwrap().unwrap();
             save_body(c, m.id, b"Subject: s\r\n\r\nCorpo salvo.", &[]).unwrap();
             assert_eq!(list_page(c, inbox.id, None, 50).unwrap()[2].snippet.as_deref(), Some("Corpo salvo."));
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn background_download_goes_folder_by_folder_newest_first() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            let trash = folder(c, &a.id, "[Gmail]/Lixeira", Role::Trash);
+            let work = folder(c, &a.id, "Projetos", Role::Custom);
+            apply_snapshot(c, inbox.id, &snapshot(1..=3)).unwrap();
+            let mut other = snapshot(1..=2);
+            other.headers = (1..=2).map(|u| header(u, &format!("<w{u}@x>"), "s", false)).collect();
+            apply_snapshot(c, work.id, &other).unwrap();
+            let mut gone = snapshot(1..=1);
+            gone.headers = vec![header(1, "<t1@x>", "s", false)];
+            apply_snapshot(c, trash.id, &gone).unwrap();
+
+            let none = HashSet::new();
+            let first = bodies_to_download(c, &a.id, None, 2_000_000, 25, &none).unwrap();
+            assert_eq!(first.iter().map(|t| (t.folder_id, t.uid)).collect::<Vec<_>>(), [(inbox.id, 3), (inbox.id, 2), (inbox.id, 1)], "Caixa de entrada primeiro, mais nova antes");
+            assert!(bodies_to_download(c, &a.id, None, 999, 25, &none).unwrap().is_empty(), "acima do tamanho fica para quando abrir");
+            assert_eq!(bodies_to_download(c, &a.id, Some("2026-10-04"), 2_000_000, 25, &none).unwrap().len(), 1, "só a de 04/10 está no período");
+
+            for t in &first {
+                save_body(c, t.message_id, b"Subject: s\r\n\r\noi", &[]).unwrap();
+            }
+            let next = bodies_to_download(c, &a.id, None, 2_000_000, 1, &none).unwrap();
+            assert_eq!(next.iter().map(|t| (t.folder_id, t.uid)).collect::<Vec<_>>(), [(work.id, 2)], "depois as outras pastas; a Lixeira nunca");
+            let skip: HashSet<i64> = next.iter().map(|t| t.message_id).collect();
+            assert_eq!(bodies_to_download(c, &a.id, None, 2_000_000, 5, &skip).unwrap().len(), 1, "a já tentada fica de fora");
+
+            let asked = bodies_for_keys(c, &a.id, &[(inbox.id, 1), (work.id, 1), (work.id, 99)], 2_000_000).unwrap();
+            assert_eq!(asked.iter().map(|t| t.uid).collect::<Vec<_>>(), [1], "só a que ainda não tem corpo e existe");
+            assert_eq!(stored_in_folder(c, inbox.id).unwrap(), 3);
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn offline_choice_becomes_a_start_date() {
+        let today = chrono::NaiveDate::from_ymd_opt(2026, 10, 25).unwrap();
+        assert_eq!(offline_since("30", today), Some(Some("2026-09-25".into())));
+        assert_eq!(offline_since("90", today), Some(Some("2026-07-27".into())));
+        assert_eq!(offline_since("all", today), Some(None));
+        assert_eq!(offline_since("none", today), None);
+        let t = test_db();
+        t.db.with(|c| {
+            assert_eq!(offline_days(c).unwrap(), "30");
+            assert_eq!(set_offline_days(c, "90").unwrap(), "90");
+            assert_eq!(offline_days(c).unwrap(), "90");
+            assert_eq!(set_offline_days(c, "7"), Err(AppError::InvalidInput));
             Ok(())
         })
         .unwrap();

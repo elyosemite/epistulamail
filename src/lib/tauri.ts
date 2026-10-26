@@ -176,6 +176,15 @@ export interface NotifySettings {
   accountsOff: string[];
 }
 
+/** "Baixar e-mails para ler sem conexão" (US9, CA4). */
+export type OfflineDays = "30" | "90" | "all" | "none";
+
+export interface OfflineSettings {
+  days: OfflineDays;
+  /** Tamanho do banco local (todas as contas), em bytes. */
+  localBytes: number;
+}
+
 /** Para onde o clique numa notificação leva. */
 export interface NoticeTarget {
   accountId: string;
@@ -405,6 +414,10 @@ export const api = {
   listNotices: () => call<NoticeList>("list_notices"),
   markNoticesSeen: () => call<void>("mark_notices_seen"),
   setSnooze: (on: boolean) => call<boolean>("set_snooze", { on }),
+  /** Baixa em segundo plano as mensagens que o usuário deve abrir em seguida (US9, CA3). */
+  prefetchMessages: (messageIds: string[]) => call<void>("prefetch_messages", { messageIds }),
+  getOfflineSettings: () => call<OfflineSettings>("get_offline_settings"),
+  setOfflineDays: (days: OfflineDays) => call<OfflineSettings>("set_offline_days", { days }),
 };
 
 /** Eventos emitidos pelo backend (US3). */
