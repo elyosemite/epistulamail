@@ -148,7 +148,14 @@ pub fn run() {
     if cfg!(debug_assertions) {
         let _ = dotenvy::from_path(concat!(env!("CARGO_MANIFEST_DIR"), "/../.env"));
     }
-    tracing_subscriber::fmt().with_max_level(tracing::Level::INFO).with_target(false).init();
+    // O leitor de HTML dos e-mails (html5ever, pelo ammonia) avisa de cada tabela mal formada, comum
+    // em newsletters ("foster parenting not implemented"); isso não é problema do app e enchia o log.
+    use tracing_subscriber::prelude::*;
+    let filter = tracing_subscriber::filter::Targets::new()
+        .with_default(tracing::Level::INFO)
+        .with_target("html5ever", tracing::Level::ERROR)
+        .with_target("markup5ever", tracing::Level::ERROR);
+    tracing_subscriber::registry().with(tracing_subscriber::fmt::layer().with_target(false)).with(filter).init();
 
     let app = tauri::Builder::default()
         // Abrir o app de novo (com ele na bandeja) só traz a janela que já existe (US8).

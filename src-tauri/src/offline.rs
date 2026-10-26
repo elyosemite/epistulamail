@@ -13,7 +13,7 @@ use tokio::sync::Notify;
 
 use crate::error::AppError;
 use crate::imap_client;
-use crate::message::{self, MessageFlags};
+use crate::message;
 use crate::session::{AccountHandle, AppState, Lane};
 use crate::store::{self, AccountStatus, BodyTarget};
 
@@ -112,8 +112,7 @@ pub async fn download(state: &AppState, handle: &AccountHandle, targets: Vec<Bod
             let mut saved = 0;
             for t in targets.iter().filter(|t| t.folder_id == folder_id) {
                 let Some(raw) = bodies.remove(&t.uid) else { continue };
-                // Os anexos vêm da mesma leitura que a tela usa; as flags não mudam aqui.
-                let attachments = message::build_view(&raw, String::new(), MessageFlags::default(), None, false).attachments;
+                let attachments = message::attachments_of(&raw);
                 store::save_body(c, t.message_id, &raw, &attachments)?;
                 saved += 1;
             }

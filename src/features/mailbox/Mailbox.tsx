@@ -118,6 +118,8 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
   const initialRef = useRef(appRequest?.kind === "open" && appRequest.accountId === account.id && appRequest.folderId ? appRequest.folderId : initialFolderId);
   // Mensagem a abrir quando a pasta pedida terminar de carregar (notificação, US8).
   const pendingOpen = useRef<string | null>(null);
+  // Mensagem aberta por uma notificação: se ela não for a linha da conversa na lista, marca a linha dela.
+  const revealRef = useRef<string | null>(null);
   // Callbacks do App em refs: se mudarem de identidade a cada render do App, os efeitos de
   // carregar a pasta não podem rodar de novo (isso fechava a mensagem recém-aberta).
   const accessLostRef = useRef(onAccessLost);
@@ -230,6 +232,7 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
     if (!target) return;
     const wasFlagged = flagBucketRef.current !== null;
     setFlagBucket(null);
+    revealRef.current = appRequest.messageId;
     if (wasFlagged || searchingRef.current || folderRef.current?.id !== target.id) {
       pendingOpen.current = appRequest.messageId;
       setFolder(target);
@@ -237,6 +240,22 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
       select(appRequest.messageId);
     }
   }, [appRequest, account.id, folders, select]);
+
+  // A lista mostra uma linha por conversa: a mensagem da notificação pode ser uma mais antiga da conversa.
+  // Com a lista carregada, a linha da conversa dela fica marcada (a leitura mostra a conversa inteira).
+  useEffect(() => {
+    const wanted = revealRef.current;
+    if (!wanted || selectedId !== wanted || list.status !== "ready") return;
+    revealRef.current = null;
+    if (list.items.some((m) => m.id === wanted)) return;
+    api.getConversation(wanted)
+      .then((messages) => {
+        const ids = new Set(messages.map((m) => m.id));
+        const row = itemsRef.current.find((m) => ids.has(m.id));
+        if (row && selectedRef.current === wanted) setSelectedId(row.id);
+      })
+      .catch(() => undefined);
+  }, [list, selectedId]);
 
   // Quantidades das sinalizadas por prazo, na data local de hoje.
   const loadFlagCounts = useCallback(() => {

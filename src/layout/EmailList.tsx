@@ -54,6 +54,12 @@ export function EmailList(props: EmailListProps) {
     if (inside) hoverTimer.current = window.setTimeout(() => void api.prefetchMessages([id]).catch(() => undefined), HOVER_PREFETCH_MS);
   };
   useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
+
+  // A linha aberta fica à vista (ex.: aberta por uma notificação, US8).
+  const openInList = openId !== null && items.some((m) => m.id === openId);
+  useEffect(() => {
+    if (openId && openInList) rows.current.get(openId)?.scrollIntoView({ block: "nearest" });
+  }, [openId, openInList]);
   const [press, setPress] = useState<{ id: string; x: number; y: number } | null>(null);
   const [drag, setDrag] = useState<{ ids: string[]; x: number; y: number } | null>(null);
   // Depois de arrastar, o clique que o navegador dispara ao soltar não abre a mensagem.

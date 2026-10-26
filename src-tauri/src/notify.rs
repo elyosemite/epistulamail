@@ -125,16 +125,16 @@ pub fn new_mail_notes(settings: &NotifySettings, account_id: &str, account_name:
     let full = settings.privacy == "full";
     let key = |m: &NewMail| MessageKey { account: account_id.to_owned(), folder: m.folder_id, uid: m.uid }.encode();
     let folder = |m: &NewMail| FolderKey { account: account_id.to_owned(), folder: m.folder_id }.encode();
-    let target = |m: Option<&NewMail>| Some(Target { account_id: account_id.to_owned(), folder_id: m.map(folder), message_id: m.map(key), reconnect: false });
+    let target = |m: &NewMail| Some(Target { account_id: account_id.to_owned(), folder_id: Some(folder(m)), message_id: Some(key(m)), reconnect: false });
     let is_reply = |m: &NewMail| replies.contains(&(m.folder_id, m.uid));
     let mut notes = Vec::new();
     let (reply_mails, others): (Vec<&NewMail>, Vec<&NewMail>) = mails.iter().partition(|m| is_reply(m));
     if settings.replies {
         for m in &reply_mails {
             notes.push(if full {
-                Note { kind: "reply", sender: Some(sender(m)), title: format!("{} respondeu", sender(m)), line1: m.subject.clone(), line2: format!("{account_name} · resposta a um e-mail seu"), target: target(Some(m)) }
+                Note { kind: "reply", sender: Some(sender(m)), title: format!("{} respondeu", sender(m)), line1: m.subject.clone(), line2: format!("{account_name} · resposta a um e-mail seu"), target: target(m) }
             } else {
-                Note { kind: "reply", sender: None, title: format!("Nova resposta em {account_name}"), line1: "Alguém respondeu um e-mail seu.".into(), line2: String::new(), target: target(Some(m)) }
+                Note { kind: "reply", sender: None, title: format!("Nova resposta em {account_name}"), line1: "Alguém respondeu um e-mail seu.".into(), line2: String::new(), target: target(m) }
             });
         }
     }
@@ -156,7 +156,7 @@ pub fn new_mail_notes(settings: &NotifySettings, account_id: &str, account_name:
         } else {
             join_names(&names)
         };
-        notes.push(Note { kind: "summary", sender: None, title: format!("{} e-mails novos em {account_name}", rest.len()), line1, line2: String::new(), target: target(None) });
+        notes.push(Note { kind: "summary", sender: None, title: format!("{} e-mails novos em {account_name}", rest.len()), line1, line2: String::new(), target: Some(newest_target(account_id, &rest)) });
         return notes;
     }
     for m in rest {
@@ -170,10 +170,10 @@ pub fn new_mail_notes(settings: &NotifySettings, account_id: &str, account_name:
                     Some(snippet) => format!("{snippet} · {account_name}"),
                     None => account_name.to_owned(),
                 },
-                target: target(Some(m)),
+                target: target(m),
             }
         } else {
-            Note { kind: "mail", sender: None, title: format!("Novo e-mail em {account_name}"), line1: "Abra o Epistula para ler.".into(), line2: String::new(), target: target(Some(m)) }
+            Note { kind: "mail", sender: None, title: format!("Novo e-mail em {account_name}"), line1: "Abra o Epistula para ler.".into(), line2: String::new(), target: target(m) }
         });
     }
     notes
@@ -290,15 +290,27 @@ pub async fn after_inbox_sync(app: &AppHandle, account_id: &str, folder_id: i64,
     }
     // Primeira sincronização desta abertura: só um resumo do que chegou com o app fechado.
     let notes = if first {
-        vec![closed_summary(account_id, &account.display_name, mails.len())]
+        vec![closed_summary(account_id, &account.display_name, &mails)]
     } else {
         new_mail_notes(&settings, account_id, &account.display_name, &mails, &replies)
     };
     deliver(app, &account.display_name, notes, mails.len(), replies.len());
 }
 
+/// O destino de um aviso sobre vários e-mails: a pasta e o mais recente deles, aberto e marcado na lista.
+fn newest_target(account_id: &str, mails: &[&NewMail]) -> Target {
+    let newest = mails.iter().max_by_key(|m| m.uid);
+    Target {
+        account_id: account_id.to_owned(),
+        folder_id: newest.map(|m| FolderKey { account: account_id.to_owned(), folder: m.folder_id }.encode()),
+        message_id: newest.map(|m| MessageKey { account: account_id.to_owned(), folder: m.folder_id, uid: m.uid }.encode()),
+        reconnect: false,
+    }
+}
+
 /// O que chegou enquanto o app estava fechado, num aviso só (sem remetentes).
-pub fn closed_summary(account_id: &str, account_name: &str, count: usize) -> Note {
+pub fn closed_summary(account_id: &str, account_name: &str, mails: &[NewMail]) -> Note {
+    let count = mails.len();
     let what = if count == 1 { "1 e-mail novo".to_owned() } else { format!("{count} e-mails novos") };
     Note {
         kind: "summary",
@@ -306,7 +318,7 @@ pub fn closed_summary(account_id: &str, account_name: &str, count: usize) -> Not
         title: format!("{what} em {account_name}"),
         line1: "Chegaram enquanto o Epistula estava fechado.".into(),
         line2: String::new(),
-        target: Some(Target { account_id: account_id.to_owned(), folder_id: None, message_id: None, reconnect: false }),
+        target: Some(newest_target(account_id, &mails.iter().collect::<Vec<_>>())),
     }
 }
 
@@ -529,9 +541,13 @@ mod tests {
 
     #[test]
     fn closed_summary_has_no_senders() {
-        let n = closed_summary("acc", "Trabalho", 12);
+        let twelve: Vec<_> = (1..=12).map(|i| mail(i, "Marina", "s")).collect();
+        let n = closed_summary("acc", "Trabalho", &twelve);
+        let target = n.target.as_ref().unwrap();
+        assert_eq!(target.message_id, Some(MessageKey { account: "acc".into(), folder: 1, uid: 12 }.encode()), "abre a mais recente");
+        assert!(target.folder_id.is_some());
         assert_eq!(n.title, "12 e-mails novos em Trabalho");
-        assert_eq!(closed_summary("acc", "Pessoal", 1).title, "1 e-mail novo em Pessoal");
+        assert_eq!(closed_summary("acc", "Pessoal", &twelve[..1]).title, "1 e-mail novo em Pessoal");
     }
 
     #[test]
@@ -557,7 +573,7 @@ mod tests {
         assert_eq!(notes.len(), 1);
         assert_eq!(notes[0].title, "5 e-mails novos em Trabalho");
         assert_eq!(notes[0].line1, "P1, P2, P3 e mais 2");
-        assert_eq!(notes[0].target.as_ref().unwrap().message_id, None);
+        assert_eq!(notes[0].target.as_ref().unwrap().message_id, Some(MessageKey { account: "acc".into(), folder: 1, uid: 5 }.encode()), "o resumo abre a mais recente");
     }
 
     #[test]

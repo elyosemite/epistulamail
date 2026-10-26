@@ -306,21 +306,7 @@ pub fn build_view(raw: &[u8], id: String, flags: MessageFlags, internal_date: Op
         },
     };
 
-    let attachments: Vec<AttachmentInfo> = message
-        .attachments()
-        .map(|part| AttachmentInfo {
-            name: part.attachment_name().map(str::to_owned).unwrap_or_else(|| "(sem nome)".to_owned()),
-            mime_type: part
-                .content_type()
-                .map(|ct| match ct.subtype() {
-                    Some(sub) => format!("{}/{}", ct.ctype(), sub),
-                    None => ct.ctype().to_owned(),
-                })
-                .unwrap_or_else(|| "application/octet-stream".to_owned())
-                .to_ascii_lowercase(),
-            size: part.len(),
-        })
-        .collect();
+    let attachments = attachment_infos(&message);
 
     tracing::debug!(
         body = body.kind(),
@@ -344,6 +330,29 @@ pub fn build_view(raw: &[u8], id: String, flags: MessageFlags, internal_date: Op
         attachments,
         has_quote,
     }
+}
+
+/// Os anexos de uma mensagem, sem montar a leitura (o download em segundo plano não lê o HTML, US9).
+pub fn attachments_of(raw: &[u8]) -> Vec<AttachmentInfo> {
+    MessageParser::default().parse(raw).map(|m| attachment_infos(&m)).unwrap_or_default()
+}
+
+fn attachment_infos(message: &mail_parser::Message<'_>) -> Vec<AttachmentInfo> {
+    message
+        .attachments()
+        .map(|part| AttachmentInfo {
+            name: part.attachment_name().map(str::to_owned).unwrap_or_else(|| "(sem nome)".to_owned()),
+            mime_type: part
+                .content_type()
+                .map(|ct| match ct.subtype() {
+                    Some(sub) => format!("{}/{}", ct.ctype(), sub),
+                    None => ct.ctype().to_owned(),
+                })
+                .unwrap_or_else(|| "application/octet-stream".to_owned())
+                .to_ascii_lowercase(),
+            size: part.len(),
+        })
+        .collect()
 }
 
 #[cfg(test)]
