@@ -31,10 +31,12 @@ interface MessageViewProps {
   onLoaded: (id: string, flags: MessageFlags) => void;
   onAccessLost: () => void;
   onBack: () => void;
+  /** Gerenciador de chaves aberto da leitura (US13). */
+  onManageKeys: (fingerprint: string | null) => void;
 }
 
 /** A conversa da mensagem escolhida na lista (US8, CA6), com a resposta ou o encaminhamento. */
-export function MessageView({ account, messageId, badge, compose, onCloseCompose, onSent, onLoaded, onAccessLost, onBack }: MessageViewProps) {
+export function MessageView({ account, messageId, badge, compose, onCloseCompose, onSent, onLoaded, onAccessLost, onBack, onManageKeys }: MessageViewProps) {
   const [state, setState] = useState<State>({ status: "loading" });
   const [selectedView, setSelectedView] = useState<View | null>(null);
   const toast = useToast();
@@ -121,6 +123,7 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
       kind={compose.kind}
       messageId={messageId}
       originalAttachments={selectedView?.attachments ?? []}
+      replyToEncrypted={!!selectedView?.security?.encrypted}
       onClose={onCloseCompose}
       onSent={onSent}
     />
@@ -138,6 +141,7 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
         onLoaded={onLoaded}
         onAccessLost={onAccessLost}
         onOpenLink={openLink}
+        onManageKeys={onManageKeys}
       />
       {compose && compose.kind !== "forward" && card}
       {linkDialog}

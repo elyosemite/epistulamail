@@ -68,6 +68,14 @@ O que funciona hoje:
 - "Rodar agora" aplica uma regra aos e-mails que já estão na pasta, e regras de limpeza ("mais antigo que 30 dias", "manter só o mais recente do remetente") rodam uma vez por dia.
 - As regras rodam no Epistula, com o app aberto (inclusive na bandeja), e valem para qualquer provedor. O que chegou com o app fechado passa por elas na sincronização seguinte.
 
+**Criptografia de ponta a ponta**
+
+- OpenPGP embutido: crie uma chave (Curve25519, RSA 4096 ou uma pós-quântica experimental, com ML-KEM-768 + X25519), importe uma que você já tem ou restaure um backup do Epistula.
+- Um cadeado no composer criptografa e assina a mensagem. Ele liga sozinho quando todos os destinatários têm chave aceita, e respostas a mensagens criptografadas já começam criptografadas. Dá para esconder também o assunto do servidor.
+- Quem não tem chave aparece antes do envio, com a escolha de buscar a chave na internet (só quando você manda), enviar sem criptografia ou tirar o destinatário.
+- A leitura mostra se a mensagem veio criptografada e se a assinatura confere, com a aceitação da chave no estilo do Thunderbird (ainda não, aceita, verificada, rejeitada).
+- Um gerenciador de chaves com busca, importação de arquivo, da área de transferência ou da internet, exportação e backup protegido por senha. Chaves que chegam por Autocrypt ou anexadas ficam como "ainda não aceita".
+
 **Avisos**
 
 - Notificações do Windows para e-mails novos, respostas aos seus e-mails, prazos e contas que precisam de atenção. Um clique abre a mensagem.
@@ -125,7 +133,7 @@ Seu provedor de e-mail
 
 Alguns pontos que valem ser ditos com clareza:
 
-- **O seu provedor continua lendo os seus e-mails.** O Epistula protege a cópia local e o caminho até ela. Enquanto não houver criptografia de ponta a ponta, quem hospeda a caixa tem acesso a ela.
+- **O seu provedor continua lendo os seus e-mails**, a menos que eles vão criptografados com OpenPGP. O Epistula protege a cópia local e o caminho até ela; o que sai sem criptografia continua legível por quem hospeda a caixa, e mesmo o que vai criptografado mostra ao servidor quem escreveu para quem e quando.
 - **Os logs não contêm conteúdo.** Nem assunto, nem remetente, nem endereço da conta. Um teste percorre o app inteiro com marcadores únicos e falha se algum aparecer no log ou em texto puro no arquivo do banco.
 - **Sair de uma conta revoga o acesso** no provedor e apaga o segredo do cofre do sistema. As mensagens já baixadas continuam no disco, cifradas, até que exista a opção de apagá-las.
 - **Um computador comprometido continua comprometido.** Malware rodando na sua sessão consegue ler o que você consegue ler. Nenhum cliente de e-mail resolve isso, e preferimos dizer isso a fingir o contrário.

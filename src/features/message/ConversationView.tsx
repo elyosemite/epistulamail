@@ -1,6 +1,7 @@
 // Composição de DS: leitura.html "Conversa em cards" (US8, CA6: .conversation, .message--card, .message--collapsed,
 // .conversation__more, .message__quote-toggle + .message__quote), leitura.html (.message__head, .message__body,
-// .message__frame), mensagens.html (.section-message "Imagens externas bloqueadas", erros), anexos.html, carregamento.html
+// .message__frame), mensagens.html (.section-message "Imagens externas bloqueadas", erros), anexos.html, carregamento.html,
+// criptografia.html "Ler mensagens criptografadas e assinadas" (US13: .sec-status e os avisos de assinatura e de chave)
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { accountInitial, avatarColorClass } from "../../lib/accounts";
 import { conversationLayout, initiallyOpen, revealQuote, splitQuote } from "../../lib/conversation";
@@ -12,6 +13,7 @@ import { Avatar } from "../../ui/Avatar";
 import { CollapsedMessage, Conversation, MessageCard, MoreMessages, QuoteToggle } from "../../ui/Conversation";
 import { MessageFrame } from "../../ui/MessageFrame";
 import { MessageHead, type RecipientRow } from "../../ui/Reader";
+import { SecurityStatus } from "../../ui/SecurityStatus";
 import { SectionMessage } from "../../ui/SectionMessage";
 
 const FALLBACK: AppError = { kind: "ImapConnection", message: "Tente de novo em instantes." };
@@ -26,10 +28,12 @@ interface ConversationViewProps {
   onLoaded: (id: string, flags: MessageFlags) => void;
   onAccessLost: () => void;
   onOpenLink: (url: string, text: string) => void;
+  /** Gerenciador de chaves, numa chave ou na lista (US13). */
+  onManageKeys: (fingerprint: string | null) => void;
 }
 
 /** As mensagens da conversa, da mais antiga para a mais nova, em cards (D2 e D3). */
-export function ConversationView({ account, selectedId, messages, onSelectedView, onLoaded, onAccessLost, onOpenLink }: ConversationViewProps) {
+export function ConversationView({ account, selectedId, messages, onSelectedView, onLoaded, onAccessLost, onOpenLink, onManageKeys }: ConversationViewProps) {
   const [open, setOpen] = useState(() => initiallyOpen(messages, selectedId));
   const [showAll, setShowAll] = useState(false);
   const parts = useMemo(() => conversationLayout(messages, open, showAll), [messages, open, showAll]);
@@ -73,6 +77,7 @@ export function ConversationView({ account, selectedId, messages, onSelectedView
             onLoaded={onLoaded}
             onAccessLost={onAccessLost}
             onOpenLink={onOpenLink}
+            onManageKeys={onManageKeys}
           />
         ),
       )}
@@ -89,10 +94,11 @@ interface ConversationCardProps {
   onLoaded: (id: string, flags: MessageFlags) => void;
   onAccessLost: () => void;
   onOpenLink: (url: string, text: string) => void;
+  onManageKeys: (fingerprint: string | null) => void;
 }
 
 /** Uma mensagem aberta: o corpo vem de `get_message` (que também a marca como lida). */
-function ConversationCard({ message, avatar, onView, onLoaded, onAccessLost, onOpenLink }: ConversationCardProps) {
+function ConversationCard({ message, avatar, onView, onLoaded, onAccessLost, onOpenLink, onManageKeys }: ConversationCardProps) {
   const [state, setState] = useState<CardState>({ status: "loading" });
   const [allowRemote, setAllowRemote] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
@@ -182,7 +188,27 @@ function ConversationCard({ message, avatar, onView, onLoaded, onAccessLost, onO
         summary={recipientsSummary([...view.to, ...view.cc])}
         recipients={recipients}
         avatar={avatar}
+        status={view.security && (
+          <SecurityStatus
+            security={view.security}
+            onManageKeys={() => onManageKeys(view.security?.signature.state === "good" ? view.security.signature.fingerprint : null)}
+          />
+        )}
       />
+      {view.security?.signature.state === "bad" && (
+        <SectionMessage appearance="error" title="Esta mensagem pode ter sido alterada">
+          A assinatura não confere com o conteúdo. Desconfie de links e anexos.
+        </SectionMessage>
+      )}
+      {view.security?.encrypted && !view.security.decrypted && (
+        <SectionMessage
+          appearance="warning"
+          title="Nenhuma das suas chaves abre esta mensagem"
+          actions={[{ label: "Adicionar chave…", onClick: () => onManageKeys(null) }]}
+        >
+          Ela foi criptografada para uma chave que não está neste computador. Se você tem um backup, restaure-o.
+        </SectionMessage>
+      )}
       {view.blockedRemoteImages > 0 && !allowRemote && (
         <SectionMessage title="Imagens externas bloqueadas" actions={[{ label: "Mostrar imagens", onClick: showImages }]}>
           Para proteger sua privacidade, {view.blockedRemoteImages === 1 ? "1 imagem desta mensagem não foi carregada" : `${view.blockedRemoteImages} imagens desta mensagem não foram carregadas`}.

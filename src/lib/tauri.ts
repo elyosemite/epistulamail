@@ -84,6 +84,9 @@ export interface SendRequest {
   body: string;
   /** Encaminhar: posições dos anexos da original que vão junto. */
   keepAttachments: number[];
+  /** OpenPGP (US13): cifrar implica assinar. */
+  encrypt: boolean;
+  sign: boolean;
 }
 
 export interface ProviderInfo {
@@ -463,6 +466,8 @@ export interface MessageView {
   attachments: AttachmentInfo[];
   /** O HTML tem texto citado, escondido até o "…" (US8, D3). */
   hasQuote: boolean;
+  /** Criptografia e assinatura (US13); `null` em mensagem comum. */
+  security: MessageSecurity | null;
 }
 
 export interface FlagResult {

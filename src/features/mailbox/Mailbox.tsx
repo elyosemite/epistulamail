@@ -65,6 +65,8 @@ interface MailboxProps {
   appRequest?: MailboxRequest | null;
   /** "Mais opções" de "Criar regra": abre o editor completo nas Configurações (US12, CA5). */
   onOpenRules: (request: RulesRequest) => void;
+  /** Gerenciador de chaves OpenPGP nas Configurações (US13). */
+  onManageKeys: (fingerprint: string | null) => void;
 }
 
 const FALLBACK = { kind: "ImapConnection" as const, message: "Tente de novo em instantes." };
@@ -94,7 +96,7 @@ interface Removal {
   failedTitle: (count: number) => string;
 }
 
-export function Mailbox({ account, initialFolderId, query, settingsOpen, renderHeader, density, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange, appRequest, onOpenRules }: MailboxProps) {
+export function Mailbox({ account, initialFolderId, query, settingsOpen, renderHeader, density, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange, appRequest, onOpenRules, onManageKeys }: MailboxProps) {
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [folder, setFolder] = useState<Folder | null>(null);
   const [pager, setPager] = useState<Pager>(firstPage);
@@ -791,6 +793,7 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           onLoaded={onLoaded}
           onAccessLost={accessLost}
           onBack={() => select(null)}
+          onManageKeys={onManageKeys}
         />
       </ContentColumn>
       {confirmPurge && (

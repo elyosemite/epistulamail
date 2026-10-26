@@ -46,9 +46,11 @@ interface MessageHeadProps {
   recipients?: RecipientRow[];
   /** Outro avatar no lugar das iniciais (ex.: a foto da conta nas mensagens suas, US8). */
   avatar?: ReactNode;
+  /** Selos de criptografia e assinatura abaixo do remetente (criptografia.html, L67). */
+  status?: ReactNode;
 }
 
-export function MessageHead({ fromName, fromAddress, time, summary, recipients, avatar }: MessageHeadProps) {
+export function MessageHead({ fromName, fromAddress, time, summary, recipients, avatar, status }: MessageHeadProps) {
   const [expanded, setExpanded] = useState(false);
   const listId = useId();
   return (
@@ -77,6 +79,7 @@ export function MessageHead({ fromName, fromAddress, time, summary, recipients, 
             )}
           </>
         )}
+        {status}
       </div>
       <div className="message__time">{time}</div>
     </div>

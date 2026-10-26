@@ -58,6 +58,7 @@ function Shell() {
   const [settingsSection, setSettingsSection] = useState("general");
   const [rulesRequest, setRulesRequest] = useState<RulesRequest | null>(null);
   const rulesRequests = useRef(0);
+  const [keysRequest, setKeysRequest] = useState<{ fingerprint: string | null } | null>(null);
   const [bellOpen, setBellOpen] = useState(false);
   // Pedido ao Mailbox: abrir uma pasta e mensagem (notificação) ou começar um e-mail (bandeja).
   const [request, setRequest] = useState<MailboxRequest | null>(null);
@@ -143,6 +144,7 @@ function Shell() {
 
   const openSettings = useCallback((section = "general") => {
     setRulesRequest(null);
+    setKeysRequest(null);
     setSettingsSection(section);
     setSettingsOpen(true);
   }, []);
@@ -150,8 +152,18 @@ function Shell() {
   // Regras (US12): o editor ou o histórico abertos de fora das Configurações.
   const openRules = useCallback((request: RulesRequest) => {
     rulesRequests.current += 1;
+    setKeysRequest(null);
     setRulesRequest(request);
     setSettingsSection("rules");
+    setSettingsOpen(true);
+  }, []);
+
+  // Gerenciador de chaves aberto da leitura (US13): a folha abre direto nele.
+  const openKeys = useCallback((fingerprint: string | null) => {
+    rulesRequests.current += 1;
+    setRulesRequest(null);
+    setKeysRequest({ fingerprint });
+    setSettingsSection("crypto");
     setSettingsOpen(true);
   }, []);
 
@@ -367,6 +379,7 @@ function Shell() {
           onReaderOpenChange={onReaderOpenChange}
           appRequest={request}
           onOpenRules={openRules}
+          onManageKeys={openKeys}
         />
       )}
       {showMail && appearance.showReader && (
@@ -379,13 +392,14 @@ function Shell() {
       )}
       {settingsOpen && (
         <Settings
-          key={rulesRequest ? `rules-${rulesRequests.current}` : settingsSection}
+          key={rulesRequest || keysRequest ? `request-${rulesRequests.current}` : settingsSection}
           accounts={accounts}
           appearance={appearance}
           onAppearance={changeAppearance}
           initialSection={settingsSection}
           activeAccountId={active.id}
           rulesRequest={rulesRequest}
+          keysRequest={keysRequest}
           onClose={() => setSettingsOpen(false)}
         />
       )}

@@ -69,6 +69,14 @@ What works today:
 - "Run now" applies a rule to the mail already in a folder, and cleanup rules ("older than 30 days", "keep only the newest from this sender") run once a day.
 - Rules run inside Epistula while it's open (including in the tray) and work with any provider. Mail that arrived while the app was closed goes through them on the next sync.
 
+**End-to-end encryption**
+
+- OpenPGP built in: create a key (Curve25519, RSA 4096, or an experimental post-quantum one with ML-KEM-768 + X25519), import one you already have, or restore an Epistula backup.
+- A lock in the composer encrypts and signs the message. It turns itself on when every recipient has an accepted key, and replies to encrypted mail start encrypted. The subject can be hidden from the server too.
+- Recipients without a key are flagged before sending, with the choice to look their key up online (only when you say so), send without encryption, or remove them.
+- Reading shows whether a message was encrypted and whether the signature checks out, with the key's acceptance in Thunderbird's style (not yet, accepted, verified, rejected).
+- A key manager with search, import from a file, the clipboard or the internet, export and a password-protected backup. Keys arriving by Autocrypt or as an attachment are stored as "not yet accepted".
+
 **Staying informed**
 
 - Windows notifications for new mail, replies to your emails, due dates and accounts that need attention. One click opens the message.
@@ -126,7 +134,7 @@ Your email provider
 
 A few things worth saying plainly:
 
-- **Your provider can still read your email.** Epistula protects the local copy and the path to it. Until there is end-to-end encryption, whoever hosts the mailbox has access to it.
+- **Your provider can still read your email** unless it goes encrypted with OpenPGP. Epistula protects the local copy and the path to it; whatever leaves without encryption stays readable by whoever hosts the mailbox, and even encrypted mail shows the server who wrote to whom and when.
 - **Logs contain no content.** No subject, no sender, no account address. A test walks through the whole app with unique markers and fails if any of them shows up in the logs or in plain text in the database file.
 - **Signing out revokes access** at the provider and deletes the secret from the credential vault. Messages already downloaded stay on disk, encrypted, until there is an option to erase them.
 - **A compromised computer stays compromised.** Malware running in your session can read whatever you can read. No email client fixes that, and we would rather say so than pretend otherwise.

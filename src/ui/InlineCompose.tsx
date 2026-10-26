@@ -3,6 +3,7 @@
 //     .input--line.chip-input com .input__prefix; botoes.html · .btn-split
 // DS: composicao.html "Envio" (US7) · .compose__quote-toggle, .compose__attachments com .attachment, .compose__hint,
 //     .compose.is-sending; carregamento.html · .spinner--sm no botão
+// DS: criptografia.html "Escrever com criptografia" (US13) · .chip__key (--missing) e a faixa .compose__security (L68)
 import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { SendCheck } from "../lib/compose";
 import { attachmentKind, avatarColor, formatBytes, initials } from "../lib/format";
@@ -16,10 +17,12 @@ interface RecipientFieldProps {
   values: string[];
   onChange: (values: string[]) => void;
   trailing?: ReactNode;
+  /** Com o cadeado ligado: quem tem chave aceita (endereço em minúsculas). */
+  keys?: ReadonlyMap<string, boolean> | null;
 }
 
 /** Destinatários em chips: `,`, `;`, Enter ou sair do campo confirmam; Backspace no campo vazio tira o último. */
-export function RecipientField({ label, values, onChange, trailing }: RecipientFieldProps) {
+export function RecipientField({ label, values, onChange, trailing, keys }: RecipientFieldProps) {
   const [text, setText] = useState("");
   const id = useId();
   const commit = () => {
@@ -49,6 +52,11 @@ export function RecipientField({ label, values, onChange, trailing }: RecipientF
               <Icon name="warning" size="sm" />
             )}
             <span className="chip__name">{display}</span>
+            {keys && r.valid && (keys.get(r.address.toLowerCase()) ? (
+              <span className="chip__key" role="img" aria-label="Tem chave aceita" data-tip="Tem chave aceita"><Icon name="lock" /></span>
+            ) : (
+              <span className="chip__key chip__key--missing" role="img" aria-label="Sem chave" data-tip="Sem chave"><Icon name="lock-open" /></span>
+            ))}
             <button className="chip__remove" type="button" aria-label={`Remover ${display}`} onClick={() => onChange(values.filter((_, j) => j !== i))}>
               <Icon name="x" size="sm" />
             </button>
@@ -105,10 +113,15 @@ interface InlineComposeProps {
   sendCheck: SendCheck;
   sending: boolean;
   onSend: () => void;
+  /** US13: chaves dos destinatários (com o cadeado ligado), a faixa de segurança e o rótulo do Enviar. */
+  recipientKeys?: ReadonlyMap<string, boolean> | null;
+  security?: ReactNode;
+  sendLabel?: string;
+  sendIcon?: string;
 }
 
 export function InlineCompose(props: InlineComposeProps) {
-  const { title, value, onChange, quote, replyQuote, attachments, status, discardLabel, onDiscard, bodyLabel, sendCheck, sending, onSend } = props;
+  const { title, value, onChange, quote, replyQuote, attachments, status, discardLabel, onDiscard, bodyLabel, sendCheck, sending, onSend, recipientKeys } = props;
   const [copies, setCopies] = useState(value.cc.length > 0 || value.bcc.length > 0);
   const [quoteOpen, setQuoteOpen] = useState(false);
   const hintId = useId();
@@ -130,6 +143,7 @@ export function InlineCompose(props: InlineComposeProps) {
           label="Para"
           values={value.to}
           onChange={(to) => set({ to })}
+          keys={recipientKeys}
           trailing={
             !copies && (
               <button className="btn btn--subtle btn--compact compose__toggle" type="button" aria-expanded={copies} onClick={() => setCopies(true)}>
@@ -138,8 +152,8 @@ export function InlineCompose(props: InlineComposeProps) {
             )
           }
         />
-        {copies && <RecipientField label="Cc" values={value.cc} onChange={(cc) => set({ cc })} />}
-        {copies && <RecipientField label="Cco" values={value.bcc} onChange={(bcc) => set({ bcc })} />}
+        {copies && <RecipientField label="Cc" values={value.cc} onChange={(cc) => set({ cc })} keys={recipientKeys} />}
+        {copies && <RecipientField label="Cco" values={value.bcc} onChange={(bcc) => set({ bcc })} keys={recipientKeys} />}
         <label className="input input--line">
           <span className="input__prefix">Assunto</span>
           <input value={value.subject} maxLength={1000} onChange={(e) => set({ subject: e.target.value })} />
@@ -206,6 +220,7 @@ export function InlineCompose(props: InlineComposeProps) {
           {quote.text && <p>{quote.text}</p>}
         </div>
       )}
+      {props.security}
       <div className="compose__foot">
         <button
           className="btn btn--primary"
@@ -215,8 +230,8 @@ export function InlineCompose(props: InlineComposeProps) {
           data-tip="Enviar (Ctrl+Enter)"
           onClick={onSend}
         >
-          {sending ? <span className="spinner spinner--sm" aria-hidden="true" /> : <Icon name="send" />}
-          {sending ? "Enviando…" : "Enviar"}
+          {sending ? <span className="spinner spinner--sm" aria-hidden="true" /> : <Icon name={props.sendIcon ?? "send"} />}
+          {sending ? "Enviando…" : props.sendLabel ?? "Enviar"}
         </button>
         {!sendCheck.ok && (
           <span className="compose__hint" id={hintId}><Icon name="error" size="sm" />{sendCheck.reason}</span>

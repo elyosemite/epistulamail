@@ -190,3 +190,30 @@ export function SettingToggleRow({ media, title, subtitle, control, disabled }: 
     </div>
   );
 }
+
+/** Folha de um gerenciador aberto a partir das Configurações (criptografia.html, L66): "Voltar", título e fechar, sem a navegação. */
+export function ManagerSheet({ title, onBack, onClose, children }: { title: string; onBack: () => void; onClose: () => void; children: ReactNode }) {
+  const titleId = useId();
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => ref.current?.querySelector<HTMLElement>(".settings-sheet__back")?.focus(), []);
+  return (
+    <div
+      className="app-shell__sheet"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          onBack();
+        }
+      }}
+    >
+      <div ref={ref} className="settings-sheet" role="dialog" aria-labelledby={titleId}>
+        <div className="settings-sheet__head">
+          <IconButton icon="chevron-left" label="Voltar às configurações" className="settings-sheet__back" onClick={onBack} />
+          <h2 className="modal__title" id={titleId}>{title}</h2>
+          <IconButton icon="x" label="Fechar" data-tip="Fechar" onClick={onClose} />
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}

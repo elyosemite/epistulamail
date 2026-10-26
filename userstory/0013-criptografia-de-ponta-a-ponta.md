@@ -131,7 +131,23 @@ Aqui o risco "colher agora, decifrar depois" é maior que no TLS (US11): **o pro
 - **Ataques conhecidos:** EFAIL (conteúdo externo em mensagens decifradas): o bloqueio de imagens externas e o sanitizador já cortam esse caminho, e partes cifradas e não cifradas misturadas não são juntadas na exibição.
 - **Pós-quântica:** formato ainda em rascunho na IETF; pode mudar antes de virar RFC.
 
-### 9. Fora do escopo
+### 9. Implementação (26 out 2026)
+
+- **Backend:** rPGP 0.21 com a feature `pqc` (D1). `openpgp.rs` gera as chaves (Curve25519 v4, RSA 4096 e pós-quântica v6 com ML-KEM-768 + X25519 e ML-DSA-65 + Ed25519, pela RFC 9980), importa, exporta, cifra (SEIPDv2 com OCB quando todas as chaves são v6, senão SEIPDv1; AES-256), assina, verifica e decifra. `pgp_mime.rs` monta e lê PGP/MIME (RFC 3156), o assunto protegido (protected-headers v1, o servidor vê "...") e o cabeçalho Autocrypt. `pgp_store.rs` guarda as chaves e as configurações por conta (migração 0009). `e2ee.rs` abre a mensagem na leitura e escolhe as chaves do envio. `key_lookup.rs` busca por WKD (métodos avançado e direto) e em `keys.openpgp.org`.
+- **Envio:** com o cadeado ligado, a mensagem é cifrada para os destinatários e para a minha chave e sempre assinada; sem ele, pode sair só assinada (`multipart/signed`). Destinatário sem chave aceita recusa o envio antes de agendar (`MissingRecipientKey`).
+- **Leitura:** decifra e verifica antes de sanitizar; o HTML decifrado passa pelo mesmo sanitizador e pelo bloqueio de imagens externas. Chaves que chegam por Autocrypt ou anexo `application/pgp-keys` entram como "ainda não aceita".
+- **Frontend:** Configurações → Criptografia (`features/crypto/CryptoSettings.tsx`): chave da conta (L64, L65), "Ao enviar" e "Avançado". Assistente "Adicionar chave" (criar, importar, restaurar backup) com a impressão digital e o backup protegido por senha (`AddKeyDialog.tsx`). Gerenciador de chaves numa folha própria com "Voltar" (`KeyManager.tsx`, L66): busca, filtro, importar de arquivo, da área de transferência ou da internet, aceitação no estilo do Thunderbird, exportar a pública (L69), backup da secreta e excluir. Composer: faixa de segurança (L68), cadeado nos chips, aviso de destinatário sem chave com "Buscar a chave na internet" (o clique é o consentimento, D5), "Aceitar a chave encontrada", "Enviar sem criptografia" e "Tirar este destinatário", e o rótulo do Enviar. A resposta a uma mensagem criptografada começa criptografada. Leitura: selos (L67) e o painel "Segurança desta mensagem", com avisos de assinatura inválida e de mensagem que nenhuma chave abre.
+- **Arquivos:** salvar vai para a pasta Downloads pelo próprio WebView (sem plugin de diálogo); abrir usa o seletor do sistema.
+- **Limitações desta entrega:**
+  - O rPGP não define validade ao gerar: as chaves novas saem sem validade, o assistente não pergunta, e "Mudar validade…" e "Revogar…" ainda não existem.
+  - O cadeado na lista (`message.crypto`) e o assunto decifrado na lista (D7) ainda não são preenchidos na sincronização; a lista mostra o que o servidor tem ("..." para assunto protegido).
+  - Chaves por Autocrypt só entram ao abrir a mensagem, não ao sincronizar.
+  - "Tecnologia preferida" fica escondida até a US14 (S/MIME), porque hoje só há OpenPGP.
+  - O aviso de "contato trocou de chave" ainda não existe.
+- **Testes:** 174 no Rust e 88 no frontend passam; clippy, typecheck e build sem avisos.
+- **Falta (manual):** trocar mensagens com o Thunderbird e o Kleopatra (cifrada, assinada, Autocrypt e chave anexada), restaurar um backup em outro computador, a busca WKD num domínio real, e conferir que salvar arquivo e ler a área de transferência funcionam no WebView2.
+
+### 10. Fora do escopo
 
 - Smartcards e tokens (YubiKey, cartão ICP-Brasil em hardware).
 - Assinatura de mensagens com certificado ICP-Brasil para validade jurídica.

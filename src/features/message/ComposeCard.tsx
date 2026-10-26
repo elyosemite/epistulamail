@@ -1,15 +1,21 @@
 // Composição de DS: composicao.html (.compose--inline, .message__quote; "Envio": citação recolhida, anexos do
 // encaminhamento, motivo do bloqueio e "Enviando…") + modais.html (confirmar descarte e "Enviar sem assunto?")
+// + criptografia.html "Escrever com criptografia" (US13: .compose__security e o aviso de destinatário sem chave)
 // Resposta, resposta a todos, encaminhamento e e-mail novo (US4, CA8), com envio (US7, CA1–CA3). O rascunho fica no
 // banco local até o envio dar certo.
 import { useEffect, useRef, useState } from "react";
 import { checkSend, outgoingBody, quoteHeader, quotedLines } from "../../lib/compose";
+import { keyName, sendLabel } from "../../lib/crypto";
 import { formatLongDate } from "../../lib/format";
 import { api, isAppError, type Account, type AttachmentInfo, type DraftKind, type Quote } from "../../lib/tauri";
 import { Button } from "../../ui/Button";
+import { ComposeSecurityBar } from "../../ui/ComposeSecurityBar";
 import { InlineCompose, type ComposeValue } from "../../ui/InlineCompose";
 import { Modal } from "../../ui/Modal";
+import { parseRecipient } from "../../lib/recipients";
+import { SectionMessage } from "../../ui/SectionMessage";
 import { Spinner } from "../../ui/Spinner";
+import { useComposeSecurity } from "./useComposeSecurity";
 
 const SAVE_DELAY_MS = 2000;
 
@@ -29,6 +35,8 @@ interface ComposeCardProps {
   messageId: string | null;
   /** Anexos da mensagem original (encaminhar leva todos, e cada um pode ser removido). */
   originalAttachments?: AttachmentInfo[];
+  /** Resposta a uma mensagem criptografada: o cadeado começa ligado (US13, CA6). */
+  replyToEncrypted?: boolean;
   onClose: () => void;
   /** O envio foi agendado (6 s para desfazer): o card fecha e o toast assume. */
   onSent: (sendId: string) => void;
@@ -36,7 +44,7 @@ interface ComposeCardProps {
 
 const time = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-export function ComposeCard({ account, kind, messageId, originalAttachments = [], onClose, onSent }: ComposeCardProps) {
+export function ComposeCard({ account, kind, messageId, originalAttachments = [], replyToEncrypted = false, onClose, onSent }: ComposeCardProps) {
   const [value, setValue] = useState<ComposeValue | null>(null);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [keepQuote, setKeepQuote] = useState(true);
@@ -47,6 +55,9 @@ export function ComposeCard({ account, kind, messageId, originalAttachments = []
   const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef<ComposeValue | null>(null);
   latest.current = value;
+  const recipients = value ? [...value.to, ...value.cc, ...value.bcc] : [];
+  const crypto = useComposeSecurity(account.id, recipients, replyToEncrypted && kind !== "forward");
+  const { encrypt, sign, missing } = crypto.security;
 
   useEffect(() => {
     let cancelled = false;
@@ -102,7 +113,8 @@ export function ComposeCard({ account, kind, messageId, originalAttachments = []
 
   const attachments = kept.map((i) => originalAttachments[i]).filter(Boolean);
   const attachmentBytes = attachments.reduce((sum, a) => sum + a.size, 0);
-  const sendCheck = value ? checkSend(value, attachmentBytes) : { ok: false as const, reason: "" };
+  const baseCheck = value ? checkSend(value, attachmentBytes) : { ok: false as const, reason: "" };
+  const sendCheck = baseCheck.ok && encrypt && missing.length > 0 ? { ok: false as const, reason: "Resolva o destinatário sem chave para enviar" } : baseCheck;
 
   /** O rascunho é salvo antes: se o envio for desfeito ou falhar, o texto volta igual. */
   const send = async (confirmed = false) => {
@@ -124,6 +136,8 @@ export function ComposeCard({ account, kind, messageId, originalAttachments = []
         subject: value.subject,
         body: outgoingBody(kind, value.body, quote, keepQuote),
         keepAttachments: kept,
+        encrypt,
+        sign,
       });
       onSent(sendId);
     } catch (error) {
@@ -156,6 +170,22 @@ export function ComposeCard({ account, kind, messageId, originalAttachments = []
         sendCheck={sendCheck}
         sending={sending}
         onSend={() => void send()}
+        recipientKeys={crypto.keys}
+        sendLabel={sendLabel({ encrypt, sign })}
+        sendIcon={encrypt ? "lock" : sign ? "signature" : undefined}
+        security={
+          crypto.enabled && (
+            <>
+              {encrypt && missing.length > 0 && <MissingKeys missing={missing} crypto={crypto} onRemove={() => change(removeAddresses(value, missing))} />}
+              <ComposeSecurityBar
+                encrypt={encrypt}
+                sign={sign}
+                onEncrypt={(on) => crypto.setChoice((c) => ({ ...c, encrypt: on }))}
+                onSign={(on) => crypto.setChoice((c) => ({ ...c, sign: on }))}
+              />
+            </>
+          )
+        }
       />
       {confirm === "discard" && (
         <Modal
@@ -189,5 +219,37 @@ export function ComposeCard({ account, kind, messageId, originalAttachments = []
         </Modal>
       )}
     </>
+  );
+}
+
+/** Tira os endereços (em minúsculas) de Para, Cc e Cco. */
+function removeAddresses(value: ComposeValue, addresses: string[]): ComposeValue {
+  const keep = (list: string[]) => list.filter((r) => !addresses.includes(parseRecipient(r).address.toLowerCase()));
+  return { ...value, to: keep(value.to), cc: keep(value.cc), bcc: keep(value.bcc) };
+}
+
+/** Aviso com o cadeado ligado e destinatários sem chave: buscar (o clique é o consentimento), aceitar o que achou, enviar sem criptografia ou tirar. */
+function MissingKeys({ missing, crypto, onRemove }: { missing: string[]; crypto: ReturnType<typeof useComposeSecurity>; onRemove: () => void }) {
+  const one = missing.length === 1;
+  const actions: Array<{ label: string; onClick: () => void }> = [];
+  if (crypto.found.length > 0) {
+    actions.push({ label: one ? "Aceitar a chave encontrada" : "Aceitar as chaves encontradas", onClick: () => void crypto.accept(crypto.found.map((k) => k.fingerprint)) });
+  } else if (crypto.settings?.searchOnline !== "never" && !crypto.searching && !crypto.searchedAll) {
+    actions.push({ label: one ? "Buscar a chave na internet" : "Buscar as chaves na internet", onClick: () => void crypto.search(missing) });
+  }
+  actions.push({ label: "Enviar sem criptografia", onClick: () => crypto.setChoice((c) => ({ ...c, encrypt: false })) });
+  actions.push({ label: one ? "Tirar este destinatário" : "Tirar estes destinatários", onClick: onRemove });
+  return (
+    <div style={{ margin: "0 var(--space-200) var(--space-150)" }}>
+      <SectionMessage appearance="warning" title={one ? `${missing[0]} não tem chave` : `${missing.length} destinatários não têm chave`} actions={actions}>
+        {crypto.searching
+          ? "Buscando no domínio do destinatário e em keys.openpgp.org…"
+          : crypto.found.length > 0
+            ? `Achamos ${crypto.found.map((k) => `a chave de ${keyName(k)} (${k.fingerprint.slice(-16).match(/.{4}/g)?.join(" ")})`).join(", ")}. Aceite só se confiar que a chave é mesmo da pessoa; dá para conferir a impressão digital no gerenciador de chaves.`
+            : crypto.searchedAll && crypto.settings?.searchOnline !== "never"
+              ? "Nenhuma chave publicada. Peça a chave pública à pessoa ou envie sem criptografia."
+              : `Sem ${one ? "a chave" : "as chaves"}, a mensagem não pode ser criptografada para ninguém.${crypto.settings?.searchOnline === "ask" ? " Buscar na internet avisa quem responde a busca com quem você vai falar." : ""}`}
+      </SectionMessage>
+    </div>
   );
 }
