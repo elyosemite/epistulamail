@@ -2,17 +2,18 @@
 
 [English](README.md) | **Português**
 
-Um cliente de e-mail para desktop que guarda as suas mensagens no seu computador, cifradas, e não depende de nenhum servidor nosso.
+Um cliente de e-mail para desktop que guarda as suas mensagens no seu computador, cifradas, e nunca as faz passar por um servidor nosso.
 
-O Epistula conecta as suas contas, baixa o que você precisa ler e mantém tudo num banco local protegido por AES-256. A chave fica no cofre do sistema operacional. Não existe conta Epistula, não existe nuvem Epistula e não existe ninguém do nosso lado com acesso ao que você recebe.
+O Epistula conecta as suas contas, baixa o que você precisa ler e mantém tudo num banco local protegido por AES-256. A chave fica no cofre do sistema operacional. Não existe conta Epistula nem nuvem Epistula. O único servidor nosso no caminho vai ser um servidor de login, para o OAuth com o Google e a Microsoft; os seus e-mails vão direto do seu computador para o seu provedor. E abrir um arquivo de e-mail (um backup do Gmail, do Outlook, do Thunderbird ou do Apple Mail) não vai precisar de conta nem de ligação nenhuma conosco.
 
 ![Caixa de entrada do Epistula com três contas, pastas e marcadores, a lista de mensagens e uma newsletter aberta no painel de leitura](docs/images/epistula-caixa-de-entrada.png)
 
-> O projeto está em desenvolvimento ativo. Leitura, envio, organização, regras, conversas, notificações, leitura sem conexão e várias contas já funcionam. Senha do app, bloqueio automático e backup cifrado estão a caminho. A seção [Estado atual](#estado-atual) diz exatamente o que existe hoje.
+> O projeto está em desenvolvimento ativo. Leitura, envio, organização, regras, conversas, notificações, leitura sem conexão, várias contas e criptografia de ponta a ponta (OpenPGP e S/MIME) já funcionam. O próximo passo é abrir arquivos de e-mail de outros programas, sem conta; depois vêm o servidor de login e o backup cifrado. A seção [Estado atual](#estado-atual) diz exatamente o que existe hoje.
 
 ## Em poucas palavras
 
-- **Sem conta Epistula e sem nuvem Epistula.** O app fala direto com o seu provedor. Não há servidor nosso no meio.
+- **Sem conta Epistula e sem nuvem Epistula.** Os seus e-mails vão direto para o seu provedor. O nosso servidor de login (planejado) só participa do login OAuth e nunca vê uma mensagem.
+- **Abra arquivos antigos, sem internet e sem conta (próximo).** Backups do Google Takeout, do Outlook, do Thunderbird e do Apple Mail, lidos do arquivo, sem se conectar a nada.
 - **Tudo cifrado no disco.** Mensagens, assuntos, remetentes e índices ficam num banco AES-256, que já resiste a computadores quânticos.
 - **Abre na hora, até sem internet.** Os e-mails recentes são baixados em segundo plano e abrem do disco.
 - **Contra rastreamento.** Imagens externas (os "pixels espiões" que avisam que você abriu) ficam bloqueadas até você liberar.
@@ -74,7 +75,7 @@ O que funciona hoje:
 - Um cadeado no composer criptografa e assina a mensagem. Ele liga sozinho quando todos os destinatários têm chave aceita, e respostas a mensagens criptografadas já começam criptografadas. Dá para esconder também o assunto do servidor.
 - Quem não tem chave aparece antes do envio, com a escolha de buscar a chave na internet (só quando você manda), enviar sem criptografia ou tirar o destinatário.
 - A leitura mostra se a mensagem veio criptografada e se a assinatura confere, com a aceitação da chave no estilo do Thunderbird (ainda não, aceita, verificada, rejeitada).
-- Um gerenciador de chaves com busca, importação de arquivo, da área de transferência ou da internet, exportação e backup protegido por senha. Chaves que chegam por Autocrypt ou anexadas ficam como "ainda não aceita".
+- Um gerenciador de chaves com busca, importação de arquivo, da área de transferência ou da internet, exportação e backup protegido por senha. Chaves que chegam por Autocrypt ou anexadas ficam como "ainda não aceita", inclusive a chave anexada dentro de uma mensagem cifrada. A primeira mensagem de alguém novo é conferida com a chave que a pessoa anexou, e o cabeçalho Autocrypt que o Epistula envia é lido pelos outros programas.
 - S/MIME também, para quem usa Outlook, Apple Mail ou o certificado da empresa: peça um certificado (o par de chaves nasce no seu computador e só o pedido vai para a autoridade certificadora), importe o emitido ou um `.p12` e guarde os certificados de quem manda mensagens assinadas. A confiança segue as raízes do Windows. Um script de CA de teste deixa experimentar sem comprar nada.
 
 **Avisos**
@@ -90,9 +91,34 @@ O que funciona hoje:
 O que ainda não existe:
 
 - Outros provedores além do Google. O modelo de dados já prevê Outlook, Yahoo, iCloud, Zoho, GMX, AOL e IMAP genérico.
+- O servidor de login e a importação de arquivos de e-mail (veja abaixo).
 - Releases assinados. Por enquanto, o caminho é compilar a partir do código.
 
 ## Para onde vamos
+
+### Abra os seus e-mails antigos, sem conta
+
+A próxima entrega. Escolha um arquivo ou uma pasta e leia no Epistula, sem entrar em conta nenhuma e sem o app falar com servidor algum, nosso ou de outros:
+
+- **Gmail:** o `.mbox` do Google Takeout, com os marcadores mantidos como marcadores.
+- **Outlook:** arquivos de dados `.pst` e mensagens `.msg`; o `.olm` do Outlook para Mac.
+- **Thunderbird:** as pastas mbox do perfil.
+- **Apple Mail:** pacotes `.mbox` exportados e mensagens `.emlx`.
+- **O resto:** arquivos `.eml`, mbox simples e pastas Maildir.
+
+O que for importado entra no mesmo banco cifrado, como um arquivo local ao lado das contas, com a mesma leitura segura (HTML limpo, imagens externas bloqueadas). As mensagens cifradas do arquivo abrem com as suas chaves OpenPGP e os seus certificados S/MIME. O arquivo original só é lido, nunca alterado. As questões em aberto estão em [userstory/0015-importacao-de-arquivos.md](userstory/0015-importacao-de-arquivos.md).
+
+### Um servidor de login, e nada mais
+
+Entrar por OAuth faz com que você nunca digite a senha do seu e-mail no Epistula, e permite revogar o acesso a qualquer momento na página do provedor. Para isso, o Epistula precisa de apps registrados no Google (Google Cloud) e na Microsoft (Azure). As configurações deles vão ficar num pequeno servidor do Epistula, e não dentro do instalador, para poderem ser trocadas sem uma versão nova.
+
+Para que esse servidor serve, e para que não serve:
+
+- Ele participa só do login. IMAP e SMTP continuam indo direto do seu computador para o seu provedor, e nenhuma mensagem, assunto ou contato passa por ele.
+- Ele não tem conta Epistula e não guarda nada sobre os seus e-mails.
+- Sem ele, você continua lendo tudo que já está no computador e abrindo arquivos; só conectar uma conta nova, e em alguns casos renovar o acesso, depende dele.
+
+O que exatamente passa por ele no login (só as configurações do app, ou também a troca que gera os seus tokens) ainda é uma decisão em aberto, registrada no [modelo de ameaças](docs/arquitetura-e-ameacas.md#planejado-servidor-de-login).
 
 ### Seus dados só seus, mesmo no seu computador
 
@@ -116,7 +142,7 @@ Exportar uma conta inteira para um arquivo cifrado, guardar onde quiser (um disc
 
 ### Gestão de e-mail de verdade
 
-Busca local no conteúdo completo, mesmo offline. Regras que também rodam no servidor, com o app fechado. Adiar mensagens. Visão unificada de todas as contas. Assinaturas, modelos e agendamento de envio. Outros provedores (Outlook, Yahoo, iCloud e IMAP genérico). Indicadores de autenticidade do remetente (SPF, DKIM, DMARC) visíveis na leitura, para ajudar a reconhecer phishing.
+Busca local no conteúdo completo, mesmo offline. Regras que também rodam no servidor, com o app fechado. Adiar mensagens. Visão unificada de todas as contas. Assinaturas, modelos e agendamento de envio. Outros provedores (Outlook pelo OAuth da Microsoft, Yahoo, iCloud e IMAP genérico). Indicadores de autenticidade do remetente (SPF, DKIM, DMARC) visíveis na leitura, para ajudar a reconhecer phishing.
 
 ## Como a sua informação é tratada
 
@@ -127,9 +153,12 @@ Seu computador
 ├── Cofre do sistema         refresh tokens e a chave do banco
 └── epistula.db              mensagens, pastas e ajustes, cifrado por inteiro
 
-        │ TLS
-        ▼
-Seu provedor de e-mail
+        │ TLS                              │ TLS, só para entrar (planejado)
+        ▼                                  ▼
+Seu provedor de e-mail           Servidor de login do Epistula
+(IMAP, SMTP, OAuth)              configurações OAuth do Google e da Microsoft
+
+Arquivos de e-mail (.mbox, .pst, .eml…)  ──lidos no computador──▶  epistula.db, sem rede
 ```
 
 Alguns pontos que valem ser ditos com clareza:
@@ -162,13 +191,16 @@ pnpm install
 ./scripts/setup-build-tools.ps1
 ```
 
-Para conectar uma conta Google, crie um cliente OAuth do tipo "Desktop app" no Google Cloud e preencha o `.env`:
+Enquanto o servidor de login não existe, o build de desenvolvimento lê as configurações OAuth do `.env`. Crie os seus próprios clientes: um "Desktop app" no Google Cloud e um registro de aplicativo no Azure (Microsoft Entra ID) com a plataforma "Aplicativos móveis e da área de trabalho" e `http://127.0.0.1` como URI de redirecionamento (o app escuta numa porta aleatória desse endereço; se o portal recusar o IP, acrescente pelo Manifesto do app).
 
 ```powershell
 Copy-Item .env.example .env
 # EPISTULA_GOOGLE_CLIENT_ID=...
 # EPISTULA_GOOGLE_CLIENT_SECRET=...
+# EPISTULA_MS_CLIENT_ID=...
 ```
+
+O `.env` fica fora do git; nunca faça commit dele.
 
 Depois:
 

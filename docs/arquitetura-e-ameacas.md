@@ -1,6 +1,6 @@
 # Epistula: arquitetura e modelo de ameaças
 
-Situação em 25 out 2026, após a US7. Produto: cliente desktop que conecta várias contas de e-mail (Gmail por OAuth nesta versão), lê as caixas por IMAP e envia por SMTP, com um banco local cifrado (decisão D1, opção A, provisória). Não há servidor do Epistula.
+Situação em 25 out 2026, após a US7. Produto: cliente desktop que conecta várias contas de e-mail (Gmail por OAuth nesta versão), lê as caixas por IMAP e envia por SMTP, com um banco local cifrado (decisão D1, opção A, provisória). Ainda não há servidor do Epistula. Planejados (26 out 2026): um servidor de login, só para o OAuth com o Google e a Microsoft, por onde nenhuma mensagem passa, e a importação de arquivos de e-mail, que funciona sem conta e sem rede. Os dois estão nas seções "Planejado" no fim deste documento.
 
 ## Componentes e limites de confiança
 
@@ -149,6 +149,47 @@ Inventário de cada uso de criptografia (US10, CA1). "Quântico" diz se o uso re
 | 12 | Infraestrutura ou ordem legal | Fora do escopo do Epistula | Não há infraestrutura do Epistula. Pedidos legais alcançam os dados no Google. |
 
 **Risco aceito pela D4.** Depois de sair de uma conta, as mensagens salvas dela continuam no disco (cifradas). Sem a senha do Epistula, qualquer pessoa com acesso à sessão do usuário no Windows consegue lê-las pelo Epistula. Desde a US10, o diálogo de sair e Configurações → Privacidade apagam os dados da conta e trocam a chave do banco.
+
+## Planejado: servidor de login
+
+Pedido do produto (26 out 2026): os apps OAuth registrados no Google Cloud e no Azure (`EPISTULA_GOOGLE_CLIENT_ID`, `EPISTULA_GOOGLE_CLIENT_SECRET`, `EPISTULA_MS_CLIENT_ID` e os próximos provedores) ficam configurados num servidor do Epistula, e não embutidos no instalador. Hoje eles vêm do `.env` no build ou do ambiente (`provider.rs`).
+
+O que já está decidido: o servidor participa só do login. IMAP e SMTP continuam indo direto do computador ao provedor; nenhuma mensagem, assunto, contato ou chave passa pelo servidor nem fica guardada nele; não existe conta Epistula. A importação de arquivos e a leitura do que já está no banco não dependem dele.
+
+Fatos que pesam nas decisões:
+
+- O Google trata o `client_secret` de um cliente "Desktop app" como não confidencial (ele fica no app instalado), mas exige que seja enviado na troca do código. A Microsoft aceita cliente público com PKCE, sem segredo nenhum.
+- O PKCE (S256) e o redirect de loopback (`http://127.0.0.1:{porta}`) já protegem o código de autorização contra outro programa no computador; o segredo do Google não acrescenta proteção a um app instalado.
+
+Decisões pendentes:
+
+- **S1 (pendente, recomendo a opção A): o que passa pelo servidor.**
+  - **A. Só a configuração.** O app baixa do servidor os client IDs (e o segredo do Google) e faz o PKCE, a troca do código e a renovação direto com o provedor, como hoje. Os tokens nunca passam pelo servidor. Ganho: trocar ou revogar um cliente sem lançar versão. Custo: o segredo do Google continua chegando ao computador, como já chega no binário.
+  - **B. O servidor faz a troca do código e a renovação.** O segredo nunca sai do servidor. Custo: o refresh token e o access token de todas as contas passam por ele; um servidor comprometido teria acesso às caixas de quem entrasse ou renovasse naquele período, e o servidor fora do ar impede renovar o acesso (o access token dura cerca de 1 h). Isso quebra a promessa "nenhum servidor nosso com acesso ao seu e-mail".
+- **S2 (pendente, recomendo assinar): autenticidade da configuração.** Um servidor ou DNS comprometido poderia entregar o client ID de um app do atacante; o usuário veria uma tela de consentimento parecida e daria acesso à caixa a outra pessoa. Recomendo: a configuração assinada (Ed25519) com uma chave pública embutida no app, os endereços de autorização e de token fixos no código (o servidor só fornece IDs), e a última configuração válida guardada no banco para funcionar com o servidor fora do ar.
+- **S3 (pendente, recomendo o mínimo): o que o servidor registra.** Sem logs de IP associados a pedidos, sem identificador do usuário (com a opção A, o pedido nem precisa dizer qual conta vai entrar).
+- **S4 (pendente): hospedagem e quem administra** o servidor e as contas do Google Cloud e do Azure, inclusive a verificação do app pelo Google (risco residual 2) e a verificação de publicador na Microsoft.
+
+Ameaças novas (entram na tabela quando o servidor existir):
+
+| Ameaça | Mitigação prevista |
+|---|---|
+| Servidor ou DNS entrega a configuração de um app do atacante (consentimento enganoso) | Configuração assinada, endpoints fixos no app, só IDs vindos do servidor (S2) |
+| Servidor comprometido colhe tokens | Opção A: os tokens não passam por ele (S1) |
+| Servidor fora do ar | Última configuração válida guardada; leitura, envio e renovação continuam (com a opção A) |
+| Servidor vira rastreador de uso | Pedido sem identificador e sem logs de IP (S3) |
+
+## Planejado: importação de arquivos de e-mail
+
+Próxima entrega (story `userstory/0015-importacao-de-arquivos.md`): abrir backups do Gmail (Google Takeout, `.mbox`), do Outlook (`.pst`, `.msg`, `.olm`), do Thunderbird (mbox do perfil), do Apple Mail (pacotes `.mbox`, `.emlx`) e arquivos `.eml`, mbox e Maildir, **sem conta e sem nenhuma ligação com o servidor do Epistula ou com a internet**.
+
+Impacto no modelo:
+
+- **Entrada não confiável nova e grande.** O arquivo vem de qualquer lugar, e o `.pst` e o `.olm` são formatos complexos (binário e ZIP com XML). Os leitores rodam no processo Rust, sem `unsafe` próprio, com limites de tamanho por mensagem e por anexo, sem seguir caminhos de dentro do ZIP para o disco (nada é extraído para fora do banco) e com limite de descompressão contra bombas. O conteúdo passa pela mesma limpeza de HTML e pelo bloqueio de imagens externas.
+- **Sem rede.** A importação não faz nenhuma requisição; abrir uma mensagem importada também não, a menos que o usuário libere as imagens.
+- **Dados.** As mensagens importadas vão para o `epistula.db` (cifrado), num arquivo local separado das contas. O arquivo original fica onde está, sem cifra, e não é alterado; o app avisa disso e não o apaga.
+- **Criptografia.** Mensagens OpenPGP e S/MIME do arquivo abrem com as chaves e os certificados que o usuário já tem; chaves e certificados que chegarem nelas seguem as mesmas regras da leitura (só do remetente, "ainda não aceita").
+- **Logs.** Só contagens e erros por tipo (quantas mensagens, quantas falharam); nunca nomes de pastas, assuntos, remetentes nem o caminho do arquivo.
 
 ## Premissas
 

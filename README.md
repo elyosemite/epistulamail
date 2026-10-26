@@ -2,17 +2,18 @@
 
 **English** | [Português](README.pt-BR.md)
 
-A desktop email client that keeps your messages on your own computer, encrypted, with no server of ours in between.
+A desktop email client that keeps your messages on your own computer, encrypted, and never routes them through a server of ours.
 
-Epistula connects your accounts, downloads what you need to read and stores it in a local database protected by AES-256. The key lives in your operating system's credential vault. There is no Epistula account, no Epistula cloud, and nobody on our side with access to your mail.
+Epistula connects your accounts, downloads what you need to read and stores it in a local database protected by AES-256. The key lives in your operating system's credential vault. There is no Epistula account and no Epistula cloud. The only server of ours on the way will be a sign-in server, for the OAuth login with Google and Microsoft; your mail goes straight between your computer and your provider. And opening an email archive (a Gmail, Outlook, Thunderbird or Apple Mail backup) will need no account and no connection to us at all.
 
 ![Epistula inbox with three accounts, folders and labels, the message list and an open newsletter in the reading pane](docs/images/epistula-caixa-de-entrada.png)
 
-> Epistula is under active development. Reading, sending, organizing, rules, conversations, notifications, offline reading and multiple accounts work today. An app password, automatic lock and encrypted backups are on the way. [Current state](#current-state) lists exactly what exists right now.
+> Epistula is under active development. Reading, sending, organizing, rules, conversations, notifications, offline reading, multiple accounts and end-to-end encryption (OpenPGP and S/MIME) work today. Next up: opening email archives from other programs, with no account. Then the sign-in server and encrypted backups. [Current state](#current-state) lists exactly what exists right now.
 
 ## At a glance
 
-- **No Epistula account, no Epistula cloud.** The app talks straight to your provider. There is no server of ours in between.
+- **No Epistula account, no Epistula cloud.** Your mail goes straight to your provider. Our sign-in server (planned) only takes part in the OAuth login and never sees a message.
+- **Open old archives, offline and with no account (next).** Gmail Takeout, Outlook, Thunderbird and Apple Mail backups, read from the file, without connecting to anything.
 - **Everything on disk is encrypted.** Messages, subjects, senders and indexes live in an AES-256 database, which already holds up against quantum computers.
 - **Opens instantly, even offline.** Recent mail is downloaded in the background and opens from disk.
 - **Blocks tracking.** Remote images (the "spy pixels" that tell senders you opened their email) stay blocked until you allow them.
@@ -75,7 +76,7 @@ What works today:
 - A lock in the composer encrypts and signs the message. It turns itself on when every recipient has an accepted key, and replies to encrypted mail start encrypted. The subject can be hidden from the server too.
 - Recipients without a key are flagged before sending, with the choice to look their key up online (only when you say so), send without encryption, or remove them.
 - Reading shows whether a message was encrypted and whether the signature checks out, with the key's acceptance in Thunderbird's style (not yet, accepted, verified, rejected).
-- A key manager with search, import from a file, the clipboard or the internet, export and a password-protected backup. Keys arriving by Autocrypt or as an attachment are stored as "not yet accepted".
+- A key manager with search, import from a file, the clipboard or the internet, export and a password-protected backup. Keys arriving by Autocrypt or as an attachment are stored as "not yet accepted", including a key attached inside an encrypted message. The first message from someone new is checked against the key they attached, and the Autocrypt header Epistula sends can be read by other programs.
 - S/MIME too, for people on Outlook, Apple Mail or a company certificate: request a certificate (the key pair is created on your computer and only the request goes to the certificate authority), import the issued one or a `.p12`, and keep the certificates of whoever sends you signed mail. Trust follows the root certificates in Windows. A test CA script lets you try it without buying anything.
 
 **Staying informed**
@@ -91,9 +92,34 @@ What works today:
 What does not exist yet:
 
 - Providers other than Google. The data model already covers Outlook, Yahoo, iCloud, Zoho, GMX, AOL and generic IMAP.
+- The sign-in server and importing email archives (see below).
 - Signed releases. For now, the way in is building from source.
 
 ## Where this is going
+
+### Open your old email, no account needed
+
+The next feature. Pick a file or a folder and read it in Epistula, without signing in to anything and without the app talking to any server, ours or anyone else's:
+
+- **Gmail:** the `.mbox` from Google Takeout, with labels kept as labels.
+- **Outlook:** `.pst` data files and single `.msg` messages; `.olm` from Outlook for Mac.
+- **Thunderbird:** the profile's mbox folders.
+- **Apple Mail:** exported `.mbox` bundles and `.emlx` messages.
+- **Anything else:** `.eml` files, plain mbox and Maildir folders.
+
+Imported mail goes into the same encrypted database, as a local archive alongside your accounts, with the same safe reading (sanitized HTML, remote images blocked). Encrypted messages in the archive open with your OpenPGP keys and S/MIME certificates. The original file is only read, never changed. The open questions are in [userstory/0015-importacao-de-arquivos.md](userstory/0015-importacao-de-arquivos.md) (in Portuguese).
+
+### A sign-in server, and nothing more
+
+Signing in with OAuth means you never type your email password into Epistula, and you can revoke access at any time on your provider's page. For that, Epistula needs registered apps with Google (Google Cloud) and Microsoft (Azure). Their settings will live on a small Epistula server instead of inside the installer, so they can be rotated without a new release.
+
+What that server is for, and what it is not:
+
+- It takes part in the login only. IMAP and SMTP keep going straight from your computer to your provider, and no message, subject or address book passes through it.
+- It has no Epistula account and stores nothing about your mail.
+- Without it you can still read everything already on your computer and open archives; only connecting a new account, and renewing access in some cases, depends on it.
+
+Exactly what passes through it during the login (only the app's settings, or also the exchange that produces your tokens) is still an open decision, written down in the [threat model](docs/arquitetura-e-ameacas.md#planejado-servidor-de-login).
 
 ### Your data, only yours, even on your own computer
 
@@ -117,7 +143,7 @@ Export a whole account to an encrypted file, keep it wherever you like (an exter
 
 ### Real email management
 
-Full-text local search, offline included. Rules that also run on the server, with the app closed. Snoozing messages. A unified view across accounts. Signatures, templates and scheduled send. Other providers (Outlook, Yahoo, iCloud and generic IMAP). Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
+Full-text local search, offline included. Rules that also run on the server, with the app closed. Snoozing messages. A unified view across accounts. Signatures, templates and scheduled send. Other providers (Outlook over Microsoft OAuth, Yahoo, iCloud and generic IMAP). Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
 
 ## How your information is handled
 
@@ -128,9 +154,12 @@ Your computer
 ├── OS credential vault      refresh tokens and the database key
 └── epistula.db              messages, folders and settings, fully encrypted
 
-        │ TLS
-        ▼
-Your email provider
+        │ TLS                              │ TLS, only to sign in (planned)
+        ▼                                  ▼
+Your email provider              Epistula sign-in server
+(IMAP, SMTP, OAuth)              OAuth app settings for Google and Microsoft
+
+Email archives (.mbox, .pst, .eml…)  ──read locally──▶  epistula.db, with no network
 ```
 
 A few things worth saying plainly:
@@ -163,13 +192,16 @@ pnpm install
 ./scripts/setup-build-tools.ps1
 ```
 
-To connect a Google account, create an OAuth client of type "Desktop app" in Google Cloud and fill in `.env`:
+Until the sign-in server exists, a development build reads the OAuth settings from `.env`. Create your own clients: a "Desktop app" client in Google Cloud, and an app registration in Azure (Microsoft Entra ID) with the "Mobile and desktop applications" platform and `http://127.0.0.1` as the redirect URI (the app listens on a random port of that address; if the portal refuses the IP, add it in the app's Manifest).
 
 ```powershell
 Copy-Item .env.example .env
 # EPISTULA_GOOGLE_CLIENT_ID=...
 # EPISTULA_GOOGLE_CLIENT_SECRET=...
+# EPISTULA_MS_CLIENT_ID=...
 ```
+
+`.env` is ignored by git; never commit it.
 
 Then:
 
