@@ -274,7 +274,8 @@ async fn deliver(state: &AppState, outgoing: &Outgoing) -> Result<(), AppError> 
                 AppError::SmtpConnection
             })?
             .port(port)
-            .credentials(Credentials::new(account.email.clone(), token))
+            // A lettre guarda a própria cópia do token; a nossa é zerada no fim da volta.
+            .credentials(Credentials::new(account.email.clone(), token.to_string()))
             .authentication(vec![Mechanism::Xoauth2])
             .timeout(Some(SMTP_TIMEOUT))
             .build();

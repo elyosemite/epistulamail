@@ -8,7 +8,17 @@ O Epistula conecta as suas contas, baixa o que você precisa ler e mantém tudo 
 
 ![Caixa de entrada do Epistula com várias contas, pastas, lista de mensagens e uma mensagem aberta com as imagens externas bloqueadas](docs/images/epistula-caixa-de-entrada.png)
 
-> O projeto está em desenvolvimento ativo. Leitura, organização e múltiplas contas já funcionam. Envio, backup completo e criptografia pós-quântica estão a caminho. A seção [Estado atual](#estado-atual) diz exatamente o que existe hoje.
+> O projeto está em desenvolvimento ativo. Leitura, envio, organização, conversas, notificações, leitura sem conexão e várias contas já funcionam. Senha do app, bloqueio automático e backup cifrado estão a caminho. A seção [Estado atual](#estado-atual) diz exatamente o que existe hoje.
+
+## Em poucas palavras
+
+- **Sem conta Epistula e sem nuvem Epistula.** O app fala direto com o seu provedor. Não há servidor nosso no meio.
+- **Tudo cifrado no disco.** Mensagens, assuntos, remetentes e índices ficam num banco AES-256, que já resiste a computadores quânticos.
+- **Abre na hora, até sem internet.** Os e-mails recentes são baixados em segundo plano e abrem do disco.
+- **Contra rastreamento.** Imagens externas (os "pixels espiões" que avisam que você abriu) ficam bloqueadas até você liberar.
+- **Conversas fáceis de ler.** Cada resposta num card, com o texto citado escondido.
+- **Avisa só o que importa.** Notificações do Windows, bandeja do sistema, horário de silêncio e um histórico no sino.
+- **Segurança que dá para conferir.** Modelo de ameaças público e testes que falham se algum conteúdo aparecer nos logs.
 
 ## Por que mais um cliente de e-mail
 
@@ -26,28 +36,59 @@ O Epistula parte de três ideias simples:
 
 O que funciona hoje:
 
-- Conexão com contas Google por OAuth (PKCE), lendo a caixa por IMAP sobre TLS. Nenhuma senha passa pelo app.
+**Contas e segurança**
+
+- Conexão com contas Google por OAuth (PKCE), lendo por IMAP e enviando por SMTP, sempre sobre TLS. Nenhuma senha passa pelo app.
 - Várias contas ao mesmo tempo, cada uma com nome, cor e foto, e troca com um clique.
-- Pastas e marcadores, paginação e sincronização em segundo plano com intervalo configurável por conta.
-- Banco local SQLCipher (AES-256, HMAC por página). A lista abre do disco e continua disponível offline.
-- Leitura segura: HTML de terceiros limpo por allowlist no processo Rust e exibido num iframe sem scripts. Imagens remotas ficam bloqueadas até você liberar, mensagem por mensagem.
-- Mover, arquivar, excluir, marcar como lida e sinalizar com prazo, inclusive em várias mensagens de uma vez e arrastando para a pasta.
-- Busca, barra de comandos e rascunhos locais de resposta, resposta a todos e encaminhamento.
-- Tema claro, escuro ou do sistema, e cor de fundo personalizável.
+- Banco local SQLCipher (AES-256, HMAC por página), com a chave no Cofre de Credenciais do Windows e exclusão segura das páginas apagadas.
+- Leitura segura: o HTML de terceiros é limpo por allowlist no processo Rust e exibido num iframe sem scripts. As imagens externas ficam bloqueadas até você liberar, mensagem por mensagem.
+- Notificações com privacidade: você escolhe se elas mostram remetente e assunto ou só a conta.
+
+**Leitura**
+
+- Conversas em cards: cada resposta separada, as não lidas abertas e o texto citado escondido atrás de um "…".
+- Leitura sem conexão: depois de cada sincronização, os e-mails do período escolhido (30 dias, 90 dias, tudo ou só ao abrir) são baixados em segundo plano, sem marcar como lidos.
+- Abrir é instantâneo: o app já busca as próximas mensagens da lista, as da conversa e a que está sob o mouse.
+- Primeira sincronização em etapas: a lista aparece com as 200 mais recentes, e o resto chega aos poucos.
+
+**Escrita e organização**
+
+- Escrever, responder, responder a todos e encaminhar, com rascunhos salvos cifrados.
+- Pastas e marcadores, sinalizadas com prazo, e mover, arquivar, excluir e marcar como lida, em uma ou várias mensagens, inclusive arrastando para a pasta.
+- Busca, barra de comandos e sincronização em segundo plano com intervalo por conta.
+
+**Avisos**
+
+- Notificações do Windows para e-mails novos, respostas aos seus e-mails, prazos e contas que precisam de atenção. Um clique abre a mensagem.
+- O app continua na bandeja do sistema com a janela fechada, com "novo e-mail" e silenciar por um tempo.
+- Horário de silêncio e um sino com o histórico dos últimos 7 dias.
+
+**Aparência**
+
+- Tema claro, escuro ou do sistema, cor de fundo personalizável, densidade da lista e colunas que se recolhem para focar na leitura.
 
 O que ainda não existe:
 
-- Envio de mensagens (SMTP). Os rascunhos já ficam salvos, cifrados.
 - Outros provedores além do Google. O modelo de dados já prevê Outlook, Yahoo, iCloud, Zoho, GMX, AOL e IMAP genérico.
 - Releases assinados. Por enquanto, o caminho é compilar a partir do código.
 
 ## Para onde vamos
 
-### Criptografia pós-quântica
+### Seus dados só seus, mesmo no seu computador
+
+Hoje o banco é cifrado contra quem está fora do seu Windows. O próximo passo é protegê-lo também de quem está dentro dele: outra pessoa na sua sessão, o administrador de um domínio corporativo ou alguém com uma cópia do disco e a sua senha do Windows.
+
+- **Senha do Epistula (opcional):** a chave do banco passa a ser protegida por uma chave derivada da sua senha com Argon2id. A senha não fica gravada em lugar nenhum.
+- **Bloqueio automático:** depois de um tempo sem uso ou quando o Windows bloqueia a tela, o app fecha o banco e apaga a chave da memória.
+- **Nada vaza para fora do banco:** notificações sem conteúdo por padrão, nenhum e-mail no cache do navegador interno, nenhum despejo de memória em disco após uma falha, e um aviso quando o disco não tem BitLocker.
+- **Guardar menos:** apagar do computador os e-mails fora do período escolhido e os de contas que você deixou, trocando a chave do banco em seguida.
+- **Links honestos:** aviso quando o link leva a um endereço diferente do que aparece, e remoção dos parâmetros de rastreamento.
+
+### Pronto para computadores quânticos
 
 Mensagens cifradas hoje podem ser capturadas hoje e decifradas daqui a alguns anos, quando houver computadores quânticos capazes de quebrar as trocas de chave atuais. Para e-mail, que costuma ser guardado por décadas, esse risco não é teórico.
 
-A cifra simétrica que o Epistula já usa em repouso (AES-256) continua forte nesse cenário. O ponto frágil está em tudo que envolve chave pública: backups que precisam ser abertos em outro computador, sincronização entre dispositivos seus e mensagens cifradas de ponta a ponta. É ali que entram esquemas híbridos, combinando um algoritmo clássico com um pós-quântico padronizado (X25519 com ML-KEM), para que a proteção não dependa de uma única aposta.
+A cifra que o Epistula já usa no disco (AES-256) continua forte nesse cenário; não é preciso trocá-la. No caminho até o provedor, o app vai oferecer a troca de chaves híbrida (X25519 com ML-KEM-768), que passa a valer assim que o servidor aceitar. E tudo que vier a usar chave pública (backup aberto em outro computador, sincronização entre dispositivos seus, mensagens cifradas de ponta a ponta) já nasce com esquemas híbridos, para que a proteção não dependa de uma única aposta.
 
 ### Backup que você controla
 
@@ -55,14 +96,14 @@ Exportar uma conta inteira para um arquivo cifrado, guardar onde quiser (um disc
 
 ### Gestão de e-mail de verdade
 
-Busca local completa, mesmo offline. Regras e filtros. Adiar mensagens. Visão unificada de todas as contas. Assinaturas, modelos e agendamento de envio. Indicadores de autenticidade do remetente (SPF, DKIM, DMARC) visíveis na leitura, para ajudar a reconhecer phishing.
+Busca local no conteúdo completo, mesmo offline. Regras e filtros. Adiar mensagens. Visão unificada de todas as contas. Assinaturas, modelos e agendamento de envio. Outros provedores (Outlook, Yahoo, iCloud e IMAP genérico). Indicadores de autenticidade do remetente (SPF, DKIM, DMARC) visíveis na leitura, para ajudar a reconhecer phishing.
 
 ## Como a sua informação é tratada
 
 ```
 Seu computador
 ├── Interface (WebView)      só exibe; nunca vê tokens nem a chave do banco
-├── Processo Rust            OAuth, IMAP, limpeza de HTML, decide o que sai para a tela
+├── Processo Rust            OAuth, IMAP, SMTP, limpeza de HTML, decide o que sai para a tela
 ├── Cofre do sistema         refresh tokens e a chave do banco
 └── epistula.db              mensagens, pastas e ajustes, cifrado por inteiro
 
@@ -78,7 +119,7 @@ Alguns pontos que valem ser ditos com clareza:
 - **Sair de uma conta revoga o acesso** no provedor e apaga o segredo do cofre do sistema. As mensagens já baixadas continuam no disco, cifradas, até que exista a opção de apagá-las.
 - **Um computador comprometido continua comprometido.** Malware rodando na sua sessão consegue ler o que você consegue ler. Nenhum cliente de e-mail resolve isso, e preferimos dizer isso a fingir o contrário.
 
-A análise completa, com a matriz de dados, os limites de confiança e as doze ameaças consideradas, está em [docs/arquitetura-e-ameacas.md](docs/arquitetura-e-ameacas.md).
+A análise completa, com a matriz de dados, o inventário de criptografia, os limites de confiança e as dezessete ameaças consideradas, está em [docs/arquitetura-e-ameacas.md](docs/arquitetura-e-ameacas.md).
 
 ## Design System
 
@@ -130,7 +171,7 @@ O CI roda tudo isso no Windows a cada push, além de uma varredura de segredos n
 
 ```
 src/                 interface em React
-src-tauri/src/       backend em Rust (OAuth, IMAP, sincronização, banco, limpeza de HTML)
+src-tauri/src/       backend em Rust (OAuth, IMAP, SMTP, sincronização, banco, limpeza de HTML, notificações)
 src-tauri/migrations versões do esquema do banco
 design-system/       componentes e tokens visuais
 docs/                arquitetura e modelo de ameaças

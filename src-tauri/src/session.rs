@@ -16,13 +16,13 @@ use crate::oauth::{self, Tokens};
 use crate::photo;
 use crate::provider::Provider;
 use crate::providers::{self, AuthKind};
-use crate::secrets;
+use crate::secrets::{self, SecretString};
 use crate::store::{self, Account, AccountStatus};
 
 const REFRESH_MARGIN: Duration = Duration::from_secs(60);
 
 struct AccessToken {
-    value: String,
+    value: SecretString,
     expires_at: Instant,
 }
 
@@ -35,7 +35,7 @@ fn access_from(tokens: &Tokens) -> AccessToken {
 
 #[derive(Default)]
 struct Auth {
-    refresh_token: Option<String>,
+    refresh_token: Option<SecretString>,
     access: Option<AccessToken>,
 }
 
@@ -217,7 +217,7 @@ impl AppState {
 
     /// Access token válido da conta, renovando pelo refresh token quando necessário.
     /// Chamado por `imap_client::with_session` com o lock de uma conexão tomado: não usa conexões.
-    pub async fn access(&self, handle: &AccountHandle, force_refresh: bool) -> Result<String, AppError> {
+    pub async fn access(&self, handle: &AccountHandle, force_refresh: bool) -> Result<SecretString, AppError> {
         match self.status_of(&handle.id).await? {
             AccountStatus::Active => {}
             AccountStatus::SignedOut => return Err(AppError::SignedOut),

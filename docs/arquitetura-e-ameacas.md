@@ -48,7 +48,8 @@ Limites de confiança, do mais confiável ao menos:
 | Dado | Onde fica | Por quanto tempo | Quem acessa |
 |---|---|---|---|
 | Refresh token OAuth (por conta) | Keyring do SO (`epistula/account-<id>` + `secret-<id>-N`) | Até sair da conta, `invalid_grant` ou 7 dias (app em modo Testing) | Processo Rust; usuário do SO |
-| Chave do banco (32 bytes do gerador do SO) | Keyring do SO (`epistula/db-key`) | Permanente | Processo Rust; usuário do SO |
+| Chave do banco (32 bytes do gerador do SO) | Keyring do SO (`epistula/db-key`, em hexadecimal: formato v1; o v2, envolvido pela senha do Epistula, vem com a US10) | Até a próxima troca de chave | Processo Rust; usuário do SO |
+| Chave nova durante uma troca | Keyring do SO (`epistula/db-key-next`) | Do início da troca até o banco abrir com ela (segundos); uma troca interrompida é concluída ou desfeita na próxima abertura | Processo Rust; usuário do SO |
 | Índice de contas (id, provedor, e-mail) | Keyring do SO (`epistula/accounts-index`) | Permanente | Processo Rust; usuário do SO |
 | Access token OAuth | Memória do processo Rust | ~1 h ou até fechar o app | Processo Rust |
 | Sessões IMAP autenticadas | Memória do processo Rust (até 2 por conta) | Até erro, saída da conta ou fechar o app | Processo Rust |
@@ -89,6 +90,24 @@ account ──┬── provider_config (1:1)       (account.photo: foto do perf
 - `UNIQUE(provider, email)` em `account`.
 - `UNIQUE(account_id, dedupe_key)` em `message`: no Gmail, a mesma mensagem em vários marcadores é guardada uma vez (Message-ID + tamanho; sem Message-ID, fica restrita à pasta e ao UID).
 - Migrações em `src-tauri/migrations/`, aplicadas em transação e controladas por `PRAGMA user_version`. `foreign_keys`, `secure_delete`, WAL e `temp_store = MEMORY` ligados ao abrir.
+- As configurações de cifra são fixas no código (`CIPHER_PRAGMAS` em `db.rs`), iguais ao padrão do SQLCipher 4, e um teste falha se mudarem. `app_setting.cipher_scheme` guarda a versão do esquema de cifra (1); um banco com versão maior que a conhecida não abre.
+
+## Criptografia
+
+Inventário de cada uso de criptografia (US10, CA1). "Quântico" diz se o uso resiste a um computador quântico capaz de quebrar RSA e curvas elípticas.
+
+| Onde | Para quê | Algoritmo e biblioteca | Tipo | Quântico | O que fazer |
+|---|---|---|---|---|---|
+| `epistula.db` e WAL | Cifra em repouso de tudo que o app guarda | SQLCipher 4: AES-256-CBC por página, HMAC-SHA512, chave crua de 256 bits (OpenSSL embutido) | Simétrica | Resiste: o algoritmo de Grover deixa cerca de 128 bits | Nada. Não existe cifra simétrica "pós-quântica" melhor (D10 da US10) |
+| Chave do banco e refresh tokens no cofre | Guardar os segredos fora do banco | DPAPI do Windows (`keyring`): chave derivada da senha do Windows | Simétrica | Resiste | Quem tem a sessão ou a senha do Windows abre o cofre: senha do Epistula (US10, CA2) |
+| Backup do DPAPI em domínio | O administrador do domínio recupera o cofre de qualquer usuário | RSA no controlador de domínio | Chave pública | Não resiste | Senha do Epistula (US10, CA2): sem ela, a chave do cofre não abre o banco |
+| Troca da chave do banco | Aposentar uma chave | `PRAGMA rekey` do SQLCipher, numa transação | Simétrica | Resiste | Feito (`keys.rs`) |
+| TLS de IMAP, SMTP, login e foto | Sigilo e autenticidade no trânsito | `native-tls` (SChannel): troca de chaves ECDHE, certificados RSA ou ECDSA | Chave pública | A troca de chaves não resiste ("colher agora, decifrar depois"). O certificado só importa no momento da conexão | Troca híbrida X25519 + ML-KEM-768 (US11) |
+| OAuth PKCE | Amarrar o código de autorização ao app | SHA-256 (`sha2`) | Hash | Resiste | Nada |
+| `state` do OAuth, chave do banco, `code_verifier` | Valores imprevisíveis | Gerador do sistema (`OsRng`) | | Resiste | Nada |
+| Senha do Epistula (US10, CA2) | Envolver a chave do banco | Argon2id (RFC 9106) + AES-256-GCM | Simétrica | Resiste | A implementar |
+
+**Regra para recursos futuros (US10, CA10).** Todo recurso que precisar de chave pública (backup aberto em outro computador, sincronização entre dispositivos, e-mail cifrado entre pessoas) usa o modelo híbrido, X25519 + ML-KEM-768 via HPKE (RFC 9180) ou X-Wing quando estiver padronizado, com biblioteca auditada. Assinaturas, quando forem necessárias, consideram ML-DSA (FIPS 204) em modo híbrido. Nenhuma criptografia própria.
 
 ## Ameaças
 
@@ -96,7 +115,7 @@ account ──┬── provider_config (1:1)       (account.photo: foto do perf
 |---|---|---|---|
 | 1 | Atacante externo sem autenticação | Mitigada | Não há porta aberta além do loopback efêmero do OAuth: 127.0.0.1, aceita uma requisição, valida `state` de uso único e expira em 5 min. |
 | 2 | Usuário autenticado acessando dados de outra conta | Mitigada no app | Várias contas por instalação, todas do mesmo usuário do SO. Ids opacos carregam a conta, e o backend recusa (`InvalidId`) um id de pasta ou mensagem que não pertença à conta do pedido. O isolamento no provedor é do Google. |
-| 3 | Roubo de banco ou backup | Mitigada | `epistula.db` é cifrado por inteiro com SQLCipher (AES-256, HMAC por página), inclusive índices e metadados. A chave fica só no keyring. Uma cópia do arquivo, sozinha, não revela nada. Backups do perfil do SO que incluam o keyring levam a chave junto, cifrada pelo SO. |
+| 3 | Roubo de banco ou backup | Mitigada | `epistula.db` é cifrado por inteiro com SQLCipher (AES-256, HMAC por página), inclusive índices e metadados. A chave fica só no keyring. Uma cópia do arquivo, sozinha, não revela nada. Backups do perfil do SO que incluam o keyring levam a chave junto, cifrada pelo SO (ver 15). |
 | 4 | Conta administrativa comprometida | Fora do escopo | Não há administração do Epistula. Um admin de Workspace pode revogar ou auditar o acesso pelo Google. |
 | 5 | CI/CD ou cadeia de dependências | Parcialmente mitigada | `Cargo.lock` e `pnpm-lock.yaml` versionados; `cargo deny` (licenças, fontes, advisories) e `cargo audit` locais. O OpenSSL do SQLCipher é compilado do fonte (`openssl-src`); o Strawberry Perl usado no build é baixado por `scripts/setup-build-tools.ps1` com SHA-256 fixo. O CI (GitHub Actions) roda build, clippy, testes e gitleaks, sem segredos. Ainda não há auditoria contínua das dependências, e os releases não são assinados. |
 | 6 | Operador curioso ou malicioso | Fora do escopo | Não há operador do Epistula com acesso a dados. O Google, como provedor, tem acesso total (ver 8). |
@@ -106,7 +125,10 @@ account ──┬── provider_config (1:1)       (account.photo: foto do perf
 | 13 | Envio: injeção de cabeçalho, vazamento do Cco e da identidade do computador | Mitigada | A mensagem é montada pela `lettre` (cabeçalhos codificados, endereços validados); controles no assunto viram espaço, com teste de injeção. O Cco vai só no envelope SMTP, nunca nos cabeçalhos (teste). O `Message-ID` usa o domínio de quem envia e o EHLO não leva o nome do computador (sem a feature `hostname`). TLS implícito na porta 465 com certificado validado; o token só segue depois do TLS. Até 100 destinatários, 2 MB de texto e 25 MB com anexos. Enviar exige a conta ativa. |
 | 14 | Mover: perda de mensagem ou estado inconsistente | Mitigada | O mover fica registrado no banco antes de ir ao servidor; se o app fechar no prazo do "Desfazer" ou no meio do MOVE, ele é refeito na próxima abertura (refazer um MOVE já feito não faz nada no servidor). Se o servidor recusar, a mensagem volta para a origem e o usuário é avisado. Enquanto espera a sincronização do destino, a mensagem fica protegida da limpeza de órfãs por até 10 min. |
 | 10 | Perda, roubo ou revogação de chaves | Mitigada | Sair da conta revoga o refresh token no Google e apaga o segredo do keyring. Revogar em `myaccount.google.com/permissions` faz a conta virar "precisa reconectar" sem apagar os dados. Sem a chave do banco, o arquivo é posto de lado (`epistula.db.unreadable-*`) e um banco novo é criado; as contas voltam pelo índice do keyring e o conteúdo é baixado de novo do servidor. Não há chaves E2EE ainda. |
-| 11 | Logs, traces, dumps de memória, temporários | Parcialmente mitigada | Logs sem conteúdo nem identificação da conta, com teste. WAL cifrado como o banco; `temp_store = MEMORY` evita temporários em disco; `secure_delete` sobrescreve páginas apagadas. Dumps de memória do processo conteriam tokens, a chave do banco e mensagens abertas; os segredos não são zerados ao sair da memória. |
+| 11 | Logs, traces, dumps de memória, temporários | Parcialmente mitigada | Logs sem conteúdo nem identificação da conta, com teste. WAL cifrado como o banco; `temp_store = MEMORY` evita temporários em disco; `secure_delete` sobrescreve páginas apagadas. A chave do banco, os refresh tokens e os access tokens ficam em `Zeroizing` e são zerados ao sair de uso; a chave nunca aparece em `Debug` (teste). As cópias feitas dentro das bibliotecas (`keyring`, SChannel, `lettre`, o SQLCipher) não são zeradas pelo app; o `cipher_memory_security` do SQLCipher estoura a pilha no Windows e fica desligado. O processo Rust sai dos relatórios de erro do Windows (`WerAddExcludedApplication`), para uma falha não gravar um despejo de memória; os processos do WebView2, que mostram o e-mail aberto, ainda têm os próprios relatórios (US10, CA6). |
+| 15 | Cópia do disco com a senha do Windows, ou backup do DPAPI em domínio | Não mitigada (US10, CA2) | O DPAPI entrega a chave do banco a quem está na sessão do usuário, a quem copia o disco e tem a senha do Windows (que, sem BitLocker, pode ser adivinhada offline) e ao administrador do domínio, que tem a chave de backup do DPAPI (protegida por RSA). A senha opcional do Epistula, com Argon2id, fecha esse caminho. |
+| 16 | Conteúdo fora do banco cifrado | Parcialmente mitigada (US10, CA6) | As notificações podem mostrar só a conta; com "Remetente e assunto", o Windows guarda esse texto sem cifra no próprio banco de notificações. Imagens liberadas pelo usuário vão para o cache do WebView2 em disco. O arquivo de paginação e o de hibernação podem receber memória do app; só o BitLocker os protege. |
+| 17 | Computador quântico no futuro | Parcialmente mitigada | Dados guardados: resistem (AES-256). Tráfego gravado hoje: a troca de chaves do TLS não resiste (US11). Backup RSA do DPAPI em domínio: não resiste (ver 15). |
 | 12 | Infraestrutura ou ordem legal | Fora do escopo do Epistula | Não há infraestrutura do Epistula. Pedidos legais alcançam os dados no Google. |
 
 **Risco aceito pela D4.** Depois de sair de uma conta, as mensagens salvas dela continuam no disco (cifradas). Qualquer pessoa com acesso à sessão do usuário no Windows consegue lê-las pelo Epistula. Apagar os dados de uma conta do computador fica para outra story.
@@ -116,7 +138,7 @@ account ──┬── provider_config (1:1)       (account.photo: foto do perf
 - O keyring do SO protege os itens da sessão do usuário contra outros usuários locais.
 - A WebView do sistema (WebView2 no Windows) aplica corretamente `sandbox`, `srcdoc` e CSP.
 - O `ammonia` (allowlist sobre o parser html5ever) é a barreira principal contra HTML ativo; o iframe sem scripts é a segunda.
-- O SQLCipher 4 com as configurações padrão (AES-256-CBC, HMAC-SHA512, chave crua sem KDF, porque já vem do gerador do SO) é adequado para cifra em repouso.
+- O SQLCipher 4 com as configurações fixas em `db.rs` (AES-256-CBC, HMAC-SHA512, chave crua sem KDF, porque já vem do gerador do SO) é adequado para cifra em repouso.
 - O app não faz requisições de rede para desenhar a tela: fontes e estilos vêm empacotados (sem Google Fonts), e a CSP só permite fontes e estilos locais.
 - O escopo OAuth do Google é `https://mail.google.com/ openid email profile`. Ele já cobre o SMTP do envio. `profile` (não sensível) só serve para a foto e o nome do `From`; sem ele, a conta funciona com a inicial e envia só com o endereço.
 - O servidor de envio grava a cópia em Enviados (comportamento do Gmail); o app não faz `APPEND` e só sincroniza Enviados depois.
@@ -127,5 +149,7 @@ account ──┬── provider_config (1:1)       (account.photo: foto do perf
 1. Releases sem assinatura nem atualização verificada (ameaça 5): antes de distribuir.
 2. Verificação do app OAuth pelo Google, com avaliação de segurança, para sair do modo Testing.
 3. Auditoria contínua das dependências: o CI atual roda clippy, testes e gitleaks; `cargo deny` roda só localmente.
-4. Dados de contas de que o usuário saiu continuam no disco (D4): oferecer "apagar dados desta conta".
-5. Indicadores de autenticidade do remetente (SPF/DKIM/DMARC dos cabeçalhos `Authentication-Results`).
+4. Dados de contas de que o usuário saiu continuam no disco (D4): oferecer "apagar dados desta conta" (US10, CA7).
+5. Quem tem acesso ao Windows do usuário tem acesso à chave do banco (ameaça 15): senha do Epistula e bloqueio (US10, CA2 e CA3).
+6. Conteúdo fora do banco: notificações, cache do WebView2, paginação e hibernação (ameaça 16, US10, CA6).
+7. Indicadores de autenticidade do remetente (SPF/DKIM/DMARC dos cabeçalhos `Authentication-Results`).

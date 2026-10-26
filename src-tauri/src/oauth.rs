@@ -13,8 +13,10 @@ use sha2::{Digest, Sha256};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
+use zeroize::Zeroizing;
 
 use crate::error::AppError;
+use crate::secrets::SecretString;
 use crate::provider::{OAuthClient, Provider};
 
 const CALLBACK_TIMEOUT: Duration = Duration::from_secs(5 * 60);
@@ -24,9 +26,10 @@ const CALLBACK_PAGE: &str = "<!doctype html><html lang=\"pt-BR\"><meta charset=\
 <body style=\"font-family:system-ui,sans-serif;display:grid;place-items:center;height:100vh;margin:0\">\
 <p>Pronto. Você já pode fechar esta aba e voltar para o Epistula.</p></body></html>";
 
+/// Tokens da conta, zerados na memória ao sair de uso (US10, CA5).
 pub struct Tokens {
-    pub access_token: String,
-    pub refresh_token: Option<String>,
+    pub access_token: SecretString,
+    pub refresh_token: Option<SecretString>,
     pub expires_in: u64,
     pub id_token: Option<String>,
 }
@@ -247,8 +250,8 @@ async fn token_request(http: &reqwest::Client, provider: Provider, form: &[(&str
     }
     let body: TokenResponse = response.json().await.map_err(|_| AppError::AuthFailed)?;
     Ok(Tokens {
-        access_token: body.access_token,
-        refresh_token: body.refresh_token,
+        access_token: Zeroizing::new(body.access_token),
+        refresh_token: body.refresh_token.map(Zeroizing::new),
         expires_in: body.expires_in.unwrap_or(3600),
         id_token: body.id_token,
     })

@@ -5,9 +5,13 @@
 //! caracteres), então o refresh token é dividido em partes: `account-<id>` guarda quantas são e
 //! `secret-<id>-N` guarda cada parte. `accounts-index` lista as contas para recuperar o acesso
 //! se o banco precisar ser recriado (CA1).
+//!
+//! Tudo que sai do cofre fica em `Zeroizing`, zerado ao sair de uso (US10, CA5). As cópias feitas
+//! dentro do crate `keyring` e do Windows estão fora do alcance do app.
 
 use keyring::Entry;
 use serde::{Deserialize, Serialize};
+use zeroize::{Zeroize, Zeroizing};
 
 use crate::db::DbKey;
 use crate::error::AppError;
@@ -16,6 +20,8 @@ use crate::provider::Provider;
 const SERVICE: &str = "epistula";
 const CHUNK_CHARS: usize = 1000;
 const DB_KEY_ENTRY: &str = "db-key";
+/// Chave nova durante uma troca (US10, CA4), até o banco abrir com ela.
+const DB_KEY_NEXT_ENTRY: &str = "db-key-next";
 const INDEX_ENTRY: &str = "accounts-index";
 const LEGACY_ACCOUNT_ENTRY: &str = "account";
 
@@ -28,9 +34,12 @@ fn keyring_error(e: keyring::Error) -> AppError {
     AppError::Keyring
 }
 
-fn get(name: &str) -> Result<Option<String>, AppError> {
+/// Texto secreto que é zerado ao sair de uso.
+pub type SecretString = Zeroizing<String>;
+
+fn get(name: &str) -> Result<Option<SecretString>, AppError> {
     match entry(name)?.get_password() {
-        Ok(value) => Ok(Some(value)),
+        Ok(value) => Ok(Some(Zeroizing::new(value))),
         Err(keyring::Error::NoEntry) => Ok(None),
         Err(e) => Err(keyring_error(e)),
     }
@@ -67,10 +76,11 @@ struct SecretMeta {
 
 // ---------------------------------------------------------------- refresh token por conta
 
-pub fn load_refresh_token(account_id: &str) -> Result<Option<String>, AppError> {
+pub fn load_refresh_token(account_id: &str) -> Result<Option<SecretString>, AppError> {
     let Some(meta) = get(&meta_name(account_id))? else { return Ok(None) };
     let Ok(meta) = serde_json::from_str::<SecretMeta>(&meta) else { return Ok(None) };
-    let mut token = String::new();
+    // Capacidade reservada antes, para o texto não ser realocado (e copiado) ao crescer.
+    let mut token = Zeroizing::new(String::with_capacity(meta.parts * CHUNK_CHARS * 4));
     for i in 0..meta.parts {
         match get(&part_name(account_id, i))? {
             Some(part) => token.push_str(&part),
@@ -83,13 +93,14 @@ pub fn load_refresh_token(account_id: &str) -> Result<Option<String>, AppError> 
 /// Grava o refresh token e confere lendo de volta.
 pub fn save_refresh_token(account_id: &str, token: &str) -> Result<(), AppError> {
     delete_refresh_token(account_id)?;
-    let parts = split_secret(token);
-    for (i, part) in parts.iter().enumerate() {
-        set(&part_name(account_id, i), part)?;
-    }
-    let meta = serde_json::to_string(&SecretMeta { parts: parts.len() }).map_err(|_| AppError::Keyring)?;
+    let mut parts = split_secret(token);
+    let written: Result<(), AppError> = parts.iter().enumerate().try_for_each(|(i, part)| set(&part_name(account_id, i), part));
+    let count = parts.len();
+    parts.zeroize();
+    written?;
+    let meta = serde_json::to_string(&SecretMeta { parts: count }).map_err(|_| AppError::Keyring)?;
     set(&meta_name(account_id), &meta)?;
-    if load_refresh_token(account_id)?.as_deref() != Some(token) {
+    if load_refresh_token(account_id)?.as_deref().map(String::as_str) != Some(token) {
         tracing::error!("o refresh token gravado não confere na releitura");
         return Err(AppError::Keyring);
     }
@@ -127,26 +138,86 @@ pub fn save_index(entries: &[IndexEntry]) -> Result<(), AppError> {
 
 // ---------------------------------------------------------------- chave do banco
 
-pub fn load_db_key() -> Result<Option<DbKey>, AppError> {
-    Ok(get(DB_KEY_ENTRY)?.and_then(|hex| parse_key(&hex)))
+/// Qual das chaves do banco: a atual ou a nova durante uma troca (US10, CA4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum KeySlot {
+    Current,
+    Next,
 }
 
-pub fn save_db_key(key: &DbKey) -> Result<(), AppError> {
-    let hex: String = key.iter().map(|b| format!("{b:02x}")).collect();
-    set(DB_KEY_ENTRY, &hex)?;
-    if load_db_key()?.as_ref() != Some(key) {
-        tracing::error!("a chave do banco gravada não confere na releitura");
+fn slot_name(slot: KeySlot) -> &'static str {
+    match slot {
+        KeySlot::Current => DB_KEY_ENTRY,
+        KeySlot::Next => DB_KEY_NEXT_ENTRY,
+    }
+}
+
+/// Como a chave do banco fica guardada no cofre, com versão (US10, CA2).
+/// - v1: a chave crua em hexadecimal (64 caracteres), o formato de antes da US10.
+/// - v2: a chave envolvida (AES-256-GCM) por uma chave derivada da senha do Epistula com Argon2id,
+///   em JSON com os parâmetros, o sal, o nonce e o texto cifrado, para ser aberta só com a senha.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StoredKey {
+    Raw(DbKey),
+    Wrapped(WrappedKey),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WrappedKey {
+    pub v: u8,
+    pub kdf: String,
+    /// Memória do Argon2id em KiB, iterações e paralelismo.
+    pub m_kib: u32,
+    pub t: u32,
+    pub p: u32,
+    /// Sal, nonce e texto cifrado (chave + tag) em base64.
+    pub salt: String,
+    pub nonce: String,
+    pub ct: String,
+}
+
+pub const WRAPPED_VERSION: u8 = 2;
+
+impl StoredKey {
+    pub fn parse(text: &str) -> Option<StoredKey> {
+        if let Some(key) = parse_key(text) {
+            return Some(StoredKey::Raw(key));
+        }
+        serde_json::from_str::<WrappedKey>(text).ok().filter(|w| w.v == WRAPPED_VERSION && w.kdf == "argon2id").map(StoredKey::Wrapped)
+    }
+
+    pub fn encode(&self) -> Result<SecretString, AppError> {
+        match self {
+            StoredKey::Raw(key) => Ok(key.to_hex()),
+            StoredKey::Wrapped(w) => serde_json::to_string(w).map(Zeroizing::new).map_err(|_| AppError::Keyring),
+        }
+    }
+}
+
+pub fn load_db_key(slot: KeySlot) -> Result<Option<StoredKey>, AppError> {
+    Ok(get(slot_name(slot))?.and_then(|text| StoredKey::parse(&text)))
+}
+
+/// Grava e confere lendo de volta.
+pub fn save_db_key(slot: KeySlot, key: &StoredKey) -> Result<(), AppError> {
+    set(slot_name(slot), &key.encode()?)?;
+    if load_db_key(slot)?.as_ref() != Some(key) {
+        tracing::error!(?slot, "a chave do banco gravada não confere na releitura");
         return Err(AppError::Keyring);
     }
     Ok(())
+}
+
+pub fn delete_db_key(slot: KeySlot) -> Result<(), AppError> {
+    remove(slot_name(slot))
 }
 
 pub fn parse_key(hex: &str) -> Option<DbKey> {
     if hex.len() != 64 || !hex.is_ascii() {
         return None;
     }
-    let mut key = [0u8; 32];
-    for (i, byte) in key.iter_mut().enumerate() {
+    let mut key = DbKey::zeroed();
+    for (i, byte) in key.bytes_mut().iter_mut().enumerate() {
         *byte = u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16).ok()?;
     }
     Some(key)
@@ -226,10 +297,30 @@ mod tests {
     #[test]
     fn db_key_hex_roundtrips_and_rejects_garbage() {
         let key = crate::db::new_key();
-        let hex: String = key.iter().map(|b| format!("{b:02x}")).collect();
-        assert_eq!(parse_key(&hex), Some(key));
+        assert_eq!(parse_key(&key.to_hex()), Some(key));
         assert_eq!(parse_key("abc"), None);
         assert_eq!(parse_key(&"zz".repeat(32)), None);
         assert_eq!(parse_key(&"é".repeat(32)), None);
+    }
+
+    #[test]
+    fn stored_key_reads_both_versions() {
+        let key = crate::db::new_key();
+        let raw = StoredKey::Raw(key.clone());
+        assert_eq!(StoredKey::parse(&raw.encode().unwrap()), Some(raw), "v1: a chave de antes da US10");
+        let wrapped = StoredKey::Wrapped(WrappedKey {
+            v: WRAPPED_VERSION,
+            kdf: "argon2id".into(),
+            m_kib: 65536,
+            t: 3,
+            p: 1,
+            salt: "c2Fs".into(),
+            nonce: "bm9uY2U=".into(),
+            ct: "Y3Q=".into(),
+        });
+        assert_eq!(StoredKey::parse(&wrapped.encode().unwrap()), Some(wrapped));
+        assert_eq!(StoredKey::parse(r#"{"v":9,"kdf":"argon2id","m_kib":1,"t":1,"p":1,"salt":"","nonce":"","ct":""}"#), None, "versão desconhecida");
+        assert_eq!(StoredKey::parse("lixo"), None);
+        assert_eq!(slot_name(KeySlot::Current), "db-key", "o nome de antes da US10 não muda");
     }
 }

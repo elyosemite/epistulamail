@@ -8,7 +8,17 @@ Epistula connects your accounts, downloads what you need to read and stores it i
 
 ![Epistula inbox with several accounts, folders, the message list and an open message with remote images blocked](docs/images/epistula-caixa-de-entrada.png)
 
-> Epistula is under active development. Reading, organizing and multiple accounts work today. Sending, full backups and post-quantum cryptography are on the way. [Current state](#current-state) lists exactly what exists right now.
+> Epistula is under active development. Reading, sending, organizing, conversations, notifications, offline reading and multiple accounts work today. An app password, automatic lock and encrypted backups are on the way. [Current state](#current-state) lists exactly what exists right now.
+
+## At a glance
+
+- **No Epistula account, no Epistula cloud.** The app talks straight to your provider. There is no server of ours in between.
+- **Everything on disk is encrypted.** Messages, subjects, senders and indexes live in an AES-256 database, which already holds up against quantum computers.
+- **Opens instantly, even offline.** Recent mail is downloaded in the background and opens from disk.
+- **Blocks tracking.** Remote images (the "spy pixels" that tell senders you opened their email) stay blocked until you allow them.
+- **Conversations that read well.** Each reply in its own card, with quoted text tucked away.
+- **Tells you only what matters.** Windows notifications, a tray icon, quiet hours and a history behind the bell.
+- **Security you can check.** A public threat model, and tests that fail if any content shows up in the logs.
 
 ## Why another email client
 
@@ -26,28 +36,59 @@ Epistula starts from three simple ideas:
 
 What works today:
 
-- Google accounts over OAuth (PKCE), reading mail through IMAP over TLS. Your password never passes through the app.
+**Accounts and security**
+
+- Google accounts over OAuth (PKCE), reading through IMAP and sending through SMTP, always over TLS. Your password never passes through the app.
 - Several accounts at once, each with its own name, color and photo, one click apart.
-- Folders and labels, pagination, and background sync with a per-account interval.
-- Local SQLCipher database (AES-256, per-page HMAC). The message list opens from disk and stays available offline.
+- Local SQLCipher database (AES-256, per-page HMAC), with the key in the Windows Credential Manager and secure deletion of freed pages.
 - Safe reading: third-party HTML is cleaned against an allowlist in the Rust process and shown in an iframe with scripts disabled. Remote images stay blocked until you allow them, one message at a time.
-- Move, archive, delete, mark as read and flag with a due date, for one message or many, including drag and drop onto a folder.
-- Search, a command bar, and local drafts for reply, reply all and forward.
-- Light, dark or system theme, and a customizable background color.
+- Private notifications: you choose whether they show sender and subject or just the account.
+
+**Reading**
+
+- Conversations as cards: each reply on its own, unread ones open, quoted text hidden behind a "…".
+- Offline reading: after every sync, mail from the period you pick (30 days, 90 days, everything, or only when opened) is downloaded in the background, without marking it as read.
+- Instant opening: the app fetches the next messages in the list, the rest of the conversation and the one under your mouse ahead of time.
+- Staged first sync: the list shows up with the 200 most recent messages, and the rest arrives gradually.
+
+**Writing and organizing**
+
+- Compose, reply, reply all and forward, with drafts saved encrypted.
+- Folders and labels, flags with due dates, and move, archive, delete and mark as read for one message or many, including drag and drop onto a folder.
+- Search, a command bar, and background sync with a per-account interval.
+
+**Staying informed**
+
+- Windows notifications for new mail, replies to your emails, due dates and accounts that need attention. One click opens the message.
+- The app stays in the system tray with the window closed, with "new email" and snooze.
+- Quiet hours and a bell with the last 7 days of notices.
+
+**Appearance**
+
+- Light, dark or system theme, a customizable background color, list density, and collapsible columns to focus on reading.
 
 What does not exist yet:
 
-- Sending mail (SMTP). Drafts are already saved, encrypted.
 - Providers other than Google. The data model already covers Outlook, Yahoo, iCloud, Zoho, GMX, AOL and generic IMAP.
 - Signed releases. For now, the way in is building from source.
 
 ## Where this is going
 
-### Post-quantum cryptography
+### Your data, only yours, even on your own computer
+
+Today the database is encrypted against anyone outside your Windows session. The next step is to protect it from people inside it too: someone else using your session, the administrator of a corporate domain, or anyone holding a copy of the disk and your Windows password.
+
+- **Epistula password (optional):** the database key gets wrapped by a key derived from your password with Argon2id. The password itself is never stored.
+- **Automatic lock:** after a period of inactivity, or when Windows locks the screen, the app closes the database and wipes the key from memory.
+- **Nothing leaks outside the database:** content-free notifications by default, no email in the embedded browser's cache, no crash dumps written to disk, and a heads-up when the disk has no BitLocker.
+- **Keep less:** erase from your computer the mail outside your chosen period and the mail of accounts you signed out of, rotating the database key afterwards.
+- **Honest links:** a warning when a link goes somewhere other than what it shows, and tracking parameters stripped.
+
+### Ready for quantum computers
 
 Data encrypted today can be captured today and decrypted years from now, once quantum computers can break the key exchanges in use. For email, which people keep for decades, that risk is not theoretical.
 
-The symmetric encryption Epistula already uses at rest (AES-256) holds up in that scenario. The weak spot is everything built on public keys: backups that must be opened on another machine, sync between your own devices, and end-to-end encrypted messages. That is where hybrid schemes come in, pairing a classical algorithm with a standardized post-quantum one (X25519 with ML-KEM), so protection never rests on a single bet.
+The encryption Epistula already uses on disk (AES-256) holds up in that scenario; there is no need to replace it. On the way to your provider, the app will offer the hybrid key exchange (X25519 with ML-KEM-768), which kicks in as soon as the server accepts it. And anything built on public keys (backups opened on another machine, sync between your own devices, end-to-end encrypted messages) will start out with hybrid schemes, so protection never rests on a single bet.
 
 ### Backups you control
 
@@ -55,14 +96,14 @@ Export a whole account to an encrypted file, keep it wherever you like (an exter
 
 ### Real email management
 
-Full local search, offline included. Rules and filters. Snooze. A unified view across accounts. Signatures, templates and scheduled send. Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
+Full-text local search, offline included. Rules and filters. Snoozing messages. A unified view across accounts. Signatures, templates and scheduled send. Other providers (Outlook, Yahoo, iCloud and generic IMAP). Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
 
 ## How your information is handled
 
 ```
 Your computer
 ├── Interface (WebView)      display only; never sees tokens or the database key
-├── Rust process             OAuth, IMAP, HTML cleaning, decides what reaches the screen
+├── Rust process             OAuth, IMAP, SMTP, HTML cleaning, decides what reaches the screen
 ├── OS credential vault      refresh tokens and the database key
 └── epistula.db              messages, folders and settings, fully encrypted
 
@@ -78,7 +119,7 @@ A few things worth saying plainly:
 - **Signing out revokes access** at the provider and deletes the secret from the credential vault. Messages already downloaded stay on disk, encrypted, until there is an option to erase them.
 - **A compromised computer stays compromised.** Malware running in your session can read whatever you can read. No email client fixes that, and we would rather say so than pretend otherwise.
 
-The full analysis, with the data inventory, trust boundaries and the twelve threats considered, is in [docs/arquitetura-e-ameacas.md](docs/arquitetura-e-ameacas.md) (in Portuguese).
+The full analysis, with the data inventory, the cryptography inventory, trust boundaries and the seventeen threats considered, is in [docs/arquitetura-e-ameacas.md](docs/arquitetura-e-ameacas.md) (in Portuguese).
 
 ## Design system
 
@@ -130,7 +171,7 @@ CI runs all of this on Windows on every push, plus a scan of the repository hist
 
 ```
 src/                 React interface
-src-tauri/src/       Rust backend (OAuth, IMAP, sync, database, HTML cleaning)
+src-tauri/src/       Rust backend (OAuth, IMAP, SMTP, sync, database, HTML cleaning, notifications)
 src-tauri/migrations database schema versions
 design-system/       visual components and tokens
 docs/                architecture and threat model

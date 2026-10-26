@@ -16,7 +16,7 @@ use crate::session::{AppState, Connected, Lane};
 use crate::compose::{self, Template};
 use crate::mailbox::{self, Role};
 use crate::store::{self, Account, AccountStatus, Draft, DraftContent, DraftKind, FolderRow, Followup, FollowupChange};
-use crate::{moves, send, sync};
+use crate::{db, keys, moves, send, sync};
 
 const MAX_FLAG_IDS: usize = 500;
 const MAX_URL_LEN: usize = 2048;
@@ -695,6 +695,13 @@ fn local_bytes(app: &AppHandle) -> u64 {
 pub async fn get_offline_settings(app: AppHandle, state: State<'_, AppState>) -> Result<OfflineSettings, AppError> {
     let days = state.db.call(|c| store::offline_days(c)).await?;
     Ok(OfflineSettings { days, local_bytes: local_bytes(&app) })
+}
+
+/// Troca a chave de proteção dos dados guardados neste computador (US10, CA4).
+#[tauri::command]
+pub async fn rotate_db_key(app: AppHandle, state: State<'_, AppState>) -> Result<(), AppError> {
+    let path = app.path().app_data_dir().map_err(|_| AppError::Storage)?.join(db::FILE_NAME);
+    keys::rotate(&state.db, &path, &keys::Keyring).await
 }
 
 /// Trocar o período não apaga nada já salvo (D4); um período maior acorda a fila na hora.

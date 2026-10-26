@@ -1,5 +1,6 @@
 //! Banco local cifrado com SQLCipher (US3, CA1). O arquivo inteiro é cifrado com AES-256; a chave
 //! (32 bytes do gerador do SO) fica só no keyring. Migrações versionadas por `PRAGMA user_version`.
+//! O esquema de cifra fica fixo no código e a chave pode ser trocada sem perder dados (US10, CA4).
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -7,6 +8,7 @@ use std::sync::{Arc, Mutex};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use rusqlite::Connection;
+use zeroize::Zeroizing;
 
 use crate::error::AppError;
 
@@ -19,13 +21,56 @@ pub const MIGRATIONS: &[&str] = &[
     include_str!("../migrations/0003_sincronia_e_foto.sql"),
     include_str!("../migrations/0004_envio_e_mover.sql"),
     include_str!("../migrations/0005_conversas_e_notificacoes.sql"),
+    include_str!("../migrations/0006_cifra.sql"),
 ];
 
-pub type DbKey = [u8; 32];
+/// Versão do esquema de cifra gravada em `app_setting` (`cipher_scheme`). 1 = SQLCipher 4 com chave
+/// crua de 256 bits e as configurações de `CIPHER_PRAGMAS`. Uma troca futura parte desse número.
+pub const CIPHER_SCHEME: u32 = 1;
+
+/// Configurações de cifra explícitas, iguais ao padrão do SQLCipher 4 com que todo banco do
+/// Epistula foi criado. Não dependem de uma mudança de padrão na biblioteca; um teste falha se
+/// mudarem. Vêm logo depois da chave, antes da primeira leitura.
+const CIPHER_PRAGMAS: &str = "PRAGMA cipher_compatibility = 4;
+     PRAGMA cipher_page_size = 4096;
+     PRAGMA kdf_iter = 256000;
+     PRAGMA cipher_hmac_algorithm = HMAC_SHA512;
+     PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA512;";
+
+/// Chave do banco. Zerada ao sair de uso e nunca exibida em `Debug` (US10, CA5).
+#[derive(Clone, PartialEq, Eq)]
+pub struct DbKey(Zeroizing<[u8; 32]>);
+
+impl DbKey {
+    pub fn zeroed() -> DbKey {
+        DbKey(Zeroizing::new([0u8; 32]))
+    }
+
+    pub fn bytes_mut(&mut self) -> &mut [u8; 32] {
+        &mut self.0
+    }
+
+    /// Hexadecimal minúsculo, num texto que também é zerado.
+    pub fn to_hex(&self) -> Zeroizing<String> {
+        const DIGITS: &[u8; 16] = b"0123456789abcdef";
+        let mut hex = Zeroizing::new(String::with_capacity(64));
+        for b in self.0.iter() {
+            hex.push(DIGITS[(b >> 4) as usize] as char);
+            hex.push(DIGITS[(b & 0xf) as usize] as char);
+        }
+        hex
+    }
+}
+
+impl std::fmt::Debug for DbKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("DbKey(…)")
+    }
+}
 
 pub fn new_key() -> DbKey {
-    let mut key = [0u8; 32];
-    OsRng.fill_bytes(&mut key);
+    let mut key = DbKey::zeroed();
+    OsRng.fill_bytes(key.bytes_mut());
     key
 }
 
@@ -52,24 +97,50 @@ pub fn sql_error(context: &'static str) -> impl Fn(rusqlite::Error) -> AppError 
     }
 }
 
-fn key_pragma(key: &DbKey) -> String {
-    let hex: String = key.iter().map(|b| format!("{b:02x}")).collect();
-    format!("PRAGMA key = \"x'{hex}'\";")
+fn key_pragma(name: &str, key: &DbKey) -> Zeroizing<String> {
+    let mut sql = Zeroizing::new(String::with_capacity(96));
+    sql.push_str("PRAGMA ");
+    sql.push_str(name);
+    sql.push_str(" = \"x'");
+    sql.push_str(&key.to_hex());
+    sql.push_str("'\";");
+    sql
+}
+
+/// Abre o arquivo com a chave e as configurações de cifra. `WrongKey` quando a chave não abre.
+fn connect(path: &Path, key: &DbKey) -> Result<Connection, OpenError> {
+    let conn = Connection::open(path).map_err(|_| OpenError::Other)?;
+    // `cipher_memory_security = ON` (zerar a memória ao liberar) estoura a pilha dentro do SQLCipher no
+    // Windows (testado na US10); fica desligado de forma explícita. As chaves do app são zeradas por `zeroize`.
+    conn.execute_batch("PRAGMA cipher_memory_security = OFF;").map_err(|_| OpenError::Other)?;
+    conn.execute_batch(&key_pragma("key", key)).map_err(|_| OpenError::Other)?;
+    conn.execute_batch(CIPHER_PRAGMAS).map_err(|_| OpenError::Other)?;
+    // Com a chave errada o SQLCipher só falha na primeira leitura.
+    if conn.query_row("SELECT count(*) FROM sqlite_master", [], |r| r.get::<_, i64>(0)).is_err() {
+        return Err(OpenError::WrongKey);
+    }
+    Ok(conn)
+}
+
+/// Confere, numa conexão separada, se a chave abre o arquivo.
+pub fn opens_with(path: &Path, key: &DbKey) -> bool {
+    connect(path, key).is_ok()
 }
 
 impl Db {
     /// Abre (ou cria) o banco com a chave e aplica as migrações pendentes.
     pub fn open(path: &Path, key: &DbKey) -> Result<Db, OpenError> {
-        Self::open_with(path, key, MIGRATIONS)
+        let db = Self::open_with(path, key, MIGRATIONS)?;
+        let scheme = db.conn.lock().map_err(|_| OpenError::Other).and_then(|c| cipher_scheme(&c).map_err(|_| OpenError::Other))?;
+        if scheme.is_some_and(|s| s > CIPHER_SCHEME) {
+            tracing::error!(scheme, known = CIPHER_SCHEME, "banco cifrado por uma versão mais nova do Epistula");
+            return Err(OpenError::Other);
+        }
+        Ok(db)
     }
 
     pub fn open_with(path: &Path, key: &DbKey, migrations: &[&str]) -> Result<Db, OpenError> {
-        let conn = Connection::open(path).map_err(|_| OpenError::Other)?;
-        conn.execute_batch(&key_pragma(key)).map_err(|_| OpenError::Other)?;
-        // Com a chave errada o SQLCipher só falha na primeira leitura.
-        if conn.query_row("SELECT count(*) FROM sqlite_master", [], |r| r.get::<_, i64>(0)).is_err() {
-            return Err(OpenError::WrongKey);
-        }
+        let conn = connect(path, key)?;
         conn.execute_batch(
             "PRAGMA auto_vacuum = INCREMENTAL;
              PRAGMA foreign_keys = ON;
@@ -82,6 +153,15 @@ impl Db {
         let mut conn = conn;
         migrate(&mut conn, migrations).map_err(|_| OpenError::Other)?;
         Ok(Db { conn: Arc::new(Mutex::new(conn)) })
+    }
+
+    /// Cifra o banco inteiro com a chave nova (`PRAGMA rekey`), numa transação só: se falhar no
+    /// meio, o arquivo continua abrindo com a chave antiga. Guardar a chave é com `keys::rotate`.
+    pub fn rekey(conn: &mut Connection, key: &DbKey) -> Result<(), AppError> {
+        conn.execute_batch(&key_pragma("rekey", key)).map_err(sql_error("rekey"))?;
+        // Confere na própria conexão antes de devolver.
+        conn.query_row("SELECT count(*) FROM sqlite_master", [], |r| r.get::<_, i64>(0)).map_err(sql_error("rekey"))?;
+        Ok(())
     }
 
     pub async fn call<T, F>(&self, f: F) -> Result<T, AppError>
@@ -112,6 +192,16 @@ impl Db {
         let mut guard = self.conn.lock().map_err(|_| AppError::Storage)?;
         f(&mut guard)
     }
+}
+
+/// Esquema de cifra registrado no banco (`None` antes da migração 0006).
+pub fn cipher_scheme(conn: &Connection) -> Result<Option<u32>, AppError> {
+    let value: Option<String> = conn
+        .query_row("SELECT value FROM app_setting WHERE key = 'cipher_scheme'", [], |r| r.get(0))
+        .map(Some)
+        .or_else(|e| if matches!(e, rusqlite::Error::QueryReturnedNoRows) { Ok(None) } else { Err(e) })
+        .map_err(sql_error("cipher_scheme"))?;
+    Ok(value.and_then(|v| v.parse().ok()))
 }
 
 /// Aplica, cada uma na sua transação, as migrações acima de `user_version`. Uma migração que
@@ -213,6 +303,60 @@ mod tests {
         let key = new_key();
         drop(Db::open_with(&path, &key, &["SELECT 1;", "SELECT 1;"]).unwrap());
         assert!(Db::open_with(&path, &key, &["SELECT 1;"]).is_err());
+    }
+
+    fn pragma(db: &Db, name: &str) -> String {
+        db.with(|c| Ok(c.query_row(&format!("PRAGMA {name}"), [], |r| r.get::<_, String>(0)).unwrap())).unwrap()
+    }
+
+    #[test]
+    fn cipher_settings_are_pinned() {
+        let (_dir, path) = temp_path();
+        let db = Db::open(&path, &new_key()).unwrap();
+        // Mudar qualquer um destes valores deixa os bancos atuais ilegíveis: exige um esquema novo.
+        assert_eq!(pragma(&db, "cipher_page_size"), "4096");
+        assert_eq!(pragma(&db, "kdf_iter"), "256000");
+        assert_eq!(pragma(&db, "cipher_hmac_algorithm"), "HMAC_SHA512");
+        assert_eq!(pragma(&db, "cipher_kdf_algorithm"), "PBKDF2_HMAC_SHA512");
+        assert_eq!(pragma(&db, "cipher_memory_security"), "0");
+        assert_eq!(db.with(|c| cipher_scheme(c)).unwrap(), Some(CIPHER_SCHEME));
+    }
+
+    #[test]
+    fn database_created_with_library_defaults_still_opens() {
+        let (_dir, path) = temp_path();
+        let key = new_key();
+        {
+            // Como os bancos eram criados antes da US10: só a chave, com o padrão do SQLCipher.
+            let conn = Connection::open(&path).unwrap();
+            conn.execute_batch(&key_pragma("key", &key)).unwrap();
+            conn.execute_batch("CREATE TABLE antiga (x INTEGER); INSERT INTO antiga VALUES (7);").unwrap();
+        }
+        let db = Db::open_with(&path, &key, &["SELECT 1;"]).unwrap();
+        let x: i64 = db.with(|c| Ok(c.query_row("SELECT x FROM antiga", [], |r| r.get(0)).unwrap())).unwrap();
+        assert_eq!(x, 7);
+    }
+
+    #[test]
+    fn rekey_keeps_data_and_retires_the_old_key() {
+        let (_dir, path) = temp_path();
+        let (old, new) = (new_key(), new_key());
+        let db = Db::open(&path, &old).unwrap();
+        db.with(|c| c.execute_batch("INSERT INTO app_setting (key, value) VALUES ('marca', 'x')").map_err(sql_error("teste"))).unwrap();
+        db.with(|c| Db::rekey(c, &new)).unwrap();
+        drop(db);
+        assert!(!opens_with(&path, &old), "a chave antiga não pode abrir depois da troca");
+        let db = Db::open(&path, &new).unwrap();
+        assert_eq!(db.with(|c| Ok(c.query_row("SELECT value FROM app_setting WHERE key = 'marca'", [], |r| r.get::<_, String>(0)).unwrap())).unwrap(), "x");
+    }
+
+    #[test]
+    fn key_never_shows_in_debug() {
+        let key = new_key();
+        let shown = format!("{key:?}");
+        assert_eq!(shown, "DbKey(…)");
+        assert!(!shown.contains(&key.to_hex()[..8]));
+        assert_eq!(key.to_hex().len(), 64);
     }
 
     #[test]

@@ -3,6 +3,7 @@ mod compose;
 mod db;
 mod error;
 mod imap_client;
+mod keys;
 mod mailbox;
 mod message;
 mod oauth;
@@ -21,42 +22,23 @@ mod store;
 mod sync;
 mod tray;
 
-use std::path::Path;
-
-use db::{Db, OpenError};
 use error::AppError;
 use session::AppState;
 use store::AccountStatus;
 use tauri::Manager;
 
-/// Abre o banco com a chave do keyring. Sem chave, ou com uma chave que não abre o arquivo, o
-/// arquivo é posto de lado e um banco novo é criado: o banco é um cache do servidor (CA1).
-fn open_database(dir: &Path) -> Result<Db, AppError> {
-    std::fs::create_dir_all(dir).map_err(|e| {
-        tracing::error!(error = %e, "não foi possível criar a pasta de dados");
-        AppError::Storage
-    })?;
-    let path = dir.join(db::FILE_NAME);
-    let key = match secrets::load_db_key()? {
-        Some(key) => key,
-        None => {
-            if path.exists() {
-                tracing::warn!("chave do banco ausente no keyring");
-                db::set_aside(&path);
-            }
-            let key = db::new_key();
-            secrets::save_db_key(&key)?;
-            key
-        }
-    };
-    match Db::open(&path, &key) {
-        Ok(db) => Ok(db),
-        Err(OpenError::WrongKey) => {
-            tracing::warn!("a chave do keyring não abre o banco");
-            db::set_aside(&path);
-            Db::open(&path, &key).map_err(|_| AppError::Storage)
-        }
-        Err(OpenError::Other) => Err(AppError::Storage),
+/// Uma falha do app não grava um despejo de memória com e-mails e chaves para os relatórios de erro
+/// do Windows (US10, CA5). Só o código do erro vai para o log.
+#[cfg(windows)]
+fn exclude_from_error_reports() {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::System::ErrorReporting::WerAddExcludedApplication;
+    let Ok(exe) = std::env::current_exe() else { return };
+    let wide: Vec<u16> = exe.as_os_str().encode_wide().chain(Some(0)).collect();
+    // SAFETY: `wide` é um texto UTF-16 terminado em zero que vive até o fim da chamada.
+    let hr = unsafe { WerAddExcludedApplication(wide.as_ptr(), 0) };
+    if hr < 0 {
+        tracing::warn!(code = hr, "não foi possível tirar o app dos relatórios de erro do Windows");
     }
 }
 
@@ -179,8 +161,10 @@ pub fn run() {
             }
         })
         .setup(|app| {
+            #[cfg(windows)]
+            exclude_from_error_reports();
             let dir = app.path().app_data_dir()?;
-            let db = open_database(&dir).map_err(|e| {
+            let db = keys::open_database(&dir, &keys::Keyring).map_err(|e| {
                 tracing::error!(kind = e.kind(), "não foi possível abrir o banco local");
                 Box::new(e) as Box<dyn std::error::Error>
             })?;
@@ -261,6 +245,7 @@ pub fn run() {
             commands::prefetch_messages,
             commands::get_offline_settings,
             commands::set_offline_days,
+            commands::rotate_db_key,
         ])
         .build(tauri::generate_context!());
 
