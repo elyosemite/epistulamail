@@ -15,6 +15,7 @@ use zeroize::{Zeroize, Zeroizing};
 
 use crate::db::DbKey;
 use crate::error::AppError;
+use crate::lock::{self, Kek};
 use crate::provider::Provider;
 
 const SERVICE: &str = "epistula";
@@ -36,6 +37,25 @@ fn keyring_error(e: keyring::Error) -> AppError {
 
 /// Texto secreto que é zerado ao sair de uso.
 pub type SecretString = Zeroizing<String>;
+
+/// Com a senha do Epistula ligada (US10, CA2), os refresh tokens vão para o cofre cifrados pela
+/// chave da senha, com este prefixo. Sem isso, quem tem acesso ao Windows usaria o token para
+/// baixar tudo do servidor, e a senha não protegeria nada.
+const SEALED_PREFIX: &str = "sealed1:";
+
+static SEAL: std::sync::Mutex<Option<Kek>> = std::sync::Mutex::new(None);
+
+/// Chave usada para cifrar os tokens: a da senha enquanto o app está desbloqueado, `None` sem senha
+/// ou com o app bloqueado.
+pub fn set_seal(kek: Option<Kek>) {
+    if let Ok(mut seal) = SEAL.lock() {
+        *seal = kek;
+    }
+}
+
+fn seal() -> Option<Kek> {
+    SEAL.lock().ok().and_then(|s| s.clone())
+}
 
 fn get(name: &str) -> Result<Option<SecretString>, AppError> {
     match entry(name)?.get_password() {
@@ -87,13 +107,28 @@ pub fn load_refresh_token(account_id: &str) -> Result<Option<SecretString>, AppE
             None => return Ok(None),
         }
     }
-    Ok(Some(token).filter(|t| !t.is_empty()))
+    let Some(sealed) = token.strip_prefix(SEALED_PREFIX) else {
+        return Ok(Some(token).filter(|t| !t.is_empty()));
+    };
+    let Some(kek) = seal() else { return Err(AppError::Locked) };
+    match lock::open_token(&kek, account_id, sealed) {
+        Ok(plain) => Ok(Some(plain).filter(|t| !t.is_empty())),
+        // Cifrado por outra senha (troca interrompida): a conta pede para reconectar.
+        Err(_) => {
+            tracing::warn!("refresh token cifrado não abre com a senha atual");
+            Ok(None)
+        }
+    }
 }
 
 /// Grava o refresh token e confere lendo de volta.
 pub fn save_refresh_token(account_id: &str, token: &str) -> Result<(), AppError> {
     delete_refresh_token(account_id)?;
-    let mut parts = split_secret(token);
+    let stored: SecretString = match seal() {
+        Some(kek) => Zeroizing::new(format!("{SEALED_PREFIX}{}", lock::seal_token(&kek, account_id, token)?)),
+        None => Zeroizing::new(token.to_owned()),
+    };
+    let mut parts = split_secret(&stored);
     let written: Result<(), AppError> = parts.iter().enumerate().try_for_each(|(i, part)| set(&part_name(account_id, i), part));
     let count = parts.len();
     parts.zeroize();

@@ -1,5 +1,6 @@
 // DS: menus.html "Menu da conta" · .account-trigger (foto na extrema direita do header) e .menu.account-menu com
-//     __head, __name, __email, __info, __line (--warning), __pref, __label; .menu__sep; .menu-item; .segmented--fill (L40–L42)
+//     __head, __name, __email, __info, __line (--warning), __pref, __label; .menu__sep; .menu-item; .segmented--fill (L40–L42);
+//     "Bloquear o Epistula" acima de "Sair" com a senha ligada (header.html, US10)
 import { useCallback, useEffect, useRef, useState } from "react";
 import { accountInitial, avatarColorClass } from "../lib/accounts";
 import { savedLabel, syncedLabel, unreadLabel } from "../lib/accountMenu";
@@ -21,10 +22,12 @@ interface AccountMenuProps {
   onAppearance: (change: Partial<Appearance>) => void;
   onSettings: () => void;
   onSignOut: () => void;
+  /** Só com a senha do Epistula ligada (US10, CA3). */
+  onLock?: () => void;
 }
 
 /** Foto da conta ativa e o menu da conta: quem você é, preferências rápidas e sair (US7, CA6). */
-export function AccountMenu({ account, appearance, offline, open, onOpenChange, onAppearance, onSettings, onSignOut }: AccountMenuProps) {
+export function AccountMenu({ account, appearance, offline, open, onOpenChange, onAppearance, onSettings, onSignOut, onLock }: AccountMenuProps) {
   const trigger = useRef<HTMLButtonElement>(null);
   const closing = useRef(false);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
@@ -107,6 +110,7 @@ export function AccountMenu({ account, appearance, offline, open, onOpenChange, 
             <Segmented label="Densidade da lista" labelledBy="account-menu-density" fill options={DENSITY_CHOICES} value={appearance.density} onChange={(density) => onAppearance({ density })} />
           </div>
           <MenuSeparator />
+          {onLock && <MenuItem label="Bloquear o Epistula" icon="lock" kbd="Ctrl+Shift+L" onSelect={() => { onOpenChange(false); onLock(); }} />}
           <MenuItem label={`Sair de ${account.displayName}`} icon="log-out" disabled={account.status === "signed_out"} onSelect={() => { onOpenChange(false); onSignOut(); }} />
         </MenuPanel>
       )}

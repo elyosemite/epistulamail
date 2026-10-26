@@ -183,6 +183,31 @@ export interface OfflineSettings {
   days: OfflineDays;
   /** Tamanho do banco local (todas as contas), em bytes. */
   localBytes: number;
+  /** Conteúdo guardado fora do período, que pode ser apagado (US10, CA7). */
+  outsideBytes: number;
+}
+
+/** Senha do Epistula e bloqueio (US10, CA2 e CA3). */
+export interface LockStatus {
+  locked: boolean;
+  hasPassword: boolean;
+  /** Segundos até poder tentar a senha de novo. */
+  retryIn: number;
+}
+
+/** "Bloquear depois de" em minutos, ou "never" (D2: 15). */
+export type LockMinutes = "5" | "15" | "30" | "60" | "never";
+
+export interface LockSettings {
+  minutes: LockMinutes;
+  withWindows: boolean;
+}
+
+export interface PrivacySettings {
+  hasPassword: boolean;
+  lock: LockSettings;
+  /** Espaço dos e-mails guardados por conta, em bytes. */
+  stored: Array<{ accountId: string; bytes: number }>;
 }
 
 /** Para onde o clique numa notificação leva. */
@@ -330,7 +355,11 @@ export type AppErrorKind =
   | "SendRejected"
   | "NoRecipients"
   | "InvalidRecipient"
-  | "AttachmentsTooLarge";
+  | "AttachmentsTooLarge"
+  | "Locked"
+  | "WrongPassword"
+  | "UnlockWait"
+  | "WeakPassword";
 
 export interface AppError {
   kind: AppErrorKind;
@@ -363,7 +392,8 @@ export const api = {
   updateAccount: (accountId: string, change: { displayName?: string; color?: AccountColor }) =>
     call<Account>("update_account", { accountId, displayName: change.displayName ?? null, color: change.color ?? null }),
   moveAccount: (accountId: string, direction: -1 | 1) => call<Account[]>("move_account", { accountId, direction }),
-  signOutAccount: (accountId: string) => call<Account>("sign_out_account", { accountId }),
+  /** `erase`: apaga também os dados da conta guardados neste computador (US10, CA7). */
+  signOutAccount: (accountId: string, erase = false) => call<Account>("sign_out_account", { accountId, erase }),
   setLastFolder: (folderId: string) => call<void>("set_last_folder", { folderId }),
   listFolders: (accountId: string) => call<Folder[]>("list_folders", { accountId }),
   listMessages: (folderId: string, cursor?: string | null) => call<MessagePage>("list_messages", { folderId, cursor: cursor ?? null }),
@@ -418,6 +448,22 @@ export const api = {
   prefetchMessages: (messageIds: string[]) => call<void>("prefetch_messages", { messageIds }),
   getOfflineSettings: () => call<OfflineSettings>("get_offline_settings"),
   setOfflineDays: (days: OfflineDays) => call<OfflineSettings>("set_offline_days", { days }),
+  purgeOutsidePeriod: () => call<OfflineSettings>("purge_outside_period"),
+  lockStatus: () => call<LockStatus>("lock_status"),
+  unlockApp: (password: string) => call<void>("unlock_app", { password }),
+  lockApp: () => call<void>("lock_app"),
+  setAppPassword: (password: string) => call<void>("set_app_password", { password }),
+  changeAppPassword: (current: string, password: string) => call<void>("change_app_password", { current, password }),
+  removeAppPassword: (current: string) => call<void>("remove_app_password", { current }),
+  /** "Esqueci a senha": apaga os dados deste computador e começa de novo, sem senha. */
+  wipeLocalData: () => call<void>("wipe_local_data"),
+  getPrivacySettings: () => call<PrivacySettings>("get_privacy_settings"),
+  setLockSettings: (settings: LockSettings) => call<LockSettings>("set_lock_settings", { minutes: settings.minutes, withWindows: settings.withWindows }),
+  /** O disco do Epistula está cifrado (BitLocker)? `null` quando não dá para saber. */
+  diskEncryption: () => call<boolean | null>("disk_encryption"),
+  /** Apaga deste computador os dados de uma conta de que você saiu. */
+  deleteAccountData: (accountId: string) => call<void>("delete_account_data", { accountId }),
+  rotateDbKey: () => call<void>("rotate_db_key"),
 };
 
 /** Eventos emitidos pelo backend (US3). */
@@ -436,6 +482,8 @@ export interface BackendEvents {
   "open-target": NoticeTarget;
   /** "Novo e-mail" no menu da bandeja (US8, CA5). */
   "tray-compose": null;
+  /** Bloqueio, desbloqueio ou senha ligada e desligada (US10). */
+  "lock-changed": LockStatus;
 }
 
 export function onBackendEvent<K extends keyof BackendEvents>(name: K, handler: (payload: BackendEvents[K]) => void): () => void {

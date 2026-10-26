@@ -1,5 +1,7 @@
-// Composição de DS: modais.html "Configurações" (.settings__group, .setting com .select), campos.html (.select)
+// Composição de DS: modais.html "Configurações" (.settings__group, .setting com .select), campos.html (.select); US10: modais.html
+// "Mudanças em ajustes que já existem" (.setting com .btn--subtle "Apagar")
 import { useEffect, useState } from "react";
+import { Button } from "../../ui/Button";
 import { formatBytes } from "../../lib/format";
 import { api, type OfflineDays, type OfflineSettings as Settings } from "../../lib/tauri";
 import { Select } from "../../ui/Select";
@@ -21,6 +23,20 @@ export function OfflineSettings() {
   useEffect(() => {
     api.getOfflineSettings().then(setSettings).catch(() => undefined);
   }, []);
+
+  // Apagar o conteúdo fora do período (US10, CA7, D7): só quando o usuário pede.
+  const [purging, setPurging] = useState(false);
+  const purge = async () => {
+    setPurging(true);
+    try {
+      setSettings(await api.purgeOutsidePeriod());
+      toast({ kind: "success", title: "E-mails fora do período apagados deste computador" });
+    } catch {
+      toast({ kind: "error", title: "Não foi possível apagar", description: "Tente de novo em instantes." });
+    } finally {
+      setPurging(false);
+    }
+  };
 
   const change = (days: OfflineDays) => {
     const before = settings;
@@ -46,6 +62,17 @@ export function OfflineSettings() {
       >
         <Select labelledBy="offline-days" value={settings?.days ?? "30"} options={CHOICES} disabled={!settings} onChange={(v) => change(v as OfflineDays)} />
       </Setting>
+      {settings && settings.outsideBytes > 0 && (
+        <Setting
+          labelId="offline-outside"
+          label="E-mails fora do período"
+          description={`${formatBytes(settings.outsideBytes)} de e-mails fora do período continuam aqui. Apagar só tira o conteúdo deste computador; eles baixam de novo ao abrir.`}
+        >
+          <Button appearance="subtle" icon="trash" loading={purging} aria-describedby="offline-outside" onClick={() => void purge()}>
+            Apagar {formatBytes(settings.outsideBytes)}
+          </Button>
+        </Setting>
+      )}
     </SettingsGroup>
   );
 }

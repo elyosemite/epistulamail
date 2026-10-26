@@ -4,9 +4,11 @@
 // __resizer, .has-reader, --no-folders, --no-reader; --no-sidebar antes da primeira conta), modais.html (configurações)
 // US8: o sino de notificações fica entre os botões das colunas e a foto (header.html, L52); clicar numa notificação, no
 // Windows ou no sino, abre a conta e a mensagem; "Novo e-mail" na bandeja abre a composição.
+// US10: o LockGate mostra a tela de desbloqueio (carregamento.html, L53) e desmonta o app inteiro ao bloquear.
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AccountSettingsDialog, SignOutDialog } from "./features/accounts/AccountDialogs";
 import { AddAccount, ConnectFlow } from "./features/accounts/AddAccount";
+import { LockGate, useAppLock } from "./features/lock/LockGate";
 import { Mailbox, type MailboxRequest } from "./features/mailbox/Mailbox";
 import { Settings } from "./features/settings/Settings";
 import { AccountsBar } from "./layout/AccountsBar";
@@ -33,7 +35,9 @@ type Dialog = { kind: "settings"; account: Account; isNew: boolean } | { kind: "
 export function App() {
   return (
     <ToastProvider>
-      <Shell />
+      <LockGate>
+        <Shell />
+      </LockGate>
     </ToastProvider>
   );
 }
@@ -60,6 +64,7 @@ function Shell() {
   // Pasta aberta por conta nesta sessão, para voltar ao mesmo lugar ao trocar de conta.
   const lastFolder = useRef(new Map<string, string>());
   const toast = useToast();
+  const appLock = useAppLock();
 
   const reload = useCallback(async () => {
     try {
@@ -274,6 +279,7 @@ function Shell() {
             onAppearance={changeAppearance}
             onSettings={() => openSettings()}
             onSignOut={() => setDialog({ kind: "sign-out", account: active })}
+            onLock={appLock.hasPassword ? appLock.lockNow : undefined}
           />
         </>
       }
@@ -360,10 +366,14 @@ function Shell() {
       {dialog?.kind === "sign-out" && (
         <SignOutDialog
           account={dialog.account}
-          onConfirm={async () => {
+          onConfirm={async (erase) => {
             try {
-              await api.signOutAccount(dialog.account.id);
-              toast({ kind: "info", title: `Você saiu de ${dialog.account.displayName}`, description: "Entre de novo com o mesmo e-mail para ver as mensagens salvas." });
+              await api.signOutAccount(dialog.account.id, erase);
+              toast(
+                erase
+                  ? { kind: "info", title: `Você saiu de ${dialog.account.displayName}`, description: "Os e-mails desta conta foram apagados deste computador." }
+                  : { kind: "info", title: `Você saiu de ${dialog.account.displayName}`, description: "Entre de novo com o mesmo e-mail para ver as mensagens salvas." },
+              );
             } catch {
               toast({ kind: "error", title: "Não foi possível sair da conta", description: "Tente de novo em instantes." });
             }

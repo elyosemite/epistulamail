@@ -5,6 +5,7 @@ import { ACCOUNT_COLORS, MAX_ACCOUNT_NAME, NAME_SUGGESTIONS, accountInitial } fr
 import type { Account, AccountColor } from "../../lib/tauri";
 import { Button } from "../../ui/Button";
 import { ColorPicker } from "../../ui/ColorPicker";
+import { ConfirmCheck } from "../../ui/ConfirmCheck";
 import { ChipGroup, TextField } from "../../ui/Field";
 import { Modal } from "../../ui/Modal";
 
@@ -77,9 +78,11 @@ export function AccountSettingsDialog({ account, isNew, onSave, onClose }: Accou
   );
 }
 
-/** Sair da conta (CA6): a conta sai da coluna, mas os dados ficam no computador, por isso aviso e não perigo. */
-export function SignOutDialog({ account, onConfirm, onClose }: { account: Account; onConfirm: () => Promise<void>; onClose: () => void }) {
+/** Sair da conta (CA6): a conta sai da coluna, mas os dados ficam no computador, por isso aviso e não perigo. Marcar
+ * "Apagar também" (US10, CA7) apaga os dados da conta deste computador e o botão vira perigo. */
+export function SignOutDialog({ account, onConfirm, onClose }: { account: Account; onConfirm: (erase: boolean) => Promise<void>; onClose: () => void }) {
   const [busy, setBusy] = useState(false);
+  const [erase, setErase] = useState(false);
   return (
     <Modal
       title={`Sair de ${account.displayName}?`}
@@ -91,24 +94,25 @@ export function SignOutDialog({ account, onConfirm, onClose }: { account: Accoun
         <>
           <Button appearance="subtle" data-cancel onClick={onClose}>Cancelar</Button>
           <Button
-            appearance="warning"
+            appearance={erase ? "danger" : "warning"}
             loading={busy}
             onClick={async () => {
               setBusy(true);
               try {
-                await onConfirm();
+                await onConfirm(erase);
               } finally {
                 onClose();
               }
             }}
           >
-            Sair
+            {erase ? "Sair e apagar" : "Sair"}
           </Button>
         </>
       }
     >
       <p>O Epistula deixa de acessar <b>{account.email}</b> e a conta sai da coluna de contas. As mensagens já salvas continuam neste computador, cifradas, e voltam quando você entrar de novo com o mesmo e-mail.</p>
       <p>Nada muda na sua conta de e-mail.</p>
+      <ConfirmCheck checked={erase} onChange={setErase}>Apagar também os e-mails desta conta guardados neste computador.</ConfirmCheck>
     </Modal>
   );
 }

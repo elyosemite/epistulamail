@@ -57,6 +57,14 @@ pub enum AppError {
     InvalidRecipient,
     #[error("Os anexos passam do limite de 25 MB.")]
     AttachmentsTooLarge,
+    #[error("O Epistula está bloqueado. Digite a senha para continuar.")]
+    Locked,
+    #[error("Senha incorreta.")]
+    WrongPassword,
+    #[error("Aguarde um pouco antes de tentar de novo.")]
+    UnlockWait,
+    #[error("Use uma senha com pelo menos 8 caracteres.")]
+    WeakPassword,
 }
 
 impl AppError {
@@ -88,6 +96,10 @@ impl AppError {
             AppError::NoRecipients => "NoRecipients",
             AppError::InvalidRecipient => "InvalidRecipient",
             AppError::AttachmentsTooLarge => "AttachmentsTooLarge",
+            AppError::Locked => "Locked",
+            AppError::WrongPassword => "WrongPassword",
+            AppError::UnlockWait => "UnlockWait",
+            AppError::WeakPassword => "WeakPassword",
         }
     }
 }

@@ -51,6 +51,10 @@ impl DbKey {
     }
 
     /// Hexadecimal minúsculo, num texto que também é zerado.
+    pub fn bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+
     pub fn to_hex(&self) -> Zeroizing<String> {
         const DIGITS: &[u8; 16] = b"0123456789abcdef";
         let mut hex = Zeroizing::new(String::with_capacity(64));
@@ -82,10 +86,11 @@ pub enum OpenError {
 }
 
 /// Conexão única, protegida por mutex. Toda chamada a partir de código assíncrono passa por
-/// `call`, que roda a consulta fora das threads do runtime.
+/// `call`, que roda a consulta fora das threads do runtime. Com o app bloqueado (US10, CA3) não há
+/// conexão: o arquivo fica fechado e toda chamada devolve `Locked`.
 #[derive(Clone)]
 pub struct Db {
-    conn: Arc<Mutex<Connection>>,
+    conn: Arc<Mutex<Option<Connection>>>,
 }
 
 pub fn sql_error(context: &'static str) -> impl Fn(rusqlite::Error) -> AppError {
@@ -131,7 +136,7 @@ impl Db {
     /// Abre (ou cria) o banco com a chave e aplica as migrações pendentes.
     pub fn open(path: &Path, key: &DbKey) -> Result<Db, OpenError> {
         let db = Self::open_with(path, key, MIGRATIONS)?;
-        let scheme = db.conn.lock().map_err(|_| OpenError::Other).and_then(|c| cipher_scheme(&c).map_err(|_| OpenError::Other))?;
+        let scheme = db.with_conn(|c| cipher_scheme(c)).map_err(|_| OpenError::Other)?;
         if scheme.is_some_and(|s| s > CIPHER_SCHEME) {
             tracing::error!(scheme, known = CIPHER_SCHEME, "banco cifrado por uma versão mais nova do Epistula");
             return Err(OpenError::Other);
@@ -152,7 +157,36 @@ impl Db {
         .map_err(|_| OpenError::Other)?;
         let mut conn = conn;
         migrate(&mut conn, migrations).map_err(|_| OpenError::Other)?;
-        Ok(Db { conn: Arc::new(Mutex::new(conn)) })
+        Ok(Db { conn: Arc::new(Mutex::new(Some(conn))) })
+    }
+
+    /// Sem conexão: o app abriu bloqueado e espera a senha.
+    pub fn closed() -> Db {
+        Db { conn: Arc::new(Mutex::new(None)) }
+    }
+
+    /// Passa para este `Db` (o que o app inteiro usa) a conexão de um banco recém-aberto.
+    pub fn attach(&self, opened: Db) {
+        let conn = opened.conn.lock().ok().and_then(|mut c| c.take());
+        if let Ok(mut mine) = self.conn.lock() {
+            *mine = conn;
+        }
+    }
+
+    /// Fecha o arquivo; a próxima chamada devolve `Locked`.
+    pub fn close(&self) {
+        if let Ok(mut mine) = self.conn.lock() {
+            mine.take();
+        }
+    }
+
+    pub fn is_open(&self) -> bool {
+        self.conn.lock().map(|c| c.is_some()).unwrap_or(false)
+    }
+
+    fn with_conn<T>(&self, f: impl FnOnce(&mut Connection) -> Result<T, AppError>) -> Result<T, AppError> {
+        let mut guard = self.conn.lock().map_err(|_| AppError::Storage)?;
+        f(guard.as_mut().ok_or(AppError::Locked)?)
     }
 
     /// Cifra o banco inteiro com a chave nova (`PRAGMA rekey`), numa transação só: se falhar no
@@ -174,7 +208,7 @@ impl Db {
             let asked = std::time::Instant::now();
             let mut guard = conn.lock().map_err(|_| AppError::Storage)?;
             let waited = asked.elapsed();
-            let result = f(&mut guard);
+            let result = f(guard.as_mut().ok_or(AppError::Locked)?);
             let ran = asked.elapsed() - waited;
             // Diagnóstico da abertura: espera pela conexão única e consultas lentas (só tempos).
             if waited.as_millis() >= 100 || ran.as_millis() >= 100 {
@@ -189,8 +223,7 @@ impl Db {
     /// Acesso síncrono, para testes.
     #[cfg(test)]
     pub fn with<T>(&self, f: impl FnOnce(&mut Connection) -> Result<T, AppError>) -> Result<T, AppError> {
-        let mut guard = self.conn.lock().map_err(|_| AppError::Storage)?;
-        f(&mut guard)
+        self.with_conn(f)
     }
 }
 
@@ -348,6 +381,20 @@ mod tests {
         assert!(!opens_with(&path, &old), "a chave antiga não pode abrir depois da troca");
         let db = Db::open(&path, &new).unwrap();
         assert_eq!(db.with(|c| Ok(c.query_row("SELECT value FROM app_setting WHERE key = 'marca'", [], |r| r.get::<_, String>(0)).unwrap())).unwrap(), "x");
+    }
+
+    #[tokio::test]
+    async fn closed_database_answers_locked_until_attached() {
+        let (_dir, path) = temp_path();
+        let key = new_key();
+        let shared = Db::closed();
+        assert!(matches!(shared.call(|_| Ok(())).await, Err(AppError::Locked)));
+        shared.attach(Db::open(&path, &key).unwrap());
+        assert!(shared.is_open());
+        assert_eq!(shared.call(|c| Ok(c.query_row("SELECT 1", [], |r| r.get::<_, i64>(0)).unwrap())).await.unwrap(), 1);
+        shared.close();
+        assert!(!shared.is_open());
+        assert!(matches!(shared.call(|_| Ok(())).await, Err(AppError::Locked)));
     }
 
     #[test]

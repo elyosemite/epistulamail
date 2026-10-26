@@ -108,10 +108,15 @@ pub struct AppState {
     started: tokio::sync::watch::Sender<bool>,
     /// O frontend já mostrou a primeira tela: a sincronização automática pode começar.
     ui_ready: tokio::sync::Notify,
+    /// Senha do Epistula, chave em uso e tentativas (US10).
+    pub lock: crate::privacy::LockState,
+    /// O banco já foi aberto alguma vez (com a senha ligada, só depois do primeiro desbloqueio).
+    opened: tokio::sync::watch::Sender<bool>,
 }
 
 impl AppState {
     pub fn new(app: AppHandle, db: Db) -> Result<Self, AppError> {
+        let db_open = db.is_open();
         let http = reqwest::Client::builder().timeout(Duration::from_secs(20)).build().map_err(|e| {
             tracing::error!(error = %e, "não foi possível criar o cliente HTTP");
             AppError::Config
@@ -124,7 +129,27 @@ impl AppState {
             pending_connect: std::sync::Mutex::new(None),
             started: tokio::sync::watch::channel(false).0,
             ui_ready: tokio::sync::Notify::new(),
+            lock: crate::privacy::LockState::default(),
+            opened: tokio::sync::watch::channel(db_open).0,
         })
+    }
+
+    pub fn mark_open(&self) {
+        self.opened.send_replace(true);
+    }
+
+    /// Espera o banco abrir: na hora sem senha; com senha, até o primeiro desbloqueio.
+    pub async fn wait_open(&self) {
+        let mut rx = self.opened.subscribe();
+        let _ = rx.wait_for(|open| *open).await;
+    }
+
+    /// Bloqueio (US10, CA3): encerra as conexões e descarta as sessões das contas, com os tokens.
+    pub async fn forget_accounts(&self) {
+        let handles: Vec<_> = self.accounts.lock().await.drain().map(|(_, h)| h).collect();
+        for h in handles {
+            h.close_sessions().await;
+        }
     }
 
     pub fn mark_started(&self) {

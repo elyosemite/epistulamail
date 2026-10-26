@@ -177,10 +177,10 @@ export function SettingListRow({ checked, disabled, checkLabel, onCheck, media, 
   );
 }
 
-/** Linha com avatar, nome e um toggle no fim, sem seleção (notificações por conta, US8). */
-export function SettingToggleRow({ media, title, subtitle, control }: { media: ReactNode; title: string; subtitle: string; control: ReactNode }) {
+/** Linha com avatar, nome e um controle no fim, sem seleção (notificações por conta, US8; espaço guardado, US10). */
+export function SettingToggleRow({ media, title, subtitle, control, disabled }: { media: ReactNode; title: string; subtitle: string; control: ReactNode; disabled?: boolean }) {
   return (
-    <div className="setting-list__row setting-list__row--toggle">
+    <div className={["setting-list__row setting-list__row--toggle", disabled && "is-disabled"].filter(Boolean).join(" ")}>
       {media}
       <div className="setting-list__name">
         <span className="setting-list__title">{title}</span>

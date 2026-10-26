@@ -16,7 +16,9 @@ use crate::session::{AppState, Connected, Lane};
 use crate::compose::{self, Template};
 use crate::mailbox::{self, Role};
 use crate::store::{self, Account, AccountStatus, Draft, DraftContent, DraftKind, FolderRow, Followup, FollowupChange};
-use crate::{db, keys, moves, send, sync};
+use crate::privacy::{self, LockStatus};
+use crate::{moves, send, sync};
+use zeroize::Zeroizing;
 
 const MAX_FLAG_IDS: usize = 500;
 const MAX_URL_LEN: usize = 2048;
@@ -123,9 +125,14 @@ pub async fn move_account(state: State<'_, AppState>, account_id: String, direct
 }
 
 #[tauri::command]
-pub async fn sign_out_account(state: State<'_, AppState>, account_id: String) -> Result<Account, AppError> {
+pub async fn sign_out_account(state: State<'_, AppState>, account_id: String, erase: Option<bool>) -> Result<Account, AppError> {
     let id = self::account_id(&account_id)?;
-    state.sign_out(&id).await
+    let account = state.sign_out(&id).await?;
+    // "Apagar também os e-mails desta conta guardados neste computador" (US10, CA7).
+    if erase == Some(true) {
+        privacy::delete_account_data(&state, id).await?;
+    }
+    Ok(account)
 }
 
 #[tauri::command]
@@ -685,6 +692,35 @@ pub struct OfflineSettings {
     pub days: String,
     /// Tamanho do banco local (todas as contas), em bytes.
     pub local_bytes: u64,
+    /// Conteúdo guardado fora do período, que pode ser apagado (US10, CA7).
+    pub outside_bytes: u64,
+}
+
+/// Até que data o conteúdo está "dentro do período": `None` apaga tudo ("Só ao abrir"); com "Tudo",
+/// nada fica de fora.
+fn outside_cutoff(choice: &str) -> Option<Option<String>> {
+    match store::offline_since(choice, chrono::Local::now().date_naive()) {
+        None => Some(None),
+        Some(None) => None,
+        Some(Some(date)) => Some(Some(date)),
+    }
+}
+
+async fn offline_settings(app: &AppHandle, state: &AppState) -> Result<OfflineSettings, AppError> {
+    state
+        .db
+        .call({
+            let local_bytes = local_bytes(app);
+            move |c| {
+                let days = store::offline_days(c)?;
+                let outside_bytes = match outside_cutoff(&days) {
+                    Some(before) => store::bytes_outside(c, before.as_deref())?,
+                    None => 0,
+                };
+                Ok(OfflineSettings { days, local_bytes, outside_bytes })
+            }
+        })
+        .await
 }
 
 fn local_bytes(app: &AppHandle) -> u64 {
@@ -693,24 +729,122 @@ fn local_bytes(app: &AppHandle) -> u64 {
 
 #[tauri::command]
 pub async fn get_offline_settings(app: AppHandle, state: State<'_, AppState>) -> Result<OfflineSettings, AppError> {
-    let days = state.db.call(|c| store::offline_days(c)).await?;
-    Ok(OfflineSettings { days, local_bytes: local_bytes(&app) })
+    offline_settings(&app, &state).await
+}
+
+/// Apaga o conteúdo guardado fora do período escolhido (US10, CA7, D7) e troca a chave.
+#[tauri::command]
+pub async fn purge_outside_period(app: AppHandle, state: State<'_, AppState>) -> Result<OfflineSettings, AppError> {
+    let purged = state
+        .db
+        .call(|c| {
+            let days = store::offline_days(c)?;
+            match outside_cutoff(&days) {
+                Some(before) => store::purge_outside(c, before.as_deref()),
+                None => Ok(0),
+            }
+        })
+        .await?;
+    tracing::info!(count = purged, "conteúdo fora do período apagado");
+    privacy::compact_and_rotate(&state).await;
+    offline_settings(&app, &state).await
 }
 
 /// Troca a chave de proteção dos dados guardados neste computador (US10, CA4).
 #[tauri::command]
-pub async fn rotate_db_key(app: AppHandle, state: State<'_, AppState>) -> Result<(), AppError> {
-    let path = app.path().app_data_dir().map_err(|_| AppError::Storage)?.join(db::FILE_NAME);
-    keys::rotate(&state.db, &path, &keys::Keyring).await
+pub async fn rotate_db_key(state: State<'_, AppState>) -> Result<(), AppError> {
+    privacy::rotate_key(&state).await
+}
+
+// ---------------------------------------------------------------- privacidade (US10)
+
+#[tauri::command]
+pub fn lock_status(state: State<'_, AppState>) -> LockStatus {
+    privacy::status(&state)
+}
+
+#[tauri::command]
+pub async fn unlock_app(state: State<'_, AppState>, password: String) -> Result<(), AppError> {
+    privacy::unlock(&state, Zeroizing::new(password)).await
+}
+
+#[tauri::command]
+pub async fn lock_app(state: State<'_, AppState>) -> Result<(), AppError> {
+    privacy::lock_now(&state).await
+}
+
+#[tauri::command]
+pub async fn set_app_password(state: State<'_, AppState>, password: String) -> Result<(), AppError> {
+    privacy::set_password(&state, Zeroizing::new(password)).await
+}
+
+#[tauri::command]
+pub async fn change_app_password(state: State<'_, AppState>, current: String, password: String) -> Result<(), AppError> {
+    privacy::change_password(&state, Zeroizing::new(current), Zeroizing::new(password)).await
+}
+
+#[tauri::command]
+pub async fn remove_app_password(state: State<'_, AppState>, current: String) -> Result<(), AppError> {
+    privacy::remove_password(&state, Zeroizing::new(current)).await
+}
+
+/// "Esqueci a senha": só com o app bloqueado.
+#[tauri::command]
+pub async fn wipe_local_data(state: State<'_, AppState>) -> Result<(), AppError> {
+    privacy::wipe(&state).await
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StoredByAccount {
+    pub account_id: String,
+    pub bytes: u64,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PrivacySettings {
+    pub has_password: bool,
+    pub lock: store::LockSettings,
+    pub stored: Vec<StoredByAccount>,
+}
+
+#[tauri::command]
+pub async fn get_privacy_settings(state: State<'_, AppState>) -> Result<PrivacySettings, AppError> {
+    let (lock, stored) = state.db.call(|c| Ok((store::lock_settings(c)?, store::stored_bytes_by_account(c)?))).await?;
+    Ok(PrivacySettings {
+        has_password: state.lock.has_password(),
+        lock,
+        stored: stored.into_iter().map(|(account_id, bytes)| StoredByAccount { account_id, bytes }).collect(),
+    })
+}
+
+#[tauri::command]
+pub async fn set_lock_settings(state: State<'_, AppState>, minutes: String, with_windows: bool) -> Result<store::LockSettings, AppError> {
+    state.db.call(move |c| store::set_lock_settings(c, &store::LockSettings { minutes, with_windows })).await
+}
+
+/// O disco do Epistula está cifrado (BitLocker)? `None` quando não dá para saber (US10, CA6).
+#[tauri::command]
+pub async fn disk_encryption(app: AppHandle) -> Result<Option<bool>, AppError> {
+    Ok(privacy::disk_encrypted(privacy::data_dir(&app)?).await)
+}
+
+/// Apaga deste computador os dados de uma conta de que o usuário saiu (US10, CA7).
+#[tauri::command]
+pub async fn delete_account_data(state: State<'_, AppState>, account_id: String) -> Result<(), AppError> {
+    let id = self::account_id(&account_id)?;
+    privacy::delete_account_data(&state, id).await
 }
 
 /// Trocar o período não apaga nada já salvo (D4); um período maior acorda a fila na hora.
 #[tauri::command]
 pub async fn set_offline_days(app: AppHandle, state: State<'_, AppState>, days: String) -> Result<OfflineSettings, AppError> {
-    let days = state.db.call(move |c| store::set_offline_days(c, &days)).await?;
+    state.db.call(move |c| store::set_offline_days(c, &days)).await?;
     crate::offline::wake(&app);
-    tracing::info!(days = days.as_str(), "período de download ajustado");
-    Ok(OfflineSettings { days, local_bytes: local_bytes(&app) })
+    let settings = offline_settings(&app, &state).await?;
+    tracing::info!(days = settings.days.as_str(), "período de download ajustado");
+    Ok(settings)
 }
 
 // ---------------------------------------------------------------- sino (US8, CA7)

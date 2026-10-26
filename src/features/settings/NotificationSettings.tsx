@@ -12,8 +12,8 @@ import { useToast } from "../../ui/Toast";
 
 const HOURS = Array.from({ length: 24 }, (_, h) => ({ value: String(h), label: `${h}:00` }));
 const PRIVACY = [
-  { value: "full" as const, label: "Remetente e assunto" },
   { value: "account" as const, label: "Só a conta" },
+  { value: "full" as const, label: "Remetente e assunto" },
 ];
 
 /** Notificações (US8, CA4): o que avisa, por conta, privacidade, Não perturbe e a bandeja. */
@@ -94,7 +94,7 @@ export function NotificationSettings({ accounts }: { accounts: Account[] }) {
         </SettingList>
       </SettingsGroup>
       <SettingsGroup title="Privacidade">
-        <Setting labelId="notify-privacy" label="O que aparece na notificação" description="As notificações aparecem na tela bloqueada e ficam na Central de Notificações do Windows.">
+        <Setting labelId="notify-privacy" label="O que aparece na notificação" description={'As notificações aparecem na tela bloqueada, e o Windows guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do Epistula.'}>
           <Segmented label="O que aparece na notificação" labelledBy="notify-privacy" options={PRIVACY} value={settings.privacy} onChange={(privacy) => change({ privacy })} />
         </Setting>
       </SettingsGroup>

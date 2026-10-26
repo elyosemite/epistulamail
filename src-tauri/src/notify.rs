@@ -560,7 +560,7 @@ mod tests {
 
     #[test]
     fn few_mails_are_separate_and_many_become_a_summary() {
-        let s = NotifySettings::default();
+        let s = NotifySettings { privacy: "full".into(), ..Default::default() };
         let three = [mail(1, "Marina Couto", "Contrato"), mail(2, "Rafael Dias", "Q1"), mail(3, "", "Extrato")];
         let notes = new_mail_notes(&s, "acc", "Trabalho", &three, &HashSet::new());
         assert_eq!(notes.len(), 3);
@@ -578,13 +578,19 @@ mod tests {
 
     #[test]
     fn replies_have_their_own_note_even_with_new_mail_off() {
-        let s = NotifySettings { new_mail: false, ..Default::default() };
+        let s = NotifySettings { new_mail: false, privacy: "full".into(), ..Default::default() };
         let mails = [mail(1, "Paulo Henrique", "Re: Contrato"), mail(2, "Banco", "Extrato")];
         let replies: HashSet<_> = [(1, 1)].into();
         let notes = new_mail_notes(&s, "acc", "Trabalho", &mails, &replies);
         assert_eq!(notes.len(), 1);
         assert_eq!(notes[0].title, "Paulo Henrique respondeu");
         assert_eq!(notes[0].line2, "Trabalho · resposta a um e-mail seu");
+    }
+
+    #[test]
+    fn notifications_show_only_the_account_by_default() {
+        // US10, D5: o Windows guarda o texto das notificações sem cifra.
+        assert_eq!(NotifySettings::default().privacy, "account");
     }
 
     #[test]

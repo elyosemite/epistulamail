@@ -1,6 +1,8 @@
 //! Bandeja do sistema e barra de tarefas (US8, CA5). Fechar a janela a esconde aqui; o menu do ícone
 //! abre o app, começa um e-mail, sincroniza, silencia por 1 hora e sai de verdade. O tooltip mostra
-//! as não lidas e o ícone da barra de tarefas ganha um ponto azul quando há alguma (D9).
+//! as não lidas e o ícone da barra de tarefas ganha um ponto azul quando há alguma (D9). Com a senha
+//! do Epistula ligada, o menu ganha "Bloquear o Epistula"; bloqueado, perde "Novo e-mail" e
+//! "Sincronizar agora" (US10, CA3).
 
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
@@ -15,19 +17,52 @@ const TRAY_ID: &str = "epistula";
 const SNOOZE_ID: &str = "snooze";
 
 /// O item "Não perturbe" do menu, para o texto acompanhar o sino e o fim da 1 hora.
-struct SnoozeItem(MenuItem<tauri::Wry>);
+struct SnoozeItem(std::sync::Mutex<MenuItem<tauri::Wry>>);
 
-pub fn create(app: &AppHandle) -> tauri::Result<()> {
+/// Monta o menu conforme a senha e o bloqueio.
+fn menu(app: &AppHandle, has_password: bool, locked: bool) -> tauri::Result<Menu<tauri::Wry>> {
     let open = MenuItem::with_id(app, "open", "Abrir o Epistula", true, None::<&str>)?;
     let compose = MenuItem::with_id(app, "compose", "Novo e-mail", true, None::<&str>)?;
     let sync_now = MenuItem::with_id(app, "sync", "Sincronizar agora", true, None::<&str>)?;
     let snooze = MenuItem::with_id(app, SNOOZE_ID, "Não perturbe por 1 hora", true, None::<&str>)?;
+    let lock = MenuItem::with_id(app, "lock", "Bloquear o Epistula", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Sair do Epistula", true, None::<&str>)?;
-    app.manage(SnoozeItem(snooze.clone()));
-    let menu = Menu::with_items(
-        app,
-        &[&open, &compose, &sync_now, &PredefinedMenuItem::separator(app)?, &snooze, &PredefinedMenuItem::separator(app)?, &quit],
-    )?;
+    match app.try_state::<SnoozeItem>() {
+        Some(item) => {
+            if let Ok(mut current) = item.0.lock() {
+                *current = snooze.clone();
+            }
+        }
+        None => {
+            app.manage(SnoozeItem(std::sync::Mutex::new(snooze.clone())));
+        }
+    }
+    let (sep1, sep2) = (PredefinedMenuItem::separator(app)?, PredefinedMenuItem::separator(app)?);
+    let mut items: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = vec![&open];
+    if !locked {
+        items.extend([&compose as &dyn tauri::menu::IsMenuItem<tauri::Wry>, &sync_now]);
+    }
+    items.extend([&sep1 as &dyn tauri::menu::IsMenuItem<tauri::Wry>, &snooze, &sep2]);
+    if has_password && !locked {
+        items.push(&lock);
+    }
+    items.push(&quit);
+    Menu::with_items(app, &items)
+}
+
+/// Refaz o menu depois de ligar ou desligar a senha, bloquear ou desbloquear.
+pub fn update_menu(app: &AppHandle) {
+    let state = app.state::<AppState>();
+    let (has_password, locked) = (state.lock.has_password(), !state.db.is_open());
+    if let (Some(tray), Ok(menu)) = (app.tray_by_id(TRAY_ID), menu(app, has_password, locked)) {
+        let _ = tray.set_menu(Some(menu));
+        sync_snooze(app);
+    }
+}
+
+pub fn create(app: &AppHandle) -> tauri::Result<()> {
+    let state = app.state::<AppState>();
+    let menu = menu(app, state.lock.has_password(), !state.db.is_open())?;
     let mut builder = TrayIconBuilder::with_id(TRAY_ID).tooltip("Epistula").menu(&menu).show_menu_on_left_click(false);
     if let Some(icon) = app.default_window_icon() {
         builder = builder.icon(icon.clone());
@@ -56,6 +91,12 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
                 let _ = app.emit("notices-updated", ());
                 tracing::info!(on, "não perturbe da bandeja");
             }
+            "lock" => {
+                let app = app.clone();
+                tauri::async_runtime::spawn(async move {
+                    let _ = crate::privacy::lock_now(&app.state::<AppState>()).await;
+                });
+            }
             "quit" => app.exit(0),
             _ => {}
         })
@@ -71,7 +112,10 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
 /// Texto do item "Não perturbe" conforme o estado atual.
 pub fn sync_snooze(app: &AppHandle) {
     let (Some(item), Some(n)) = (app.try_state::<SnoozeItem>(), app.try_state::<Notifier>()) else { return };
-    let _ = item.0.set_text(if n.snoozed() { "Retomar notificações" } else { "Não perturbe por 1 hora" });
+    let text = if n.snoozed() { "Retomar notificações" } else { "Não perturbe por 1 hora" };
+    if let Ok(current) = item.0.lock() {
+        let _ = current.set_text(text);
+    };
 }
 
 /// Ponto azul de 16 px para o ícone sobreposto da barra de tarefas.

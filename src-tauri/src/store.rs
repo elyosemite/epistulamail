@@ -1129,7 +1129,8 @@ impl Default for NotifySettings {
             failures: true,
             reauth: true,
             offline: false,
-            privacy: "full".into(),
+            // "Só a conta" (US10, D5): o Windows guarda o texto das notificações sem cifra.
+            privacy: "account".into(),
             quiet: true,
             quiet_from: 22,
             quiet_to: 7,
@@ -1270,6 +1271,92 @@ pub fn list_notices(conn: &Connection, at: i64) -> Result<Vec<Notice>, AppError>
 /// Abrir o painel ou "Marcar todas como vistas".
 pub fn mark_notices_seen(conn: &Connection) -> Result<(), AppError> {
     conn.execute("UPDATE notice SET seen = 1 WHERE seen = 0", []).map_err(sql_error("sino"))?;
+    Ok(())
+}
+
+// ---------------------------------------------------------------- privacidade (US10)
+
+/// "Bloquear depois de" (CA3, D2: 15 minutos) e "Bloquear junto com o Windows" (D2: ligado).
+pub const LOCK_CHOICES: &[&str] = &["5", "15", "30", "60", "never"];
+const LOCK_DEFAULT: &str = "15";
+const APP_LOCK_MINUTES: &str = "lock_minutes";
+const APP_LOCK_WITH_WINDOWS: &str = "lock_with_windows";
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LockSettings {
+    pub minutes: String,
+    pub with_windows: bool,
+}
+
+pub fn lock_settings(conn: &Connection) -> Result<LockSettings, AppError> {
+    let minutes = app_setting(conn, APP_LOCK_MINUTES)?.filter(|v| LOCK_CHOICES.contains(&v.as_str())).unwrap_or_else(|| LOCK_DEFAULT.to_owned());
+    let with_windows = app_setting(conn, APP_LOCK_WITH_WINDOWS)?.as_deref() != Some("0");
+    Ok(LockSettings { minutes, with_windows })
+}
+
+pub fn set_lock_settings(conn: &Connection, settings: &LockSettings) -> Result<LockSettings, AppError> {
+    if !LOCK_CHOICES.contains(&settings.minutes.as_str()) {
+        return Err(AppError::InvalidInput);
+    }
+    set_app_setting(conn, APP_LOCK_MINUTES, &settings.minutes)?;
+    set_app_setting(conn, APP_LOCK_WITH_WINDOWS, if settings.with_windows { "1" } else { "0" })?;
+    lock_settings(conn)
+}
+
+/// Espaço dos e-mails guardados (conteúdo baixado) por conta (CA7).
+pub fn stored_bytes_by_account(conn: &Connection) -> Result<Vec<(String, u64)>, AppError> {
+    let mut stmt = conn
+        .prepare("SELECT m.account_id, SUM(length(b.raw)) FROM message_body b JOIN message m ON m.id = b.message_id GROUP BY m.account_id")
+        .map_err(sql_error("espaço por conta"))?;
+    let rows = stmt
+        .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, Option<i64>>(1)?.unwrap_or(0).max(0) as u64)))
+        .map_err(sql_error("espaço por conta"))?;
+    rows.collect::<Result<_, _>>().map_err(sql_error("espaço por conta"))
+}
+
+/// Mensagens fora do período escolhido: anteriores a `before`, ou todas com `None` ("Só ao abrir").
+const OUTSIDE: &str = "SELECT id FROM message WHERE body_state = 'cached' AND (?1 IS NULL OR date < ?1)";
+
+/// Bytes do conteúdo guardado fora do período (CA7).
+pub fn bytes_outside(conn: &Connection, before: Option<&str>) -> Result<u64, AppError> {
+    let bytes: Option<i64> = conn
+        .query_row(&format!("SELECT SUM(length(raw)) FROM message_body WHERE message_id IN ({OUTSIDE})"), [before], |r| r.get(0))
+        .map_err(sql_error("fora do período"))?;
+    Ok(bytes.unwrap_or(0).max(0) as u64)
+}
+
+/// Apaga o conteúdo guardado fora do período (CA7, D7). Os cabeçalhos ficam: o e-mail continua na
+/// lista e baixa de novo ao abrir. Devolve quantas mensagens perderam o conteúdo.
+pub fn purge_outside(conn: &mut Connection, before: Option<&str>) -> Result<usize, AppError> {
+    let tx = conn.transaction().map_err(sql_error("apagar fora do período"))?;
+    let ids: Vec<i64> = {
+        let mut stmt = tx.prepare(OUTSIDE).map_err(sql_error("apagar fora do período"))?;
+        let rows = stmt.query_map([before], |r| r.get(0)).map_err(sql_error("apagar fora do período"))?;
+        rows.collect::<Result<_, _>>().map_err(sql_error("apagar fora do período"))?
+    };
+    for id in &ids {
+        tx.execute("DELETE FROM message_body WHERE message_id = ?1", [id]).map_err(sql_error("apagar fora do período"))?;
+        tx.execute("UPDATE message SET body_state = 'none' WHERE id = ?1", [id]).map_err(sql_error("apagar fora do período"))?;
+    }
+    tx.commit().map_err(sql_error("apagar fora do período"))?;
+    Ok(ids.len())
+}
+
+/// Apaga uma conta de que o usuário saiu, com tudo que pende dela (mensagens, pastas, rascunhos,
+/// avisos), por `ON DELETE CASCADE` (CA7). Conta ativa: `InvalidInput` (para isso, sair antes).
+pub fn delete_signed_out_account(conn: &Connection, account_id: &str) -> Result<(), AppError> {
+    if require_account(conn, account_id)?.status != AccountStatus::SignedOut {
+        return Err(AppError::InvalidInput);
+    }
+    conn.execute("DELETE FROM account WHERE id = ?1", [account_id]).map_err(sql_error("apagar conta"))?;
+    Ok(())
+}
+
+/// Depois de apagar dados: o arquivo encolhe e o WAL é zerado.
+pub fn compact(conn: &Connection) -> Result<(), AppError> {
+    conn.execute_batch("VACUUM;").map_err(sql_error("compactar"))?;
+    conn.query_row("PRAGMA wal_checkpoint(TRUNCATE)", [], |_| Ok(())).map_err(sql_error("compactar"))?;
     Ok(())
 }
 
@@ -2422,6 +2509,63 @@ pub(crate) mod tests {
             assert_eq!(search(c, &a.id, "100%").unwrap().len(), 1);
             assert_eq!(search(c, &a.id, "_").unwrap().len(), 0, "_ é literal");
             assert_eq!(search(c, &a.id, "remetente@exemplo").unwrap().len(), 2);
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn purge_outside_keeps_the_list_and_drops_old_content() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            apply_snapshot(c, inbox.id, &snapshot(1..=3)).unwrap();
+            for uid in 1..=3 {
+                let m = message_by_uid(c, inbox.id, uid).unwrap().unwrap();
+                save_body(c, m.id, b"conteudo", &[]).unwrap();
+            }
+            assert_eq!(stored_bytes_by_account(c).unwrap(), vec![(a.id.clone(), 24)]);
+            assert_eq!(bytes_outside(c, Some("2026-10-04")).unwrap(), 16, "as de 2 e 3 de outubro");
+            assert_eq!(purge_outside(c, Some("2026-10-04")).unwrap(), 2);
+            assert_eq!(count(c, "SELECT count(*) FROM message"), 3, "a lista continua");
+            assert_eq!(count(c, "SELECT count(*) FROM message_body"), 1);
+            assert_eq!(count(c, "SELECT count(*) FROM message WHERE body_state = 'none'"), 2, "baixam de novo ao abrir");
+            assert_eq!(bytes_outside(c, None).unwrap(), 8, "Só ao abrir: todo o resto fica de fora");
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn only_signed_out_accounts_can_be_erased() {
+        let t = test_db();
+        t.db.with(|c| {
+            let a = account(c, "eu@gmail.com");
+            let inbox = folder(c, &a.id, "INBOX", Role::Inbox);
+            apply_snapshot(c, inbox.id, &snapshot(1..=2)).unwrap();
+            let m = message_by_uid(c, inbox.id, 1).unwrap().unwrap();
+            save_body(c, m.id, b"conteudo", &[]).unwrap();
+            assert!(matches!(delete_signed_out_account(c, &a.id), Err(AppError::InvalidInput)), "conta ativa: sair antes");
+            set_status(c, &a.id, AccountStatus::SignedOut).unwrap();
+            delete_signed_out_account(c, &a.id).unwrap();
+            for table in ["account", "folder", "message", "message_body"] {
+                assert_eq!(count(c, &format!("SELECT count(*) FROM {table}")), 0, "{table}");
+            }
+            compact(c).unwrap();
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn lock_settings_default_to_15_minutes_and_follow_windows() {
+        let t = test_db();
+        t.db.with(|c| {
+            assert_eq!(lock_settings(c).unwrap(), LockSettings { minutes: "15".into(), with_windows: true });
+            let s = LockSettings { minutes: "never".into(), with_windows: false };
+            assert_eq!(set_lock_settings(c, &s).unwrap(), s);
+            assert!(set_lock_settings(c, &LockSettings { minutes: "7".into(), with_windows: true }).is_err());
             Ok(())
         })
         .unwrap();

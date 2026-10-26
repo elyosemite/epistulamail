@@ -8,12 +8,14 @@ import { AppearanceSettings } from "./AppearanceSettings";
 import { GeneralSettings } from "./GeneralSettings";
 import { NotificationSettings } from "./NotificationSettings";
 import { OfflineSettings } from "./OfflineSettings";
+import { PrivacySettings } from "./PrivacySettings";
 import { SyncSettings } from "./SyncSettings";
 
 const SECTIONS: SettingsSection[] = [
   { id: "general", label: "Geral", icon: "sliders" },
   { id: "appearance", label: "Aparência", icon: "palette" },
   { id: "notifications", label: "Notificações", icon: "bell" },
+  { id: "privacy", label: "Privacidade", icon: "shield" },
   { id: "account", label: "Conta", icon: "user" },
   { id: "email", label: "E-mail", icon: "mail" },
 ];
@@ -47,6 +49,8 @@ export function Settings({ accounts, appearance, onAppearance, initialSection = 
         </>
       ) : section === "notifications" ? (
         <NotificationSettings accounts={accounts} />
+      ) : section === "privacy" ? (
+        <PrivacySettings />
       ) : section === "appearance" ? (
         <AppearanceSettings appearance={appearance} onChange={onAppearance} />
       ) : (

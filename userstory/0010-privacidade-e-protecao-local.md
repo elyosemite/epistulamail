@@ -145,9 +145,17 @@ Cada item é uma entrega separada, na ordem sugerida.
 - **Item 3:** feito. `DbKey` virou um tipo com `Zeroizing` e `Debug` sem a chave; o `PRAGMA key` é montado num texto zerado; refresh token e access token em `SecretString` (`secrets.rs`, `oauth.rs`, `session.rs`). As cópias dentro da `lettre`, do `keyring` e do SChannel ficam fora do alcance. O app sai dos relatórios de erro do Windows ao abrir (`lib.rs`).
 - **Item 4:** feito. `CIPHER_PRAGMAS` em `db.rs`, migração `0006_cifra.sql` com `cipher_scheme = 1`, banco com esquema mais novo não abre; testes `cipher_settings_are_pinned` e `database_created_with_library_defaults_still_opens`.
 - **Item 5:** feito no backend. `keys.rs` (`open_database` e `rotate`, com o cofre por trás de `KeyVault`) e o comando `rotate_db_key`; a chave nova fica em `db-key-next` até o banco abrir com ela. Testes de troca, de interrupção antes e depois do rekey e de falha ao gravar cada chave. Falta o botão (item 8).
-- **Item 6:** feito. `StoredKey` lê v1 (hexadecimal) e v2 (JSON com versão, parâmetros do Argon2id, sal, nonce e texto cifrado). O v2 ainda não é gravado: vem com o item 7.
-- **Testes:** 123 no Rust passam; clippy sem avisos.
-- **Próximos:** itens 7 a 16 dependem da aprovação do rascunho e das decisões D1 a D8.
+- **Item 6:** feito. `StoredKey` lê v1 (hexadecimal) e v2 (JSON com versão, custo do Argon2id, sal, nonce e texto cifrado).
+- **Item 7:** feito. `lock.rs` (Argon2id 64 MiB e 3 passadas, AES-256-GCM com dados associados por uso, custo lido do cofre só dentro de limites, espera de 2, 4, 8… até 300 s), `keys.rs` com `Protection` (chave crua ou envolvida), `privacy.rs` (desbloquear, bloquear, ligar, trocar e desligar a senha, "esqueci a senha"). **Achado de segurança:** só envolver a chave do banco não bastava, porque o refresh token continuava no cofre só com o DPAPI e daria acesso ao servidor a quem tem o Windows; com a senha ligada, os tokens também vão cifrados por ela (`sealed1:`), e "esqueci a senha" os apaga (as contas voltam pedindo para reconectar). O `Db` fica sem conexão enquanto bloqueado (`Locked`); a inicialização espera o primeiro desbloqueio.
+- **Item 8:** feito. `LockGate` e `UnlockScreen` (L53, com espera e "Esqueci a senha"), `PasswordField` (L54), `ConfirmCheck` (L57), Configurações → Privacidade e os modais de senha, chave e dados.
+- **Item 9:** feito. Tempo sem uso no frontend (eventos de teclado e mouse, padrão 15 min), Windows bloqueado (conferido a cada 3 s pela área de trabalho de entrada), Ctrl+Shift+L, "Bloquear o Epistula" no menu da conta e na bandeja. Bloquear encerra as conexões, descarta as sessões e os tokens da memória, fecha o banco e limpa os dados de navegação da janela. **Diferença do CA3/D3:** com o banco fechado não há sincronização, então não chegam notificações de e-mail enquanto o app está bloqueado (nem só com a conta).
+- **Item 10:** feito. Padrão "Só a conta" (para quem nunca salvou as notificações), opção primeiro na lista e o aviso de que o Windows guarda o texto sem cifra.
+- **Item 11:** feito em parte. `--disk-cache-size=1` nos argumentos do WebView2 e limpeza dos dados de navegação ao bloquear. Falta conferir no app real que nada do e-mail fica na pasta do WebView2 (não dá para testar no CI).
+- **Item 12:** feito. `System.Volume.BitLockerProtection` do volume do banco, lido pelo PowerShell sem administrador; aviso só quando desligado ou suspenso.
+- **Item 13:** feito. "E-mails fora do período" com o tamanho e "Apagar", que tira os corpos (os cabeçalhos ficam), compacta e troca a chave.
+- **Item 14:** feito. "Apagar também os e-mails desta conta" ao sair (o botão vira "Sair e apagar") e "Apagar" em Privacidade só nas contas de que o usuário saiu: apaga a conta e tudo que pende dela, tira do índice do cofre, compacta e troca a chave. Em contas em uso o "Apagar" não existe, porque o download em segundo plano traria o conteúdo de volta.
+- **Testes:** 138 no Rust e 67 no frontend passam; clippy e typecheck sem avisos.
+- **Próximos:** itens 15 (links) e 16 (confirmação de leitura); teste manual do bloqueio e do WebView2 no app real.
 
 ### 7. Riscos técnicos
 

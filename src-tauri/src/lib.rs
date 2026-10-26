@@ -4,6 +4,7 @@ mod db;
 mod error;
 mod imap_client;
 mod keys;
+mod lock;
 mod mailbox;
 mod message;
 mod oauth;
@@ -12,6 +13,7 @@ mod notify;
 mod offline;
 mod photo;
 mod preview;
+mod privacy;
 mod provider;
 mod providers;
 mod sanitize;
@@ -22,6 +24,7 @@ mod store;
 mod sync;
 mod tray;
 
+use db::Db;
 use error::AppError;
 use session::AppState;
 use store::AccountStatus;
@@ -164,17 +167,30 @@ pub fn run() {
             #[cfg(windows)]
             exclude_from_error_reports();
             let dir = app.path().app_data_dir()?;
-            let db = keys::open_database(&dir, &keys::Keyring).map_err(|e| {
-                tracing::error!(kind = e.kind(), "não foi possível abrir o banco local");
-                Box::new(e) as Box<dyn std::error::Error>
-            })?;
-            let state = AppState::new(app.handle().clone(), db)?;
+            // Com a senha do Epistula ligada (US10), o banco só abre no desbloqueio.
+            let opened = match keys::open_database(&dir, &keys::Keyring, None) {
+                Ok(opened) => Some(opened),
+                Err(AppError::Locked) => None,
+                Err(e) => {
+                    tracing::error!(kind = e.kind(), "não foi possível abrir o banco local");
+                    return Err(Box::new(e));
+                }
+            };
+            let state = AppState::new(app.handle().clone(), Db::closed())?;
+            match opened {
+                Some(opened) => privacy::install(&state, opened),
+                None => {
+                    state.lock.start_locked();
+                    tracing::info!("app aberto bloqueado");
+                }
+            }
             app.manage(state);
             // A janela não espera a inicialização: o keyring e a limpeza rodam em segundo plano, e só
             // `list_accounts` aguarda o fim (a tela de carregamento aparece antes).
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 let state = handle.state::<AppState>();
+                state.wait_open().await;
                 let started = std::time::Instant::now();
                 startup(&state).await;
                 state.mark_started();
@@ -185,6 +201,7 @@ pub fn run() {
             app.manage(notify::Notifier::default());
             app.manage(offline::Downloader::default());
             offline::start(app.handle());
+            privacy::watch_windows_lock(app.handle());
             notify::start(app.handle());
             tray::create(app.handle())?;
             // Aberto com o Windows (D8): fica só na bandeja. Senão, a janela aparece.
@@ -246,6 +263,18 @@ pub fn run() {
             commands::get_offline_settings,
             commands::set_offline_days,
             commands::rotate_db_key,
+            commands::lock_status,
+            commands::unlock_app,
+            commands::lock_app,
+            commands::set_app_password,
+            commands::change_app_password,
+            commands::remove_app_password,
+            commands::wipe_local_data,
+            commands::get_privacy_settings,
+            commands::set_lock_settings,
+            commands::disk_encryption,
+            commands::delete_account_data,
+            commands::purge_outside_period,
         ])
         .build(tauri::generate_context!());
 
