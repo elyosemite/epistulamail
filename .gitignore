@@ -7,3 +7,5 @@ src-tauri/gen/
 !.env.example
 client_secret_*.json
 .tools/
+site/dist/
+site/.vercel/

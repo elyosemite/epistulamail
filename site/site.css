@@ -1,0 +1,131 @@
+/* Landing page do Epistula (rascunho). Só tokens do design system; as peças do app vêm de components.css.
+   Peças próprias do site, com prefixo site-: cabeçalho, hero, faixas de seção, linhas de recurso alternadas,
+   moldura das "fotos" em HTML, cartões e rodapé. Os tamanhos de destaque derivam da escala do DS (lacuna:
+   o DS não tem tamanhos maiores que --font-size-hero, feitos para o app). */
+
+:root {
+  --site-width: 72rem;
+  --site-gutter: var(--space-300);
+  --site-display: clamp(calc(var(--font-size-hero) * 1.15), 8vw, calc(var(--font-size-hero) * 1.75));
+  --site-title: clamp(var(--font-size-hero), 5vw, calc(var(--font-size-hero) * 1.25));
+  --site-header-height: calc(var(--space-800) - var(--space-100));
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: var(--site-header-height); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--font-body-large);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--color-link); }
+.site-container { width: 100%; max-width: var(--site-width); margin-inline: auto; padding-inline: var(--site-gutter); }
+.site-skip { position: absolute; left: var(--space-200); top: calc(-1 * var(--space-1000)); z-index: var(--z-flag); }
+.site-skip:focus { top: var(--space-200); }
+
+/* ---------- Cabeçalho fixo ---------- */
+.site-header {
+  position: sticky; top: 0; z-index: var(--z-navigation);
+  height: var(--site-header-height);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+.site-header__inner { display: flex; align-items: center; gap: var(--space-300); height: 100%; }
+.site-header .wordmark { text-decoration: none; color: var(--color-text); }
+.site-nav { display: flex; gap: var(--space-300); margin-left: auto; }
+.site-nav a { color: var(--color-text-subtle); text-decoration: none; font: var(--font-weight-medium) var(--font-size-body)/var(--line-height-body) var(--font-family-body); }
+.site-nav a:hover { color: var(--color-text); }
+.site-header__end { display: flex; align-items: center; gap: var(--space-100); }
+@media (max-width: 52rem) { .site-nav { display: none; } .site-header__end { margin-left: auto; } }
+
+/* ---------- Faixas de seção: separadas por borda, alternando o fundo ---------- */
+.site-band { border-bottom: var(--border-width) solid var(--color-border); padding-block: var(--space-1000); }
+.site-band--sunken { background: var(--color-surface-sunken); }
+.site-eyebrow {
+  margin: 0 0 var(--space-200);
+  font: var(--font-weight-medium) var(--font-size-label)/var(--line-height-label) var(--font-family-code);
+  letter-spacing: var(--letter-spacing-label); text-transform: uppercase;
+  color: var(--color-text-subtlest);
+}
+.site-h2 { margin: 0 0 var(--space-200); font: var(--font-weight-bold) var(--site-title)/1.1 var(--font-family-heading); letter-spacing: var(--letter-spacing-hero); text-wrap: balance; }
+.site-lead { margin: 0; max-width: 60ch; color: var(--color-text-subtle); font: var(--font-body-large); font-size: calc(var(--font-size-body-large) * 1.125); line-height: 1.6; text-wrap: pretty; }
+
+/* ---------- Hero: texto à esquerda, o app à direita ---------- */
+.site-hero { border-bottom: var(--border-width) solid var(--color-border); overflow: hidden; }
+.site-hero__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: var(--space-800); align-items: center; padding-block: var(--space-1000); }
+.site-hero h1 { margin: 0 0 var(--space-300); font: var(--font-weight-bold) var(--site-display)/1.02 var(--font-family-heading); letter-spacing: -0.035em; text-wrap: balance; }
+.site-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-150); margin-top: var(--space-500); }
+.site-facts { display: flex; flex-wrap: wrap; gap: var(--space-100) var(--space-400); margin: var(--space-600) 0 0; padding: 0; list-style: none; }
+.site-facts li { display: flex; align-items: center; gap: var(--space-100); font: var(--font-weight-medium) var(--font-size-label)/var(--line-height-label) var(--font-family-code); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtle); }
+.site-facts .i { color: var(--color-icon-brand); }
+@media (max-width: 60rem) { .site-hero__grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-600); } }
+
+/* ---------- "Foto" do app feita em HTML: a moldura recorta um trecho ampliado ---------- */
+.site-shot {
+  position: relative; overflow: hidden;
+  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large);
+  background: var(--color-canvas);
+  box-shadow: var(--shadow-overlay);
+}
+.site-shot__zoom { padding: var(--space-300); transform: scale(1.12); transform-origin: top left; pointer-events: none; }
+.site-shot__zoom--center { transform-origin: center; }
+.site-shot__panel { border-radius: var(--radius-large); background: var(--color-surface); overflow: hidden; }
+.site-shot::after { content: ""; position: absolute; inset: auto 0 0 0; height: var(--space-600); background: linear-gradient(to bottom, transparent, var(--color-canvas)); }
+.site-shot--plain::after { display: none; }
+
+/* App em miniatura no hero: coluna de contas, pastas, lista e leitura. */
+.site-mini { display: grid; grid-template-columns: auto 11rem minmax(0, 1fr); gap: var(--space-100); padding: var(--space-100); min-width: 44rem; }
+.site-mini .account-rail { border-radius: var(--radius-large); background: var(--color-surface); }
+.site-mini .sidebar { border-radius: var(--radius-large); background: var(--color-surface); border: 0; }
+
+/* ---------- Recursos: linhas de duas colunas que alternam ---------- */
+.site-features { display: grid; gap: var(--space-1000); }
+.site-feature { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--space-800); align-items: center; }
+.site-feature--text-first { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+.site-feature--text-first .site-feature__media { order: 2; }
+.site-feature__text h3 { margin: 0 0 var(--space-200); font: var(--font-weight-bold) calc(var(--font-size-hero) * 0.95)/1.15 var(--font-family-heading); letter-spacing: var(--letter-spacing-hero); text-wrap: balance; }
+.site-feature__text p { margin: 0 0 var(--space-200); color: var(--color-text-subtle); line-height: 1.65; max-width: 52ch; text-wrap: pretty; }
+.site-feature__points { display: grid; gap: var(--space-100); margin: var(--space-300) 0 0; padding: 0; list-style: none; }
+.site-feature__points li { display: flex; gap: var(--space-100); align-items: flex-start; color: var(--color-text); font: var(--font-body); }
+.site-feature__points .i { flex: none; margin-top: 2px; color: var(--color-icon-success); }
+@media (max-width: 56rem) {
+  .site-feature, .site-feature--text-first { grid-template-columns: minmax(0, 1fr); gap: var(--space-400); }
+  .site-feature--text-first .site-feature__media { order: 0; }
+}
+
+/* Entrada ao rolar: cada linha aparece quando chega à tela (sem animação para quem pediu menos movimento). */
+.site-reveal { opacity: 0; transform: translateY(var(--space-300)); transition: opacity 500ms ease-out, transform 500ms ease-out; }
+.site-reveal.is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .site-reveal { opacity: 1; transform: none; transition: none; } }
+
+/* ---------- Cartões (segurança e para onde vamos) ---------- */
+.site-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: var(--space-200); margin-top: var(--space-600); }
+.site-card { display: grid; gap: var(--space-100); align-content: start; padding: var(--space-300); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: var(--color-surface-raised); }
+.site-card .i { width: 1.5rem; height: 1.5rem; color: var(--color-icon-brand); }
+.site-card h3 { margin: var(--space-100) 0 0; font: var(--font-card); letter-spacing: var(--letter-spacing-card); }
+.site-card p { margin: 0; color: var(--color-text-subtle); font: var(--font-body); }
+.site-card .lozenge { justify-self: start; }
+
+/* ---------- Começar ---------- */
+.site-start { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-800); align-items: center; }
+.site-start .pem-box { max-height: none; padding: var(--space-300); font-size: var(--font-size-code); }
+@media (max-width: 56rem) { .site-start { grid-template-columns: minmax(0, 1fr); gap: var(--space-400); } }
+
+/* ---------- Rodapé ---------- */
+.site-footer { padding-block: var(--space-800) var(--space-600); }
+.site-footer__grid { display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: var(--space-400); }
+.site-footer h4 { margin: 0 0 var(--space-200); font: var(--font-weight-medium) var(--font-size-label)/var(--line-height-label) var(--font-family-code); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtlest); }
+.site-footer ul { display: grid; gap: var(--space-100); margin: 0; padding: 0; list-style: none; }
+.site-footer a { color: var(--color-text-subtle); text-decoration: none; font: var(--font-body); }
+.site-footer a:hover { color: var(--color-text); text-decoration: underline; }
+.site-footer__note { margin: var(--space-200) 0 0; max-width: 34ch; color: var(--color-text-subtle); font: var(--font-body); }
+.site-footer__legal { margin-top: var(--space-600); padding-top: var(--space-300); border-top: var(--border-width) solid var(--color-border); color: var(--color-text-subtlest); font: var(--font-body-small); }
+@media (max-width: 48rem) { .site-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+@media (max-width: 30rem) {
+  :root { --site-gutter: var(--space-200); }
+  .site-band { padding-block: var(--space-800); }
+}

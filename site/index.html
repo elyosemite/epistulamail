@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Epistula · e-mail no seu computador, cifrado</title>
+<meta name="description" content="Cliente de e-mail para desktop que guarda as suas mensagens no seu computador, cifradas, e nunca as faz passar por um servidor nosso.">
+<meta name="color-scheme" content="light dark">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="ds/tokens.css">
+<link rel="stylesheet" href="ds/components.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<!-- ds-icons -->
+<a class="btn btn--primary site-skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="site-header">
+  <div class="site-container site-header__inner">
+    <a class="wordmark wordmark--sm" href="#topo" aria-label="Epistula, início"><span class="wordmark__glyph"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</a>
+    <nav class="site-nav" aria-label="Seções">
+      <a href="#recursos">Recursos</a>
+      <a href="#seguranca">Segurança</a>
+      <a href="#para-onde">Para onde vamos</a>
+      <a href="#comecar">Começar</a>
+    </nav>
+    <div class="site-header__end">
+      <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
+      <a class="btn" href="https://github.com/elyosemite/epistulamail"><svg class="i"><use href="#i-link"/></svg>GitHub</a>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo">
+  <!-- ================================================================== hero -->
+  <section class="site-hero" id="topo">
+    <div class="site-container site-hero__grid">
+      <div>
+        <p class="site-eyebrow">Cliente de e-mail para desktop · código aberto</p>
+        <h1>Seus e-mails no seu computador. Cifrados.</h1>
+        <p class="site-lead">O Epistula baixa o que você precisa ler e guarda num banco local protegido por AES-256. Sem conta Epistula, sem nuvem Epistula e sem ninguém do nosso lado lendo o que você recebe.</p>
+        <div class="site-hero__actions">
+          <a class="btn btn--primary" href="#comecar"><svg class="i"><use href="#i-download"/></svg>Como instalar</a>
+          <a class="btn" href="#recursos">Ver os recursos</a>
+        </div>
+        <ul class="site-facts" aria-label="Em poucas palavras">
+          <li><svg class="i i--sm"><use href="#i-lock"/></svg>AES-256 no disco</li>
+          <li><svg class="i i--sm"><use href="#i-key"/></svg>OpenPGP e S/MIME</li>
+          <li><svg class="i i--sm"><use href="#i-shield"/></svg>Sem conta, sem nuvem</li>
+        </ul>
+      </div>
+
+      <figure class="site-shot" style="margin:0" aria-label="O Epistula com duas contas, a Caixa de entrada e uma conversa aberta">
+        <div class="site-shot__zoom" aria-hidden="true">
+          <div class="site-mini">
+            <nav class="account-rail">
+              <div class="account-rail__list" role="list">
+                <div role="listitem"><span class="account-rail__item" aria-current="true"><span class="avatar avatar--lg avatar--purple">T</span><span class="badge badge--primary account-rail__badge">12</span><span class="account-rail__name">Trabalho</span></span></div>
+                <div role="listitem"><span class="account-rail__item"><span class="avatar avatar--lg">P</span><span class="account-rail__name">Pessoal</span></span></div>
+                <div role="listitem"><span class="account-rail__item"><span class="avatar avatar--lg avatar--archive"><svg class="i"><use href="#i-archive"/></svg></span><span class="account-rail__name">Arquivo</span></span></div>
+              </div>
+            </nav>
+            <nav class="sidebar">
+              <div class="nav-group">
+                <span class="nav-item has-unread" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></span>
+                <span class="nav-item"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></span>
+                <span class="nav-item"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span>
+                <span class="nav-item"><svg class="i"><use href="#i-file"/></svg><span class="nav-item__text">Rascunhos</span></span>
+              </div>
+              <div class="nav-group">
+                <div class="nav-heading">Marcadores</div>
+                <span class="nav-item"><span class="dot" style="--lb-fg:var(--color-label-purple-text)"></span><span class="nav-item__text">Jurídico</span></span>
+                <span class="nav-item"><span class="dot" style="--lb-fg:var(--color-label-green-text)"></span><span class="nav-item__text">Financeiro</span></span>
+              </div>
+            </nav>
+            <div class="site-shot__panel">
+              <div class="thread-list">
+                <div class="thread is-unread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">Segue a versão 3 com os ajustes da cláusula 7.2. Preciso do retorno até sexta.</div></div>
+                <div class="thread is-unread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Paulo Henrique</span></div><div class="thread__meta"><span class="thread__date">09:15</span></div><div class="thread__subject"><span class="thread__subject-text">Fotos da obra, semana 42</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-image"/></svg></span></div><div class="thread__snippet">A fachada já está pintada e a calçada fica pronta na segunda.</div></div>
+                <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Equipe Lumen</span></div><div class="thread__meta"><span class="thread__date">20 out</span></div><div class="thread__subject"><span class="thread__subject-text">Ata da reunião de planejamento</span></div><div class="thread__snippet">Segue a ata com as decisões e os responsáveis.</div></div>
+                <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Banco Atlântico</span></div><div class="thread__meta"><span class="thread__date">19 out</span></div><div class="thread__subject"><span class="thread__subject-text">Seu extrato de outubro está disponível</span></div><div class="thread__snippet">O extrato da conta corrente já pode ser consultado.</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================================================================== porquê -->
+  <section class="site-band site-band--sunken" aria-labelledby="porque">
+    <div class="site-container">
+      <p class="site-eyebrow">Por que mais um cliente de e-mail</p>
+      <h2 class="site-h2" id="porque">O arquivo mais antigo da sua vida digital mora na casa de outra pessoa.</h2>
+      <p class="site-lead">Contratos, exames, conversas de família, a recuperação de senha de todo o resto. O Epistula parte de três ideias simples.</p>
+      <div class="site-cards">
+        <article class="site-card"><svg class="i"><use href="#i-hard-drive"/></svg><h3>Seus dados ficam com você</h3><p>Cada mensagem aberta fica no seu disco. Se a rede cair, a caixa continua lá. Se o provedor mudar de regra, a sua cópia continua sua.</p></article>
+        <article class="site-card"><svg class="i"><use href="#i-lock"/></svg><h3>O que fica no disco fica cifrado</h3><p>O banco inteiro, inclusive índices, assuntos e remetentes. Um notebook esquecido no táxi não revela nada sem a chave.</p></article>
+        <article class="site-card"><svg class="i"><use href="#i-badge-check"/></svg><h3>Segurança se demonstra</h3><p>O modelo de ameaças é público, os riscos ainda não resolvidos estão escritos, e o que dá para testar tem teste.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================== recursos -->
+  <section class="site-band" id="recursos" aria-labelledby="recursos-titulo">
+    <div class="site-container">
+      <p class="site-eyebrow">Recursos</p>
+      <h2 class="site-h2" id="recursos-titulo">Feito para quem lê e-mail o dia inteiro.</h2>
+      <p class="site-lead">Cada tela abaixo é o próprio Epistula, montado com as mesmas peças do app.</p>
+
+      <div class="site-features" style="margin-top:var(--space-1000)">
+        <!-- 1 · imagem, texto -->
+        <article class="site-feature site-reveal">
+          <figure class="site-feature__media site-shot" style="margin:0" aria-label="Lista de conversas com o aviso de que o computador está sem conexão">
+            <div class="site-shot__zoom" aria-hidden="true">
+              <div class="site-shot__panel" style="display:grid;gap:var(--space-100);padding:var(--space-100)">
+                <div class="banner banner--warning"><svg class="i"><use href="#i-warning"/></svg>Sem conexão. Mostrando mensagens salvas neste computador.</div>
+                <div class="thread-list">
+                  <div class="thread is-unread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="thread__subject-text">Revisão do contrato</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">Preciso do retorno até sexta.</div></div>
+                  <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Clínica Vida</span></div><div class="thread__meta"><span class="thread__date">ontem</span></div><div class="thread__subject"><span class="thread__subject-text">Resultado dos exames</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">O laudo está anexado em PDF.</div></div>
+                  <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Equipe Lumen</span></div><div class="thread__meta"><span class="thread__date">20 out</span></div><div class="thread__subject"><span class="thread__subject-text">Ata da reunião</span></div><div class="thread__snippet">Revisem os prazos até quarta.</div></div>
+                </div>
+              </div>
+            </div>
+          </figure>
+          <div class="site-feature__text">
+            <p class="site-eyebrow">Leitura sem conexão</p>
+            <h3>Abre na hora, até no avião.</h3>
+            <p>Os e-mails recentes são baixados em segundo plano e abrem do disco. A primeira sincronização mostra as mais novas em segundos e traz o resto aos poucos.</p>
+            <ul class="site-feature__points">
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Período que você escolhe: 30 dias, 90 dias ou tudo</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>A próxima conversa já está baixada antes do clique</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- 2 · texto, imagem -->
+        <article class="site-feature site-feature--text-first site-reveal">
+          <figure class="site-feature__media site-shot" style="margin:0" aria-label="Mensagem com as imagens externas bloqueadas">
+            <div class="site-shot__zoom" aria-hidden="true">
+              <div class="site-shot__panel" style="padding:var(--space-300)">
+                <div class="message">
+                  <div class="message__head"><span class="avatar avatar--lg avatar--orange">L</span><div style="min-width:0"><div class="message__from">Loja Aurora <span class="message__addr">&lt;ofertas@aurora.com&gt;</span></div><span class="message__to">para mim</span></div><div class="message__time">08:02</div></div>
+                  <div class="section-message" style="margin-top:var(--space-200)"><svg class="i"><use href="#i-info"/></svg><div><p class="section-message__title">Imagens externas bloqueadas</p><p>Elas avisariam à loja que você abriu este e-mail, quando e de onde.</p><div class="section-message__actions"><span class="btn btn--link">Mostrar imagens</span></div></div></div>
+                  <div class="message__body"><p>Olá! As novidades da semana chegaram, com até 40% de desconto.</p></div>
+                </div>
+              </div>
+            </div>
+          </figure>
+          <div class="site-feature__text">
+            <p class="site-eyebrow">Contra rastreamento</p>
+            <h3>Os pixels espiões ficam de fora.</h3>
+            <p>Imagens externas só carregam quando você deixa, mensagem por mensagem. O HTML de terceiros é limpo antes de chegar à tela e aparece sem scripts.</p>
+            <ul class="site-feature__points">
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Aviso quando um link leva a outro endereço</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Confirmações de leitura nunca são enviadas</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- 3 · imagem, texto -->
+        <article class="site-feature site-reveal">
+          <figure class="site-feature__media site-shot" style="margin:0" aria-label="Regras na ordem em que rodam, cada uma lida como uma frase">
+            <div class="site-shot__zoom" aria-hidden="true">
+              <div class="site-shot__panel">
+                <div class="rule-list">
+                  <div class="rule-row"><span class="rule-row__grip"><svg class="i"><use href="#i-grip"/></svg></span><input type="checkbox" class="toggle" checked tabindex="-1"><div class="rule-row__body"><span class="rule-row__name">Newsletters</span><span class="rule-sentence">Se <span class="rule-term">é de uma lista de e-mails</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action"><svg class="i"><use href="#i-folder-move"/></svg>Mover para Leitura</span></span></div><span class="rule-row__stats">214 e-mails<br>em 30 dias</span></div>
+                  <div class="rule-row"><span class="rule-row__grip"><svg class="i"><use href="#i-grip"/></svg></span><input type="checkbox" class="toggle" checked tabindex="-1"><div class="rule-row__body"><span class="rule-row__name">Pessoas importantes</span><span class="rule-sentence">Se <span class="rule-term">De é mãe@exemplo.com</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action"><svg class="i"><use href="#i-bell"/></svg>Notificar sempre</span></span></div><span class="rule-row__stats">9 e-mails<br>em 30 dias</span></div>
+                  <div class="rule-row"><span class="rule-row__grip"><svg class="i"><use href="#i-grip"/></svg></span><input type="checkbox" class="toggle" checked tabindex="-1"><div class="rule-row__body"><span class="rule-row__name">Recibos</span><span class="rule-sentence">Se <span class="rule-term">Assunto contém recibo, nota fiscal</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action"><svg class="i"><use href="#i-tag"/></svg>Financeiro</span></span></div><span class="rule-row__stats">31 e-mails<br>em 30 dias</span></div>
+                </div>
+              </div>
+            </div>
+          </figure>
+          <div class="site-feature__text">
+            <p class="site-eyebrow">Regras</p>
+            <h3>A caixa se organiza enquanto você trabalha.</h3>
+            <p>Cada regra se lê como uma frase. Antes de salvar, a prévia mostra quais e-mails ela pegaria; depois, tudo que ela fez fica no histórico com "Desfazer".</p>
+            <ul class="site-feature__points">
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Funciona com qualquer provedor, sem depender do servidor</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Excluir sempre vai para a Lixeira</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- 4 · texto, imagem -->
+        <article class="site-feature site-feature--text-first site-reveal">
+          <figure class="site-feature__media site-shot" style="margin:0" aria-label="Resposta criptografada e assinada, com a chave de cada destinatário">
+            <div class="site-shot__zoom" aria-hidden="true">
+              <div class="site-shot__panel" style="display:grid;gap:var(--space-200);padding:var(--space-200)">
+                <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg avatar--green">AR</span><div style="min-width:0"><div class="message__from">Ana Ribeiro <span class="message__addr">&lt;ana@lumen.com.br&gt;</span></div><div class="sec-status"><span class="sec-badge"><svg class="i"><use href="#i-lock"/></svg>Criptografada</span><span class="sec-badge"><svg class="i"><use href="#i-badge-check"/></svg>Assinatura verificada</span></div></div><span class="message__time">10:42</span></div></div>
+                <div class="compose compose--inline">
+                  <div class="compose__bar"><span class="compose__title">Responder</span></div>
+                  <div class="compose__fields"><div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR</span><span class="chip__name">Ana Ribeiro</span><span class="chip__key"><svg class="i"><use href="#i-lock"/></svg></span></span></div></div>
+                  <div class="compose__security"><span class="btn btn--subtle btn--compact" aria-pressed="true"><svg class="i"><use href="#i-lock"/></svg>Criptografar</span><span class="btn btn--subtle btn--compact" aria-pressed="true"><svg class="i"><use href="#i-signature"/></svg>Assinar</span><span class="compose__security-tech">OpenPGP</span></div>
+                  <div class="compose__foot"><span class="btn btn--primary"><svg class="i"><use href="#i-lock"/></svg>Enviar criptografado</span></div>
+                </div>
+              </div>
+            </div>
+          </figure>
+          <div class="site-feature__text">
+            <p class="site-eyebrow">Criptografia de ponta a ponta</p>
+            <h3>Nem o seu provedor lê o que vai cifrado.</h3>
+            <p>OpenPGP embutido, com chaves Curve25519 e uma opção pós-quântica experimental, e S/MIME para quem usa Outlook, Apple Mail ou o certificado da empresa. O cadeado liga sozinho quando todos os destinatários têm chave.</p>
+            <ul class="site-feature__points">
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>O assunto também pode ir escondido</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Selos que dizem se a assinatura confere e de quem é a chave</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- 5 · imagem, texto -->
+        <article class="site-feature site-reveal">
+          <figure class="site-feature__media site-shot site-shot--plain" style="margin:0" aria-label="Resumo da importação de um backup antigo">
+            <div class="site-shot__zoom site-shot__zoom--center" aria-hidden="true" style="transform:scale(1.05)">
+              <div class="modal" style="margin-inline:auto">
+                <div class="modal__head"><h3 class="modal__title">Gmail antigo está pronto</h3></div>
+                <div class="modal__body" style="display:grid;gap:var(--space-200)">
+                  <dl class="import-summary"><div><dt>Entraram</dt><dd>47.034</dd></div><div><dt>Repetidas</dt><dd>81</dd></div><div><dt>Falharam</dt><dd>0</dd></div></dl>
+                  <div class="section-message section-message--success"><svg class="i"><use href="#i-success"/></svg><div><p class="section-message__title">Nada saiu deste computador</p><p>O backup foi lido aqui e copiado para o banco cifrado.</p></div></div>
+                </div>
+                <div class="modal__foot"><span class="btn btn--primary">Abrir Gmail antigo</span></div>
+              </div>
+            </div>
+          </figure>
+          <div class="site-feature__text">
+            <p class="site-eyebrow">Arquivos antigos, sem conta</p>
+            <h3>Traga a caixa de anos atrás para perto.</h3>
+            <p>Abra o backup do Google Takeout, o <code>.pst</code> do Outlook, as pastas do Thunderbird ou o <code>.mbox</code> do Apple Mail. Sem entrar em conta nenhuma e sem internet: o arquivo é lido no seu computador.</p>
+            <ul class="site-feature__points">
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Importar o mesmo backup de novo não duplica nada</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Busca, conversas e pastas como numa conta</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- 6 · texto, imagem -->
+        <article class="site-feature site-feature--text-first site-reveal">
+          <figure class="site-feature__media site-shot site-shot--plain" style="margin:0" aria-label="O Epistula bloqueado, pedindo a senha">
+            <div class="site-shot__zoom site-shot__zoom--center" aria-hidden="true" style="transform:scale(1.05)">
+              <div class="unlock__card" style="margin-inline:auto">
+                <span class="unlock__icon"><svg class="i"><use href="#i-lock"/></svg></span>
+                <h3 class="unlock__title">O Epistula está bloqueado</h3>
+                <p class="unlock__text">Digite a senha do Epistula para ver as suas mensagens.</p>
+                <div class="unlock__form">
+                  <div class="field"><span class="field__label">Senha do Epistula</span><div class="input input--password"><input type="password" value="frase-secreta" tabindex="-1" aria-hidden="true"></div></div>
+                  <span class="btn btn--primary btn--block">Desbloquear</span>
+                </div>
+              </div>
+            </div>
+          </figure>
+          <div class="site-feature__text">
+            <p class="site-eyebrow">Senha do Epistula</p>
+            <h3>Protegido até de quem usa o seu Windows.</h3>
+            <p>Com a senha ligada, a chave do banco é protegida por Argon2id. O app fecha o banco depois de um tempo sem uso ou quando o Windows bloqueia a tela, e apaga a chave da memória.</p>
+            <ul class="site-feature__points">
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Notificações sem conteúdo por padrão</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Apagar os dados de uma conta troca a chave do banco</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================== segurança -->
+  <section class="site-band site-band--sunken" id="seguranca" aria-labelledby="seguranca-titulo">
+    <div class="site-container">
+      <p class="site-eyebrow">Segurança</p>
+      <h2 class="site-h2" id="seguranca-titulo">O que dá para garantir, e o que não dá.</h2>
+      <p class="site-lead">O Epistula protege a cópia local e o caminho até ela. O que sai sem criptografia continua legível por quem hospeda a caixa, e um computador comprometido continua comprometido. Preferimos dizer isso a fingir o contrário.</p>
+      <div class="site-cards">
+        <article class="site-card"><svg class="i"><use href="#i-eye-off"/></svg><h3>Logs sem conteúdo</h3><p>Nem assunto, nem remetente, nem endereço. Um teste percorre o app com marcadores únicos e falha se algum aparecer no log.</p></article>
+        <article class="site-card"><svg class="i"><use href="#i-key"/></svg><h3>Chaves longe da tela</h3><p>Tokens e a chave do banco ficam no cofre do sistema e no processo Rust. A interface nunca os vê.</p></article>
+        <article class="site-card"><svg class="i"><use href="#i-log-out"/></svg><h3>Sair revoga de verdade</h3><p>Sair de uma conta revoga o acesso no provedor e apaga o segredo do cofre do sistema.</p></article>
+        <article class="site-card"><svg class="i"><use href="#i-file"/></svg><h3>Modelo de ameaças público</h3><p>Matriz de dados, inventário de criptografia, limites de confiança e as ameaças consideradas. <a href="https://github.com/elyosemite/epistulamail/blob/main/docs/arquitetura-e-ameacas.md">Ler o documento</a></p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================== para onde vamos -->
+  <section class="site-band" id="para-onde" aria-labelledby="para-onde-titulo">
+    <div class="site-container">
+      <p class="site-eyebrow">Para onde vamos</p>
+      <h2 class="site-h2" id="para-onde-titulo">Pronto para os próximos dez anos de e-mail.</h2>
+      <p class="site-lead">Dados cifrados hoje podem ser capturados hoje e decifrados quando houver computadores quânticos. Para e-mail, guardado por décadas, isso não é teórico.</p>
+      <div class="site-cards">
+        <article class="site-card"><span class="lozenge lozenge--inprogress">Planejado</span><h3>Servidor de login, e nada mais</h3><p>Um pequeno servidor só para o OAuth com o Google e a Microsoft. Nenhuma mensagem passa por ele.</p></article>
+        <article class="site-card"><span class="lozenge lozenge--inprogress">Planejado</span><h3>Backup que você controla</h3><p>Uma conta inteira num arquivo cifrado, legível só por quem tem a chave, em formato documentado.</p></article>
+        <article class="site-card"><span class="lozenge lozenge--inprogress">Planejado</span><h3>Troca de chaves híbrida</h3><p>X25519 com ML-KEM-768 no caminho até o provedor, assim que o servidor aceitar.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================== começar -->
+  <section class="site-band site-band--sunken" id="comecar" aria-labelledby="comecar-titulo">
+    <div class="site-container site-start">
+      <div>
+        <p class="site-eyebrow">Começar</p>
+        <h2 class="site-h2" id="comecar-titulo">Por enquanto, o caminho é compilar.</h2>
+        <p class="site-lead">O Epistula ainda não tem instalador assinado. No Windows, com Node.js 24, pnpm 10 e Rust 1.88 ou mais novo, cinco comandos bastam. O passo a passo completo está no README.</p>
+        <div class="site-hero__actions">
+          <a class="btn btn--primary" href="https://github.com/elyosemite/epistulamail#building"><svg class="i"><use href="#i-file"/></svg>Ler o passo a passo</a>
+        </div>
+      </div>
+      <pre class="pem-box" aria-label="Comandos para compilar">git clone https://github.com/elyosemite/epistulamail
+cd epistulamail
+pnpm install
+./scripts/setup-build-tools.ps1
+pnpm tauri build</pre>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="site-container">
+    <div class="site-footer__grid">
+      <div>
+        <a class="wordmark wordmark--sm" href="#topo" style="text-decoration:none;color:var(--color-text)"><span class="wordmark__glyph"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</a>
+        <p class="site-footer__note">Um cliente de e-mail que guarda as suas mensagens no seu computador, cifradas.</p>
+      </div>
+      <div>
+        <h4>Produto</h4>
+        <ul><li><a href="#recursos">Recursos</a></li><li><a href="#seguranca">Segurança</a></li><li><a href="#para-onde">Para onde vamos</a></li></ul>
+      </div>
+      <div>
+        <h4>Projeto</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail">Código no GitHub</a></li><li><a href="https://github.com/elyosemite/epistulamail/blob/main/docs/arquitetura-e-ameacas.md">Modelo de ameaças</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/design-system">Design system</a></li></ul>
+      </div>
+      <div>
+        <h4>Contribuir</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail/issues">Issues</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/userstory">Histórico de decisões</a></li></ul>
+      </div>
+    </div>
+    <p class="site-footer__legal">Licença a definir. Este site não usa cookies, não tem rastreamento e não carrega nada de terceiros.</p>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

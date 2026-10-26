@@ -222,6 +222,7 @@ src/                 React interface
 src-tauri/src/       Rust backend (OAuth, IMAP, SMTP, sync, database, HTML cleaning, notifications)
 src-tauri/migrations database schema versions
 design-system/       visual components and tokens
+site/                public landing page (static, published to Vercel by its own workflow)
 docs/                architecture and threat model
 userstory/           decision history, one story per delivery
 ```

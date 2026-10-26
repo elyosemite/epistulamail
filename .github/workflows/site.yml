@@ -1,0 +1,82 @@
+# Site do Epistula (site/): build e publicação na Vercel. Roda só quando o site, as peças do design system que
+# ele usa ou este arquivo mudam. Push no main publica em produção; pull request publica uma prévia.
+# Segredos (Settings → Secrets → Actions): VERCEL_TOKEN, VERCEL_ORG_ID e VERCEL_PROJECT_ID. Sem eles (fork, ou
+# antes de configurar), o site é montado e conferido, mas não publicado.
+name: Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "design-system/tokens.css"
+      - "design-system/components.css"
+      - "design-system/docs.js"
+      - ".github/workflows/site.yml"
+  pull_request:
+    paths:
+      - "site/**"
+      - "design-system/tokens.css"
+      - "design-system/components.css"
+      - "design-system/docs.js"
+      - ".github/workflows/site.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  # Versão fixa da CLI: atualizar de propósito, não a cada execução.
+  VERCEL_CLI: vercel@63.1.2
+
+jobs:
+  site:
+    name: Build e publicação do site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ github.event_name == 'push' && 'site-production' || 'site-preview' }}
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # As fontes do site vêm dos pacotes @fontsource da raiz (nenhuma requisição a terceiros na página).
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Montar o site
+        working-directory: site
+        run: node build.mjs
+
+      - name: Publicar na Vercel
+        id: deploy
+        if: env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != ''
+        working-directory: site
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          PRODUCTION: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$PRODUCTION" = "true" ]; then target=production; prod=--prod; else target=preview; prod=; fi
+          npx --yes "$VERCEL_CLI" pull --yes --environment="$target" --token="$VERCEL_TOKEN"
+          npx --yes "$VERCEL_CLI" build $prod --token="$VERCEL_TOKEN"
+          url=$(npx --yes "$VERCEL_CLI" deploy --prebuilt $prod --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Site publicado ($target): $url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Sem segredos da Vercel
+        if: env.VERCEL_ORG_ID == '' || env.VERCEL_PROJECT_ID == ''
+        run: echo "Site montado, mas não publicado (segredos da Vercel não configurados)." >> "$GITHUB_STEP_SUMMARY"

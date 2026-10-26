@@ -2,10 +2,13 @@
 # Não usa segredos: o build sai sem as credenciais OAuth, só para provar que compila e passa nos testes.
 name: CI
 
+# Mudanças só no site (site/) têm o próprio pipeline (site.yml).
 on:
   push:
     branches: [main]
+    paths-ignore: ["site/**", ".github/workflows/site.yml"]
   pull_request:
+    paths-ignore: ["site/**", ".github/workflows/site.yml"]
   workflow_dispatch:
 
 permissions:
