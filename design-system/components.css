@@ -1605,3 +1605,76 @@ html.is-grabbing, html.is-grabbing * { cursor: grabbing !important; user-select:
 .rule-history__row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) auto; gap: var(--space-150); align-items: center; padding: var(--space-100) 0; border-bottom: var(--border-width) solid var(--color-border); font: var(--font-body-small); color: var(--color-text-subtle); }
 .rule-history__row b { color: var(--color-text); font-weight: var(--font-weight-semibold); }
 .rule-history__row.is-undone { opacity: .55; }
+
+/* ==========================================================================
+   Criptografia de ponta a ponta (L64–L69, US13 e US14)
+   ========================================================================== */
+/* L64 · Cartão de escolha: uma opção de um assistente, como rádio grande. */
+.choice-list { display: grid; gap: var(--space-100); }
+.choice-card {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: var(--space-150); align-items: start;
+  padding: var(--space-150) var(--space-200); cursor: pointer;
+  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-medium); background: var(--color-surface);
+}
+.choice-card:hover, .choice-card.is-hover { background: var(--color-bg-neutral-subtle-hovered); }
+.choice-card:has(input:checked), .choice-card.is-selected { border-color: var(--color-border-selected); background: var(--color-bg-selected); }
+.choice-card input { margin: 3px 0 0; accent-color: var(--color-bg-brand-bold); }
+.choice-card__icon { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: var(--radius-small); background: var(--color-bg-neutral); color: var(--color-icon); }
+.choice-card__title { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-075); font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); color: var(--color-text); }
+.choice-card__desc { margin: 2px 0 0; font: var(--font-body-small); color: var(--color-text-subtle); }
+
+/* L65 · Impressão digital: grupos de 4, fonte mono, selecionável e com copiar. */
+.fingerprint { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-050) var(--space-100); font: var(--font-code); color: var(--color-text); letter-spacing: .02em; user-select: all; }
+.fingerprint span:nth-child(5) { margin-right: var(--space-100); }
+.fingerprint--compact { font-size: var(--font-size-body-small); color: var(--color-text-subtle); }
+
+/* L66 · Gerenciador de chaves: barra, lista em tabela e detalhes ao lado. */
+.key-manager { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-150); min-height: 0; }
+.key-manager__bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-100); }
+.key-manager__bar .input--search { flex: 1 1 14rem; }
+.key-manager__body { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: var(--space-200); min-height: 0; }
+.key-table { width: 100%; border-collapse: collapse; font: var(--font-body-small); color: var(--color-text-subtle); }
+.key-table th { position: sticky; top: 0; padding: var(--space-075) var(--space-100); text-align: left; font-weight: var(--font-weight-semibold); color: var(--color-text-subtlest); background: var(--color-surface); border-bottom: var(--border-width) solid var(--color-border); }
+.key-table td { padding: var(--space-100); border-bottom: var(--border-width) solid var(--color-border); vertical-align: middle; }
+.key-table tr[aria-selected="true"] td { background: var(--color-bg-selected); }
+.key-table tbody tr:hover td { background: var(--color-bg-neutral-subtle-hovered); }
+.key-table__who { display: grid; gap: 2px; min-width: 0; }
+.key-table__who b { color: var(--color-text); font-weight: var(--font-weight-semibold); }
+.key-table__id { font: var(--font-code); font-size: var(--font-size-body-small); }
+.key-details { display: grid; align-content: start; gap: var(--space-150); max-height: 100%; overflow: auto; padding: var(--space-200); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-medium); background: var(--color-surface); }
+.key-details__title { margin: 0; font: var(--font-card); color: var(--color-text); }
+.key-details dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-050) var(--space-150); margin: 0; font: var(--font-body-small); }
+.key-details dt { color: var(--color-text-subtlest); }
+.key-details dd { margin: 0; color: var(--color-text); overflow-wrap: anywhere; }
+
+/* L67 · Selo de segurança da mensagem: no cabeçalho, com detalhes ao clicar. */
+.sec-status { display: flex; flex-wrap: wrap; gap: var(--space-075); margin-top: var(--space-075); }
+.sec-badge {
+  display: inline-flex; align-items: center; gap: var(--space-050);
+  padding: 2px var(--space-100); border: 0; border-radius: var(--radius-round); cursor: pointer;
+  font: var(--font-weight-medium) var(--font-size-body-small)/1.5 var(--font-family-body);
+  background: var(--color-bg-success); color: var(--color-text-success);
+}
+.sec-badge .i { width: 14px; height: 14px; }
+.sec-badge--info { background: var(--color-bg-information); color: var(--color-text-information); }
+.sec-badge--warning { background: var(--color-bg-warning); color: var(--color-text-warning); }
+.sec-badge--danger { background: var(--color-bg-danger); color: var(--color-text-danger); }
+.sec-badge:focus-visible { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 1px; }
+
+/* L68 · Segurança no composer: cifrar, assinar e a tecnologia; chip do destinatário com o estado da chave. */
+.compose__security { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-075); padding: var(--space-075) var(--space-200); border-top: var(--border-width) solid var(--color-border); background: var(--color-bg-neutral); }
+.compose__security .btn[aria-pressed="true"] { background: var(--color-bg-selected); color: var(--color-text-selected); }
+.compose__security-tech { margin-left: auto; font: var(--font-body-small); color: var(--color-text-subtle); }
+.chip__key { display: inline-grid; place-items: center; width: 1rem; height: 1rem; color: var(--color-icon-success); }
+.chip__key .i { width: 12px; height: 12px; }
+.chip__key--missing { color: var(--color-icon-warning); }
+
+/* L69 · Bloco de texto para copiar (CSR, chave pública). */
+.pem-box { position: relative; margin: 0; padding: var(--space-150); padding-right: var(--space-500); max-height: 12rem; overflow: auto; border-radius: var(--radius-small); background: var(--color-bg-neutral); font: var(--font-code); font-size: var(--font-size-body-small); color: var(--color-text); white-space: pre; }
+.pem-box__copy { position: absolute; top: var(--space-075); right: var(--space-075); }
+
+/* Cabeçalho da folha com "Voltar" à esquerda (gerenciadores abertos a partir das Configurações). */
+.settings-sheet__head > .settings-sheet__back { margin-left: 0; }
+
+/* Etapas de um assistente: "1 de 3". */
+.wizard-steps { margin: 0 0 var(--space-100); font: var(--font-body-small); color: var(--color-text-subtlest); }
