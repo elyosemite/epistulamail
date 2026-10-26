@@ -411,11 +411,12 @@ pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_r
     };
     let view = message::build_view(&raw.raw, key.encode(), flags, raw.internal_date, allow_remote_images);
     let attachments = view.attachments.clone();
+    let preview = crate::preview::from_raw(&raw.raw);
     let id = stored.id;
     state
         .db
         .call(move |c| {
-            store::save_body(c, id, &raw.raw, &attachments)?;
+            store::save_body_with(c, id, &raw.raw, &attachments, &preview)?;
             store::set_local_flags(c, id, flags)
         })
         .await?;

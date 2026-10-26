@@ -2,8 +2,11 @@
 //! (32 bytes do gerador do SO) fica só no keyring. Migrações versionadas por `PRAGMA user_version`.
 //! O esquema de cifra fica fixo no código e a chave pode ser trocada sem perder dados (US10, CA4).
 
+use std::future::Future;
+use std::panic::Location;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -23,6 +26,7 @@ pub const MIGRATIONS: &[&str] = &[
     include_str!("../migrations/0005_conversas_e_notificacoes.sql"),
     include_str!("../migrations/0006_cifra.sql"),
     include_str!("../migrations/0007_regras.sql"),
+    include_str!("../migrations/0008_indice_conversas.sql"),
 ];
 
 /// Versão do esquema de cifra gravada em `app_setting` (`cipher_scheme`). 1 = SQLCipher 4 com chave
@@ -92,6 +96,17 @@ pub enum OpenError {
 #[derive(Clone)]
 pub struct Db {
     conn: Arc<Mutex<Option<Connection>>>,
+    /// De onde veio o último acesso que pegou a conexão, para o log dizer quem fez esperar.
+    holder: Arc<Mutex<Option<&'static Location<'static>>>>,
+}
+
+/// Acima disso, a espera ou a consulta vai para o log.
+const SLOW: Duration = Duration::from_millis(100);
+
+/// `offline.rs:111`: só o arquivo e a linha do código, nunca dados.
+fn place(at: &Location<'_>) -> String {
+    let file = at.file().rsplit(['/', '\\']).next().unwrap_or_default();
+    format!("{file}:{}", at.line())
 }
 
 pub fn sql_error(context: &'static str) -> impl Fn(rusqlite::Error) -> AppError {
@@ -158,12 +173,12 @@ impl Db {
         .map_err(|_| OpenError::Other)?;
         let mut conn = conn;
         migrate(&mut conn, migrations).map_err(|_| OpenError::Other)?;
-        Ok(Db { conn: Arc::new(Mutex::new(Some(conn))) })
+        Ok(Db { conn: Arc::new(Mutex::new(Some(conn))), holder: Arc::default() })
     }
 
     /// Sem conexão: o app abriu bloqueado e espera a senha.
     pub fn closed() -> Db {
-        Db { conn: Arc::new(Mutex::new(None)) }
+        Db { conn: Arc::new(Mutex::new(None)), holder: Arc::default() }
     }
 
     /// Passa para este `Db` (o que o app inteiro usa) a conexão de um banco recém-aberto.
@@ -199,26 +214,37 @@ impl Db {
         Ok(())
     }
 
-    pub async fn call<T, F>(&self, f: F) -> Result<T, AppError>
+    /// Roda `f` com a conexão, fora das threads do runtime. Espera ou consulta lenta vai para o log
+    /// com o lugar no código de quem chamou e de quem estava antes com a conexão (só arquivo e linha).
+    #[track_caller]
+    pub fn call<T, F>(&self, f: F) -> impl Future<Output = Result<T, AppError>> + Send + 'static
     where
         T: Send + 'static,
         F: FnOnce(&mut Connection) -> Result<T, AppError> + Send + 'static,
     {
-        let conn = self.conn.clone();
-        tokio::task::spawn_blocking(move || {
-            let asked = std::time::Instant::now();
-            let mut guard = conn.lock().map_err(|_| AppError::Storage)?;
-            let waited = asked.elapsed();
-            let result = f(guard.as_mut().ok_or(AppError::Locked)?);
-            let ran = asked.elapsed() - waited;
-            // Diagnóstico da abertura: espera pela conexão única e consultas lentas (só tempos).
-            if waited.as_millis() >= 100 || ran.as_millis() >= 100 {
-                tracing::info!(wait_ms = waited.as_millis() as u64, run_ms = ran.as_millis() as u64, "acesso lento ao banco");
-            }
-            result
-        })
-        .await
-        .map_err(|_| AppError::Storage)?
+        let at = Location::caller();
+        let (conn, holder) = (self.conn.clone(), self.holder.clone());
+        async move {
+            tokio::task::spawn_blocking(move || {
+                let asked = Instant::now();
+                let mut guard = conn.lock().map_err(|_| AppError::Storage)?;
+                let waited = asked.elapsed();
+                let before = holder.lock().ok().and_then(|mut h| h.replace(at));
+                let result = f(guard.as_mut().ok_or(AppError::Locked)?);
+                let ran = asked.elapsed() - waited;
+                drop(guard);
+                if waited >= SLOW {
+                    let after = before.map(place).unwrap_or_default();
+                    tracing::info!(wait_ms = waited.as_millis() as u64, run_ms = ran.as_millis() as u64, at = %place(at), after = %after, "acesso ao banco esperou outro");
+                }
+                if ran >= SLOW {
+                    tracing::info!(run_ms = ran.as_millis() as u64, at = %place(at), "acesso lento ao banco");
+                }
+                result
+            })
+            .await
+            .map_err(|_| AppError::Storage)?
+        }
     }
 
     /// Acesso síncrono, para testes.
@@ -396,6 +422,12 @@ mod tests {
         shared.close();
         assert!(!shared.is_open());
         assert!(matches!(shared.call(|_| Ok(())).await, Err(AppError::Locked)));
+    }
+
+    #[test]
+    fn slow_access_log_names_only_file_and_line() {
+        let at = Location::caller();
+        assert_eq!(place(at), format!("db.rs:{}", at.line()));
     }
 
     #[test]

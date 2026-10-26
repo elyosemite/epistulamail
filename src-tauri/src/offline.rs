@@ -19,6 +19,8 @@ use crate::store::{self, AccountStatus, BodyTarget};
 
 /// Mensagens por lote (CA2).
 pub const BATCH: usize = 25;
+/// Corpos gravados por acesso ao banco: entre um pacote e outro a tela pode usar a conexão.
+const SAVE_CHUNK: usize = 5;
 /// Maior mensagem baixada antes de abrir (D2); acima disso, quase sempre anexos grandes, só ao abrir.
 pub const MAX_BACKGROUND_BYTES: u32 = 2 * 1024 * 1024;
 /// Lotes por conta em cada volta, para uma conta grande não segurar as outras.
@@ -106,19 +108,35 @@ pub async fn download(state: &AppState, handle: &AccountHandle, targets: Vec<Bod
     })
     .await?;
     let mut bodies: HashMap<u32, Vec<u8>> = fetched.into_iter().collect();
-    state
-        .db
-        .call(move |c| {
-            let mut saved = 0;
-            for t in targets.iter().filter(|t| t.folder_id == folder_id) {
-                let Some(raw) = bodies.remove(&t.uid) else { continue };
+    let pairs: Vec<(i64, Vec<u8>)> = targets.iter().filter(|t| t.folder_id == folder_id).filter_map(|t| Some((t.message_id, bodies.remove(&t.uid)?))).collect();
+    // Anexos e prévia saem do MIME aqui, fora da conexão com o banco.
+    let parsed = tokio::task::spawn_blocking(move || {
+        pairs
+            .into_iter()
+            .map(|(id, raw)| {
                 let attachments = message::attachments_of(&raw);
-                store::save_body(c, t.message_id, &raw, &attachments)?;
-                saved += 1;
-            }
-            Ok(saved)
-        })
-        .await
+                let preview = crate::preview::from_raw(&raw);
+                (id, raw, attachments, preview)
+            })
+            .collect::<Vec<_>>()
+    })
+    .await
+    .map_err(|_| AppError::Storage)?;
+    let mut saved = 0;
+    let mut parsed = parsed.into_iter().peekable();
+    while parsed.peek().is_some() {
+        let chunk: Vec<_> = parsed.by_ref().take(SAVE_CHUNK).collect();
+        saved += state
+            .db
+            .call(move |c| {
+                for (id, raw, attachments, preview) in &chunk {
+                    store::save_body_with(c, *id, raw, attachments, preview)?;
+                }
+                Ok(chunk.len())
+            })
+            .await?;
+    }
+    Ok(saved)
 }
 
 /// Pré-busca (CA3): as mensagens pedidas pelo frontend (as próximas da lista, as da conversa, a

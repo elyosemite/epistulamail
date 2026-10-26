@@ -834,17 +834,15 @@ const NEWER_IN_THREAD: &str = "m.thread_id IS NOT NULL AND m.thread_id <> '' AND
           AND NOT EXISTS (SELECT 1 FROM pending_move pm2 WHERE pm2.from_folder_id = mf2.folder_id AND pm2.from_uid = mf2.uid))";
 
 /// Resumo de cada conversa (fora Lixeira e Spam), para a lista. `own` é o e-mail da conta.
+const THREAD_SUMMARY_SQL: &str = "SELECT m.from_name, m.from_address, m.seen, m.flagged FROM message m
+     WHERE m.account_id = ?1 AND m.thread_id = ?2
+       AND EXISTS (SELECT 1 FROM message_folder mf JOIN folder f ON f.id = mf.folder_id
+                   WHERE mf.message_id = m.id AND f.role NOT IN ('trash', 'spam'))
+     ORDER BY m.date";
+
 pub fn thread_summaries(conn: &Connection, account_id: &str, own: &str, keys: &[String]) -> Result<HashMap<String, ThreadSummary>, AppError> {
     let own = own.trim().to_lowercase();
-    let mut st = conn
-        .prepare_cached(
-            "SELECT m.from_name, m.from_address, m.seen, m.flagged FROM message m
-             WHERE m.account_id = ?1 AND m.thread_id = ?2
-               AND EXISTS (SELECT 1 FROM message_folder mf JOIN folder f ON f.id = mf.folder_id
-                           WHERE mf.message_id = m.id AND f.role NOT IN ('trash', 'spam'))
-             ORDER BY m.date",
-        )
-        .map_err(sql_error("conversa"))?;
+    let mut st = conn.prepare_cached(THREAD_SUMMARY_SQL).map_err(sql_error("conversa"))?;
     let mut out = HashMap::new();
     for key in keys.iter().filter(|k| !k.starts_with('#')) {
         if out.contains_key(key) {
@@ -917,7 +915,14 @@ pub fn load_body(conn: &Connection, message_id: i64) -> Result<Option<Vec<u8>>, 
         .map_err(sql_error("corpo"))
 }
 
+#[cfg(test)]
 pub fn save_body(conn: &mut Connection, message_id: i64, raw: &[u8], attachments: &[AttachmentInfo]) -> Result<(), AppError> {
+    save_body_with(conn, message_id, raw, attachments, &crate::preview::from_raw(raw))
+}
+
+/// Como `save_body`, com a prévia já calculada: interpretar o MIME fora da conexão evita que um
+/// e-mail grande faça a tela esperar o banco.
+pub fn save_body_with(conn: &mut Connection, message_id: i64, raw: &[u8], attachments: &[AttachmentInfo], preview: &crate::preview::Preview) -> Result<(), AppError> {
     let tx = conn.transaction().map_err(sql_error("corpo"))?;
     tx.execute(
         "INSERT INTO message_body (message_id, raw, fetched_at) VALUES (?1, ?2, ?3)
@@ -933,7 +938,6 @@ pub fn save_body(conn: &mut Connection, message_id: i64, raw: &[u8], attachments
         )
         .map_err(sql_error("corpo"))?;
     }
-    let preview = crate::preview::from_raw(raw);
     tx.execute(
         "UPDATE message SET body_state = 'cached', has_attachments = ?2, snippet = ?3, has_files = ?4, has_images = ?5 WHERE id = ?1",
         params![message_id, !attachments.is_empty(), preview.snippet, preview.has_files, preview.has_images],
@@ -953,6 +957,24 @@ pub struct ConversationItem {
     pub mine: bool,
 }
 
+/// As mensagens vêm de uma lista de ids (a pedida e as da conversa): com `m.id = ?3 OR thread_id = ?2`
+/// o SQLite percorria todas as mensagens da conta.
+fn conversation_sql() -> String {
+    let visible = "(f.role NOT IN ('trash', 'spam') OR m.id = ?3)";
+    format!(
+        "SELECT {LISTED_COLUMNS}, mf.folder_id, m.id, lower(m.from_address) = ?4
+         FROM message m
+         JOIN message_folder mf ON mf.message_id = m.id
+         JOIN folder f ON f.id = mf.folder_id
+         LEFT JOIN message_followup fu ON fu.message_id = m.id
+         WHERE m.id IN (SELECT id FROM message WHERE id = ?3 AND account_id = ?1
+                        UNION SELECT id FROM message WHERE account_id = ?1 AND ?2 <> '' AND thread_id = ?2)
+           AND {visible}
+           AND f.position = (SELECT min(f.position) FROM message_folder mf JOIN folder f ON f.id = mf.folder_id WHERE mf.message_id = m.id AND {visible})
+         ORDER BY m.date, m.id"
+    )
+}
+
 /// Todas as mensagens da conversa de `message_id`, da mais antiga para a mais nova, uma vez cada,
 /// na primeira pasta da sidebar em que estão. Lixeira e Spam ficam de fora (a não ser a própria).
 pub fn conversation(conn: &Connection, account_id: &str, own: &str, message_id: i64) -> Result<Vec<ConversationItem>, AppError> {
@@ -961,19 +983,7 @@ pub fn conversation(conn: &Connection, account_id: &str, own: &str, message_id: 
         .optional()
         .map_err(sql_error("conversa"))?
         .ok_or(AppError::MessageNotFound)?;
-    let visible = "(f.role NOT IN ('trash', 'spam') OR m.id = ?3)";
-    let mut st = conn
-        .prepare_cached(&format!(
-            "SELECT {LISTED_COLUMNS}, mf.folder_id, m.id, lower(m.from_address) = ?4
-             FROM message m
-             JOIN message_folder mf ON mf.message_id = m.id
-             JOIN folder f ON f.id = mf.folder_id
-             LEFT JOIN message_followup fu ON fu.message_id = m.id
-             WHERE m.account_id = ?1 AND (m.id = ?3 OR (?2 <> '' AND m.thread_id = ?2)) AND {visible}
-               AND f.position = (SELECT min(f.position) FROM message_folder mf JOIN folder f ON f.id = mf.folder_id WHERE mf.message_id = m.id AND {visible})
-             ORDER BY m.date, m.id"
-        ))
-        .map_err(sql_error("conversa"))?;
+    let mut st = conn.prepare_cached(&conversation_sql()).map_err(sql_error("conversa"))?;
     let thread = thread.unwrap_or_default();
     let rows = st
         .query_map(params![account_id, thread, message_id, own.trim().to_lowercase()], |r| {
@@ -2804,6 +2814,27 @@ pub(crate) mod tests {
             assert_eq!(search(c, &a.id, "100%").unwrap().len(), 1);
             assert_eq!(search(c, &a.id, "_").unwrap().len(), 0, "_ é literal");
             assert_eq!(search(c, &a.id, "remetente@exemplo").unwrap().len(), 2);
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    /// Plano do SQLite (só o texto de cada passo), para conferir os índices.
+    fn plan(c: &Connection, sql: &str, args: &[&dyn rusqlite::ToSql]) -> String {
+        let mut st = c.prepare(&format!("EXPLAIN QUERY PLAN {sql}")).unwrap();
+        let rows = st.query_map(args, |r| r.get::<_, String>(3)).unwrap();
+        rows.map(Result::unwrap).collect::<Vec<_>>().join(" | ")
+    }
+
+    #[test]
+    fn conversation_queries_never_scan_the_whole_account() {
+        let t = test_db();
+        t.db.with(|c| {
+            let summary = plan(c, THREAD_SUMMARY_SQL, &[&"a", &"t"]);
+            assert!(summary.contains("ix_message_thread_date"), "{summary}");
+            let open = plan(c, &conversation_sql(), &[&"a", &"t", &1, &"x"]);
+            assert!(!open.contains("ix_message_account_date"), "{open}");
+            assert!(open.contains("ix_message_thread_date"), "{open}");
             Ok(())
         })
         .unwrap();
