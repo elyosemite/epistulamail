@@ -8,7 +8,7 @@ Epistula connects your accounts, downloads what you need to read and stores it i
 
 ![Epistula inbox with three accounts, folders and labels, the message list and an open newsletter in the reading pane](docs/images/epistula-caixa-de-entrada.png)
 
-> Epistula is under active development. Reading, sending, organizing, conversations, notifications, offline reading and multiple accounts work today. An app password, automatic lock and encrypted backups are on the way. [Current state](#current-state) lists exactly what exists right now.
+> Epistula is under active development. Reading, sending, organizing, rules, conversations, notifications, offline reading and multiple accounts work today. An app password, automatic lock and encrypted backups are on the way. [Current state](#current-state) lists exactly what exists right now.
 
 ## At a glance
 
@@ -57,7 +57,17 @@ What works today:
 - Compose, reply, reply all and forward, with drafts saved encrypted.
 - Folders and labels, flags with due dates, and move, archive, delete and mark as read for one message or many, including drag and drop onto a folder.
 - Search, a command bar, and background sync with a per-account interval.
-- Rules that organize mail as it arrives: move, archive, delete, label, mark as read, star, flag with a due date, silence or always notify. Each rule reads as a sentence, shows a live preview of the mail it would catch before you save it, and everything it does can be undone from its history. Start from a template or straight from a message ("always move mail from this sender").
+
+**Rules**
+
+- Rules that organize mail as it arrives, before it turns into a notification. Each rule reads as a sentence: "If From contains @shop.com → Move to Shopping".
+- Conditions on sender, domain, To and Cc, "sent only to me", subject, text snippet, mailing list, attachments, size, read and starred, with "all" or "any" and exceptions ("except if…"). Case and accents don't matter, and several comma-separated values count as "any of them".
+- Actions: move, archive, delete (always to the Trash), apply a label, mark as read, star, flag with a due date, don't notify and always notify (even in Do Not Disturb). Rules run in order, and one can stop the rest.
+- Live preview in the editor: before saving you see how many and which messages the rule would catch, plus a warning when a rule above keeps it from running.
+- Everything can be undone: the history keeps 30 days of what each rule did, with Undo on each batch, and a notice after each sync shows what got organized.
+- Start from a template (Newsletters, Automatic notices, Receipts and invoices, Important people) or straight from a message: "Create rule…", "Always move from this sender to…" and "Delete everything from this sender…".
+- "Run now" applies a rule to the mail already in a folder, and cleanup rules ("older than 30 days", "keep only the newest from this sender") run once a day.
+- Rules run inside Epistula while it's open (including in the tray) and work with any provider. Mail that arrived while the app was closed goes through them on the next sync.
 
 **Staying informed**
 

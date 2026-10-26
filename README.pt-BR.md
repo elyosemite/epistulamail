@@ -8,7 +8,7 @@ O Epistula conecta as suas contas, baixa o que você precisa ler e mantém tudo 
 
 ![Caixa de entrada do Epistula com três contas, pastas e marcadores, a lista de mensagens e uma newsletter aberta no painel de leitura](docs/images/epistula-caixa-de-entrada.png)
 
-> O projeto está em desenvolvimento ativo. Leitura, envio, organização, conversas, notificações, leitura sem conexão e várias contas já funcionam. Senha do app, bloqueio automático e backup cifrado estão a caminho. A seção [Estado atual](#estado-atual) diz exatamente o que existe hoje.
+> O projeto está em desenvolvimento ativo. Leitura, envio, organização, regras, conversas, notificações, leitura sem conexão e várias contas já funcionam. Senha do app, bloqueio automático e backup cifrado estão a caminho. A seção [Estado atual](#estado-atual) diz exatamente o que existe hoje.
 
 ## Em poucas palavras
 
@@ -56,7 +56,17 @@ O que funciona hoje:
 
 - Escrever, responder, responder a todos e encaminhar, com rascunhos salvos cifrados.
 - Pastas e marcadores, sinalizadas com prazo, e mover, arquivar, excluir e marcar como lida, em uma ou várias mensagens, inclusive arrastando para a pasta.
-- Regras que organizam os e-mails assim que chegam: mover, arquivar, excluir, aplicar marcador, marcar como lida, estrela, sinalizar com prazo, não notificar ou notificar sempre. Cada regra se lê como uma frase, mostra uma prévia ao vivo dos e-mails que pegaria antes de salvar, e tudo que ela faz pode ser desfeito pelo histórico. Dá para começar por um modelo ou direto de uma mensagem ("sempre mover deste remetente").
+
+**Regras**
+
+- Regras que organizam os e-mails assim que chegam, antes de virarem notificação. Cada regra se lê como uma frase: "Se De contém @loja.com → Mover para Compras".
+- Condições por remetente, domínio, Para e Cc, "enviado só para mim", assunto, trecho do texto, lista de e-mails, anexos, tamanho, lida e estrela, com "todas" ou "qualquer uma" e exceções ("exceto se…"). Maiúsculas e acentos não fazem diferença, e vários valores separados por vírgula valem como "qualquer um".
+- Ações: mover, arquivar, excluir (sempre para a Lixeira), aplicar marcador, marcar como lida, estrela, sinalizar com prazo, não notificar e notificar sempre (até no Não perturbe). Ordem entre as regras e "parar de aplicar as outras".
+- Prévia ao vivo no editor: antes de salvar, você vê quantos e quais e-mails a regra pegaria, e o aviso quando outra regra acima a impede de rodar.
+- Tudo pode ser desfeito: o histórico guarda 30 dias do que cada regra fez, com "Desfazer" em cada lote, e um aviso depois de cada sincronização mostra o que foi organizado.
+- Comece por um modelo (Newsletters, Avisos automáticos, Recibos e faturas, Pessoas importantes) ou direto de uma mensagem: "Criar regra…", "Sempre mover deste remetente para…" e "Excluir tudo deste remetente…".
+- "Rodar agora" aplica uma regra aos e-mails que já estão na pasta, e regras de limpeza ("mais antigo que 30 dias", "manter só o mais recente do remetente") rodam uma vez por dia.
+- As regras rodam no Epistula, com o app aberto (inclusive na bandeja), e valem para qualquer provedor. O que chegou com o app fechado passa por elas na sincronização seguinte.
 
 **Avisos**
 
