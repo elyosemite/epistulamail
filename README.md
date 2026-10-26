@@ -6,7 +6,7 @@ A desktop email client that keeps your messages on your own computer, encrypted,
 
 Epistula connects your accounts, downloads what you need to read and stores it in a local database protected by AES-256. The key lives in your operating system's credential vault. There is no Epistula account, no Epistula cloud, and nobody on our side with access to your mail.
 
-![Epistula inbox with several accounts, folders, the message list and an open message with remote images blocked](docs/images/epistula-caixa-de-entrada.png)
+![Epistula inbox with three accounts, folders and labels, the message list and an open newsletter in the reading pane](docs/images/epistula-caixa-de-entrada.png)
 
 > Epistula is under active development. Reading, sending, organizing, conversations, notifications, offline reading and multiple accounts work today. An app password, automatic lock and encrypted backups are on the way. [Current state](#current-state) lists exactly what exists right now.
 
