@@ -1,8 +1,10 @@
 mod commands;
 mod compose;
 mod db;
+mod e2ee;
 mod error;
 mod imap_client;
+mod key_lookup;
 mod keys;
 mod links;
 mod lock;
@@ -12,6 +14,9 @@ mod oauth;
 mod moves;
 mod notify;
 mod offline;
+mod openpgp;
+mod pgp_mime;
+mod pgp_store;
 mod photo;
 mod preview;
 mod privacy;
@@ -279,6 +284,17 @@ pub fn run() {
             commands::disk_encryption,
             commands::delete_account_data,
             commands::purge_outside_period,
+            commands::list_pgp_keys,
+            commands::generate_pgp_key,
+            commands::import_pgp_keys,
+            commands::export_pgp_public,
+            commands::backup_pgp_secret,
+            commands::set_pgp_acceptance,
+            commands::delete_pgp_key,
+            commands::get_crypto_settings,
+            commands::set_crypto_settings,
+            commands::recipients_key_status,
+            commands::search_pgp_key,
             commands::list_rules,
             commands::save_rule,
             commands::delete_rule,

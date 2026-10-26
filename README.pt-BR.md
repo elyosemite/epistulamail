@@ -145,7 +145,7 @@ O alvo principal hoje é o Windows. O Epistula é feito com [Tauri 2](https://ta
 Requisitos:
 
 - Node.js 24 e pnpm 10
-- Rust 1.82 ou mais recente
+- Rust 1.88 ou mais recente
 - No Windows, o Perl portátil usado para compilar o OpenSSL embutido do SQLCipher. O script abaixo baixa e confere o SHA-256.
 
 ```powershell

@@ -2,6 +2,8 @@
 //! cabeçalhos codificados, sem injeção de cabeçalho) e sai depois do prazo do "Desfazer envio"
 //! (D3). O servidor grava a cópia em Enviados; aqui só sincronizamos a pasta depois.
 //! Nunca vão para log: destinatários, assunto, corpo nem nomes de anexos. Só contagens e resultado.
+//! Com OpenPGP (US13), o corpo sai cifrado e assinado (PGP/MIME) ou só assinado, com o cabeçalho
+//! Autocrypt quando a conta tem chave.
 
 use std::collections::HashSet;
 use std::str::FromStr;
@@ -50,6 +52,20 @@ pub struct Outgoing {
     pub body: String,
     /// Posições (em `attachments()` da original) dos anexos que o encaminhamento leva.
     pub keep_attachments: Vec<usize>,
+    /// Criptografar e assinar com OpenPGP (US13, CA6).
+    pub encrypt: bool,
+    pub sign: bool,
+}
+
+/// O que a criptografia precisa para montar a mensagem (US13).
+pub struct Crypto {
+    pub encrypt: bool,
+    pub sign: bool,
+    /// Minha chave e as dos destinatários; só quando cifra ou assina.
+    pub keys: Option<crate::e2ee::SendKeys>,
+    /// Minha chave pública (binária), para o Autocrypt e o anexo.
+    pub own_public: Option<Vec<u8>>,
+    pub settings: crate::pgp_store::CryptoSettings,
 }
 
 #[derive(Clone, Serialize)]
@@ -91,7 +107,7 @@ pub fn validate(
     }
     // Quebras de linha no assunto viram espaço (a lettre codifica o resto).
     let subject = subject.chars().map(|c| if c.is_control() { ' ' } else { c }).collect::<String>().trim().to_owned();
-    Ok(Outgoing { account_id, kind, original, to, cc, bcc, subject, body, keep_attachments })
+    Ok(Outgoing { account_id, kind, original, to, cc, bcc, subject, body, keep_attachments, encrypt: false, sign: false })
 }
 
 /// Agenda o envio para depois do prazo do "Desfazer" e devolve o id para cancelar.
@@ -195,8 +211,23 @@ fn new_message_id(from: &Mailbox) -> String {
 }
 
 /// Monta a mensagem. `original` é a mensagem respondida ou encaminhada, quando há.
+#[cfg(test)]
 pub fn build(from: Mailbox, outgoing: &Outgoing, original: Option<&[u8]>) -> Result<Message, AppError> {
-    let mut builder = Message::builder().message_id(Some(new_message_id(&from))).from(from).subject(outgoing.subject.clone()).date_now();
+    build_with(from, outgoing, original, None)
+}
+
+/// Monta a mensagem, cifrada, assinada ou com Autocrypt quando `crypto` pede.
+pub fn build_with(from: Mailbox, outgoing: &Outgoing, original: Option<&[u8]>, crypto: Option<&Crypto>) -> Result<Message, AppError> {
+    let encrypting = crypto.is_some_and(|c| c.encrypt);
+    let hide_subject = encrypting && crypto.is_some_and(|c| c.settings.encrypt_subject);
+    let from_address = from.email.to_string();
+    let outer_subject = if hide_subject { crate::pgp_mime::HIDDEN_SUBJECT.to_owned() } else { outgoing.subject.clone() };
+    let mut builder = Message::builder().message_id(Some(new_message_id(&from))).from(from).subject(outer_subject).date_now();
+    if let Some(c) = crypto {
+        if let (true, Some(public)) = (c.settings.autocrypt, &c.own_public) {
+            builder = builder.raw_header(crate::pgp_mime::autocrypt_header(&from_address, public));
+        }
+    }
     for m in &outgoing.to {
         builder = builder.to(m.clone());
     }
@@ -234,19 +265,70 @@ pub fn build(from: Mailbox, outgoing: &Outgoing, original: Option<&[u8]>) -> Res
             parts.push(Attachment::new(name).body(bytes, mime));
         }
     }
-    let result = if parts.is_empty() {
-        builder.singlepart(text)
+    // Assinada com OpenPGP: a minha chave pública vai junto, para responderem cifrado (US13, CA1).
+    if let Some(c) = crypto {
+        if let (true, true, Some(keys)) = (c.encrypt || c.sign, c.settings.attach_key, &c.keys) {
+            let public = crate::openpgp::armored_public(&keys.mine.to_public_key())?;
+            let id = crate::openpgp::info(&keys.mine.to_public_key()).fingerprint;
+            let name = format!("OpenPGP_0x{}.asc", &id[id.len().saturating_sub(16)..]);
+            parts.push(Attachment::new(name).body(public, ContentType::parse("application/pgp-keys").expect("tipo fixo")));
+        }
+    }
+    let inner = if parts.is_empty() {
+        crate::pgp_mime::Inner::Single(text)
     } else {
         let mut mixed = MultiPart::mixed().singlepart(text);
         for p in parts {
             mixed = mixed.singlepart(p);
         }
-        builder.multipart(mixed)
+        crate::pgp_mime::Inner::Multi(mixed)
+    };
+    let result = match crypto.and_then(|c| c.keys.as_ref().map(|k| (c, k))) {
+        Some((c, keys)) if c.encrypt => {
+            let mut body = inner.formatted();
+            if hide_subject {
+                body = crate::pgp_mime::protect_subject(&body, &outgoing.subject);
+            }
+            let cipher = crate::openpgp::encrypt(&body, &keys.recipients, Some(&keys.mine))?;
+            builder.multipart(crate::pgp_mime::encrypted_body(cipher))
+        }
+        Some((c, keys)) if c.sign => {
+            let signed = crate::pgp_mime::canonical(&inner.formatted());
+            let signature = crate::openpgp::sign_detached(&signed, &keys.mine)?;
+            let (content_type, body) = crate::pgp_mime::signed_body(&signed, &signature);
+            builder.header(content_type).body(body)
+        }
+        _ => match inner {
+            crate::pgp_mime::Inner::Single(p) => builder.singlepart(p),
+            crate::pgp_mime::Inner::Multi(p) => builder.multipart(p),
+        },
     };
     result.map_err(|e| {
         tracing::warn!(error = %e, "mensagem não pôde ser montada");
         AppError::InvalidInput
     })
+}
+
+/// Configurações e chaves da conta para o envio. Cifrar sem a chave de algum destinatário falha
+/// antes de qualquer coisa sair (US13, regra 3).
+async fn load_crypto(state: &AppState, outgoing: &Outgoing) -> Result<Crypto, AppError> {
+    let (id, encrypt, sign) = (outgoing.account_id.clone(), outgoing.encrypt, outgoing.sign);
+    let recipients: Vec<String> = outgoing.to.iter().chain(&outgoing.cc).chain(&outgoing.bcc).map(|m| m.email.to_string().to_lowercase()).collect();
+    let loaded = state
+        .db
+        .call(move |c| {
+            let settings = crate::pgp_store::crypto_settings(c, &id)?;
+            let keys = if encrypt || sign { Some(crate::e2ee::send_keys(c, &id, &recipients, encrypt)?) } else { None };
+            let own_public = match &settings.pgp_key {
+                Some(fp) => crate::pgp_store::public_key(c, fp)?,
+                None => None,
+            };
+            Ok((settings, keys, own_public))
+        })
+        .await?;
+    let (settings, keys, own_public) = loaded;
+    tracing::info!(encrypt, sign, "envio com OpenPGP preparado");
+    Ok(Crypto { encrypt, sign, keys, own_public, settings })
 }
 
 async fn deliver(state: &AppState, outgoing: &Outgoing) -> Result<(), AppError> {
@@ -262,7 +344,8 @@ async fn deliver(state: &AppState, outgoing: &Outgoing) -> Result<(), AppError> 
     };
     let address = account.email.parse().map_err(|_| AppError::InvalidRecipient)?;
     let from = Mailbox::new(sender.filter(|n| !n.trim().is_empty()), address);
-    let message = build(from, outgoing, original.as_deref())?;
+    let crypto = load_crypto(state, outgoing).await?;
+    let message = build_with(from, outgoing, original.as_deref(), Some(&crypto))?;
 
     let mut force_refresh = false;
     for attempt in 0..2 {

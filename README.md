@@ -146,7 +146,7 @@ The main target today is Windows. Epistula is built with [Tauri 2](https://tauri
 Requirements:
 
 - Node.js 24 and pnpm 10
-- Rust 1.82 or later
+- Rust 1.88 or later
 - On Windows, the portable Perl used to compile SQLCipher's bundled OpenSSL. The script below downloads it and checks its SHA-256.
 
 ```powershell

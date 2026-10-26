@@ -17,6 +17,7 @@ use crate::compose::{self, Template};
 use crate::mailbox::{self, Role};
 use crate::store::{self, Account, AccountStatus, Draft, DraftContent, DraftKind, FolderRow, Followup, FollowupChange};
 use crate::links;
+use crate::{openpgp, pgp_store};
 use crate::{rule_runner, rules};
 use crate::privacy::{self, LockStatus};
 use crate::{moves, send, sync};
@@ -349,7 +350,7 @@ pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_r
     // Corpo já salvo: abre sem rede. A mensagem aparece na hora como lida e o servidor recebe o "lida" em
     // seguida, sem segurar a tela; se ele não receber, a próxima sincronização traz o estado do servidor.
     if let Some(raw) = cached {
-        let mut view = message::build_view(&raw, key.encode(), stored.flags, None, allow_remote_images);
+        let mut view = view_of(&state, &raw, key.encode(), stored.flags, None, allow_remote_images).await;
         if !stored.flags.seen && account.status == AccountStatus::Active {
             let id = stored.id;
             let local = MessageFlags { seen: true, ..stored.flags };
@@ -409,8 +410,9 @@ pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_r
         }
         Err(e) => return Err(e),
     };
-    let view = message::build_view(&raw.raw, key.encode(), flags, raw.internal_date, allow_remote_images);
-    let attachments = view.attachments.clone();
+    let view = view_of(&state, &raw.raw, key.encode(), flags, raw.internal_date.clone(), allow_remote_images).await;
+    // O banco guarda os anexos da mensagem como veio do servidor (cifrada, se for o caso).
+    let attachments = message::attachments_of(&raw.raw);
     let preview = crate::preview::from_raw(&raw.raw);
     let id = stored.id;
     state
@@ -424,6 +426,18 @@ pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_r
         state.emit_accounts_changed();
     }
     Ok(view)
+}
+
+/// Monta a mensagem exibida, decifrando e verificando o OpenPGP quando houver (US13, CA7).
+async fn view_of(state: &AppState, raw: &[u8], id: String, flags: MessageFlags, internal_date: Option<String>, allow_remote_images: bool) -> MessageView {
+    let opened = crate::e2ee::open(state, raw.to_vec()).await;
+    let shown = if opened.raw.is_empty() { raw } else { &opened.raw };
+    let mut view = message::build_view(shown, id, flags, internal_date, allow_remote_images);
+    if let Some(subject) = opened.subject {
+        view.subject = subject;
+    }
+    view.security = opened.security;
+    view
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -757,6 +771,159 @@ pub async fn purge_outside_period(app: AppHandle, state: State<'_, AppState>) ->
 #[tauri::command]
 pub async fn rotate_db_key(state: State<'_, AppState>) -> Result<(), AppError> {
     privacy::rotate_key(&state).await
+}
+
+// ---------------------------------------------------------------- criptografia de ponta a ponta (US13)
+
+/// Impressão digital válida: 40 (v4) ou 64 (v6) dígitos hexadecimais.
+fn fingerprint(value: &str) -> Result<String, AppError> {
+    let v = value.trim().to_uppercase();
+    if (v.len() == 40 || v.len() == 64) && v.chars().all(|c| c.is_ascii_hexdigit()) {
+        Ok(v)
+    } else {
+        Err(AppError::InvalidId)
+    }
+}
+
+#[tauri::command]
+pub async fn list_pgp_keys(state: State<'_, AppState>) -> Result<Vec<pgp_store::PgpKeyRow>, AppError> {
+    state.db.call(|c| pgp_store::list_keys(c)).await
+}
+
+/// Cria uma chave para a conta (CA2) e, se a conta ainda não tem uma, passa a usá-la.
+#[tauri::command]
+pub async fn generate_pgp_key(state: State<'_, AppState>, account_id: String, kind: openpgp::KeyKind, name: String) -> Result<pgp_store::PgpKeyRow, AppError> {
+    let id = self::account_id(&account_id)?;
+    let lookup = id.clone();
+    let account = state.db.call(move |c| store::require_account(c, &lookup)).await?;
+    let name = name.trim().chars().take(120).collect::<String>();
+    let email = account.email.clone();
+    // RSA 4096 leva alguns segundos: fora das threads do runtime.
+    let secret = tokio::task::spawn_blocking(move || openpgp::generate(kind, &name, &email)).await.map_err(|_| AppError::Storage)??;
+    let public = secret.to_public_key();
+    let info = openpgp::info(&public);
+    let (pubb, secb) = (openpgp::public_bytes(&public)?, openpgp::secret_bytes(&secret)?);
+    let row = state
+        .db
+        .call(move |c| {
+            let row = pgp_store::upsert_key(c, &info, &pubb, Some(&secb), "generated")?;
+            let settings = pgp_store::crypto_settings(c, &id)?;
+            if settings.pgp_key.is_none() {
+                pgp_store::set_crypto_settings(c, &id, &pgp_store::CryptoSettings { pgp_key: Some(row.fingerprint.clone()), ..settings })?;
+            }
+            Ok(row)
+        })
+        .await?;
+    tracing::info!(kind = ?kind, "chave OpenPGP criada");
+    Ok(row)
+}
+
+/// Importa chaves de um arquivo ou da área de transferência (texto em armadura, ou binário em base64).
+#[tauri::command]
+pub async fn import_pgp_keys(state: State<'_, AppState>, data: String, binary: bool, passphrase: Option<String>) -> Result<Vec<pgp_store::PgpKeyRow>, AppError> {
+    use base64::Engine;
+    if data.len() > 4 * 1024 * 1024 {
+        return Err(AppError::InvalidInput);
+    }
+    let bytes = if binary { base64::engine::general_purpose::STANDARD.decode(data.trim()).map_err(|_| AppError::InvalidInput)? } else { data.into_bytes() };
+    let passphrase = passphrase.map(zeroize::Zeroizing::new);
+    let rows = state.db.call(move |c| crate::e2ee::import(c, &bytes, passphrase.as_deref().map(String::as_str))).await?;
+    tracing::info!(count = rows.len(), "chaves OpenPGP importadas");
+    Ok(rows)
+}
+
+/// A chave pública em armadura, para copiar ou salvar.
+#[tauri::command]
+pub async fn export_pgp_public(state: State<'_, AppState>, fingerprint: String) -> Result<String, AppError> {
+    let fp = self::fingerprint(&fingerprint)?;
+    let bytes = state.db.call(move |c| pgp_store::public_key(c, &fp)).await?.ok_or(AppError::InvalidId)?;
+    openpgp::armored_public(&openpgp::public_from_bytes(&bytes)?)
+}
+
+/// Backup da minha chave secreta, protegido pela senha dada (CA2).
+#[tauri::command]
+pub async fn backup_pgp_secret(state: State<'_, AppState>, fingerprint: String, passphrase: String) -> Result<String, AppError> {
+    let fp = self::fingerprint(&fingerprint)?;
+    let passphrase = zeroize::Zeroizing::new(passphrase);
+    let bytes = state.db.call(move |c| pgp_store::secret_key(c, &fp)).await?.ok_or(AppError::InvalidId)?;
+    let armored = tokio::task::spawn_blocking(move || openpgp::armored_secret_backup(&openpgp::secret_from_bytes(&bytes)?, &passphrase))
+        .await
+        .map_err(|_| AppError::Storage)??;
+    tracing::info!("backup de chave OpenPGP exportado");
+    Ok(armored)
+}
+
+#[tauri::command]
+pub async fn set_pgp_acceptance(state: State<'_, AppState>, fingerprint: String, acceptance: String) -> Result<pgp_store::PgpKeyRow, AppError> {
+    let fp = self::fingerprint(&fingerprint)?;
+    state.db.call(move |c| pgp_store::set_acceptance(c, &fp, &acceptance)).await
+}
+
+/// Exclui uma chave. Uma chave minha em uso por alguma conta deixa de ser usada.
+#[tauri::command]
+pub async fn delete_pgp_key(state: State<'_, AppState>, fingerprint: String) -> Result<(), AppError> {
+    let fp = self::fingerprint(&fingerprint)?;
+    state
+        .db
+        .call(move |c| {
+            for account in store::list_accounts(c)? {
+                let s = pgp_store::crypto_settings(c, &account.id)?;
+                if s.pgp_key.as_deref() == Some(fp.as_str()) {
+                    pgp_store::set_crypto_settings(c, &account.id, &pgp_store::CryptoSettings { pgp_key: None, ..s })?;
+                }
+            }
+            pgp_store::delete_key(c, &fp)
+        })
+        .await?;
+    tracing::info!("chave OpenPGP excluída");
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_crypto_settings(state: State<'_, AppState>, account_id: String) -> Result<pgp_store::CryptoSettings, AppError> {
+    let id = self::account_id(&account_id)?;
+    state.db.call(move |c| pgp_store::crypto_settings(c, &id)).await
+}
+
+#[tauri::command]
+pub async fn set_crypto_settings(state: State<'_, AppState>, account_id: String, settings: pgp_store::CryptoSettings) -> Result<pgp_store::CryptoSettings, AppError> {
+    let id = self::account_id(&account_id)?;
+    let fp = settings.pgp_key.as_deref().map(self::fingerprint).transpose()?;
+    state.db.call(move |c| pgp_store::set_crypto_settings(c, &id, &pgp_store::CryptoSettings { pgp_key: fp, ..settings })).await
+}
+
+/// Quais destinatários têm chave aceita (CA6), para o cadeado de cada um no composer.
+#[tauri::command]
+pub async fn recipients_key_status(state: State<'_, AppState>, addresses: Vec<String>) -> Result<Vec<crate::e2ee::RecipientKey>, AppError> {
+    if addresses.len() > 100 {
+        return Err(AppError::InvalidInput);
+    }
+    let addresses: Vec<String> = addresses.into_iter().map(|a| a.trim().to_lowercase()).collect();
+    state.db.call(move |c| crate::e2ee::recipient_status(c, &addresses)).await
+}
+
+/// Busca a chave de um e-mail na internet (D5: a interface pede permissão antes) e a guarda como
+/// "ainda não aceita".
+#[tauri::command]
+pub async fn search_pgp_key(state: State<'_, AppState>, email: String) -> Result<Vec<pgp_store::PgpKeyRow>, AppError> {
+    let email = email.trim().to_lowercase();
+    let Some((bytes, _source)) = crate::key_lookup::search(&state.http, &email).await? else { return Ok(Vec::new()) };
+    let keys = openpgp::parse_keys(&bytes)?;
+    state
+        .db
+        .call(move |c| {
+            let mut out = Vec::new();
+            for key in keys {
+                let public = key.public();
+                let info = openpgp::info(&public);
+                // Só chaves com o e-mail procurado.
+                if info.emails.contains(&email) {
+                    out.push(pgp_store::upsert_key(c, &info, &openpgp::public_bytes(&public)?, None, "search")?);
+                }
+            }
+            Ok(out)
+        })
+        .await
 }
 
 // ---------------------------------------------------------------- regras (US12)
@@ -1195,6 +1362,11 @@ pub struct SendRequest {
     pub body: String,
     #[serde(default)]
     pub keep_attachments: Vec<usize>,
+    /// Criptografar e assinar com OpenPGP (US13).
+    #[serde(default)]
+    pub encrypt: bool,
+    #[serde(default)]
+    pub sign: bool,
 }
 
 /// Valida e agenda o envio para depois do prazo do "Desfazer". O resultado chega pelo evento
@@ -1213,8 +1385,8 @@ pub async fn send_message(app: AppHandle, state: State<'_, AppState>, request: S
         }
         None => None,
     };
-    let outgoing = send::validate(
-        id,
+    let mut outgoing = send::validate(
+        id.clone(),
         request.kind,
         original,
         &request.to,
@@ -1224,6 +1396,15 @@ pub async fn send_message(app: AppHandle, state: State<'_, AppState>, request: S
         request.body,
         request.keep_attachments,
     )?;
+    // Mensagem criptografada é sempre assinada (US13, CA1).
+    outgoing.encrypt = request.encrypt;
+    outgoing.sign = request.sign || request.encrypt;
+    // Sem a chave de algum destinatário, o erro aparece já, e não depois do prazo do "Desfazer".
+    if outgoing.encrypt || outgoing.sign {
+        let recipients: Vec<String> = outgoing.to.iter().chain(&outgoing.cc).chain(&outgoing.bcc).map(|m| m.email.to_string().to_lowercase()).collect();
+        let encrypt = outgoing.encrypt;
+        state.db.call(move |c| crate::e2ee::send_keys(c, &id, &recipients, encrypt).map(|_| ())).await?;
+    }
     Ok(send::schedule(&app, outgoing))
 }
 

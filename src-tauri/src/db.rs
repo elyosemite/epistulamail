@@ -27,6 +27,7 @@ pub const MIGRATIONS: &[&str] = &[
     include_str!("../migrations/0006_cifra.sql"),
     include_str!("../migrations/0007_regras.sql"),
     include_str!("../migrations/0008_indice_conversas.sql"),
+    include_str!("../migrations/0009_openpgp.sql"),
 ];
 
 /// Versão do esquema de cifra gravada em `app_setting` (`cipher_scheme`). 1 = SQLCipher 4 com chave

@@ -187,6 +187,64 @@ export interface OfflineSettings {
   outsideBytes: number;
 }
 
+/** OpenPGP (US13): tipo da chave nova. */
+export type PgpKeyKind = "curve25519" | "rsa4096" | "post_quantum";
+/** Aceitação da chave de um contato (no modelo do Thunderbird). */
+export type PgpAcceptance = "undecided" | "rejected" | "unverified" | "verified";
+
+export interface PgpKey {
+  fingerprint: string;
+  userIds: string[];
+  emails: string[];
+  algorithm: string;
+  version: number;
+  postQuantum: boolean;
+  /** Segundos desde 1970. */
+  createdAt: number;
+  expiresAt: number | null;
+  revoked: boolean;
+  acceptance: PgpAcceptance;
+  origin: "generated" | "imported" | "autocrypt" | "attachment" | "search";
+  addedAt: number;
+  /** Tem a parte secreta. */
+  mine: boolean;
+}
+
+/** Configurações → Criptografia, por conta (CA1). */
+export interface CryptoSettings {
+  pgpKey: string | null;
+  encryptNew: boolean;
+  autoEncrypt: boolean;
+  signUnencrypted: boolean;
+  attachKey: boolean;
+  autocrypt: boolean;
+  encryptSubject: boolean;
+  technology: "auto" | "openpgp" | "smime";
+  searchOnline: "ask" | "always" | "never";
+}
+
+export interface RecipientKey {
+  address: string;
+  hasKey: boolean;
+  postQuantum: boolean;
+}
+
+export type Verification =
+  | { state: "unsigned" }
+  | { state: "good"; fingerprint: string }
+  | { state: "unknown_key"; issuer: string | null }
+  | { state: "bad" };
+
+/** Segurança de uma mensagem aberta (CA7). */
+export interface MessageSecurity {
+  technology: "openpgp";
+  encrypted: boolean;
+  decrypted: boolean;
+  postQuantum: boolean;
+  signature: Verification;
+  signerAcceptance: PgpAcceptance | null;
+}
+
 /** Regras (US12): campo, operador e valor de uma condição. */
 export type RuleField =
   | "from" | "from_domain" | "to" | "cc" | "to_or_cc" | "only_to_me" | "subject" | "snippet" | "list" | "has_files"
@@ -442,7 +500,10 @@ export type AppErrorKind =
   | "Locked"
   | "WrongPassword"
   | "UnlockWait"
-  | "WeakPassword";
+  | "WeakPassword"
+  | "NoKeyForMessage"
+  | "NoOwnKey"
+  | "MissingRecipientKey";
 
 export interface AppError {
   kind: AppErrorKind;
@@ -562,6 +623,19 @@ export const api = {
   ruleHistory: (accountId: string) => call<RuleRun[]>("rule_history", { accountId }),
   undoRuleRun: (accountId: string, runId: number) => call<number>("undo_rule_run", { accountId, runId }),
   ruleSuggestions: (messageId: string) => call<RuleSuggestions>("rule_suggestions", { messageId }),
+  listPgpKeys: () => call<PgpKey[]>("list_pgp_keys"),
+  generatePgpKey: (accountId: string, kind: PgpKeyKind, name: string) => call<PgpKey>("generate_pgp_key", { accountId, kind, name }),
+  /** Texto em armadura, ou o arquivo binário em base64 (`binary`). */
+  importPgpKeys: (data: string, binary: boolean, passphrase: string | null = null) => call<PgpKey[]>("import_pgp_keys", { data, binary, passphrase }),
+  exportPgpPublic: (fingerprint: string) => call<string>("export_pgp_public", { fingerprint }),
+  backupPgpSecret: (fingerprint: string, passphrase: string) => call<string>("backup_pgp_secret", { fingerprint, passphrase }),
+  setPgpAcceptance: (fingerprint: string, acceptance: PgpAcceptance) => call<PgpKey>("set_pgp_acceptance", { fingerprint, acceptance }),
+  deletePgpKey: (fingerprint: string) => call<void>("delete_pgp_key", { fingerprint }),
+  getCryptoSettings: (accountId: string) => call<CryptoSettings>("get_crypto_settings", { accountId }),
+  setCryptoSettings: (accountId: string, settings: CryptoSettings) => call<CryptoSettings>("set_crypto_settings", { accountId, settings }),
+  recipientsKeyStatus: (addresses: string[]) => call<RecipientKey[]>("recipients_key_status", { addresses }),
+  /** Busca na internet (WKD e keys.openpgp.org): só depois de o usuário permitir (D5). */
+  searchPgpKey: (email: string) => call<PgpKey[]>("search_pgp_key", { email }),
 };
 
 /** Eventos emitidos pelo backend (US3). */

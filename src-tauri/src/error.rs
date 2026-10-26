@@ -65,6 +65,12 @@ pub enum AppError {
     UnlockWait,
     #[error("Use uma senha com pelo menos 8 caracteres.")]
     WeakPassword,
+    #[error("Nenhuma das suas chaves abre esta mensagem.")]
+    NoKeyForMessage,
+    #[error("Escolha uma chave OpenPGP para esta conta em Configurações → Criptografia.")]
+    NoOwnKey,
+    #[error("Algum destinatário não tem chave aceita. Busque a chave dele ou envie sem criptografia.")]
+    MissingRecipientKey,
 }
 
 impl AppError {
@@ -100,6 +106,9 @@ impl AppError {
             AppError::WrongPassword => "WrongPassword",
             AppError::UnlockWait => "UnlockWait",
             AppError::WeakPassword => "WeakPassword",
+            AppError::NoKeyForMessage => "NoKeyForMessage",
+            AppError::NoOwnKey => "NoOwnKey",
+            AppError::MissingRecipientKey => "MissingRecipientKey",
         }
     }
 }

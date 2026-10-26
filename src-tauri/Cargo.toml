@@ -3,7 +3,7 @@ name = "epistula"
 version = "0.1.0"
 description = "Cliente de e-mail desktop Epistula"
 edition = "2021"
-rust-version = "1.82"
+rust-version = "1.88"
 publish = false
 
 [lib]
@@ -44,6 +44,12 @@ zeroize = "1.9"
 # chave do banco e os refresh tokens. Crates do RustCrypto, auditados.
 argon2 = { version = "0.5", default-features = false, features = ["alloc"] }
 aes-gcm = { version = "0.10", default-features = false, features = ["aes", "alloc"] }
+# OpenPGP (US13): rPGP, Rust puro, MIT/Apache, auditado; `pqc` traz ML-KEM e ML-DSA (RFC 9980).
+pgp = { version = "0.21", features = ["pqc"] }
+# Hash do WKD (busca de chaves OpenPGP pelo domínio): SHA-1 é o que a especificação pede.
+sha1 = "0.10"
+# Tamanho das chaves RSA na tela (o rPGP já traz o crate).
+rsa = { version = "0.9", default-features = false }
 chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 tauri-plugin-single-instance = "2"
 

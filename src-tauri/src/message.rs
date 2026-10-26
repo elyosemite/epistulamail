@@ -271,6 +271,8 @@ pub struct MessageView {
     pub attachments: Vec<AttachmentInfo>,
     /// O HTML tem texto citado marcado e escondido (US8, D3). No texto puro, o frontend procura as linhas com `>`.
     pub has_quote: bool,
+    /// Criptografia e assinatura (US13): preenchido por `e2ee::open`.
+    pub security: Option<crate::e2ee::Security>,
 }
 
 fn people(address: Option<&Address>) -> Vec<Person> {
@@ -306,6 +308,7 @@ pub fn build_view(raw: &[u8], id: String, flags: MessageFlags, internal_date: Op
             blocked_remote_images: 0,
             attachments: Vec::new(),
             has_quote: false,
+            security: None,
         };
     };
 
@@ -349,6 +352,7 @@ pub fn build_view(raw: &[u8], id: String, flags: MessageFlags, internal_date: Op
         blocked_remote_images,
         attachments,
         has_quote,
+        security: None,
     }
 }
 
