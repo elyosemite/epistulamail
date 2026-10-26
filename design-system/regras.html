@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Regras · Epistula Design System</title>
+<meta name="description" content="Organizar os e-mails assim que chegam.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="regras">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="regras">
+      <div class="ds-head">
+        <p class="eyebrow">US12 · L58–L63</p>
+        <h1>Regras</h1>
+        <p class="lede">Regras que organizam os e-mails assim que eles chegam. Composição de <code>.settings</code>, <code>.toggle</code>, <code>.select</code>, <code>.input</code>, <code>.chip</code>, <code>.modal</code>, <code>.toast</code>, <code>.menu</code>, <code>.section-message</code> e <code>.empty</code>, mais as peças L58 a L63. Ícones: <code>filter</code>, <code>grip</code>, <code>play</code>, <code>arrow-right</code>, <code>history</code>, <code>receipt</code>.</p>
+      </div>
+      <dl class="guidance">
+        <div><dt>Ideia central</dt><dd>Cada regra se lê como uma frase: "De contém @loja.com → Mover para Compras". A mesma frase aparece na lista, no editor (ao vivo) e no histórico.</dd></div>
+        <div><dt>Confiança</dt><dd>Antes de salvar, a prévia mostra quais e-mails a regra pegaria. Depois, tudo que ela faz vai para o histórico com "Desfazer". Excluir sempre vai para a Lixeira.</dd></div>
+      </dl>
+    </section>
+
+    <section class="ds-section" id="lista">
+      <div class="ds-head">
+        <p class="eyebrow">L58 · L59 · CA1</p>
+        <h2>Configurações → Regras</h2>
+        <p class="lede">Seção entre Privacidade e Conta. A conta fica no topo (D1). As regras rodam de cima para baixo; arrastar pela alça, ou <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> com a linha em foco, muda a ordem.</p>
+      </div>
+      <div class="stage stage--flush scroll-x">
+        <div style="display:flex;height:44rem;min-width:60rem;padding:var(--space-100);background:var(--color-canvas)">
+          <div class="settings-sheet" role="dialog" aria-modal="true" aria-labelledby="r-title">
+            <div class="settings-sheet__head">
+              <svg class="i"><use href="#i-settings"/></svg>
+              <h2 class="modal__title" id="r-title">Configurações</h2>
+              <button class="btn btn--subtle btn--icon" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button>
+            </div>
+            <div class="settings">
+              <div class="settings__nav" role="tablist" aria-orientation="vertical" aria-label="Seções">
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-sliders"/></svg><span class="nav-item__text">Geral</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-palette"/></svg><span class="nav-item__text">Aparência</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-bell"/></svg><span class="nav-item__text">Notificações</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-shield"/></svg><span class="nav-item__text">Privacidade</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="true"><svg class="i"><use href="#i-filter"/></svg><span class="nav-item__text">Regras</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-user"/></svg><span class="nav-item__text">Conta</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-mail"/></svg><span class="nav-item__text">E-mail</span></button>
+              </div>
+              <div class="settings__panel" role="tabpanel" style="overflow:auto">
+                <h3 class="settings__title">Regras</h3>
+                <div class="row" style="justify-content:space-between;gap:var(--space-150)">
+                  <div class="row" style="gap:var(--space-100)">
+                    <span id="r-acc" style="font:var(--font-body);color:var(--color-text-subtle)">Regras de</span>
+                    <span class="select"><select aria-labelledby="r-acc"><option selected>Pessoal</option><option>Trabalho</option><option>Família</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                  </div>
+                  <div class="row" style="gap:var(--space-100)">
+                    <button class="btn btn--subtle" type="button"><svg class="i"><use href="#i-history"/></svg>Histórico</button>
+                    <button class="btn btn--primary" type="button"><svg class="i"><use href="#i-plus"/></svg>Nova regra</button>
+                  </div>
+                </div>
+                <div class="rule-list" role="list" aria-label="Regras de Pessoal, na ordem em que rodam">
+                  <div class="rule-row" role="listitem">
+                    <span class="rule-row__grip" aria-hidden="true"><svg class="i"><use href="#i-grip"/></svg></span>
+                    <input type="checkbox" class="toggle" checked aria-label="Ligar a regra Pessoas importantes">
+                    <div class="rule-row__body">
+                      <span class="rule-row__name">Pessoas importantes</span>
+                      <span class="rule-sentence">Se <span class="rule-term">De é mãe@exemplo.com, ana@exemplo.com</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action"><svg class="i"><use href="#i-bell"/></svg>Notificar sempre</span><span class="rule-term rule-term--action"><svg class="i"><use href="#i-star"/></svg>Estrela</span> e parar</span>
+                    </div>
+                    <span class="rule-row__stats">9 e-mails<br>em 30 dias</span>
+                    <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Mais ações da regra Pessoas importantes"><svg class="i"><use href="#i-more"/></svg></button>
+                  </div>
+                  <div class="rule-row is-hover" role="listitem">
+                    <span class="rule-row__grip" aria-hidden="true"><svg class="i"><use href="#i-grip"/></svg></span>
+                    <input type="checkbox" class="toggle" checked aria-label="Ligar a regra Newsletters">
+                    <div class="rule-row__body">
+                      <span class="rule-row__name">Newsletters</span>
+                      <span class="rule-sentence">Se <span class="rule-term">É de uma lista de e-mails</span> e <span class="rule-term">De não contém BBC In History</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action"><svg class="i"><use href="#i-folder-move"/></svg>Mover para Leitura</span><span class="rule-term rule-term--action"><svg class="i"><use href="#i-bell-off"/></svg>Não notificar</span></span>
+                    </div>
+                    <span class="rule-row__stats">214 e-mails<br>em 30 dias</span>
+                    <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Mais ações da regra Newsletters"><svg class="i"><use href="#i-more"/></svg></button>
+                  </div>
+                  <div class="rule-row" role="listitem">
+                    <span class="rule-row__grip" aria-hidden="true"><svg class="i"><use href="#i-grip"/></svg></span>
+                    <input type="checkbox" class="toggle" checked aria-label="Ligar a regra Promoções antigas">
+                    <div class="rule-row__body">
+                      <span class="rule-row__name">Promoções antigas</span>
+                      <span class="rule-sentence">Se <span class="rule-term">Domínio é pinterest.com, amazon.com.br</span> e <span class="rule-term">Mais antigo que 14 dias</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--danger"><svg class="i"><use href="#i-trash"/></svg>Excluir</span></span>
+                    </div>
+                    <span class="rule-row__stats">Limpeza diária<br>31 em 30 dias</span>
+                    <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Mais ações da regra Promoções antigas"><svg class="i"><use href="#i-more"/></svg></button>
+                  </div>
+                  <div class="rule-row is-off" role="listitem">
+                    <span class="rule-row__grip" aria-hidden="true"><svg class="i"><use href="#i-grip"/></svg></span>
+                    <input type="checkbox" class="toggle" aria-label="Ligar a regra Projetos antigos">
+                    <div class="rule-row__body">
+                      <span class="rule-row__name">Projetos antigos</span>
+                      <span class="rule-sentence">Se <span class="rule-term">Para contém projetos@</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action"><svg class="i"><use href="#i-folder-move"/></svg>Mover para Projetos 2024</span></span>
+                      <span class="rule-row__warn"><svg class="i i--sm"><use href="#i-warning"/></svg>Desligada: a pasta Projetos 2024 não existe mais. Edite para escolher outra.</span>
+                    </div>
+                    <span class="rule-row__stats">—</span>
+                    <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Mais ações da regra Projetos antigos"><svg class="i"><use href="#i-more"/></svg></button>
+                  </div>
+                </div>
+                <p class="setting__desc" style="margin:0">As regras organizam os e-mails que chegam com o Epistula aberto, inclusive na bandeja. O que chegou com ele fechado passa pelas regras na próxima sincronização.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;gap:var(--space-300);grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));align-items:start;margin-top:var(--space-300)">
+        <figure class="state" style="justify-items:stretch">
+          <div class="menu" role="menu" aria-label="Regra Newsletters" style="max-width:15rem">
+            <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-pencil"/></svg><span class="menu-item__text">Editar</span></button>
+            <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-play"/></svg><span class="menu-item__text">Rodar agora…</span></button>
+            <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-copy"/></svg><span class="menu-item__text">Duplicar</span></button>
+            <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-arrow-up"/></svg><span class="menu-item__text">Subir</span><kbd>Alt+↑</kbd></button>
+            <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-arrow-down"/></svg><span class="menu-item__text">Descer</span><kbd>Alt+↓</kbd></button>
+            <div class="menu__sep" role="separator"></div>
+            <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-trash"/></svg><span class="menu-item__text">Excluir regra</span></button>
+          </div>
+          <figcaption><b>Menu da regra</b>"Subir" e "Descer" são a alternativa ao arraste, pelo teclado</figcaption>
+        </figure>
+        <figure class="state" style="justify-items:stretch">
+          <div class="rule-list"><div class="rule-row is-dragging"><span class="rule-row__grip" aria-hidden="true"><svg class="i"><use href="#i-grip"/></svg></span><input type="checkbox" class="toggle" checked aria-label="Ligar"><div class="rule-row__body"><span class="rule-row__name">Faturas</span><span class="rule-sentence">Se <span class="rule-term">Assunto contém fatura</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action">Marcador Investments</span></span></div><span class="rule-row__stats">6</span><span></span></div></div>
+          <figcaption><b>Arrastando</b><code>.rule-row.is-dragging</code> com a sombra de sobreposição</figcaption>
+        </figure>
+      </div>
+      <dl class="guidance">
+        <div><dt>Frase (L58)</dt><dd>Condições em <code>.rule-term</code> neutro, ações em <code>.rule-term--action</code>; excluir usa <code>.rule-term--danger</code>. "e parar" aparece quando a regra impede as seguintes.</dd></div>
+        <div><dt>Números</dt><dd>Quantos e-mails a regra afetou em 30 dias: uma regra que nunca age provavelmente está errada.</dd></div>
+        <div><dt>Problemas</dt><dd>Regra desligada por erro (pasta apagada) mostra o motivo na própria linha e no sino.</dd></div>
+      </dl>
+    </section>
+
+    <section class="ds-section" id="modelos">
+      <div class="ds-head">
+        <p class="eyebrow">L62 · CA7</p>
+        <h2>Sem regras: modelos</h2>
+        <p class="lede">O estado vazio ensina o que uma regra faz e oferece modelos. Um modelo abre o editor preenchido; nada é salvo sem confirmar.</p>
+      </div>
+      <div class="stage" style="display:grid;gap:var(--space-300)">
+        <div class="empty" style="padding-block:var(--space-200) 0">
+          <svg class="empty__art" viewBox="0 0 96 96" fill="none" aria-hidden="true"><path d="M14 20h68L56 52v20l-16 8V52z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="m60 74 6 6 14-14" stroke="var(--color-icon-success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h3 class="empty__title">Deixe o Epistula arrumar a Caixa de entrada</h3>
+          <p class="empty__desc">Uma regra olha cada e-mail que chega e faz o que você pediu: mover, arquivar, marcar ou excluir. Comece por um modelo ou crie a sua.</p>
+        </div>
+        <div class="rule-templates">
+          <button class="rule-template" type="button"><span class="rule-template__icon"><svg class="i"><use href="#i-mail-open"/></svg></span><span class="rule-template__title">Newsletters</span><span class="rule-template__desc">E-mails de listas vão para uma pasta de leitura, sem notificar.</span></button>
+          <button class="rule-template is-hover" type="button"><span class="rule-template__icon"><svg class="i"><use href="#i-bell-off"/></svg></span><span class="rule-template__title">Avisos automáticos</span><span class="rule-template__desc">De no-reply e notificações: arquivar e marcar como lidos.</span></button>
+          <button class="rule-template" type="button"><span class="rule-template__icon"><svg class="i"><use href="#i-receipt"/></svg></span><span class="rule-template__title">Recibos e faturas</span><span class="rule-template__desc">Assunto com fatura, boleto ou nota fiscal ganha estrela e prazo.</span></button>
+          <button class="rule-template" type="button"><span class="rule-template__icon"><svg class="i"><use href="#i-star"/></svg></span><span class="rule-template__title">Pessoas importantes</span><span class="rule-template__desc">Sempre notificar e marcar com estrela, até no Não perturbe.</span></button>
+        </div>
+        <div style="justify-self:center"><button class="btn btn--primary" type="button"><svg class="i"><use href="#i-plus"/></svg>Criar uma regra do zero</button></div>
+      </div>
+    </section>
+
+    <section class="ds-section" id="editor">
+      <div class="ds-head">
+        <p class="eyebrow">L60 · L61 · CA2</p>
+        <h2>Editor de regra</h2>
+        <p class="lede">Ocupa o painel das Configurações, com "Voltar às regras". Três blocos que se leem de cima para baixo: <b>quando</b>, <b>fazer</b> e <b>exceto se</b>. A prévia ao lado atualiza enquanto você escreve.</p>
+      </div>
+      <div class="stage">
+        <div class="rule-editor">
+          <div class="rule-editor__main">
+            <button class="btn btn--subtle rule-editor__back" type="button"><svg class="i"><use href="#i-chevron-left"/></svg>Voltar às regras</button>
+            <div class="field" style="max-width:24rem"><label class="field__label" for="e-name">Nome da regra</label><div class="input"><input id="e-name" value="Newsletters"></div></div>
+            <div class="rule-block" role="group" aria-labelledby="e-when">
+              <div class="rule-block__head" id="e-when">
+                Quando chegar um e-mail na
+                <span class="select"><select aria-label="Pasta"><option selected>Caixa de entrada</option><option>Caixa de entrada e Todos os e-mails</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                que atenda a
+                <div class="segmented" role="radiogroup" aria-label="Quais condições"><button class="btn btn--compact" type="button" role="radio" aria-checked="true">todas</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false">qualquer uma</button></div>
+              </div>
+              <div class="rule-cond">
+                <span class="select"><select aria-label="Campo"><option selected>Lista de e-mails</option><option>De</option><option>Domínio do remetente</option><option>Para</option><option>Cc</option><option>Para ou Cc</option><option>Enviado só para mim</option><option>Assunto</option><option>Trecho do texto</option><option>Tem arquivos anexados</option><option>Tamanho maior que</option><option>Já lida</option><option>Com estrela</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                <span class="select"><select aria-label="Operador"><option selected>é de uma lista</option><option>não é de uma lista</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                <span></span>
+                <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover esta condição" data-tip="Remover"><svg class="i"><use href="#i-x"/></svg></button>
+              </div>
+              <div class="rule-cond">
+                <span class="select"><select aria-label="Campo"><option selected>De</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                <span class="select"><select aria-label="Operador"><option>contém</option><option selected>não contém</option><option>é</option><option>começa com</option><option>termina com</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                <div class="input"><input aria-label="Valor" value="BBC In History, Golang SP"></div>
+                <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover esta condição" data-tip="Remover"><svg class="i"><use href="#i-x"/></svg></button>
+              </div>
+              <p class="field__help" style="margin:0">Vários valores separados por vírgula valem como "qualquer um deles". Maiúsculas e acentos não fazem diferença.</p>
+              <button class="btn btn--subtle btn--compact rule-block__add" type="button"><svg class="i"><use href="#i-plus"/></svg>Adicionar condição</button>
+            </div>
+            <div class="rule-block" role="group" aria-labelledby="e-do">
+              <div class="rule-block__head" id="e-do">Fazer</div>
+              <div class="rule-cond" style="grid-template-columns:11rem minmax(0,1fr) auto">
+                <span class="select"><select aria-label="Ação"><option selected>Mover para</option><option>Arquivar</option><option>Excluir (Lixeira)</option><option>Aplicar marcador</option><option>Marcar como lida</option><option>Marcar com estrela</option><option>Sinalizar com prazo</option><option>Não notificar</option><option>Notificar sempre</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                <span class="select"><select aria-label="Pasta de destino"><option>Leitura</option><option>Investments</option><option>Movies</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover esta ação"><svg class="i"><use href="#i-x"/></svg></button>
+              </div>
+              <div class="rule-cond" style="grid-template-columns:11rem minmax(0,1fr) auto">
+                <span class="select"><select aria-label="Ação"><option selected>Não notificar</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                <span></span>
+                <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover esta ação"><svg class="i"><use href="#i-x"/></svg></button>
+              </div>
+              <button class="btn btn--subtle btn--compact rule-block__add" type="button"><svg class="i"><use href="#i-plus"/></svg>Adicionar ação</button>
+              <label class="confirm-check"><input type="checkbox" class="checkbox">Parar de aplicar as outras regras a este e-mail</label>
+            </div>
+            <div class="rule-block" role="group" aria-labelledby="e-except">
+              <div class="rule-block__head" id="e-except">Exceto se <span style="font:var(--font-body-small);color:var(--color-text-subtle)">(opcional)</span></div>
+              <button class="btn btn--subtle btn--compact rule-block__add" type="button"><svg class="i"><use href="#i-plus"/></svg>Adicionar exceção</button>
+            </div>
+            <label class="confirm-check"><input type="checkbox" class="checkbox" checked>Aplicar também aos 128 e-mails que já estão na Caixa de entrada</label>
+            <div class="section-message"><svg class="i"><use href="#i-info"/></svg><div><p class="section-message__title">Como vai ficar</p><p><span class="rule-sentence" style="display:inline-flex">Se <span class="rule-term">É de uma lista de e-mails</span> e <span class="rule-term">De não contém BBC In History, Golang SP</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action">Mover para Leitura</span><span class="rule-term rule-term--action">Não notificar</span></span></p></div></div>
+            <div class="row" style="justify-content:flex-end;gap:var(--space-100)">
+              <button class="btn btn--subtle" type="button">Cancelar</button>
+              <button class="btn btn--primary" type="button">Salvar regra</button>
+            </div>
+          </div>
+          <aside class="rule-preview" aria-live="polite" aria-labelledby="p-count">
+            <p class="rule-preview__count" id="p-count">Pegaria 128 de 500</p>
+            <p class="rule-preview__hint">Entre os 500 e-mails mais recentes da Caixa de entrada.</p>
+            <ul class="rule-preview__list">
+              <li class="rule-preview__item"><b>El Mundo</b><span>8,99€/año: 365 días para entender…</span><span>24 out</span></li>
+              <li class="rule-preview__item"><b>O'Reilly</b><span>How one AI project is progressing</span><span>20 out</span></li>
+              <li class="rule-preview__item"><b>GitLab</b><span>What's new from GitLab Transcend</span><span>16 out</span></li>
+              <li class="rule-preview__item"><b>The Washington Post</b><span>New sign in activity.</span><span>15 out</span></li>
+              <li class="rule-preview__item"><b>Pinterest</b><span>"Design de livros", "Escritor" e 2…</span><span>14 out</span></li>
+            </ul>
+            <button class="btn btn--link" type="button" style="justify-self:start">Ver os 128</button>
+          </aside>
+        </div>
+      </div>
+      <div style="display:grid;gap:var(--space-300);grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));align-items:start;margin-top:var(--space-300)">
+        <figure class="state" style="justify-items:stretch">
+          <div class="section-message section-message--warning"><svg class="i"><use href="#i-warning"/></svg><div><p class="section-message__title">A regra "Pessoas importantes" vem antes e para as outras</p><p>Para 3 destes e-mails, esta regra não vai rodar. Mova esta regra para cima ou tire o "parar" da outra.</p></div></div>
+          <figcaption><b>Regra encoberta</b>o editor avisa quando uma regra acima pega os mesmos e-mails (CA9)</figcaption>
+        </figure>
+        <figure class="state" style="justify-items:stretch">
+          <div class="rule-preview"><p class="rule-preview__count">Não pegaria nenhum</p><p class="rule-preview__hint">Nenhum dos 500 e-mails mais recentes atende a estas condições. Confira o texto ou troque "todas" por "qualquer uma".</p></div>
+          <figcaption><b>Prévia vazia</b>ajuda a perceber uma condição errada antes de salvar</figcaption>
+        </figure>
+        <figure class="state" style="justify-items:stretch">
+          <div class="rule-cond" style="grid-template-columns:11rem minmax(0,1fr) auto">
+            <span class="select"><select aria-label="Ação"><option selected>Excluir (Lixeira)</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+            <span class="field__help" style="margin:0">Vai para a Lixeira, e dá para desfazer pelo histórico.</span>
+            <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover esta ação"><svg class="i"><use href="#i-x"/></svg></button>
+          </div>
+          <figcaption><b>Excluir</b>explica para onde vai; "Mover para" e "Arquivar" somem da lista de ações enquanto houver "Excluir"</figcaption>
+        </figure>
+      </div>
+      <dl class="guidance">
+        <div><dt>Ordem de leitura</dt><dd>Quando → Fazer → Exceto se. O resumo "Como vai ficar" repete a frase da lista (L58), para conferir antes de salvar.</dd></div>
+        <div><dt>Salvar</dt><dd>Desabilitado sem ação. Sem condição, pede a confirmação "Valer para todos os e-mails".</dd></div>
+        <div><dt>Prévia (L61)</dt><dd>Roda no banco local, sem rede, nos 500 mais recentes da pasta. Em telas estreitas vai para baixo do editor.</dd></div>
+        <div><dt>Acessibilidade</dt><dd>Cada bloco é um <code>role="group"</code> com o título como rótulo; cada select e campo tem <code>aria-label</code>; a prévia é <code>aria-live="polite"</code>.</dd></div>
+      </dl>
+    </section>
+
+    <section class="ds-section" id="da-mensagem">
+      <div class="ds-head">
+        <p class="eyebrow">CA5</p>
+        <h2>Criar a partir de uma mensagem</h2>
+        <p class="lede">Na barra de comandos ("Mais" → "Criar regra…"). Um modal curto, com as sugestões vindas da mensagem; "Mais opções" leva ao editor completo, já preenchido.</p>
+      </div>
+      <div style="display:grid;gap:var(--space-300);grid-template-columns:repeat(auto-fit,minmax(24rem,1fr));align-items:start">
+        <div class="stage stage--sunken">
+          <div class="modal" role="dialog" aria-labelledby="q-title" style="margin-inline:auto;max-width:30rem">
+            <div class="modal__head"><h3 class="modal__title" id="q-title">Criar regra</h3></div>
+            <div class="modal__body" style="display:grid;gap:var(--space-200)">
+              <div style="display:grid;gap:var(--space-100)">
+                <span class="field__label">E-mails</span>
+                <div class="chip-group" role="group" aria-label="Quais e-mails">
+                  <button class="chip is-selected" type="button" aria-pressed="true">De BBC In History</button>
+                  <button class="chip" type="button" aria-pressed="false">Do domínio email.bbc.com</button>
+                  <button class="chip" type="button" aria-pressed="false">Desta lista de e-mails</button>
+                  <button class="chip" type="button" aria-pressed="false">Com assunto "How the Vikings…"</button>
+                </div>
+              </div>
+              <div class="field"><label class="field__label" for="q-do">Fazer</label>
+                <div class="row" style="gap:var(--space-100);flex-wrap:nowrap">
+                  <span class="select"><select id="q-do"><option selected>Mover para</option><option>Arquivar</option><option>Excluir (Lixeira)</option><option>Marcar como lida</option><option>Notificar sempre</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                  <span class="select"><select aria-label="Pasta de destino"><option>Leitura</option><option>Languages/English</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                </div>
+              </div>
+              <label class="confirm-check"><input type="checkbox" class="checkbox" checked>Aplicar também aos 23 que já estão na Caixa de entrada</label>
+            </div>
+            <div class="modal__foot modal__foot--split">
+              <button class="btn btn--subtle" type="button">Mais opções</button>
+              <button class="btn btn--subtle" type="button">Cancelar</button>
+              <button class="btn btn--primary" type="button">Criar regra</button>
+            </div>
+          </div>
+        </div>
+        <figure class="state" style="justify-items:stretch">
+          <div class="menu" role="menu" aria-label="Mais" style="max-width:20rem">
+            <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-filter"/></svg><span class="menu-item__text">Criar regra…</span></button>
+            <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-folder-move"/></svg><span class="menu-item__text">Sempre mover de BBC In History para…</span></button>
+            <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-trash"/></svg><span class="menu-item__text">Excluir tudo de BBC In History…</span></button>
+          </div>
+          <figcaption><b>Atalhos de uma ação</b>"Sempre mover" abre o seletor de pastas; "Excluir tudo" pergunta se vale também para os que já estão na pasta</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="ds-section" id="rodar">
+      <div class="ds-head">
+        <p class="eyebrow">L63 · CA4 · CA6 · CA8</p>
+        <h2>Rodar agora, aviso e histórico</h2>
+        <p class="lede">Tudo que uma regra faz pode ser visto e desfeito.</p>
+      </div>
+      <div style="display:grid;gap:var(--space-300);grid-template-columns:repeat(auto-fit,minmax(24rem,1fr));align-items:start">
+        <div class="stage stage--sunken">
+          <div class="modal" role="dialog" aria-labelledby="run-title" style="margin-inline:auto">
+            <div class="modal__head"><h3 class="modal__title" id="run-title">Rodar "Newsletters" agora?</h3></div>
+            <div class="modal__body" style="display:grid;gap:var(--space-150)">
+              <div class="field"><label class="field__label" for="run-f">Na pasta</label><span class="select"><select id="run-f"><option selected>Caixa de entrada</option><option>Todos os e-mails</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span></div>
+              <p style="margin:0"><b>128 e-mails</b> vão para Leitura. Dá para desfazer pelo histórico das regras.</p>
+            </div>
+            <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--primary" type="button">Rodar em 128 e-mails</button></div>
+          </div>
+        </div>
+        <div style="display:grid;gap:var(--space-200)">
+          <figure class="state" style="justify-items:stretch">
+            <div class="toast toast--info" role="status"><svg class="i"><use href="#i-filter"/></svg><div><p class="toast__title">Regras organizaram 7 e-mails</p><p class="toast__desc">5 em Leitura, 2 arquivados</p><div class="toast__actions"><button type="button">Ver</button><button type="button">Desfazer</button></div></div><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></div>
+            <figcaption><b>Depois de uma sincronização</b>um toast por sincronização, não por e-mail; "Ver" abre o histórico</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="stage" style="margin-top:var(--space-300);max-width:44rem">
+        <div class="settings__group">
+          <div class="row" style="justify-content:space-between"><h4 class="settings__group-title" style="margin:0">Histórico das regras</h4><span style="font:var(--font-body-small);color:var(--color-text-subtle)">Últimos 30 dias</span></div>
+          <div class="rule-history">
+            <div class="rule-history__row"><span>Hoje, 09:12</span><span><b>Newsletters</b> moveu 5 e-mails para Leitura</span><button class="btn btn--subtle btn--compact" type="button">Desfazer</button></div>
+            <div class="rule-history__row"><span>Hoje, 09:12</span><span><b>Avisos automáticos</b> arquivou 2 e-mails</span><button class="btn btn--subtle btn--compact" type="button">Desfazer</button></div>
+            <div class="rule-history__row"><span>Ontem, 03:00</span><span><b>Promoções antigas</b> mandou 31 e-mails para a Lixeira (limpeza diária)</span><button class="btn btn--subtle btn--compact" type="button">Desfazer</button></div>
+            <div class="rule-history__row is-undone"><span>24 out</span><span><b>Newsletters</b> moveu 128 e-mails para Leitura (rodada por você) · desfeito</span><span></span></div>
+          </div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Desfazer</dt><dd>Volta cada e-mail do lote para onde estava, se ele ainda existir; lida e estrela também voltam. Depois de desfeito, a linha fica apagada (<code>.is-undone</code>).</dd></div>
+        <div><dt>Sino</dt><dd>Lotes de mais de 20 e-mails e erros de regra também aparecem no sino (US8).</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

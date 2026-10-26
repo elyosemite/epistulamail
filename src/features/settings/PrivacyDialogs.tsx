@@ -109,7 +109,6 @@ export function ChangePasswordDialog({ onConfirm, onClose }: { onConfirm: (curre
   return (
     <Modal
       title="Trocar a senha do Epistula"
-      icon="key"
       onClose={onClose}
       footer={
         <>
@@ -185,7 +184,6 @@ export function RotateKeyDialog({ onConfirm, onClose }: { onConfirm: () => Promi
   return (
     <Modal
       title="Trocar a chave de proteção?"
-      icon="key"
       initialFocus="[data-cancel]"
       onClose={onClose}
       footer={

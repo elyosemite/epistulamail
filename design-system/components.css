@@ -1531,3 +1531,77 @@ html.is-grabbing, html.is-grabbing * { cursor: grabbing !important; user-select:
 /* L57 · Confirmação dentro de um modal (checkbox com texto longo). */
 .confirm-check { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-100); align-items: start; font: var(--font-body); color: var(--color-text); cursor: pointer; }
 .confirm-check .checkbox { margin-top: 2px; }
+
+/* ==========================================================================
+   Regras (L58–L63, US12)
+   ========================================================================== */
+/* L58 · Frase da regra: condições e ações como termos destacados, lidos como uma frase. */
+.rule-sentence { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-050); font: var(--font-body-small); color: var(--color-text-subtle); }
+.rule-term {
+  display: inline-flex; align-items: center; gap: var(--space-050);
+  padding: 0 var(--space-075); border-radius: var(--radius-small);
+  background: var(--color-bg-neutral); color: var(--color-text);
+  font: var(--font-weight-medium) var(--font-size-body-small)/1.6 var(--font-family-body);
+}
+.rule-term .i { width: 14px; height: 14px; color: var(--color-icon-subtle); }
+.rule-term--action { background: var(--color-bg-information); color: var(--color-text-information); }
+.rule-term--action .i { color: var(--color-icon-brand); }
+.rule-term--danger { background: var(--color-bg-danger); color: var(--color-text-danger); }
+.rule-term--danger .i { color: var(--color-icon-danger); }
+
+/* L59 · Linha de regra na lista: alça, liga/desliga, nome com a frase, números e menu. */
+.rule-list { display: grid; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-medium); overflow: hidden; }
+.rule-row {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-150);
+  padding: var(--space-150) var(--space-150) var(--space-150) var(--space-100);
+  background: var(--color-surface);
+}
+.rule-row + .rule-row { border-top: var(--border-width) solid var(--color-border); }
+.rule-row:hover, .rule-row.is-hover { background: var(--color-bg-neutral-subtle-hovered); }
+.rule-row.is-dragging { box-shadow: var(--shadow-overlay); position: relative; z-index: 1; }
+.rule-row.is-off .rule-row__name, .rule-row.is-off .rule-sentence { opacity: .55; }
+.rule-row__grip { display: grid; place-items: center; width: 1.25rem; color: var(--color-icon-subtle); cursor: grab; }
+.rule-row__body { display: grid; gap: var(--space-050); min-width: 0; }
+.rule-row__name { font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); color: var(--color-text); }
+.rule-row__stats { font: var(--font-body-small); color: var(--color-text-subtlest); white-space: nowrap; text-align: right; }
+.rule-row__warn { display: flex; align-items: center; gap: var(--space-050); font: var(--font-body-small); color: var(--color-text-warning); }
+
+/* L60 · Linha de condição do editor: campo, operador, valor e remover. */
+.rule-cond { display: grid; grid-template-columns: 11rem 9rem minmax(0, 1fr) auto; gap: var(--space-100); align-items: center; }
+.rule-cond > .select { width: 100%; min-width: 0; }
+.rule-cond > .select select { width: 100%; min-width: 0; }
+.rule-block { display: grid; gap: var(--space-100); padding: var(--space-200); border-radius: var(--radius-medium); background: var(--color-bg-neutral); }
+.rule-block__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-100); font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); color: var(--color-text); }
+.rule-block__head .select { font-weight: var(--font-weight-regular); }
+.rule-block__add { justify-self: start; }
+
+/* L61 · Editor com prévia ao lado. */
+.rule-editor { display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: var(--space-300); align-items: start; }
+.rule-editor__main { display: grid; gap: var(--space-200); min-width: 0; }
+.rule-editor__back { justify-self: start; }
+.rule-preview { position: sticky; top: 0; display: grid; gap: var(--space-150); padding: var(--space-200); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-medium); background: var(--color-surface); }
+.rule-preview__count { margin: 0; font: var(--font-card); color: var(--color-text); }
+.rule-preview__hint { margin: 0; font: var(--font-body-small); color: var(--color-text-subtle); }
+.rule-preview__list { display: grid; gap: var(--space-075); margin: 0; padding: 0; list-style: none; }
+.rule-preview__item { display: grid; gap: 2px; padding-bottom: var(--space-075); border-bottom: var(--border-width) solid var(--color-border); font: var(--font-body-small); color: var(--color-text-subtle); }
+.rule-preview__item b { color: var(--color-text); font-weight: var(--font-weight-semibold); }
+.rule-preview__item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* L62 · Modelos de regra: cartões clicáveis no estado vazio e em "Nova regra". */
+.rule-templates { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--space-150); }
+.rule-template {
+  display: grid; gap: var(--space-075); padding: var(--space-200); text-align: left; cursor: pointer;
+  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-medium); background: var(--color-surface); color: var(--color-text);
+  font: var(--font-body);
+}
+.rule-template:hover, .rule-template.is-hover { border-color: var(--color-border-bold); background: var(--color-bg-neutral-subtle-hovered); }
+.rule-template:focus-visible { outline: var(--border-width-focused) solid var(--color-border-focused); outline-offset: 2px; }
+.rule-template__icon { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: var(--radius-small); background: var(--color-bg-information); color: var(--color-icon-brand); }
+.rule-template__title { font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); }
+.rule-template__desc { font: var(--font-body-small); color: var(--color-text-subtle); }
+
+/* L63 · Histórico das regras: uma linha por lote, com desfazer. */
+.rule-history { display: grid; }
+.rule-history__row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) auto; gap: var(--space-150); align-items: center; padding: var(--space-100) 0; border-bottom: var(--border-width) solid var(--color-border); font: var(--font-body-small); color: var(--color-text-subtle); }
+.rule-history__row b { color: var(--color-text); font-weight: var(--font-weight-semibold); }
+.rule-history__row.is-undone { opacity: .55; }
