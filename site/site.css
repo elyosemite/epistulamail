@@ -63,14 +63,9 @@ a { color: var(--color-link); }
 .site-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-100) var(--space-400); margin: var(--space-600) 0 0; padding: 0; list-style: none; }
 .site-facts li { display: flex; align-items: center; gap: var(--space-100); font: var(--font-weight-medium) var(--font-size-label)/var(--line-height-label) var(--font-family-code); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtle); }
 .site-facts .i { color: var(--color-icon-brand); }
-/* A imagem sobe do pé da seção, cortada pela borda de baixo (como se o app continuasse). */
-.site-hero__media { display: flex; justify-content: center; max-width: calc(var(--site-width) + var(--space-1000)); }
-.site-hero__image {
-  display: block; width: 100%; height: auto;
-  border: var(--border-width) solid var(--color-border); border-bottom: 0;
-  border-radius: var(--radius-large) var(--radius-large) 0 0;
-  box-shadow: var(--shadow-overlay);
-}
+/* A janela do app, recortada sem o papel de parede (cantos transparentes), flutuando no centro. */
+.site-hero__media { display: flex; justify-content: center; max-width: calc(var(--site-width) + var(--space-1000)); padding-bottom: var(--space-1000); }
+.site-hero__image { display: block; width: 100%; height: auto; border-radius: var(--radius-small); box-shadow: var(--shadow-overlay); }
 
 /* ---------- "Foto" do app feita em HTML: a moldura recorta um trecho ampliado ---------- */
 .site-shot {

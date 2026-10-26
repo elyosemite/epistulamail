@@ -54,9 +54,9 @@ function build() {
 
   for (const file of ["site.css", "site.js", "theme.js"]) copyFileSync(join(here, file), join(dist, file));
 
-  // A imagem do README (docs/images): a mesma da página do GitHub, sem cópia no repositório.
+  // A janela do app recortada da captura do README (docs/images), sem o papel de parede.
   mkdirSync(join(dist, "images"), { recursive: true });
-  copyFileSync(join(root, "docs", "images", "epistula-caixa-de-entrada.png"), join(dist, "images", "epistula-caixa-de-entrada.png"));
+  copyFileSync(join(root, "docs", "images", "epistula-janela.webp"), join(dist, "images", "epistula-janela.webp"));
 
   const page = readFileSync(join(here, "index.html"), "utf8");
   if (!page.includes("<!-- ds-icons -->")) fail("index.html sem o marcador <!-- ds-icons -->");
