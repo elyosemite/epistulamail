@@ -247,6 +247,7 @@ impl AppState {
             AccountStatus::Active => {}
             AccountStatus::SignedOut => return Err(AppError::SignedOut),
             AccountStatus::NeedsReauth => return Err(AppError::TokenExpired),
+            AccountStatus::Local => return Err(AppError::LocalArchive),
         }
         let mut auth = handle.auth.lock().await;
         if !force_refresh {
@@ -441,8 +442,10 @@ impl AppState {
     /// Atualiza o índice de contas no keyring (usado para recuperar contas se o banco for recriado).
     pub async fn save_index(&self) {
         let accounts = self.db.call(|c| store::list_accounts(c)).await.unwrap_or_default();
+        // Arquivos locais (US15) não têm segredo nem servidor: sem o banco, não há o que recuperar.
         let index: Vec<secrets::IndexEntry> = accounts
             .into_iter()
+            .filter(|a| a.status != AccountStatus::Local)
             .map(|a| secrets::IndexEntry { id: a.id, provider: a.provider, email: a.email })
             .collect();
         if let Err(e) = secrets::save_index(&index) {

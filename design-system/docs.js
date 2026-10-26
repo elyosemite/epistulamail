@@ -122,6 +122,11 @@ const EPISTULA_PAGES = [
         "Organizar os e-mails assim que chegam."
       ],
       [
+        "arquivos",
+        "Arquivos de e-mail",
+        "Abrir backups de outros programas, sem conta."
+      ],
+      [
         "criptografia",
         "Criptografia",
         "Chaves, certificados e mensagens criptografadas."

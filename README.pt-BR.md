@@ -8,12 +8,12 @@ O Epistula conecta as suas contas, baixa o que você precisa ler e mantém tudo 
 
 ![Caixa de entrada do Epistula com três contas, pastas e marcadores, a lista de mensagens e uma newsletter aberta no painel de leitura](docs/images/epistula-caixa-de-entrada.png)
 
-> O projeto está em desenvolvimento ativo. Leitura, envio, organização, regras, conversas, notificações, leitura sem conexão, várias contas e criptografia de ponta a ponta (OpenPGP e S/MIME) já funcionam. O próximo passo é abrir arquivos de e-mail de outros programas, sem conta; depois vêm o servidor de login e o backup cifrado. A seção [Estado atual](#estado-atual) diz exatamente o que existe hoje.
+> O projeto está em desenvolvimento ativo. Leitura, envio, organização, regras, conversas, notificações, leitura sem conexão, várias contas, criptografia de ponta a ponta (OpenPGP e S/MIME) e abrir arquivos de e-mail de outros programas, sem conta, já funcionam. Os próximos passos são o servidor de login e o backup cifrado. A seção [Estado atual](#estado-atual) diz exatamente o que existe hoje.
 
 ## Em poucas palavras
 
 - **Sem conta Epistula e sem nuvem Epistula.** Os seus e-mails vão direto para o seu provedor. O nosso servidor de login (planejado) só participa do login OAuth e nunca vê uma mensagem.
-- **Abra arquivos antigos, sem internet e sem conta (próximo).** Backups do Google Takeout, do Outlook, do Thunderbird e do Apple Mail, lidos do arquivo, sem se conectar a nada.
+- **Abra arquivos antigos, sem internet e sem conta.** Backups do Google Takeout, do Outlook, do Thunderbird e do Apple Mail, lidos do arquivo, sem se conectar a nada.
 - **Tudo cifrado no disco.** Mensagens, assuntos, remetentes e índices ficam num banco AES-256, que já resiste a computadores quânticos.
 - **Abre na hora, até sem internet.** Os e-mails recentes são baixados em segundo plano e abrem do disco.
 - **Contra rastreamento.** Imagens externas (os "pixels espiões" que avisam que você abriu) ficam bloqueadas até você liberar.
@@ -78,6 +78,13 @@ O que funciona hoje:
 - Um gerenciador de chaves com busca, importação de arquivo, da área de transferência ou da internet, exportação e backup protegido por senha. Chaves que chegam por Autocrypt ou anexadas ficam como "ainda não aceita", inclusive a chave anexada dentro de uma mensagem cifrada. A primeira mensagem de alguém novo é conferida com a chave que a pessoa anexou, e o cabeçalho Autocrypt que o Epistula envia é lido pelos outros programas.
 - S/MIME também, para quem usa Outlook, Apple Mail ou o certificado da empresa: peça um certificado (o par de chaves nasce no seu computador e só o pedido vai para a autoridade certificadora), importe o emitido ou um `.p12` e guarde os certificados de quem manda mensagens assinadas. A confiança segue as raízes do Windows. Um script de CA de teste deixa experimentar sem comprar nada.
 
+**Arquivos de e-mail, sem conta**
+
+- Abra um backup ou uma pasta de e-mails de outro programa, direto da primeira tela ou soltando sobre a janela: o `.mbox` do Google Takeout (com os marcadores como marcadores), `.pst` e `.msg` do Outlook, as pastas do perfil do Thunderbird, `.mbox` exportado e `.emlx` do Apple Mail, arquivos `.eml` e Maildir.
+- Sem conta, sem servidor e sem rede nenhuma: o arquivo é lido no seu computador e copiado para o banco cifrado. O original só é lido, nunca alterado.
+- Antes de importar, aparecem o formato, as pastas (você escolhe quais entram) e quanto vai ocupar no disco; depois, quantas entraram, quantas eram repetidas e quantas falharam, e por quê. Importar o mesmo backup duas vezes não duplica nada, e uma importação interrompida ao fechar o app continua de onde parou.
+- O arquivo aparece ao lado das contas, com as pastas de origem. Leitura, conversas, busca, mover, sinalizar e excluir funcionam como numa conta, tudo neste computador; mensagens cifradas abrem com as suas chaves OpenPGP e os seus certificados S/MIME. Remover apaga as mensagens dele e troca a chave do banco.
+
 **Avisos**
 
 - Notificações do Windows para e-mails novos, respostas aos seus e-mails, prazos e contas que precisam de atenção. Um clique abre a mensagem.
@@ -91,22 +98,10 @@ O que funciona hoje:
 O que ainda não existe:
 
 - Outros provedores além do Google. O modelo de dados já prevê Outlook, Yahoo, iCloud, Zoho, GMX, AOL e IMAP genérico.
-- O servidor de login e a importação de arquivos de e-mail (veja abaixo).
+- O servidor de login (veja abaixo) e os arquivos `.olm` do Outlook para Mac.
 - Releases assinados. Por enquanto, o caminho é compilar a partir do código.
 
 ## Para onde vamos
-
-### Abra os seus e-mails antigos, sem conta
-
-A próxima entrega. Escolha um arquivo ou uma pasta e leia no Epistula, sem entrar em conta nenhuma e sem o app falar com servidor algum, nosso ou de outros:
-
-- **Gmail:** o `.mbox` do Google Takeout, com os marcadores mantidos como marcadores.
-- **Outlook:** arquivos de dados `.pst` e mensagens `.msg`; o `.olm` do Outlook para Mac.
-- **Thunderbird:** as pastas mbox do perfil.
-- **Apple Mail:** pacotes `.mbox` exportados e mensagens `.emlx`.
-- **O resto:** arquivos `.eml`, mbox simples e pastas Maildir.
-
-O que for importado entra no mesmo banco cifrado, como um arquivo local ao lado das contas, com a mesma leitura segura (HTML limpo, imagens externas bloqueadas). As mensagens cifradas do arquivo abrem com as suas chaves OpenPGP e os seus certificados S/MIME. O arquivo original só é lido, nunca alterado. As questões em aberto estão em [userstory/0015-importacao-de-arquivos.md](userstory/0015-importacao-de-arquivos.md).
 
 ### Um servidor de login, e nada mais
 
@@ -158,7 +153,7 @@ Seu computador
 Seu provedor de e-mail           Servidor de login do Epistula
 (IMAP, SMTP, OAuth)              configurações OAuth do Google e da Microsoft
 
-Arquivos de e-mail (.mbox, .pst, .eml…)  ──lidos no computador──▶  epistula.db, sem rede
+Arquivos de e-mail (.mbox, .pst, .eml…)  ──lidos no computador──▶  epistula.db, sem rede (já funciona)
 ```
 
 Alguns pontos que valem ser ditos com clareza:
@@ -168,7 +163,7 @@ Alguns pontos que valem ser ditos com clareza:
 - **Sair de uma conta revoga o acesso** no provedor e apaga o segredo do cofre do sistema. As mensagens já baixadas continuam no disco, cifradas, até que exista a opção de apagá-las.
 - **Um computador comprometido continua comprometido.** Malware rodando na sua sessão consegue ler o que você consegue ler. Nenhum cliente de e-mail resolve isso, e preferimos dizer isso a fingir o contrário.
 
-A análise completa, com a matriz de dados, o inventário de criptografia, os limites de confiança e as dezessete ameaças consideradas, está em [docs/arquitetura-e-ameacas.md](docs/arquitetura-e-ameacas.md).
+A análise completa, com a matriz de dados, o inventário de criptografia, os limites de confiança e as dezoito ameaças consideradas, está em [docs/arquitetura-e-ameacas.md](docs/arquitetura-e-ameacas.md).
 
 ## Design System
 

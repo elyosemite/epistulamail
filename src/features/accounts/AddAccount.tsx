@@ -1,4 +1,5 @@
-// Composição de DS: selecao.html (.provider-grid), vazios.html (.empty, "Aguardando ação fora do app" com
+// Composição de DS: selecao.html (.provider-grid), arquivos.html (cartão "Abrir arquivo de e-mail" sob "Sem conta",
+// US15; .nav-heading de sidebar.html), vazios.html (.empty, "Aguardando ação fora do app" com
 // .empty__spinner), mensagens.html (.section-message), botoes.html (.btn)
 import { useEffect, useRef, useState } from "react";
 import { api, isAppError, type AppError, type Connected, type ProviderInfo } from "../../lib/tauri";
@@ -15,9 +16,11 @@ interface AddAccountProps {
   first: boolean;
   onConnected: (result: Connected) => void;
   onCancel: () => void;
+  /** Abrir um arquivo de e-mail sem conta (US15, CA1). */
+  onOpenFile: () => void;
 }
 
-export function AddAccount({ first, onConnected, onCancel }: AddAccountProps) {
+export function AddAccount({ first, onConnected, onCancel, onOpenFile }: AddAccountProps) {
   const [providers, setProviders] = useState<ProviderInfo[] | null>(null);
   const [picked, setPicked] = useState<ProviderInfo | null>(null);
 
@@ -39,11 +42,17 @@ export function AddAccount({ first, onConnected, onCancel }: AddAccountProps) {
   return (
     <div style={{ display: "grid", gap: "var(--space-300)" }}>
       <EmptyState
-        title={first ? "Conecte seu e-mail" : "Adicionar conta"}
+        title={first ? "Conecte seu e-mail ou abra um arquivo" : "Adicionar conta"}
         description="Escolha o serviço do seu e-mail. O login acontece no navegador, na página do provedor; o Epistula nunca vê sua senha."
         actions={first ? undefined : <Button appearance="subtle" onClick={onCancel}>Cancelar</Button>}
       />
       {providers === null ? <Spinner size="lg" label="Carregando provedores" /> : <ProviderGrid providers={providers} onPick={setPicked} />}
+      <div className="nav-heading" style={{ padding: 0 }}>Sem conta</div>
+      <ProviderGrid
+        providers={[{ id: "archive", name: "Abrir arquivo de e-mail", description: "Um backup ou uma pasta de outro programa. Sem conta e sem internet.", available: true, icon: "archive" }]}
+        wide
+        onPick={onOpenFile}
+      />
     </div>
   );
 }

@@ -27,6 +27,11 @@ const MAX_FLAG_IDS: usize = 500;
 const MAX_URL_LEN: usize = 2048;
 pub const PAGE_SIZE: u32 = 50;
 
+/// Id de conta vindo do frontend, para os comandos de outros módulos (importação, US15).
+pub fn checked_account_id(id: &str) -> Result<String, AppError> {
+    account_id(id)
+}
+
 fn account_id(id: &str) -> Result<String, AppError> {
     if message::valid_account_id(id) {
         Ok(id.to_owned())
@@ -41,6 +46,15 @@ fn require_active(account: &Account) -> Result<(), AppError> {
         AccountStatus::Active => Ok(()),
         AccountStatus::SignedOut => Err(AppError::SignedOut),
         AccountStatus::NeedsReauth => Err(AppError::TokenExpired),
+        AccountStatus::Local => Err(AppError::LocalArchive),
+    }
+}
+
+/// Conta ativa, ou arquivo local (US15): o que não precisa de servidor no arquivo local.
+fn require_usable(account: &Account) -> Result<(), AppError> {
+    match account.status {
+        AccountStatus::Local => Ok(()),
+        _ => require_active(account),
     }
 }
 
@@ -203,11 +217,11 @@ pub async fn list_messages(app: AppHandle, state: State<'_, AppState>, folder_id
         .call(move |c| Ok((store::require_account(c, &k.account)?, store::folder_of_account(c, &k.account, k.folder)?)))
         .await?;
     let active = account.status == AccountStatus::Active;
-    let handle = state.handle(&key.account).await?;
+    let handle = if account.status == AccountStatus::Local { None } else { Some(state.handle(&key.account).await?) };
 
     // Pasta nunca sincronizada: a primeira página espera a sincronização (CA3).
-    if folder.oldest_uid.is_none() && active && handle.try_begin_sync(folder.id) {
-        let result = sync::sync_folder(&state, &handle, folder.id).await;
+    if let Some(handle) = handle.as_ref().filter(|h| folder.oldest_uid.is_none() && active && h.try_begin_sync(folder.id)) {
+        let result = sync::sync_folder(&state, handle, folder.id).await;
         handle.end_sync(folder.id);
         result?;
         let id = folder.id;
@@ -224,8 +238,8 @@ pub async fn list_messages(app: AppHandle, state: State<'_, AppState>, folder_id
     let mut rows = state.db.call(move |c| store::list_page(c, folder_db_id, before, PAGE_SIZE + 1)).await?;
 
     // Paginando além do que está salvo: traz o próximo bloco do servidor (sem rede, segue com o que há).
-    if cursor.is_some() && rows.len() <= PAGE_SIZE as usize && !folder.complete && active {
-        match sync::fetch_older(&state, &handle, &folder, sync::OLDER_BATCH, Lane::Interactive).await {
+    if let Some(handle) = handle.as_ref().filter(|_| cursor.is_some() && rows.len() <= PAGE_SIZE as usize && !folder.complete && active) {
+        match sync::fetch_older(&state, handle, &folder, sync::OLDER_BATCH, Lane::Interactive).await {
             Ok(_) => {
                 let id = folder.id;
                 let (f, r) = state
@@ -272,13 +286,14 @@ pub async fn list_messages(app: AppHandle, state: State<'_, AppState>, folder_id
         .collect();
 
     let stale = folder.last_sync_at.is_none_or(|t| store::now() - t >= sync::MIN_RESYNC_SECS);
-    if cursor.is_none() && active && stale && !handle.is_syncing(folder.id) {
+    let syncing = handle.as_ref().is_some_and(|h| h.is_syncing(folder.id));
+    if cursor.is_none() && active && stale && !syncing {
         sync::spawn_folder_sync(&app, key.account.clone(), folder.id);
     }
     Ok(MessagePage {
         total: folder.total.unwrap_or(items.len() as u32),
         unread: folder.unread,
-        syncing: active && handle.is_syncing(folder.id),
+        syncing: active && syncing,
         items,
         next_cursor,
     })
@@ -344,6 +359,17 @@ pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_r
         .await?;
     if stored.body_state == "too_large" {
         return Err(AppError::MessageTooLarge);
+    }
+    if account.status == AccountStatus::Local {
+        let raw = cached.ok_or(AppError::MessageNotFound)?;
+        let mut view = view_of(&state, &raw, key.encode(), stored.flags, None, allow_remote_images).await;
+        if !stored.flags.seen {
+            let folder_id = folder.id;
+            state.db.call(move |c| crate::archive_store::set_flags(c, folder_id, &[uid], Some(true), None)).await?;
+            view.flags.seen = true;
+            state.emit_accounts_changed();
+        }
+        return Ok(view);
     }
     let handle = state.handle(&key.account).await?;
 
@@ -477,6 +503,17 @@ pub async fn set_flags(state: State<'_, AppState>, message_ids: Vec<String>, see
             Ok((account, folders))
         })
         .await?;
+    if account.status == AccountStatus::Local {
+        let mut results = Vec::new();
+        for folder in folders {
+            let uids = groups.remove(&folder.id).unwrap_or_default();
+            let folder_id = folder.id;
+            let changed = state.db.call(move |c| crate::archive_store::set_flags(c, folder_id, &uids, seen, flagged)).await?;
+            results.extend(changed.into_iter().map(|(uid, flags)| FlagResult { id: MessageKey { account: account_id.clone(), folder: folder_id, uid }.encode(), flags }));
+        }
+        state.emit_accounts_changed();
+        return Ok(results);
+    }
     require_active(&account)?;
     let handle = state.handle(&account_id).await?;
 
@@ -1327,7 +1364,7 @@ async fn resolve_messages(state: &AppState, message_ids: &[String]) -> Result<(A
             Ok((account, folders))
         })
         .await?;
-    require_active(&account)?;
+    require_usable(&account)?;
     Ok((account, folders))
 }
 
@@ -1336,6 +1373,16 @@ async fn resolve_messages(state: &AppState, message_ids: &[String]) -> Result<(A
 async fn expunge_from_folders(state: &AppState, account: &Account, groups: Vec<(FolderRow, Vec<u32>)>) -> Result<Moved, AppError> {
     let mut result = Moved::default();
     if groups.is_empty() {
+        return Ok(result);
+    }
+    if account.status == AccountStatus::Local {
+        for (folder, uids) in groups {
+            let (folder_id, removed) = (folder.id, uids.clone());
+            state.db.call(move |c| store::unlink(c, folder_id, &removed, false).map(drop)).await?;
+            result.ids.extend(uids.iter().map(|&uid| MessageKey { account: account.id.clone(), folder: folder_id, uid }.encode()));
+        }
+        tracing::info!(count = result.ids.len(), "mensagens apagadas de vez do arquivo local");
+        state.emit_accounts_changed();
         return Ok(result);
     }
     let handle = state.handle(&account.id).await?;
@@ -1468,7 +1515,12 @@ pub async fn delete_messages(app: AppHandle, state: State<'_, AppState>, message
 pub async fn archive_messages(app: AppHandle, state: State<'_, AppState>, message_ids: Vec<String>) -> Result<Moved, AppError> {
     let (account, groups) = resolve_messages(&state, &message_ids).await?;
     let account_id = account.id.clone();
-    let all = state.db.call(move |c| store::folder_by_role(c, &account_id, Role::All)).await?.ok_or(AppError::FolderNotFound)?;
+    let local = account.status == AccountStatus::Local;
+    let all = state
+        .db
+        .call(move |c| if local { crate::archive_store::ensure_all_folder(c, &account_id).map(Some) } else { store::folder_by_role(c, &account_id, Role::All) })
+        .await?
+        .ok_or(AppError::FolderNotFound)?;
     let groups = groups.into_iter().filter(|(f, _)| f.id != all.id).collect();
     move_later(&app, &state, &account, groups, all.id).await
 }
@@ -1570,9 +1622,13 @@ pub async fn create_folder(state: State<'_, AppState>, account_id: String, name:
     let name = store::validate_folder_name(&name)?;
     let (lookup, wanted) = (id.clone(), name.clone());
     let (account, taken) = state.db.call(move |c| Ok((store::require_account(c, &lookup)?, store::folder_name_taken(c, &lookup, &wanted)?))).await?;
-    require_active(&account)?;
+    require_usable(&account)?;
     if taken {
         return Err(AppError::FolderExists);
+    }
+    if account.status == AccountStatus::Local {
+        let folder = state.db.call(move |c| crate::archive_store::create_local_folder(c, &id, &name)).await?;
+        return Ok(folder_view(&folder));
     }
     let encoded = mailbox::encode_mailbox_name(&name);
     let handle = state.handle(&id).await?;
@@ -1629,21 +1685,32 @@ pub async fn set_followup(state: State<'_, AppState>, message_ids: Vec<String>, 
     }
     let flagged = act == Action::Set;
     let (account, groups) = resolve_messages(&state, &message_ids).await?;
-    let handle = state.handle(&account.id).await?;
+    // Arquivo local (US15): a estrela fica só no banco.
+    let handle = if account.status == AccountStatus::Local { None } else { Some(state.handle(&account.id).await?) };
     let mut results = Vec::new();
     for (folder, uids) in groups {
-        let uidvalidity = folder.uidvalidity.ok_or(AppError::MessageNotFound)?;
-        let mailbox = folder.imap_name.clone();
-        let confirmed = imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
-            let mailbox = mailbox.clone();
-            let wanted = uids.clone();
-            async move {
-                imap_client::select_checked(s, &mailbox, uidvalidity).await?;
-                imap_client::store_flags(s, &wanted, None, Some(flagged)).await
+        let confirmed: Vec<(u32, MessageFlags)> = match &handle {
+            None => {
+                let (folder_id, wanted) = (folder.id, uids.clone());
+                state.db.call(move |c| crate::archive_store::set_flags(c, folder_id, &wanted, None, Some(flagged))).await?
             }
-            .boxed()
-        })
-        .await?;
+            Some(handle) => {
+                let uidvalidity = folder.uidvalidity.ok_or(AppError::MessageNotFound)?;
+                let mailbox = folder.imap_name.clone();
+                imap_client::with_session(&state, handle, Lane::Interactive, |s| {
+                    let mailbox = mailbox.clone();
+                    let wanted = uids.clone();
+                    async move {
+                        imap_client::select_checked(s, &mailbox, uidvalidity).await?;
+                        imap_client::store_flags(s, &wanted, None, Some(flagged)).await
+                    }
+                    .boxed()
+                })
+                .await?
+                .into_iter()
+                .collect()
+            }
+        };
         let folder_id = folder.id;
         let due = due.clone();
         let saved = state

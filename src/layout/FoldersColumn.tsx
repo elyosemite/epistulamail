@@ -1,6 +1,9 @@
 // Composição de DS: sidebar.html (.sidebar, .nav-group, .nav-heading, .nav-item; grupo "Sinalizadas") dentro de
-// .app-shell__sidebar, no bloco de navegação
+// .app-shell__sidebar, no bloco de navegação; arquivos.html (US15): "Arquivo deste computador" no topo e o progresso
+// da importação no fim (.meter com .progress, como o espaço da conta)
 import { canReceive } from "../lib/folders";
+import { progressShare } from "../lib/importing";
+import { Icon } from "../ui/Icon";
 import type { FlagBucket, Folder } from "../lib/tauri";
 import { NavGroup, NavSkeleton, Sidebar } from "../ui/Sidebar";
 import { FlaggedItem } from "./FlaggedItem";
@@ -16,10 +19,14 @@ interface FoldersColumnProps {
   drag: { sourceId: string | null; hoveredId: string | null } | null;
   onSelect: (folder: Folder) => void;
   onSelectFlag: (bucket: FlagBucket) => void;
+  /** Arquivo local (US15): a legenda no topo, no lugar do "Escrever". */
+  local?: boolean;
+  /** Importação deste arquivo local em andamento. */
+  importing?: { imported: number; estimate: number } | null;
 }
 
 /** Coluna de pastas: as do sistema, os marcadores e, se houver, as sinalizadas por prazo. */
-export function FoldersColumn({ folders, currentId, flagged, currentFlag, drag, onSelect, onSelectFlag }: FoldersColumnProps) {
+export function FoldersColumn({ folders, currentId, flagged, currentFlag, drag, onSelect, onSelectFlag, local, importing }: FoldersColumnProps) {
   if (!folders) {
     return <Sidebar label="Pastas"><NavSkeleton /></Sidebar>;
   }
@@ -37,6 +44,12 @@ export function FoldersColumn({ folders, currentId, flagged, currentFlag, drag, 
   );
   return (
     <Sidebar label="Pastas">
+      {local && (
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-100)", padding: "var(--space-100)", color: "var(--color-text-subtle)", font: "var(--font-body-small)" }}>
+          <Icon name="hard-drive" size="sm" />
+          Arquivo deste computador
+        </div>
+      )}
       <NavGroup>{system.map(item)}</NavGroup>
       {labels.length > 0 && <NavGroup heading="Marcadores">{labels.map(item)}</NavGroup>}
       {flagged.length > 0 && (
@@ -45,6 +58,14 @@ export function FoldersColumn({ folders, currentId, flagged, currentFlag, drag, 
             <FlaggedItem key={f.bucket} bucket={f.bucket} label={f.label} count={f.count} current={f.bucket === currentFlag} onSelect={() => onSelectFlag(f.bucket)} />
           ))}
         </NavGroup>
+      )}
+      {importing && (
+        <div className="meter" role="progressbar" aria-label="Importação" aria-valuemin={0} aria-valuemax={importing.estimate || undefined} aria-valuenow={importing.imported}>
+          <div className="progress"><span style={{ width: `${progressShare(importing.imported, importing.estimate)}%` }} /></div>
+          {importing.estimate > 0
+            ? `Importando ${importing.imported.toLocaleString("pt-BR")} de ${importing.estimate.toLocaleString("pt-BR")}`
+            : `Importando ${importing.imported.toLocaleString("pt-BR")}`}
+        </div>
       )}
     </Sidebar>
   );

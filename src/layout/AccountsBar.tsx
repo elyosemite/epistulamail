@@ -16,10 +16,12 @@ interface AccountsBarProps {
   onMove: (account: Account, direction: -1 | 1) => void;
   onSignOut: (account: Account) => void;
   onReconnect: (account: Account) => void;
+  /** Arquivo local (US15): remover do Epistula. */
+  onRemove: (account: Account) => void;
 }
 
 /** Coluna com as contas do usuário, do topo ao rodapé da janela. */
-export function AccountsBar({ accounts, activeId, onSelect, onAdd, onEdit, onMove, onSignOut, onReconnect }: AccountsBarProps) {
+export function AccountsBar({ accounts, activeId, onSelect, onAdd, onEdit, onMove, onSignOut, onReconnect, onRemove }: AccountsBarProps) {
   const [menu, setMenu] = useState<{ account: Account; anchor: { x: number; y: number } } | null>(null);
   const items = useRef(new Map<string, HTMLButtonElement>());
 
@@ -42,12 +44,14 @@ export function AccountsBar({ accounts, activeId, onSelect, onAdd, onEdit, onMov
 
   const entries = (a: Account, index: number): MenuEntry[] => {
     const access: MenuEntry =
-      a.status === "active"
+      a.status === "local"
+        ? { label: "Remover do Epistula…", icon: "trash", onSelect: () => onRemove(a) }
+        : a.status === "active"
         ? { label: "Sair desta conta", icon: "log-out", onSelect: () => onSignOut(a) }
         : { label: a.status === "signed_out" ? "Entrar de novo" : "Reconectar", icon: "log-in", onSelect: () => onReconnect(a) };
     return [
       { label: "Renomear", icon: "pencil", onSelect: () => onEdit(a) },
-      { label: "Mudar cor", icon: "droplet", onSelect: () => onEdit(a) },
+      ...(a.status === "local" ? [] : [{ label: "Mudar cor", icon: "droplet", onSelect: () => onEdit(a) } as MenuEntry]),
       { label: "Mover para cima", icon: "arrow-up", onSelect: () => onMove(a, -1), disabled: index === 0 },
       { label: "Mover para baixo", icon: "arrow-down", onSelect: () => onMove(a, 1), disabled: index === accounts.length - 1 },
       "separator",
@@ -67,6 +71,7 @@ export function AccountsBar({ accounts, activeId, onSelect, onAdd, onEdit, onMov
             initial={accountInitial(a.displayName)}
             colorClass={avatarColorClass(a.color)}
             photo={a.photo}
+            archive={a.status === "local"}
             badge={unreadBadge(a.unread)}
             state={a.status === "signed_out" ? "signed-out" : a.status === "needs_reauth" ? "alert" : "normal"}
             current={a.id === activeId}
@@ -82,7 +87,7 @@ export function AccountsBar({ accounts, activeId, onSelect, onAdd, onEdit, onMov
         ))}
         </div>
         <div className="account-rail__sep" role="separator" />
-        <button className="account-rail__add" type="button" aria-label="Adicionar conta" data-tip="Adicionar conta" onClick={onAdd}>
+        <button className="account-rail__add" type="button" aria-label="Adicionar conta ou abrir arquivo" data-tip="Adicionar conta ou abrir arquivo" onClick={onAdd}>
           <Icon name="plus" />
         </button>
       </nav>

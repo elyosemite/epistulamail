@@ -116,3 +116,37 @@ export function SignOutDialog({ account, onConfirm, onClose }: { account: Accoun
     </Modal>
   );
 }
+
+/** Remover um arquivo local (US15, CA3): as mensagens saem de vez e a chave do banco é trocada; o original fica. */
+export function RemoveArchiveDialog({ account, onConfirm, onClose }: { account: Account; onConfirm: () => Promise<void>; onClose: () => void }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Modal
+      title={`Remover ${account.displayName}?`}
+      icon="trash"
+      initialFocus="[data-cancel]"
+      onClose={onClose}
+      footer={
+        <>
+          <Button appearance="subtle" data-cancel onClick={onClose}>Cancelar</Button>
+          <Button
+            appearance="danger"
+            loading={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await onConfirm();
+              } finally {
+                onClose();
+              }
+            }}
+          >
+            Remover
+          </Button>
+        </>
+      }
+    >
+      <p>As mensagens deste arquivo saem deste computador e a chave do banco é trocada, para que nem uma cópia antiga do banco as revele. O arquivo original não é tocado: dá para importar de novo depois.</p>
+    </Modal>
+  );
+}

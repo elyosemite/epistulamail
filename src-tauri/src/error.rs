@@ -77,6 +77,16 @@ pub enum AppError {
     MissingRecipientCertificate,
     #[error("O certificado foi emitido para outro e-mail, não para o do pedido.")]
     CertificateEmailMismatch,
+    #[error("Este arquivo não parece ser de e-mail.")]
+    ImportUnrecognized,
+    #[error("Não cabe neste disco. Desmarque pastas ou libere espaço.")]
+    ImportNoSpace,
+    #[error("Já há uma importação em andamento. Espere ela terminar ou cancele.")]
+    ImportBusy,
+    #[error("O arquivo de origem não está mais onde estava.")]
+    ImportSourceMissing,
+    #[error("Este arquivo é só deste computador: não tem servidor para isso.")]
+    LocalArchive,
 }
 
 impl AppError {
@@ -118,6 +128,11 @@ impl AppError {
             AppError::NoOwnCertificate => "NoOwnCertificate",
             AppError::MissingRecipientCertificate => "MissingRecipientCertificate",
             AppError::CertificateEmailMismatch => "CertificateEmailMismatch",
+            AppError::ImportUnrecognized => "ImportUnrecognized",
+            AppError::ImportNoSpace => "ImportNoSpace",
+            AppError::ImportBusy => "ImportBusy",
+            AppError::ImportSourceMissing => "ImportSourceMissing",
+            AppError::LocalArchive => "LocalArchive",
         }
     }
 }

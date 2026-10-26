@@ -100,6 +100,8 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [folder, setFolder] = useState<Folder | null>(null);
   const [pager, setPager] = useState<Pager>(firstPage);
+  const [importing, setImporting] = useState<{ imported: number; estimate: number } | null>(null);
+  const importReloaded = useRef(0);
   const [list, setList] = useState<ListState>({ status: "loading" });
   const [syncing, setSyncing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -331,6 +333,25 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
       }),
       onBackendEvent("folders-updated", ({ accountId }) => {
         if (accountId === account.id) void loadFolders();
+      }),
+      // Importação deste arquivo local (US15): o progresso na coluna e a lista acompanhando a cada mil.
+      onBackendEvent("import-progress", (p) => {
+        if (p.accountId !== account.id) return;
+        setImporting({ imported: p.imported, estimate: p.estimate });
+        if (p.imported - importReloaded.current < 1000 && importReloaded.current > 0) return;
+        importReloaded.current = Math.max(p.imported, 1);
+        void loadFolders();
+        const current = folderRef.current;
+        if (current) void loadPage(current, pagerRef.current, true);
+      }),
+      onBackendEvent("import-finished", ({ archive }) => {
+        if (archive.accountId !== account.id) return;
+        setImporting(null);
+        importReloaded.current = 0;
+        void loadFolders();
+        // A ordem final segue a data: a lista volta para a primeira página.
+        const current = folderRef.current;
+        if (current) void loadPage(current, firstPage(), true);
       }),
       onBackendEvent("moves-finished", ({ accountId, failed, folderIds }) => {
         if (accountId !== account.id || failed.length === 0) return;
@@ -693,6 +714,8 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
       ? `Sinalizadas: ${bucketLabel(flagBucket)}`
       : folder?.name ?? "Mensagens";
   const purgeInTrash = confirmPurge ? confirmPurge.filter((m) => roleOf(m) === "trash").length : 0;
+  // Arquivo local (US15): não há servidor, a mensagem sai deste computador.
+  const purgeFrom = account.status === "local" ? "deste computador" : "do servidor";
 
   return (
     <>
@@ -703,7 +726,8 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           sourceFolderId={sourceFolderId}
           targets={targets}
           roleOf={roleOf}
-          readOnly={account.status !== "active"}
+          readOnly={account.status !== "active" && account.status !== "local"}
+          local={account.status === "local"}
           inert={settingsOpen}
           onNew={onNew}
           onDelete={onDelete}
@@ -749,6 +773,8 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
             setFlagReload(0);
             setFlagBucket(bucket);
           }}
+          local={account.status === "local"}
+          importing={importing}
         />
         <EmailListColumn
           folderName={listName}
@@ -768,7 +794,7 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           onCheck={onCheck}
           onCheckAll={onCheckAll}
           onClearChecked={clearChecked}
-          canDrag={account.status === "active"}
+          canDrag={account.status === "active" || account.status === "local"}
           onDragMessages={onDragMessages}
           onDragOver={setDropHover}
           onDropMessages={onDropMessages}
@@ -811,8 +837,8 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
         >
           <p>
             {purgeInTrash === 1
-              ? "A mensagem que está na Lixeira será apagada do servidor e não poderá ser recuperada."
-              : `As ${conversations(purgeInTrash)} que estão na Lixeira serão apagadas do servidor e não poderão ser recuperadas.`}
+              ? `A mensagem que está na Lixeira será apagada ${purgeFrom} e não poderá ser recuperada.`
+              : `As ${conversations(purgeInTrash)} que estão na Lixeira serão apagadas ${purgeFrom} e não poderão ser recuperadas.`}
             {confirmPurge.length > purgeInTrash && ` As outras ${conversations(confirmPurge.length - purgeInTrash)} vão para a Lixeira.`}
           </p>
         </Modal>

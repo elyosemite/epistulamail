@@ -52,6 +52,9 @@ pub enum AccountStatus {
     Active,
     NeedsReauth,
     SignedOut,
+    /// Arquivo de e-mail importado (US15): sem servidor. No banco fica como `signed_out` com o
+    /// provider `archive`, para nenhum caminho de rede o tratar como conta ativa.
+    Local,
 }
 
 impl AccountStatus {
@@ -59,7 +62,7 @@ impl AccountStatus {
         match self {
             AccountStatus::Active => "active",
             AccountStatus::NeedsReauth => "needs_reauth",
-            AccountStatus::SignedOut => "signed_out",
+            AccountStatus::SignedOut | AccountStatus::Local => "signed_out",
         }
     }
 
@@ -106,7 +109,10 @@ fn account_from(row: &Row<'_>) -> rusqlite::Result<Account> {
         display_name: row.get(3)?,
         color: row.get(4)?,
         position: row.get(5)?,
-        status: AccountStatus::parse(&row.get::<_, String>(6)?),
+        status: match row.get::<_, String>(1)?.as_str() {
+            ARCHIVE_PROVIDER => AccountStatus::Local,
+            _ => AccountStatus::parse(&row.get::<_, String>(6)?),
+        },
         unread: row.get::<_, Option<i64>>(7)?.and_then(|n| u32::try_from(n).ok()),
         last_folder_id: row.get(8)?,
         list_width: row.get::<_, Option<String>>(9)?.and_then(|v| v.parse().ok()),
@@ -116,6 +122,9 @@ fn account_from(row: &Row<'_>) -> rusqlite::Result<Account> {
         },
     })
 }
+
+/// Provider dos arquivos de e-mail importados (US15).
+pub const ARCHIVE_PROVIDER: &str = "archive";
 
 pub fn list_accounts(conn: &Connection) -> Result<Vec<Account>, AppError> {
     let mut st = conn.prepare_cached(&format!("{ACCOUNT_SELECT} ORDER BY a.position, a.created_at")).map_err(sql_error("contas"))?;
@@ -561,7 +570,7 @@ pub struct ApplyReport {
 
 /// Conversa da mensagem (US8): a do pai, se ele já está no banco; senão a raiz dos cabeçalhos.
 /// `''` quando a mensagem não tem nenhum id (fica sozinha).
-fn thread_for(conn: &Connection, account_id: &str, fields: &HeaderFields) -> Result<String, AppError> {
+pub(crate) fn thread_for(conn: &Connection, account_id: &str, fields: &HeaderFields) -> Result<String, AppError> {
     if let Some(parent) = &fields.in_reply_to {
         let found: Option<String> = conn
             .query_row(
@@ -579,7 +588,7 @@ fn thread_for(conn: &Connection, account_id: &str, fields: &HeaderFields) -> Res
 }
 
 /// `In-Reply-To` e `References`, separados por espaço, sem repetir.
-fn refs_of(fields: &HeaderFields) -> String {
+pub(crate) fn refs_of(fields: &HeaderFields) -> String {
     let mut out: Vec<&str> = Vec::new();
     for id in fields.in_reply_to.iter().chain(fields.references.iter()) {
         if !out.contains(&id.as_str()) {
@@ -749,7 +758,7 @@ fn uids_from(conn: &Connection, folder_id: i64, min: u32) -> Result<Vec<u32>, Ap
 }
 
 /// Mensagens sem nenhuma pasta saem do banco (com corpo e anexos, por cascade).
-fn delete_orphans(conn: &Connection, account_id: &str) -> Result<usize, AppError> {
+pub(crate) fn delete_orphans(conn: &Connection, account_id: &str) -> Result<usize, AppError> {
     conn.execute(
         "DELETE FROM message WHERE account_id = ?1
             AND NOT EXISTS (SELECT 1 FROM message_folder mf WHERE mf.message_id = message.id)
@@ -1650,7 +1659,7 @@ pub fn purge_outside(conn: &mut Connection, before: Option<&str>) -> Result<usiz
 /// Apaga uma conta de que o usuário saiu, com tudo que pende dela (mensagens, pastas, rascunhos,
 /// avisos), por `ON DELETE CASCADE` (CA7). Conta ativa: `InvalidInput` (para isso, sair antes).
 pub fn delete_signed_out_account(conn: &Connection, account_id: &str) -> Result<(), AppError> {
-    if require_account(conn, account_id)?.status != AccountStatus::SignedOut {
+    if !matches!(require_account(conn, account_id)?.status, AccountStatus::SignedOut | AccountStatus::Local) {
         return Err(AppError::InvalidInput);
     }
     conn.execute("DELETE FROM account WHERE id = ?1", [account_id]).map_err(sql_error("apagar conta"))?;
@@ -2188,7 +2197,7 @@ fn linked_to(conn: &Connection, message_id: i64, folder_id: i64) -> Result<bool,
 }
 
 /// Ajusta total e não lidas da pasta (`delta` +1 entra, -1 sai) sem esperar o servidor.
-fn shift_counts(conn: &Connection, folder_id: i64, delta: i64, unseen: bool) -> Result<(), AppError> {
+pub(crate) fn shift_counts(conn: &Connection, folder_id: i64, delta: i64, unseen: bool) -> Result<(), AppError> {
     conn.execute(
         "UPDATE folder SET total = max(0, coalesce(total, 0) + ?2),
             unread = CASE WHEN unread IS NULL OR ?3 = 0 THEN unread ELSE max(0, unread + ?2) END
@@ -2199,7 +2208,7 @@ fn shift_counts(conn: &Connection, folder_id: i64, delta: i64, unseen: bool) -> 
     Ok(())
 }
 
-fn move_counts(conn: &Connection, message_id: i64, from: i64, to: i64, undo: bool) -> Result<(), AppError> {
+pub(crate) fn move_counts(conn: &Connection, message_id: i64, from: i64, to: i64, undo: bool) -> Result<(), AppError> {
     let seen: bool = conn.query_row("SELECT seen FROM message WHERE id = ?1", [message_id], |r| r.get(0)).map_err(sql_error("mover"))?;
     let sign = if undo { -1 } else { 1 };
     shift_counts(conn, from, -sign, !seen)?;

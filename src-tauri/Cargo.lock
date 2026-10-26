@@ -749,6 +749,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cfb"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f13298d9178622b7916ec5d01d470425c04273c8ed07e87b1c38b34c4f4612b"
+dependencies = [
+ "fnv",
+ "uuid",
+ "web-time",
+]
+
+[[package]]
 name = "cfb-mode"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1649,6 +1660,7 @@ dependencies = [
  "async-imap",
  "async-native-tls",
  "base64 0.22.1",
+ "cfb 0.15.0",
  "chrono",
  "dotenvy",
  "foreign-types 0.3.2",
@@ -1658,6 +1670,7 @@ dependencies = [
  "mail-parser",
  "openssl",
  "openssl-sys",
+ "outlook-pst",
  "pgp",
  "proptest",
  "rand 0.8.8",
@@ -1672,6 +1685,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-autostart",
+ "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "tauri-plugin-single-instance",
  "tauri-winrt-notification",
@@ -2752,7 +2766,7 @@ version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4200d433cbd5178df7797c9c2e75b348b728e39631cf14520d1e2fc424201f4"
 dependencies = [
- "cfb",
+ "cfb 0.14.0",
 ]
 
 [[package]]
@@ -3879,6 +3893,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "outlook-pst"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "299eace9d895cc31490927d7de779f8e8f3deb5fb6bd1e68eb192aa1da19bd47"
+dependencies = [
+ "byteorder",
+ "thiserror 2.0.21",
+ "tracing",
+]
+
+[[package]]
 name = "p256"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4684,6 +4709,30 @@ checksum = "f8dd2a808d456c4a54e300a23e9f5a67e122c3024119acbfd73e3bf664491cb2"
 dependencies = [
  "hmac",
  "subtle",
+]
+
+[[package]]
+name = "rfd"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4fe518b6db89699d59862e4d1e3a0226316090f4e4ec09f7dd686be25634c7c"
+dependencies = [
+ "block2",
+ "dispatch2",
+ "glib-sys",
+ "gobject-sys",
+ "gtk-sys",
+ "js-sys",
+ "log",
+ "objc2",
+ "objc2-app-kit",
+ "objc2-core-foundation",
+ "objc2-foundation",
+ "raw-window-handle",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5849,6 +5898,48 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.21",
+]
+
+[[package]]
+name = "tauri-plugin-dialog"
+version = "2.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7461aaacf1901915ea7b9f5cd74f8224a351ed96af0a62c07fce934003cb34b"
+dependencies = [
+ "log",
+ "raw-window-handle",
+ "rfd",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "tauri-plugin-fs",
+ "thiserror 2.0.21",
+ "url",
+]
+
+[[package]]
+name = "tauri-plugin-fs"
+version = "2.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d58eb1d4984e535f47a642ffec09a2da6f5c18a12b5902d12126cb7626d628b"
+dependencies = [
+ "anyhow",
+ "dunce",
+ "glob",
+ "log",
+ "objc2-foundation",
+ "percent-encoding",
+ "schemars 0.8.22",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "tauri",
+ "tauri-plugin",
+ "tauri-utils",
+ "thiserror 2.0.21",
+ "toml 1.1.8+spec-1.1.0",
+ "url",
 ]
 
 [[package]]

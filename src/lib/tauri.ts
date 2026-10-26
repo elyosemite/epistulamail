@@ -1,7 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
-export type AccountStatus = "active" | "needs_reauth" | "signed_out";
+/** "local": arquivo de e-mail importado (US15), sem servidor. */
+export type AccountStatus = "active" | "needs_reauth" | "signed_out" | "local";
 export type AccountColor = "blue" | "teal" | "green" | "purple" | "magenta" | "orange";
 
 export interface Account {
@@ -568,7 +569,69 @@ export type AppErrorKind =
   | "MissingRecipientKey"
   | "NoOwnCertificate"
   | "MissingRecipientCertificate"
-  | "CertificateEmailMismatch";
+  | "CertificateEmailMismatch"
+  | "ImportUnrecognized"
+  | "ImportNoSpace"
+  | "ImportBusy"
+  | "ImportSourceMissing"
+  | "LocalArchive";
+
+// ---------------------------------------------------------------- arquivos de e-mail (US15)
+
+export type ImportFormat = "takeout" | "mbox" | "thunderbird" | "apple_mail" | "maildir" | "eml" | "emlx" | "pst" | "msg";
+
+/** Uma pasta encontrada no arquivo (passo 2). */
+export interface SourceFolder {
+  key: string;
+  name: string;
+  role: FolderRole;
+  depth: number;
+  count: number;
+  bytes: number;
+  /** Marcador do Google Takeout: a tela agrupa todos numa linha (D4). */
+  label: boolean;
+  selected: boolean;
+}
+
+export interface ImportScan {
+  format: ImportFormat;
+  name: string;
+  bytes: number;
+  estimate: number;
+  folders: SourceFolder[];
+  freeBytes: number | null;
+  marginBytes: number;
+}
+
+export type ArchiveState = "importing" | "interrupted" | "done";
+
+export interface Archive {
+  accountId: string;
+  format: ImportFormat;
+  sourceName: string;
+  state: ArchiveState;
+  imported: number;
+  duplicates: number;
+  /** Falhas por motivo: "too_large", "unreadable". */
+  failures: Record<string, number>;
+  estimate: number;
+  createdAt: number;
+  finishedAt: number | null;
+  bytes: number;
+  running: boolean;
+}
+
+export interface ImportProgress {
+  accountId: string;
+  imported: number;
+  duplicates: number;
+  failed: number;
+  estimate: number;
+  folder: string | null;
+}
+
+/** Por que a importação parou antes do fim; `null` quando terminou. */
+export type ImportStop = "cancelled" | "no_space" | "source_missing" | "error" | null;
 
 export interface AppError {
   kind: AppErrorKind;
@@ -701,6 +764,15 @@ export const api = {
   recipientsKeyStatus: (addresses: string[]) => call<RecipientKey[]>("recipients_key_status", { addresses }),
   /** Busca na internet (WKD e keys.openpgp.org): só depois de o usuário permitir (D5). */
   searchPgpKey: (email: string) => call<PgpKey[]>("search_pgp_key", { email }),
+  pickMailSource: (folder: boolean) => call<string | null>("pick_mail_source", { folder }),
+  scanMailSource: (path: string) => call<ImportScan>("scan_mail_source", { path }),
+  cancelMailScan: () => call<void>("cancel_mail_scan"),
+  startMailImport: (path: string, name: string, selected: string[], into: string | null = null) =>
+    call<Account>("start_mail_import", { path, name, selected, into }),
+  cancelMailImport: (accountId: string) => call<void>("cancel_mail_import", { accountId }),
+  resumeMailImport: (accountId: string) => call<void>("resume_mail_import", { accountId }),
+  removeArchive: (accountId: string) => call<void>("remove_archive", { accountId }),
+  listArchives: () => call<Archive[]>("list_archives"),
   listSmimeCerts: () => call<SmimeCert[]>("list_smime_certs"),
   listSmimeRequests: () => call<SmimeRequest[]>("list_smime_requests"),
   createSmimeRequest: (accountId: string, kind: SmimeCertKind, name: string, organization: string | null, country: string | null) =>
@@ -734,6 +806,10 @@ export interface BackendEvents {
   "lock-changed": LockStatus;
   /** Regras agiram depois de uma sincronização (US12, CA6). */
   "rules-applied": { accountId: string; count: number; moved: number; archived: number; deleted: number; runIds: number[] };
+  /** Lote gravado de uma importação (US15, CA2). */
+  "import-progress": ImportProgress;
+  /** Importação terminou, foi cancelada ou parou (sem espaço, arquivo sumiu). */
+  "import-finished": { archive: Archive; stopped: ImportStop };
 }
 
 export function onBackendEvent<K extends keyof BackendEvents>(name: K, handler: (payload: BackendEvents[K]) => void): () => void {

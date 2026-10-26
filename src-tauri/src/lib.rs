@@ -1,9 +1,13 @@
+mod archive_store;
 mod commands;
 mod compose;
 mod db;
 mod e2ee;
 mod error;
 mod imap_client;
+mod import;
+mod mail_import;
+mod mapi_import;
 mod key_lookup;
 mod keys;
 mod links;
@@ -127,6 +131,7 @@ async fn startup(state: &AppState) {
         ("índice", restore_from_index(state).await),
         ("migração", migrate_legacy_account(state).await),
         ("limpeza", clear_signed_out_secrets(state).await),
+        ("importações interrompidas", state.db.call(|c| archive_store::mark_interrupted(c).map(drop)).await),
     ] {
         if let Err(e) = result {
             tracing::error!(step, kind = e.kind(), "etapa de inicialização falhou");
@@ -157,6 +162,7 @@ pub fn run() {
         // Abrir o app de novo (com ele na bandeja) só traz a janela que já existe (US8).
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| notify::bring_to_front(app)))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_autostart::Builder::new().args(["--minimized"]).build())
         .on_window_event(|window, event| {
             // Fechar a janela a esconde na bandeja, para as notificações continuarem (US8, CA5).
@@ -211,6 +217,7 @@ pub fn run() {
             sync::start_periodic(app.handle());
             app.manage(notify::Notifier::default());
             app.manage(offline::Downloader::default());
+            app.manage(import::Importer::default());
             offline::start(app.handle());
             privacy::watch_windows_lock(app.handle());
             rule_runner::start_cleanup(app.handle());
@@ -226,6 +233,14 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::list_accounts,
+            import::pick_mail_source,
+            import::scan_mail_source,
+            import::cancel_mail_scan,
+            import::start_mail_import,
+            import::cancel_mail_import,
+            import::resume_mail_import,
+            import::remove_archive,
+            import::list_archives,
             commands::app_ready,
             commands::list_providers,
             commands::connect_account,

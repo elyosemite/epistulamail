@@ -103,14 +103,16 @@ interface MenuItemProps {
   selected?: boolean;
   disabled?: boolean;
   hidden?: boolean;
+  /** Ação que apaga de vez (`.menu-item--danger`). */
+  danger?: boolean;
   onSelect: () => void;
 }
 
-export function MenuItem({ label, icon, meta, kbd, selected, disabled, hidden, onSelect }: MenuItemProps) {
+export function MenuItem({ label, icon, meta, kbd, selected, disabled, hidden, danger, onSelect }: MenuItemProps) {
   return (
     <button
       type="button"
-      className={["menu-item", selected && "is-selected"].filter(Boolean).join(" ")}
+      className={["menu-item", selected && "is-selected", danger && "menu-item--danger"].filter(Boolean).join(" ")}
       role={selected === undefined ? "menuitem" : "menuitemradio"}
       aria-checked={selected === undefined ? undefined : selected}
       disabled={disabled}

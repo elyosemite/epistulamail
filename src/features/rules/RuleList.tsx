@@ -1,6 +1,7 @@
 // DS: regras.html "Configurações → Regras" · .rule-list com .rule-row (__grip, __body, __name, __stats, __warn; .is-off,
-// .is-dragging) (L59), .toggle, .menu da regra; a frase em RuleSentence (L58)
-import { useRef, useState, type DragEvent, type KeyboardEvent } from "react";
+// .is-dragging) (L59), .toggle, .menu da regra; a frase em RuleSentence (L58). O arraste é por ponteiro, pela alça:
+// com o arrastar nativo da janela ligado (soltar arquivos, US15), o arraste do HTML5 não funciona no Windows.
+import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { emailsLabel, isCleanup, sentence } from "../../lib/rules";
 import type { Folder, Rule } from "../../lib/tauri";
 import { Icon } from "../../ui/Icon";
@@ -52,11 +53,27 @@ export function RuleList({ rules, folders, onToggle, onEdit, onRun, onDuplicate,
     }
   };
 
-  const onDrop = (target: Rule) => (e: DragEvent<HTMLDivElement>) => {
+  // Arraste pela alça: começa depois de alguns pixels; ao soltar, a regra vai para a linha sob o ponteiro.
+  const drag = useRef<{ id: number; startY: number } | null>(null);
+  const onGripDown = (rule: Rule) => (e: PointerEvent<HTMLSpanElement>) => {
+    if (e.button !== 0) return;
     e.preventDefault();
-    if (dragging === null || dragging === target.id) return;
-    move(dragging, rules.findIndex((r) => r.id === target.id));
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drag.current = { id: rule.id, startY: e.clientY };
+  };
+  const onGripMove = (e: PointerEvent<HTMLSpanElement>) => {
+    if (drag.current && dragging === null && Math.abs(e.clientY - drag.current.startY) > 4) setDragging(drag.current.id);
+  };
+  const onGripUp = (e: PointerEvent<HTMLSpanElement>) => {
+    const started = drag.current;
+    drag.current = null;
+    if (!started || dragging === null) return setDragging(null);
+    const target = rules.findIndex((r) => {
+      const box = rows.current.get(r.id)?.getBoundingClientRect();
+      return !!box && e.clientY >= box.top && e.clientY <= box.bottom;
+    });
     setDragging(null);
+    if (target >= 0 && rules[target].id !== started.id) move(started.id, target);
   };
 
   return (
@@ -73,15 +90,19 @@ export function RuleList({ rules, folders, onToggle, onEdit, onRun, onDuplicate,
               role="listitem"
               tabIndex={0}
               aria-label={`${rule.name}. Alt e setas mudam a ordem; Enter edita.`}
-              draggable
-              onDragStart={(e) => { setDragging(rule.id); e.dataTransfer.effectAllowed = "move"; }}
-              onDragEnd={() => setDragging(null)}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={onDrop(rule)}
               onKeyDown={onKey(rule)}
               onDoubleClick={() => onEdit(rule)}
             >
-              <span className="rule-row__grip" aria-hidden="true"><Icon name="grip" /></span>
+              <span
+                className="rule-row__grip"
+                aria-hidden="true"
+                onPointerDown={onGripDown(rule)}
+                onPointerMove={onGripMove}
+                onPointerUp={onGripUp}
+                onPointerCancel={() => { drag.current = null; setDragging(null); }}
+              >
+                <Icon name="grip" />
+              </span>
               <input type="checkbox" className="toggle" checked={rule.enabled} aria-label={`Ligar a regra ${rule.name}`} onChange={(e) => onToggle(rule, e.target.checked)} />
               <div className="rule-row__body">
                 <span className="rule-row__name">{rule.name}</span>

@@ -30,7 +30,7 @@ export function unreadBadge(unread: number | null): string | null {
 
 /** Nome acessível do item da coluna: "Trabalho, joao@empresa.com, 12 não lidas". */
 export function railLabel(account: Account): string {
-  const parts = [account.displayName, account.email];
+  const parts = [account.displayName, account.status === "local" ? "arquivo deste computador" : account.email];
   if (account.status === "signed_out") parts.push("você saiu desta conta");
   else if (account.status === "needs_reauth") parts.push("precisa reconectar");
   else if (account.unread && account.unread > 0) parts.push(account.unread > 99 ? "mais de 99 não lidas" : `${account.unread} não lidas`);
@@ -39,7 +39,7 @@ export function railLabel(account: Account): string {
 
 export function railTip(account: Account, index: number): string {
   const shortcut = index < 9 ? ` (Ctrl+${index + 1})` : "";
-  return `${account.displayName} · ${account.email}${shortcut}`;
+  return `${account.displayName} · ${account.status === "local" ? "Arquivo deste computador" : account.email}${shortcut}`;
 }
 
 /** `Ctrl+1` a `Ctrl+9` trocam de conta pela ordem da coluna. Devolve o índice ou `null`. */

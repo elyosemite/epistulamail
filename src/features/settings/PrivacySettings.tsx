@@ -108,14 +108,15 @@ export function PrivacySettings() {
         <SettingList>
           {accounts.map((a) => {
             const signedOut = a.status === "signed_out";
+            const local = a.status === "local";
             const bytes = bytesOf(a.id);
             return (
               <SettingToggleRow
                 key={a.id}
                 disabled={signedOut}
-                media={<AccountAvatar initial={accountInitial(a.displayName)} colorClass={avatarColorClass(a.color)} photo={a.photo} />}
+                media={<AccountAvatar initial={accountInitial(a.displayName)} colorClass={avatarColorClass(a.color)} photo={a.photo} archive={local} />}
                 title={a.displayName}
-                subtitle={signedOut ? "Você saiu desta conta" : a.email}
+                subtitle={signedOut ? "Você saiu desta conta" : local ? "Arquivo deste computador" : a.email}
                 control={
                   <span className="setting-list__end">
                     <span className="setting-list__size">{formatBytes(bytes)}</span>

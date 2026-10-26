@@ -15,6 +15,8 @@ interface ToastInput {
   actions?: Array<{ label: string; onClick: () => void }>;
   /** Ícone do sprite no lugar do ícone do tipo. */
   icon?: string;
+  /** Fica até o usuário agir ou fechar (importação interrompida, US15). */
+  persist?: boolean;
 }
 
 interface ToastItem extends ToastInput {
@@ -37,7 +39,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const show = useCallback((toast: ToastInput) => {
     const id = nextId++;
     setToasts((all) => [...all.slice(-2), { ...toast, id }]);
-    if (toast.kind !== "error") setTimeout(() => dismiss(id), 6000);
+    if (toast.kind !== "error" && !toast.persist) setTimeout(() => dismiss(id), 6000);
   }, [dismiss]);
 
   const value = useMemo(() => show, [show]);

@@ -26,6 +26,8 @@ interface CommandBarProps {
   roleOf: (message: MessageHeader) => Folder["role"] | undefined;
   /** Conta sem acesso ao servidor: só "Novo e-mail" funciona. */
   readOnly: boolean;
+  /** Arquivo local (US15): sem escrever, responder nem regras; o resto age só no banco. */
+  local?: boolean;
   /** Configurações abertas: a barra não responde (D2). */
   inert: boolean;
   onNew: () => void;
@@ -47,7 +49,7 @@ function isTyping(target: EventTarget | null): boolean {
 
 /** Barra de comandos: novo e-mail, excluir, arquivar, mover, responder, lida e sinalizar. */
 export function CommandBar(props: CommandBarProps) {
-  const { account, folders, sourceFolderId, targets, roleOf, readOnly, inert, onNew, onDelete, onArchive, onMove, onCreateAndMove, onReply, onToggleRead, onFollowup, onRule } = props;
+  const { account, folders, sourceFolderId, targets, roleOf, readOnly, local, inert, onNew, onDelete, onArchive, onMove, onCreateAndMove, onReply, onToggleRead, onFollowup, onRule } = props;
   const [menu, setMenu] = useState<OpenMenu>(null);
   const [picker, setPicker] = useState(false);
   const [recent, setRecent] = useState<Folder[]>([]);
@@ -83,8 +85,9 @@ export function CommandBar(props: CommandBarProps) {
         e.preventDefault();
         fn();
       };
-      if (e.key === "n" || e.key === "N") return e.shiftKey ? undefined : run(p.onNew);
+      if (!p.local && (e.key === "n" || e.key === "N")) return e.shiftKey ? undefined : run(p.onNew);
       if (!can) return;
+      if (p.local && ["r", "R", "F"].includes(e.key)) return;
       if (e.key === "Delete" || e.key === "#") run(p.onDelete);
       else if (e.key === "e" && !e.shiftKey) run(p.onArchive);
       else if (e.key === "v" && !e.shiftKey && moveButton.current) run(() => openMove(anchorBelow(moveButton.current!)));
@@ -130,8 +133,12 @@ export function CommandBar(props: CommandBarProps) {
   return (
     <>
       <CommandToolbar label={targets.length > 1 ? `Ações de ${conversations(targets.length)}` : "Ações da mensagem"} inert={inert}>
-        <CommandButton primary icon="pencil" label="Novo e-mail" tip="Novo e-mail (N)" onClick={onNew} />
-        <CommandSeparator />
+        {!local && (
+          <>
+            <CommandButton primary icon="pencil" label="Novo e-mail" tip="Novo e-mail (N)" onClick={onNew} />
+            <CommandSeparator />
+          </>
+        )}
         <CommandGroup>
           <CommandButton
             icon="trash"
@@ -151,7 +158,7 @@ export function CommandBar(props: CommandBarProps) {
             disabled={disabled}
             onClick={(b) => openMove(anchorBelow(b))}
           />
-          <CommandSplit
+          {!local && <CommandSplit
             icon="reply-all"
             label="Responder a todos"
             tip={single ? "Responder a todos (Shift+R)" : "Selecione uma conversa só para responder"}
@@ -160,7 +167,7 @@ export function CommandBar(props: CommandBarProps) {
             disabled={disabled || !single}
             onClick={() => onReply("reply_all")}
             onMenu={(b) => setMenu({ kind: "reply", anchor: anchorBelow(b) })}
-          />
+          />}
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup>
@@ -181,7 +188,7 @@ export function CommandBar(props: CommandBarProps) {
             onClick={() => onFollowup(flagged ? { action: "clear" } : { action: "set", due: null })}
             onMenu={(b) => setMenu({ kind: "flag", anchor: anchorBelow(b) })}
           />
-          <CommandButton
+          {!local && <CommandButton
             icon="more"
             label="Mais"
             tip={single ? "Mais ações" : "Selecione uma conversa só para criar uma regra"}
@@ -189,7 +196,7 @@ export function CommandBar(props: CommandBarProps) {
             expanded={menu?.kind === "more"}
             disabled={disabled || !single}
             onClick={(b) => setMenu({ kind: "more", anchor: anchorBelow(b) })}
-          />
+          />}
         </CommandGroup>
       </CommandToolbar>
 

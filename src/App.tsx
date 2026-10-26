@@ -5,8 +5,12 @@
 // US8: o sino de notificações fica entre os botões das colunas e a foto (header.html, L52); clicar numa notificação, no
 // Windows ou no sino, abre a conta e a mensagem; "Novo e-mail" na bandeja abre a composição.
 // US10: o LockGate mostra a tela de desbloqueio (carregamento.html, L53) e desmonta o app inteiro ao bloquear.
+// US15: abrir arquivos de e-mail (arquivos.html): o assistente fica fora dos dois layouts, para seguir aberto quando a
+// primeira tela vira o app; arrastar um arquivo sobre a janela mostra a área de soltar (L70).
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AccountSettingsDialog, SignOutDialog } from "./features/accounts/AccountDialogs";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { AccountSettingsDialog, RemoveArchiveDialog, SignOutDialog } from "./features/accounts/AccountDialogs";
+import { ImportDialog } from "./features/import/ImportDialog";
 import { AddAccount, ConnectFlow } from "./features/accounts/AddAccount";
 import { LockGate, useAppLock } from "./features/lock/LockGate";
 import { Mailbox, type MailboxRequest } from "./features/mailbox/Mailbox";
@@ -24,15 +28,17 @@ import { pickActive, visibleAccounts } from "./lib/accounts";
 import { applyAppearance, cachedAppearance, parseAppearance } from "./lib/appearance";
 import { LIST_DEFAULT } from "./lib/listWidth";
 import { appliedText, emailsLabel } from "./lib/rules";
+import { finishedToast, messagesLabel } from "./lib/importing";
 import type { RulesRequest } from "./features/rules/RulesSettings";
-import { api, onBackendEvent, type Account, type Appearance, type Connected, type NoticeTarget } from "./lib/tauri";
+import { api, isAppError, onBackendEvent, type Account, type Appearance, type Connected, type NoticeTarget } from "./lib/tauri";
 import { AppBar } from "./ui/AppBar";
 import { Banner } from "./ui/Banner";
+import { DropZone } from "./ui/DropZone";
 import { Resizer } from "./ui/Resizer";
 import { ToastProvider, useToast } from "./ui/Toast";
 
 type View = { kind: "mail" } | { kind: "add" } | { kind: "reconnect"; account: Account };
-type Dialog = { kind: "settings"; account: Account; isNew: boolean } | { kind: "sign-out"; account: Account } | null;
+type Dialog = { kind: "settings"; account: Account; isNew: boolean } | { kind: "sign-out"; account: Account } | { kind: "remove-archive"; account: Account } | null;
 
 export function App() {
   return (
@@ -70,6 +76,13 @@ function Shell() {
   const lastFolder = useRef(new Map<string, string>());
   const toast = useToast();
   const appLock = useAppLock();
+  // Abrir arquivo de e-mail (US15): o caminho já escolhido (arrastado) e o arquivo local que recebe mais.
+  const [importer, setImporter] = useState<{ path: string | null; into: Account | null } | null>(null);
+  const importerOpen = useRef(false);
+  const accountsRef = useRef(accounts);
+  accountsRef.current = accounts;
+  importerOpen.current = importer !== null;
+  const [dropping, setDropping] = useState(false);
 
   const reload = useCallback(async () => {
     try {
@@ -167,6 +180,71 @@ function Shell() {
     setSettingsOpen(true);
   }, []);
 
+  // Arquivo arrastado sobre a janela (US15, CA1): a área de soltar e, ao soltar, o passo 2 direto.
+  useEffect(() => {
+    let off: (() => void) | null = null;
+    let disposed = false;
+    getCurrentWebview()
+      .onDragDropEvent((event) => {
+        const e = event.payload;
+        if (e.type === "enter" || e.type === "over") setDropping(!importerOpen.current);
+        else if (e.type === "leave") setDropping(false);
+        else if (e.type === "drop") {
+          setDropping(false);
+          if (!importerOpen.current && e.paths[0]) setImporter({ path: e.paths[0], into: null });
+        }
+      })
+      .then((fn) => {
+        if (disposed) fn();
+        else off = fn;
+      })
+      .catch(() => undefined);
+    return () => {
+      disposed = true;
+      off?.();
+    };
+  }, []);
+
+  // Fim de uma importação que correu em segundo plano (o assistente fechado): um aviso com "Abrir".
+  useEffect(() => onBackendEvent("import-finished", ({ archive, stopped }) => {
+    void reload();
+    if (importerOpen.current) return;
+    const name = accountsRef.current?.find((a) => a.id === archive.accountId)?.displayName ?? archive.sourceName;
+    toast({ ...finishedToast(archive, name, stopped), action: { label: "Abrir", onClick: () => select(archive.accountId) } });
+  }), [reload, toast, select]);
+
+  // Importação interrompida ao fechar o app (D5): continuar ou descartar o que entrou.
+  useEffect(() => {
+    if (!loaded) return;
+    api.listArchives().then((archives) => {
+      for (const a of archives.filter((x) => x.state === "interrupted" && !x.running)) {
+        const name = accountsRef.current?.find((x) => x.id === a.accountId)?.displayName ?? a.sourceName;
+        toast({
+          kind: "warning",
+          persist: true,
+          title: `A importação de ${name} parou`,
+          description: `${messagesLabel(a.imported)} entraram.`,
+          actions: [
+            {
+              label: "Continuar",
+              onClick: () => {
+                api.resumeMailImport(a.accountId).catch((error) =>
+                  toast({ kind: "error", title: "Não foi possível continuar", description: isAppError(error) ? error.message : undefined }),
+                );
+              },
+            },
+            {
+              label: "Descartar o que entrou",
+              onClick: () => {
+                api.removeArchive(a.accountId).then(() => reload()).catch(() => toast({ kind: "error", title: "Não foi possível descartar" }));
+              },
+            },
+          ],
+        });
+      }
+    }).catch(() => undefined);
+  }, [loaded, toast, reload]);
+
   // Aviso depois de uma sincronização em que regras agiram (CA6), com "Ver" e "Desfazer".
   useEffect(() => onBackendEvent("rules-applied", (e) => {
     toast({
@@ -189,8 +267,6 @@ function Shell() {
   }), [toast, openRules]);
 
   // Clique numa notificação (do Windows ou do sino): a conta, a pasta e a mensagem; "Reconecte" abre o login.
-  const accountsRef = useRef(accounts);
-  accountsRef.current = accounts;
   const openTarget = useCallback((target: NoticeTarget) => {
     const account = accountsRef.current?.find((a) => a.id === target.accountId);
     if (!account) return;
@@ -281,15 +357,38 @@ function Shell() {
   // Abertura: a tela em blocos aparece já com cada componente em carregamento (skeleton).
   if (accounts === null) return <AppSkeleton />;
 
+  const openFile = (into: Account | null = null) => setImporter({ path: null, into });
+  const overlays = (
+    <>
+      {dropping && <DropZone />}
+      {importer && (
+        <ImportDialog
+          initialPath={importer.path}
+          into={importer.into}
+          onClose={() => setImporter(null)}
+          onBackground={(account) => {
+            void reload().then(() => select(account.id));
+          }}
+          onOpen={(accountId) => {
+            void reload().then(() => select(accountId));
+          }}
+        />
+      )}
+    </>
+  );
+
   if (accounts.length === 0) {
     return (
-      <div className="app-shell app-shell--no-sidebar">
-        <AppBar />
-        {loadError && <div className="app-shell__banner"><Banner appearance="error">{loadError}</Banner></div>}
-        <div className="app-shell__center">
-          <AddAccount first onConnected={onConnected} onCancel={() => undefined} />
+      <>
+        <div className="app-shell app-shell--no-sidebar">
+          <AppBar />
+          {loadError && <div className="app-shell__banner"><Banner appearance="error">{loadError}</Banner></div>}
+          <div className="app-shell__center">
+            <AddAccount first onConnected={onConnected} onCancel={() => undefined} onOpenFile={() => openFile()} />
+          </div>
         </div>
-      </div>
+        {overlays}
+      </>
     );
   }
 
@@ -326,6 +425,10 @@ function Shell() {
             onSettings={() => openSettings()}
             onSignOut={() => setDialog({ kind: "sign-out", account: active })}
             onLock={appLock.hasPassword ? appLock.lockNow : undefined}
+            onRename={() => setDialog({ kind: "settings", account: active, isNew: false })}
+            onImportMore={() => openFile(active)}
+            onOpenFile={() => openFile()}
+            onRemove={() => setDialog({ kind: "remove-archive", account: active })}
           />
         </>
       }
@@ -334,6 +437,7 @@ function Shell() {
   );
 
   return (
+    <>
     <AppLayout listWidth={listWidth} hasReader={showMail && readerOpen} showFolders={appearance.showFolders} showReader={appearance.showReader}>
       <AccountsBar
         accounts={accounts}
@@ -344,6 +448,7 @@ function Shell() {
         onMove={move}
         onSignOut={(account) => setDialog({ kind: "sign-out", account })}
         onReconnect={(account) => setView({ kind: "reconnect", account })}
+        onRemove={(account) => setDialog({ kind: "remove-archive", account })}
       />
       {!showMail && renderHeader()}
       {offline[active.id] && active.status === "active" && (
@@ -351,7 +456,15 @@ function Shell() {
       )}
       {view.kind === "add" && (
         <div className="app-shell__center app-shell__block">
-          <AddAccount first={false} onConnected={onConnected} onCancel={() => setView({ kind: "mail" })} />
+          <AddAccount
+            first={false}
+            onConnected={onConnected}
+            onCancel={() => setView({ kind: "mail" })}
+            onOpenFile={() => {
+              setView({ kind: "mail" });
+              openFile();
+            }}
+          />
         </div>
       )}
       {view.kind === "reconnect" && (
@@ -401,6 +514,7 @@ function Shell() {
           rulesRequest={rulesRequest}
           keysRequest={keysRequest}
           onClose={() => setSettingsOpen(false)}
+          onOpenFile={() => openFile()}
         />
       )}
       {dialog?.kind === "settings" && (
@@ -433,6 +547,23 @@ function Shell() {
           onClose={() => setDialog(null)}
         />
       )}
+      {dialog?.kind === "remove-archive" && (
+        <RemoveArchiveDialog
+          account={dialog.account}
+          onConfirm={async () => {
+            try {
+              await api.removeArchive(dialog.account.id);
+              toast({ kind: "info", title: `${dialog.account.displayName} saiu do Epistula`, description: "As mensagens foram apagadas deste computador. O arquivo original continua onde estava." });
+            } catch (error) {
+              toast({ kind: "error", title: "Não foi possível remover", description: isAppError(error) ? error.message : "Tente de novo em instantes." });
+            }
+            await reload();
+          }}
+          onClose={() => setDialog(null)}
+        />
+      )}
     </AppLayout>
+    {overlays}
+    </>
   );
 }

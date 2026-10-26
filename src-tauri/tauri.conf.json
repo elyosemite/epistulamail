@@ -17,7 +17,7 @@
         "height": 800,
         "minWidth": 960,
         "minHeight": 600,
-        "dragDropEnabled": false,
+        "dragDropEnabled": true,
         "visible": false,
         "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disk-cache-size=1"
       }

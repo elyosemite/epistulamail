@@ -10,6 +10,8 @@ interface AccountsBarItemProps {
   /** Classe de cor do avatar (`avatar--purple`) ou `null` para o azul padrão. */
   colorClass: string | null;
   photo: string | null;
+  /** Arquivo local (US15): avatar neutro com o ícone (L71). */
+  archive?: boolean;
   badge: string | null;
   state: "normal" | "alert" | "signed-out";
   current: boolean;
@@ -22,7 +24,7 @@ interface AccountsBarItemProps {
 
 /** Uma conta na coluna de contas. */
 export const AccountsBarItem = forwardRef<HTMLButtonElement, AccountsBarItemProps>(function AccountsBarItem(
-  { name, initial, colorClass, photo, badge, state, current, label, tip, onSelect, onMenu, onKeyDown },
+  { name, initial, colorClass, photo, archive, badge, state, current, label, tip, onSelect, onMenu, onKeyDown },
   ref,
 ) {
   const cls = ["account-rail__item", state === "signed-out" && "account-rail__item--signed-out"].filter(Boolean).join(" ");
@@ -53,7 +55,7 @@ export const AccountsBarItem = forwardRef<HTMLButtonElement, AccountsBarItemProp
         onContextMenu={openMenu}
         onKeyDown={keyDown}
       >
-        <AccountAvatar initial={initial} colorClass={colorClass} photo={photo} size="lg" />
+        <AccountAvatar initial={initial} colorClass={colorClass} photo={photo} size="lg" archive={archive} />
         {badge && state === "normal" && <span className="badge badge--primary account-rail__badge" aria-hidden="true">{badge}</span>}
         {state === "alert" && (
           <span className="account-rail__alert" aria-hidden="true"><Icon name="warning" /></span>

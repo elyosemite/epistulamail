@@ -5,6 +5,7 @@ import type { Account, Appearance } from "../../lib/tauri";
 import { CryptoSettings } from "../crypto/CryptoSettings";
 import { CertManager } from "../crypto/CertManager";
 import { KeyManager } from "../crypto/KeyManager";
+import { ArchiveSettings } from "../import/ArchiveSettings";
 import { EmptyState } from "../../ui/EmptyState";
 import { ManagerSheet, SettingsSheet, SettingsTitle, type SettingsSection } from "../../ui/SettingsSheet";
 import { AppearanceSettings } from "./AppearanceSettings";
@@ -43,10 +44,16 @@ interface SettingsProps {
   /** Abre direto no gerenciador de chaves (US13) ou de certificados (US14), numa chave ("Ver no gerenciador" da leitura). */
   keysRequest?: { fingerprint: string | null; technology?: "openpgp" | "smime" } | null;
   onClose: () => void;
+  /** "Abrir arquivo de e-mail…" de Configurações → Geral (US15). */
+  onOpenFile: () => void;
 }
 
 /** Configurações (US5, CA6): seções à esquerda, opções da seção à direita. Abrem em Geral (US7, CA4). */
-export function Settings({ accounts, appearance, onAppearance, initialSection = "general", activeAccountId, rulesRequest, keysRequest, onClose }: SettingsProps) {
+export function Settings({ accounts, appearance, onAppearance, initialSection = "general", activeAccountId, rulesRequest, keysRequest, onClose, onOpenFile }: SettingsProps) {
+  // Arquivos locais (US15) não sincronizam, não notificam, não têm regras nem chaves próprias.
+  const mailAccounts = accounts.filter((a) => a.status !== "local");
+  const mailActive = mailAccounts.some((a) => a.id === activeAccountId) ? activeAccountId : mailAccounts[0]?.id ?? "";
+  const noMail = <EmptyState title="Conecte uma conta de e-mail" description="Esta seção vale para contas de e-mail. Arquivos abertos deste computador não precisam dela." />;
   const [section, setSection] = useState(keysRequest ? "crypto" : initialSection);
   const [manager, setManager] = useState<{ accountId: string; fingerprint: string | null; technology: "openpgp" | "smime" } | null>(
     keysRequest ? { accountId: activeAccountId, fingerprint: keysRequest.fingerprint, technology: keysRequest.technology ?? "openpgp" } : null,
@@ -68,20 +75,23 @@ export function Settings({ accounts, appearance, onAppearance, initialSection = 
     <SettingsSheet sections={SECTIONS} current={section} onSection={setSection} onClose={onClose}>
       <SettingsTitle>{current.label}</SettingsTitle>
       {section === "general" ? (
-        <GeneralSettings appearance={appearance} onChange={onAppearance} />
+        <>
+          <GeneralSettings appearance={appearance} onChange={onAppearance} />
+          <ArchiveSettings accounts={accounts} onOpenFile={() => { onClose(); onOpenFile(); }} />
+        </>
       ) : section === "email" ? (
         <>
           <OfflineSettings />
-          <SyncSettings accounts={accounts} />
+          <SyncSettings accounts={mailAccounts} />
         </>
       ) : section === "notifications" ? (
-        <NotificationSettings accounts={accounts} />
+        <NotificationSettings accounts={mailAccounts} />
       ) : section === "privacy" ? (
         <PrivacySettings />
       ) : section === "rules" ? (
-        <RulesSettings accounts={accounts} initialAccountId={activeAccountId} request={rulesRequest} />
+        mailAccounts.length === 0 ? noMail : <RulesSettings accounts={mailAccounts} initialAccountId={mailActive} request={rulesRequest} />
       ) : section === "crypto" ? (
-        <CryptoSettings accounts={accounts} initialAccountId={activeAccountId} onManageKeys={(accountId) => setManager({ accountId, fingerprint: null, technology: "openpgp" })}
+        mailAccounts.length === 0 ? noMail : <CryptoSettings accounts={mailAccounts} initialAccountId={mailActive} onManageKeys={(accountId) => setManager({ accountId, fingerprint: null, technology: "openpgp" })}
           onManageCerts={(accountId) => setManager({ accountId, fingerprint: null, technology: "smime" })}
         />
       ) : section === "appearance" ? (

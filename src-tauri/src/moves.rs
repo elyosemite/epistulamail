@@ -66,6 +66,16 @@ pub async fn run_due(app: &AppHandle) {
     let mut failed: BTreeMap<String, (Vec<String>, Vec<String>)> = BTreeMap::new();
     for ((account_id, from, to), moves) in groups {
         let ids: Vec<i64> = moves.iter().map(|m| m.id).collect();
+        // Arquivo local (US15): o mover acaba no banco, sem servidor.
+        let lookup = account_id.clone();
+        let local = state.db.call(move |c| store::require_account(c, &lookup)).await.is_ok_and(|a| a.status == store::AccountStatus::Local);
+        if local {
+            let done = ids.clone();
+            if let Err(e) = state.db.call(move |c| crate::archive_store::finish_local_moves(c, &done)).await {
+                tracing::warn!(kind = e.kind(), "mover no arquivo local não concluído");
+            }
+            continue;
+        }
         let uids: Vec<u32> = moves.iter().map(|m| m.from_uid).collect();
         let outcome = execute(&state, &account_id, from, to, &uids).await;
         let ok = outcome.is_ok();

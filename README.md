@@ -8,12 +8,12 @@ Epistula connects your accounts, downloads what you need to read and stores it i
 
 ![Epistula inbox with three accounts, folders and labels, the message list and an open newsletter in the reading pane](docs/images/epistula-caixa-de-entrada.png)
 
-> Epistula is under active development. Reading, sending, organizing, rules, conversations, notifications, offline reading, multiple accounts and end-to-end encryption (OpenPGP and S/MIME) work today. Next up: opening email archives from other programs, with no account. Then the sign-in server and encrypted backups. [Current state](#current-state) lists exactly what exists right now.
+> Epistula is under active development. Reading, sending, organizing, rules, conversations, notifications, offline reading, multiple accounts, end-to-end encryption (OpenPGP and S/MIME) and opening email archives from other programs, with no account, work today. Next up: the sign-in server and encrypted backups. [Current state](#current-state) lists exactly what exists right now.
 
 ## At a glance
 
 - **No Epistula account, no Epistula cloud.** Your mail goes straight to your provider. Our sign-in server (planned) only takes part in the OAuth login and never sees a message.
-- **Open old archives, offline and with no account (next).** Gmail Takeout, Outlook, Thunderbird and Apple Mail backups, read from the file, without connecting to anything.
+- **Open old archives, offline and with no account.** Gmail Takeout, Outlook, Thunderbird and Apple Mail backups, read from the file, without connecting to anything.
 - **Everything on disk is encrypted.** Messages, subjects, senders and indexes live in an AES-256 database, which already holds up against quantum computers.
 - **Opens instantly, even offline.** Recent mail is downloaded in the background and opens from disk.
 - **Blocks tracking.** Remote images (the "spy pixels" that tell senders you opened their email) stay blocked until you allow them.
@@ -79,6 +79,13 @@ What works today:
 - A key manager with search, import from a file, the clipboard or the internet, export and a password-protected backup. Keys arriving by Autocrypt or as an attachment are stored as "not yet accepted", including a key attached inside an encrypted message. The first message from someone new is checked against the key they attached, and the Autocrypt header Epistula sends can be read by other programs.
 - S/MIME too, for people on Outlook, Apple Mail or a company certificate: request a certificate (the key pair is created on your computer and only the request goes to the certificate authority), import the issued one or a `.p12`, and keep the certificates of whoever sends you signed mail. Trust follows the root certificates in Windows. A test CA script lets you try it without buying anything.
 
+**Email archives, with no account**
+
+- Open a backup or a mail folder from another program, straight from the first screen or by dropping it on the window: the Google Takeout `.mbox` (labels kept as labels), Outlook `.pst` and `.msg`, Thunderbird profile folders, Apple Mail `.mbox` exports and `.emlx`, `.eml` files and Maildir.
+- No account, no server and no network at all: the file is read on your computer and copied into the encrypted database. The original is only read, never changed.
+- Before importing you see the format, the folders (pick which ones go in), and how much disk space it will take; afterwards, how many came in, how many were duplicates and how many failed, and why. Importing the same backup twice duplicates nothing, and an import interrupted by closing the app can be resumed.
+- The archive shows up next to your accounts, with its original folders. Reading, conversations, search, moving, flagging and deleting work as in an account, all on this computer; encrypted messages open with your OpenPGP keys and S/MIME certificates. Removing it erases its messages and rotates the database key.
+
 **Staying informed**
 
 - Windows notifications for new mail, replies to your emails, due dates and accounts that need attention. One click opens the message.
@@ -92,22 +99,10 @@ What works today:
 What does not exist yet:
 
 - Providers other than Google. The data model already covers Outlook, Yahoo, iCloud, Zoho, GMX, AOL and generic IMAP.
-- The sign-in server and importing email archives (see below).
+- The sign-in server (see below), and `.olm` files from Outlook for Mac.
 - Signed releases. For now, the way in is building from source.
 
 ## Where this is going
-
-### Open your old email, no account needed
-
-The next feature. Pick a file or a folder and read it in Epistula, without signing in to anything and without the app talking to any server, ours or anyone else's:
-
-- **Gmail:** the `.mbox` from Google Takeout, with labels kept as labels.
-- **Outlook:** `.pst` data files and single `.msg` messages; `.olm` from Outlook for Mac.
-- **Thunderbird:** the profile's mbox folders.
-- **Apple Mail:** exported `.mbox` bundles and `.emlx` messages.
-- **Anything else:** `.eml` files, plain mbox and Maildir folders.
-
-Imported mail goes into the same encrypted database, as a local archive alongside your accounts, with the same safe reading (sanitized HTML, remote images blocked). Encrypted messages in the archive open with your OpenPGP keys and S/MIME certificates. The original file is only read, never changed. The open questions are in [userstory/0015-importacao-de-arquivos.md](userstory/0015-importacao-de-arquivos.md) (in Portuguese).
 
 ### A sign-in server, and nothing more
 
@@ -159,7 +154,7 @@ Your computer
 Your email provider              Epistula sign-in server
 (IMAP, SMTP, OAuth)              OAuth app settings for Google and Microsoft
 
-Email archives (.mbox, .pst, .eml…)  ──read locally──▶  epistula.db, with no network
+Email archives (.mbox, .pst, .eml…)  ──read locally──▶  epistula.db, with no network (works today)
 ```
 
 A few things worth saying plainly:
@@ -169,7 +164,7 @@ A few things worth saying plainly:
 - **Signing out revokes access** at the provider and deletes the secret from the credential vault. Messages already downloaded stay on disk, encrypted, until there is an option to erase them.
 - **A compromised computer stays compromised.** Malware running in your session can read whatever you can read. No email client fixes that, and we would rather say so than pretend otherwise.
 
-The full analysis, with the data inventory, the cryptography inventory, trust boundaries and the seventeen threats considered, is in [docs/arquitetura-e-ameacas.md](docs/arquitetura-e-ameacas.md) (in Portuguese).
+The full analysis, with the data inventory, the cryptography inventory, trust boundaries and the eighteen threats considered, is in [docs/arquitetura-e-ameacas.md](docs/arquitetura-e-ameacas.md) (in Portuguese).
 
 ## Design system
 

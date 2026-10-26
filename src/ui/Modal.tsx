@@ -1,4 +1,4 @@
-// DS: modais.html · .blanket, .modal, .modal--warning, .modal__foot--split, .modal__head, .modal__title, .modal__body, .modal__foot
+// DS: modais.html · .blanket, .modal, .modal--warning, .modal--medium (arquivos.html, US15), .modal__foot--split, .modal__head, .modal__title, .modal__body, .modal__foot
 // Foco preso no modal; Esc fecha; o foco volta para onde estava ao fechar.
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { Icon } from "./Icon";
@@ -7,6 +7,8 @@ interface ModalProps {
   title: string;
   icon?: string;
   appearance?: "default" | "warning";
+  /** Largura média, com o corpo rolando (assistente com listas). */
+  medium?: boolean;
   /** Seletor do elemento que recebe o foco ao abrir (padrão: o primeiro focável). */
   initialFocus?: string;
   /** Primeiro botão do rodapé à esquerda, os demais à direita (`.modal__foot--split`). */
@@ -18,7 +20,7 @@ interface ModalProps {
 
 const FOCUSABLE = "button:not(:disabled), input:not(:disabled), [tabindex]:not([tabindex='-1'])";
 
-export function Modal({ title, icon, appearance = "default", initialFocus, splitFooter, onClose, children, footer }: ModalProps) {
+export function Modal({ title, icon, appearance = "default", medium, initialFocus, splitFooter, onClose, children, footer }: ModalProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
@@ -43,7 +45,7 @@ export function Modal({ title, icon, appearance = "default", initialFocus, split
     items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
   };
 
-  const cls = ["modal", appearance === "warning" && "modal--warning"].filter(Boolean).join(" ");
+  const cls = ["modal", appearance === "warning" && "modal--warning", medium && "modal--medium"].filter(Boolean).join(" ");
   return (
     <div className="blanket" onKeyDown={onKeyDown}>
       <div ref={ref} className={cls} role="dialog" aria-modal="true" aria-labelledby={titleId}>

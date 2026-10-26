@@ -1,6 +1,6 @@
 # Epistula: arquitetura e modelo de ameaças
 
-Situação em 25 out 2026, após a US7. Produto: cliente desktop que conecta várias contas de e-mail (Gmail por OAuth nesta versão), lê as caixas por IMAP e envia por SMTP, com um banco local cifrado (decisão D1, opção A, provisória). Ainda não há servidor do Epistula. Planejados (26 out 2026): um servidor de login, só para o OAuth com o Google e a Microsoft, por onde nenhuma mensagem passa, e a importação de arquivos de e-mail, que funciona sem conta e sem rede. Os dois estão nas seções "Planejado" no fim deste documento.
+Situação em 25 out 2026, após a US7. Produto: cliente desktop que conecta várias contas de e-mail (Gmail por OAuth nesta versão), lê as caixas por IMAP e envia por SMTP, com um banco local cifrado (decisão D1, opção A, provisória). Ainda não há servidor do Epistula. Planejado (26 out 2026): um servidor de login, só para o OAuth com o Google e a Microsoft, por onde nenhuma mensagem passa (seção "Planejado: servidor de login"). A importação de arquivos de e-mail, sem conta e sem rede, existe desde a US15 (seção própria no fim).
 
 ## Componentes e limites de confiança
 
@@ -77,6 +77,9 @@ Limites de confiança, do mais confiável ao menos:
 | Certificados S/MIME: dos contatos (recolhidos das assinaturas) e os meus, com a cadeia (US14) | `epistula.db` (`smime_cert`, `smime_cert_email`) | Até o usuário excluir | Processo Rust; WebView (sem a chave privada) |
 | Chave privada dos meus certificados e dos pedidos pendentes, sem senha própria | `epistula.db` (`smime_cert.private_key`, `smime_request`), protegida só pela cifra do banco | Até excluir o certificado ou o pedido | Processo Rust |
 | Pedido de certificado (CSR), certificado exportado e `.p12` | Arquivos na pasta Downloads; o `.p12` cifrado pela senha que o usuário escolhe | Até o usuário apagar | Usuário do SO |
+| Mensagens de arquivos de e-mail importados (US15), com corpo, anexos e pastas de origem | `epistula.db` (as tabelas de mensagem de uma conta, sob uma conta `archive`) | Até o usuário remover o arquivo local | Processo Rust; WebView (HTML sanitizado) |
+| Nome e caminho do arquivo de origem, pastas escolhidas e contagens da importação | `epistula.db` (`archive`) | Até remover o arquivo local | Processo Rust; WebView (só o nome e as contagens) |
+| Arquivo de e-mail original (backup do Takeout, `.pst`…) | Onde o usuário guardou, sem cifra; o Epistula só lê | Fora do controle do Epistula | Usuário do SO |
 | Configurações de criptografia por conta | `epistula.db` (`account_crypto`) | Até a conta ser removida | Processo Rust; WebView |
 | Logs | stdout do processo | Sessão do terminal | Usuário do SO |
 
@@ -146,6 +149,7 @@ Inventário de cada uso de criptografia (US10, CA1). "Quântico" diz se o uso re
 | 15 | Cópia do disco com a senha do Windows, ou backup do DPAPI em domínio | Mitigada com a senha do Epistula ligada (opcional, D1) | Sem senha, o DPAPI entrega a chave do banco e os refresh tokens a quem está na sessão do usuário, a quem copia o disco e tem a senha do Windows (que, sem BitLocker, pode ser adivinhada offline) e ao administrador do domínio, que tem a chave de backup do DPAPI (protegida por RSA). Com a senha, a chave do banco e os refresh tokens ficam no cofre cifrados por uma chave derivada dela com Argon2id; sem a senha, nem o banco abre nem o token dá acesso ao servidor. Senha errada não apaga nada; a espera entre tentativas cresce até 5 min (só em memória: o custo do Argon2id é a defesa contra adivinhação offline). "Esqueci a senha" apaga o banco, as chaves e os tokens. Com o app bloqueado (por tempo sem uso, pelo Windows ou pelo usuário), o banco fica fechado e as sessões e tokens saem da memória. O índice de contas (e-mails) continua no cofre sem a senha. |
 | 16 | Conteúdo fora do banco cifrado | Parcialmente mitigada (US10, CA6) | As notificações mostram só a conta por padrão (D5); com "Remetente e assunto", o Windows guarda esse texto sem cifra no próprio banco de notificações. O cache de disco do WebView2 fica com 1 byte (`--disk-cache-size=1`) e os dados de navegação são limpos ao bloquear (D6); falta conferir no app real que nada do e-mail fica na pasta do WebView2. O arquivo de paginação e o de hibernação podem receber memória do app; só o BitLocker os protege, e Privacidade avisa quando o disco não está cifrado. |
 | 17 | Computador quântico no futuro | Parcialmente mitigada | Dados guardados: resistem (AES-256). Tráfego gravado hoje: a troca de chaves do TLS não resiste (US11). Backup RSA do DPAPI em domínio: não resiste (ver 15). |
+| 18 | Arquivo de e-mail malicioso ou malformado importado (US15) | Mitigada | Leitores em Rust sem `unsafe`, limite de 50 MB por mensagem, falha por mensagem (nunca derruba o app nem deixa o banco pela metade: cada lote é uma transação), nada extraído para o disco, HTML limpo e imagens bloqueadas como em qualquer mensagem. Risco residual: um defeito no `outlook-pst` ou no `cfb` com um arquivo feito para isso; os dois só leem, no processo do app, e qualquer erro vira "ilegível". O original continua sem cifra no disco (a tela avisa). |
 | 12 | Infraestrutura ou ordem legal | Fora do escopo do Epistula | Não há infraestrutura do Epistula. Pedidos legais alcançam os dados no Google. |
 
 **Risco aceito pela D4.** Depois de sair de uma conta, as mensagens salvas dela continuam no disco (cifradas). Sem a senha do Epistula, qualquer pessoa com acesso à sessão do usuário no Windows consegue lê-las pelo Epistula. Desde a US10, o diálogo de sair e Configurações → Privacidade apagam os dados da conta e trocam a chave do banco.
@@ -179,17 +183,16 @@ Ameaças novas (entram na tabela quando o servidor existir):
 | Servidor fora do ar | Última configuração válida guardada; leitura, envio e renovação continuam (com a opção A) |
 | Servidor vira rastreador de uso | Pedido sem identificador e sem logs de IP (S3) |
 
-## Planejado: importação de arquivos de e-mail
+## Importação de arquivos de e-mail (US15)
 
-Próxima entrega (story `userstory/0015-importacao-de-arquivos.md`): abrir backups do Gmail (Google Takeout, `.mbox`), do Outlook (`.pst`, `.msg`, `.olm`), do Thunderbird (mbox do perfil), do Apple Mail (pacotes `.mbox`, `.emlx`) e arquivos `.eml`, mbox e Maildir, **sem conta e sem nenhuma ligação com o servidor do Epistula ou com a internet**.
+Implementada em 26 out 2026 (story `userstory/0015-importacao-de-arquivos.md`): abre backups do Google Takeout (`.mbox`), do Outlook (`.pst`, `.msg`; `.ost` como tentativa), do Thunderbird (mbox do perfil), do Apple Mail (pacotes `.mbox`, `.emlx`) e arquivos `.eml`, mbox e Maildir, **sem conta e sem nenhuma ligação com o servidor do Epistula ou com a internet**.
 
-Impacto no modelo:
-
-- **Entrada não confiável nova e grande.** O arquivo vem de qualquer lugar, e o `.pst` e o `.olm` são formatos complexos (binário e ZIP com XML). Os leitores rodam no processo Rust, sem `unsafe` próprio, com limites de tamanho por mensagem e por anexo, sem seguir caminhos de dentro do ZIP para o disco (nada é extraído para fora do banco) e com limite de descompressão contra bombas. O conteúdo passa pela mesma limpeza de HTML e pelo bloqueio de imagens externas.
+- **Entrada não confiável nova e grande.** O arquivo vem de qualquer lugar. Os leitores rodam no processo Rust, sem `unsafe` (a única chamada `unsafe` é a que pergunta o espaço livre ao Windows): mbox, Maildir e `.emlx` por código próprio em streaming, `.pst` pelo `outlook-pst` (Microsoft, só leitura) e `.msg` pelo `cfb`. Cada mensagem tem limite de 50 MB (falha sozinha, "grande demais"); um trecho que não forma mensagem falha como "ilegível"; nada é extraído para fora do banco (sem arquivos temporários); a busca de pastas para em 12 níveis e 500 mil itens. O conteúdo passa pela mesma limpeza de HTML e pelo bloqueio de imagens externas de qualquer mensagem.
 - **Sem rede.** A importação não faz nenhuma requisição; abrir uma mensagem importada também não, a menos que o usuário libere as imagens.
-- **Dados.** As mensagens importadas vão para o `epistula.db` (cifrado), num arquivo local separado das contas. O arquivo original fica onde está, sem cifra, e não é alterado; o app avisa disso e não o apaga.
+- **Dados.** As mensagens vão para o `epistula.db` (cifrado), num arquivo local (conta com provider `archive`, sem token, sem servidor, fora do índice do cofre). O caminho do arquivo de origem fica no banco cifrado, para continuar uma importação interrompida. O arquivo original fica onde está, sem cifra, e não é alterado; a tela avisa disso e não o apaga. Remover o arquivo local apaga as mensagens e troca a chave do banco.
 - **Criptografia.** Mensagens OpenPGP e S/MIME do arquivo abrem com as chaves e os certificados que o usuário já tem; chaves e certificados que chegarem nelas seguem as mesmas regras da leitura (só do remetente, "ainda não aceita").
-- **Logs.** Só contagens e erros por tipo (quantas mensagens, quantas falharam); nunca nomes de pastas, assuntos, remetentes nem o caminho do arquivo.
+- **Seletor e arrastar.** O seletor nativo é aberto pelo processo Rust (`tauri-plugin-dialog` sem permissão para a WebView). Arrastar um arquivo sobre a janela entrega o caminho à WebView, que só o devolve ao comando de exame; o comando exige caminho absoluto e existente.
+- **Logs.** Só contagens e tipos de falha (quantas mensagens, quantas repetidas, quantas falharam e por quê); nunca nomes de pastas, assuntos, remetentes nem o caminho do arquivo.
 
 ## Premissas
 

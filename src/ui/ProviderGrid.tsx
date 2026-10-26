@@ -11,13 +11,14 @@ export interface ProviderOption {
   icon: string;
 }
 
-export function ProviderGrid({ providers, onPick }: { providers: ProviderOption[]; onPick: (provider: ProviderOption) => void }) {
+/** `wide`: cada cartão ocupa a linha inteira (o "Abrir arquivo de e-mail", US15). */
+export function ProviderGrid({ providers, wide, onPick }: { providers: ProviderOption[]; wide?: boolean; onPick: (provider: ProviderOption) => void }) {
   const soonId = useId();
   return (
     <>
       <ul className="provider-grid" role="list">
         {providers.map((p) => (
-          <li key={p.id}>
+          <li key={p.id} style={wide ? { gridColumn: "1 / -1" } : undefined}>
             <button
               className="provider-card"
               type="button"
