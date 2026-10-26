@@ -127,20 +127,20 @@ Cada item é uma entrega separada, na ordem sugerida.
 
 ### 5. Decisões
 
-- **D1 (pendente, recomendo oferecer, desligada por padrão):** senha do Epistula ao abrir o app.
-- **D2 (pendente, recomendo 15 minutos e ao bloquear o Windows):** quando o app bloqueia sozinho.
-- **D3 (pendente, recomendo só a conta):** o que as notificações mostram com o app bloqueado. A alternativa é não notificar nada.
-- **D4 (pendente, recomendo só manual e depois de apagar uma conta):** troca da chave do banco. A alternativa é trocar sozinho uma vez por ano.
-- **D5 (pendente, recomendo "Só a conta" para quem ainda não escolheu):** novo padrão das notificações. Quem já escolheu "Remetente e assunto" continua com a escolha.
-- **D6 (pendente, recomendo desligar o cache de disco):** WebView2 sem cache de disco ou com cache limpo ao fechar e ao bloquear. Sem cache, as imagens liberadas baixam de novo a cada abertura.
-- **D7 (pendente, recomendo oferecer, sem apagar sozinho):** apagar do computador os e-mails fora do período e os de contas que o usuário deixou.
-- **D8 (pendente, recomendo sim):** tirar os parâmetros de rastreamento dos links sem perguntar.
+- **D1 (aprovada em 26 out 2026: oferecer, desligada por padrão):** senha do Epistula ao abrir o app.
+- **D2 (aprovada em 26 out 2026: 15 minutos e ao bloquear o Windows):** quando o app bloqueia sozinho.
+- **D3 (aprovada em 26 out 2026: só a conta):** o que as notificações mostram com o app bloqueado. A alternativa é não notificar nada.
+- **D4 (aprovada em 26 out 2026: só manual e depois de apagar uma conta):** troca da chave do banco. A alternativa é trocar sozinho uma vez por ano.
+- **D5 (aprovada em 26 out 2026: "Só a conta" para quem ainda não escolheu):** novo padrão das notificações. Quem já escolheu "Remetente e assunto" continua com a escolha.
+- **D6 (aprovada em 26 out 2026: desligar o cache de disco):** WebView2 sem cache de disco ou com cache limpo ao fechar e ao bloquear. Sem cache, as imagens liberadas baixam de novo a cada abertura.
+- **D7 (aprovada em 26 out 2026: oferecer, sem apagar sozinho):** apagar do computador os e-mails fora do período e os de contas que o usuário deixou.
+- **D8 (aprovada em 26 out 2026: sim):** tirar os parâmetros de rastreamento dos links sem perguntar.
 - **D9:** foi para a US11.
 - **D10 (decidida na story, 26 out 2026):** não cifrar o banco de novo com outro algoritmo. O AES-256 já resiste a computadores quânticos; a troca teria custo e risco sem ganho.
 
 ### 6. Andamento (26 out 2026)
 
-- **Item 1:** rascunho em `design-system/rascunho-us10.html` (L53 tela de desbloqueio, L54 campo de senha, L55 conferência de link, L56 espaço por conta, L57 confirmação em modal; ícones `lock`, `shield`, `key`, `eye-off`). **Esperando aprovação.**
+- **Item 1:** rascunho aprovado em 26 out 2026, incorporado ao DS e apagado: L53 tela de desbloqueio (carregamento.html), L54 campo de senha (campos.html), L55 conferência de link, L56 espaço por conta e L57 confirmação em modal (modais.html), "Bloquear o Epistula" (header.html, toasts.html); ícones `lock`, `shield`, `key`, `eye-off`.
 - **Item 2:** feito. `docs/arquitetura-e-ameacas.md` tem a seção Criptografia (inventário e regra para recursos futuros), as ameaças 15 a 17 e as ameaças 3 e 11 atualizadas.
 - **Item 3:** feito. `DbKey` virou um tipo com `Zeroizing` e `Debug` sem a chave; o `PRAGMA key` é montado num texto zerado; refresh token e access token em `SecretString` (`secrets.rs`, `oauth.rs`, `session.rs`). As cópias dentro da `lettre`, do `keyring` e do SChannel ficam fora do alcance. O app sai dos relatórios de erro do Windows ao abrir (`lib.rs`).
 - **Item 4:** feito. `CIPHER_PRAGMAS` em `db.rs`, migração `0006_cifra.sql` com `cipher_scheme = 1`, banco com esquema mais novo não abre; testes `cipher_settings_are_pinned` e `database_created_with_library_defaults_still_opens`.

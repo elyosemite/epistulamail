@@ -1484,3 +1484,50 @@ html.is-grabbing, html.is-grabbing * { cursor: grabbing !important; user-select:
 }
 
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ==========================================================================
+   Privacidade e proteção local (L53–L57, US10)
+   ========================================================================== */
+/* L53 · Tela de desbloqueio: cobre a janela inteira antes de qualquer conteúdo. */
+.unlock {
+  display: grid; place-items: center;
+  min-height: 30rem; padding: var(--space-400) var(--space-200);
+  background: var(--color-canvas);
+}
+.unlock__card {
+  display: grid; gap: var(--space-200); justify-items: center;
+  width: 100%; max-width: 22rem; padding: var(--space-400) var(--space-300);
+  border-radius: var(--radius-large); background: var(--color-surface); box-shadow: var(--shadow-raised);
+  text-align: center;
+}
+.unlock__icon {
+  display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 50%;
+  background: var(--color-bg-neutral); color: var(--color-icon);
+}
+.unlock__icon .i { width: 24px; height: 24px; }
+.unlock__title { margin: 0; font: var(--font-section); color: var(--color-text); }
+.unlock__text { margin: 0; font: var(--font-body); color: var(--color-text-subtle); }
+.unlock__form { display: grid; gap: var(--space-150); width: 100%; text-align: left; }
+.unlock .section-message { text-align: left; }
+
+/* L54 · Campo de senha: .input com o botão de mostrar no fim. */
+.input--password { padding-right: var(--space-025); }
+.input--password > .btn { flex: none; }
+
+/* L55 · Conferência de link: o que o texto mostra e para onde o link leva. */
+.link-check { display: grid; gap: var(--space-100); margin: 0; }
+.link-check > div {
+  display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: var(--space-100); align-items: baseline;
+  padding: var(--space-100) var(--space-150); border-radius: var(--radius-small); background: var(--color-bg-neutral);
+}
+.link-check dt { font: var(--font-body-small); color: var(--color-text-subtlest); }
+.link-check dd { margin: 0; font: var(--font-code); color: var(--color-text); overflow-wrap: anywhere; }
+.link-check mark { background: var(--color-bg-warning); color: var(--color-text-warning); border-radius: var(--radius-xsmall); padding-inline: 2px; }
+
+/* L56 · Linha de dados guardados por conta, com o espaço ocupado. */
+.setting-list__end { display: flex; align-items: center; gap: var(--space-150); }
+.setting-list__size { font: var(--font-body-small); color: var(--color-text-subtle); white-space: nowrap; }
+
+/* L57 · Confirmação dentro de um modal (checkbox com texto longo). */
+.confirm-check { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-100); align-items: start; font: var(--font-body); color: var(--color-text); cursor: pointer; }
+.confirm-check .checkbox { margin-top: 2px; }

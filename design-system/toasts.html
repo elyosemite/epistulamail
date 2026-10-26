@@ -77,9 +77,10 @@
             <div class="menu__sep" role="separator"></div>
             <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-bell-off"/></svg><span class="menu-item__text">Não perturbe por 1 hora</span></button>
             <div class="menu__sep" role="separator"></div>
+            <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-lock"/></svg><span class="menu-item__text">Bloquear o Epistula</span></button>
             <button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-log-out"/></svg><span class="menu-item__text">Sair do Epistula</span></button>
           </div>
-          <figcaption><b>Menu do ícone da bandeja</b>clique direito; clique simples mostra a janela. Em Não perturbe, o item vira "Retomar notificações"</figcaption>
+          <figcaption><b>Menu do ícone da bandeja</b>clique direito; clique simples mostra a janela. Em Não perturbe, o item vira "Retomar notificações". "Bloquear o Epistula" só aparece com a senha ligada; bloqueado, "Novo e-mail" e "Sincronizar agora" somem (US10)</figcaption>
         </figure>
         <figure class="state" style="justify-items:stretch">
           <div style="display:grid;gap:var(--space-200)">
@@ -91,6 +92,10 @@
         <figure class="state">
           <div class="os-toast"><div class="os-toast__app"><span class="wordmark__glyph" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span>Epistula<span class="x"><svg class="i i--sm"><use href="#i-x"/></svg></span></div><div class="os-toast__main"><span class="os-icon" aria-hidden="true"><svg class="i"><use href="#i-bell"/></svg></span><div style="min-width:0;display:grid;gap:2px"><span class="os-toast__title">O Epistula continua na bandeja</span><span class="os-toast__text">Para avisar sobre e-mails novos. Para sair, use Sair no ícone da bandeja.</span></div></div></div>
           <figcaption><b>Primeira vez que a janela fecha</b>aparece uma vez só</figcaption>
+        </figure>
+        <figure class="state">
+          <div class="os-toast"><div class="os-toast__app"><span class="wordmark__glyph" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span>Epistula<span class="x"><svg class="i i--sm"><use href="#i-x"/></svg></span></div><div class="os-toast__main"><span class="os-icon" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span><div style="min-width:0;display:grid;gap:2px"><span class="os-toast__title">Trabalho</span><span class="os-toast__text">3 e-mails novos</span></div></div></div>
+          <figcaption><b>App bloqueado ou "Só a conta"</b>só a conta e a quantidade (US10, D3)</figcaption>
         </figure>
       </div>
     </section>

@@ -37,7 +37,7 @@
         <div class="stage stage--sunken">
           <div class="modal modal--warning" role="dialog" aria-labelledby="signout-title" style="margin-inline:auto">
             <div class="modal__head"><svg class="i"><use href="#i-log-out"/></svg><h3 class="modal__title" id="signout-title">Sair de Trabalho?</h3></div>
-            <div class="modal__body"><p>O Epistula deixa de acessar <b>joao.silva.empresa@gmail.com</b>. As mensagens já salvas continuam neste computador e você pode lê-las sem entrar.</p><p>Nada muda no Gmail.</p></div>
+            <div class="modal__body" style="display:grid;gap:var(--space-150)"><p style="margin:0">O Epistula deixa de acessar <b>joao.silva.empresa@gmail.com</b>. As mensagens já salvas continuam neste computador e você pode lê-las sem entrar. Nada muda no servidor.</p><label class="confirm-check"><input type="checkbox" class="checkbox">Apagar também os e-mails desta conta guardados neste computador (310 MB).</label></div>
             <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--warning" type="button">Sair</button></div>
           </div>
         </div>
@@ -200,6 +200,7 @@
                 <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-sliders"/></svg><span class="nav-item__text">Geral</span></button>
                 <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-palette"/></svg><span class="nav-item__text">Aparência</span></button>
                 <button class="nav-item" role="tab" type="button" aria-selected="true"><svg class="i"><use href="#i-bell"/></svg><span class="nav-item__text">Notificações</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-shield"/></svg><span class="nav-item__text">Privacidade</span></button>
                 <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-user"/></svg><span class="nav-item__text">Conta</span></button>
                 <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-mail"/></svg><span class="nav-item__text">E-mail</span></button>
               </div>
@@ -224,8 +225,8 @@
                 </div>
                 <div class="settings__group">
                   <h4 class="settings__group-title">Privacidade</h4>
-                  <div class="setting"><div><div class="setting__label" id="priv">O que aparece na notificação</div><p class="setting__desc">As notificações aparecem na tela bloqueada e ficam na Central de Notificações do Windows.</p></div>
-                    <div class="segmented" role="radiogroup" aria-labelledby="priv"><button class="btn btn--compact" type="button" role="radio" aria-checked="true">Remetente e assunto</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Só a conta</button></div></div>
+                  <div class="setting"><div><div class="setting__label" id="priv">O que aparece na notificação</div><p class="setting__desc">As notificações aparecem na tela bloqueada, e o Windows guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do Epistula.</p></div>
+                    <div class="segmented" role="radiogroup" aria-labelledby="priv"><button class="btn btn--compact" type="button" role="radio" aria-checked="true">Só a conta</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Remetente e assunto</button></div></div>
                 </div>
                 <div class="settings__group">
                   <h4 class="settings__group-title">Não perturbe</h4>
@@ -237,6 +238,197 @@
                   <div class="setting"><div><div class="setting__label">Abrir o Epistula ao iniciar o Windows</div><p class="setting__desc">Abre direto na bandeja, sem mostrar a janela.</p></div><input type="checkbox" class="toggle" aria-label="Abrir o Epistula ao iniciar o Windows"></div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="ds-section" id="privacidade">
+      <div class="ds-head">
+        <p class="eyebrow">L56 · US10 · CA2 · CA3 · CA4 · CA6 · CA7</p>
+        <h2>Configurações → Privacidade</h2>
+        <p class="lede">Seção nova nas Configurações, entre Notificações e Conta. Só componentes do DS, mais L56 (espaço por conta).</p>
+      </div>
+      <div class="stage stage--flush scroll-x">
+        <div style="display:flex;height:60rem;min-width:56rem;padding:var(--space-100);background:var(--color-canvas)">
+          <div class="settings-sheet" role="dialog" aria-modal="true" aria-labelledby="p-title">
+            <div class="settings-sheet__head">
+              <svg class="i"><use href="#i-settings"/></svg>
+              <h2 class="modal__title" id="p-title">Configurações</h2>
+              <button class="btn btn--subtle btn--icon" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button>
+            </div>
+            <div class="settings">
+              <div class="settings__nav" role="tablist" aria-orientation="vertical" aria-label="Seções">
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-sliders"/></svg><span class="nav-item__text">Geral</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-palette"/></svg><span class="nav-item__text">Aparência</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-bell"/></svg><span class="nav-item__text">Notificações</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="true"><svg class="i"><use href="#i-shield"/></svg><span class="nav-item__text">Privacidade</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-user"/></svg><span class="nav-item__text">Conta</span></button>
+                <button class="nav-item" role="tab" type="button" aria-selected="false"><svg class="i"><use href="#i-mail"/></svg><span class="nav-item__text">E-mail</span></button>
+              </div>
+              <div class="settings__panel" role="tabpanel" style="overflow:auto">
+                <h3 class="settings__title">Privacidade</h3>
+
+                <div class="settings__group">
+                  <h4 class="settings__group-title">Senha do Epistula</h4>
+                  <div class="setting">
+                    <div><div class="setting__label">Pedir uma senha ao abrir o Epistula</div><p class="setting__desc">Protege as mensagens guardadas neste computador até de quem usa o seu Windows. Desligada, quem entra no seu Windows abre o Epistula.</p></div>
+                    <input type="checkbox" class="toggle" checked aria-label="Pedir uma senha ao abrir o Epistula">
+                  </div>
+                  <div class="setting">
+                    <div><div class="setting__label" id="p-lock">Bloquear depois de</div><p class="setting__desc">Sem mexer no Epistula por esse tempo.</p></div>
+                    <span class="select"><select aria-labelledby="p-lock"><option>5 minutos</option><option selected>15 minutos</option><option>30 minutos</option><option>1 hora</option><option>Nunca</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+                  </div>
+                  <div class="setting">
+                    <div><div class="setting__label">Bloquear junto com o Windows</div><p class="setting__desc">Quando a tela do Windows bloquear (<kbd>Win</kbd>+<kbd>L</kbd>).</p></div>
+                    <input type="checkbox" class="toggle" checked aria-label="Bloquear junto com o Windows">
+                  </div>
+                  <div class="setting">
+                    <div><div class="setting__label">Senha</div><p class="setting__desc">Trocar a senha não baixa nada de novo.</p></div>
+                    <button class="btn btn--subtle" type="button"><svg class="i"><use href="#i-key"/></svg>Trocar senha</button>
+                  </div>
+                </div>
+
+                <div class="settings__group">
+                  <h4 class="settings__group-title">Proteção dos dados</h4>
+                  <div class="setting">
+                    <div><div class="setting__label">Trocar a chave de proteção dos dados</div><p class="setting__desc">Cifra de novo tudo que está guardado neste computador com uma chave nova. Uma cópia antiga do arquivo deixa de abrir. Leva alguns segundos.</p></div>
+                    <button class="btn btn--subtle" type="button"><svg class="i"><use href="#i-refresh"/></svg>Trocar chave</button>
+                  </div>
+                  <div class="section-message section-message--warning">
+                    <svg class="i"><use href="#i-warning"/></svg>
+                    <div>
+                      <p class="section-message__title">Este disco não está cifrado</p>
+                      <p>O Windows pode copiar partes da memória do Epistula para o disco ao hibernar ou com pouca memória. Ligue a criptografia do disco (BitLocker) nas Configurações do Windows, em Privacidade e segurança.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings__group">
+                  <h4 class="settings__group-title">Guardado neste computador</h4>
+                  <div class="setting-list">
+                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--purple" aria-hidden="true">T</span><div class="setting-list__name"><span class="setting-list__title">Trabalho</span><span class="setting-list__sub">joao.silva.empresa@exemplo.com</span></div><span class="setting-list__end"><span class="setting-list__size">310 MB</span><button class="btn btn--subtle btn--compact" type="button">Apagar</button></span></div>
+                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar" aria-hidden="true">P</span><div class="setting-list__name"><span class="setting-list__title">Pessoal</span><span class="setting-list__sub">joao.silva@exemplo.com</span></div><span class="setting-list__end"><span class="setting-list__size">1,2 GB</span><button class="btn btn--subtle btn--compact" type="button">Apagar</button></span></div>
+                    <div class="setting-list__row setting-list__row--toggle is-disabled"><span class="avatar avatar--green" aria-hidden="true">A</span><div class="setting-list__name"><span class="setting-list__title">Antiga</span><span class="setting-list__sub">Você saiu desta conta</span></div><span class="setting-list__end"><span class="setting-list__size">95 MB</span><button class="btn btn--subtle btn--compact" type="button">Apagar</button></span></div>
+                  </div>
+                  <p class="setting__desc" style="margin:0">Apagar tira deste computador as mensagens, pastas e rascunhos da conta e troca a chave de proteção. Nada muda no servidor.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Senha desligada</dt><dd>Só aparece o primeiro ajuste; "Bloquear depois de", "Bloquear junto com o Windows" e "Senha" surgem quando ela é ligada.</dd></div>
+        <div><dt>BitLocker</dt><dd>O aviso só aparece quando o disco do Epistula não está cifrado. É só recomendação: não bloqueia nada.</dd></div>
+        <div><dt>Conta da qual você saiu</dt><dd>A linha fica <code>.is-disabled</code>, mas o "Apagar" continua ativo: é ali que se apagam os dados que ficaram.</dd></div>
+      </dl>
+    </section>
+    <section class="ds-section" id="privacidade-modais">
+      <div class="ds-head">
+        <p class="eyebrow">L57 · US10 · CA2 · CA4 · CA7</p>
+        <h2>Senha, chave e dados guardados</h2>
+        <p class="lede">Seguem a regra de modais.html: o foco abre em "Cancelar", <kbd>Esc</kbd> fecha, o botão repete o verbo.</p>
+      </div>
+      <div style="display:grid;gap:var(--space-300);grid-template-columns:repeat(auto-fit,minmax(24rem,1fr));align-items:start">
+        <div class="stage stage--sunken">
+          <div class="modal modal--warning" role="dialog" aria-labelledby="m1" style="margin-inline:auto">
+            <div class="modal__head"><svg class="i"><use href="#i-lock"/></svg><h3 class="modal__title" id="m1">Pedir uma senha ao abrir?</h3></div>
+            <div class="modal__body" style="display:grid;gap:var(--space-200)">
+              <div class="field"><label class="field__label" for="m1a">Senha</label><div class="input input--password"><input id="m1a" type="password" value="minha frase longa" autocomplete="new-password"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Mostrar a senha"><svg class="i"><use href="#i-eye-off"/></svg></button></div><span class="field__help">Pelo menos 8 caracteres. Uma frase é mais fácil de lembrar e mais difícil de adivinhar.</span></div>
+              <div class="field"><label class="field__label" for="m1b">Repita a senha</label><div class="input input--password"><input id="m1b" type="password" value="minha frase longa" autocomplete="new-password"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Mostrar a senha"><svg class="i"><use href="#i-eye-off"/></svg></button></div></div>
+              <div class="section-message section-message--warning"><svg class="i"><use href="#i-warning"/></svg><div><p>Se você esquecer a senha, as mensagens guardadas neste computador não poderão ser abertas. Elas continuam no servidor e podem ser baixadas de novo.</p></div></div>
+              <label class="confirm-check"><input type="checkbox" class="checkbox" checked>Entendi que não há como recuperar a senha.</label>
+            </div>
+            <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--warning" type="button">Ligar a senha</button></div>
+          </div>
+        </div>
+
+        <div class="stage stage--sunken">
+          <div class="modal" role="dialog" aria-labelledby="m2" style="margin-inline:auto">
+            <div class="modal__head"><svg class="i"><use href="#i-key"/></svg><h3 class="modal__title" id="m2">Trocar a chave de proteção?</h3></div>
+            <div class="modal__body"><p>Tudo que está guardado neste computador é cifrado de novo com uma chave nova. Cópias antigas do arquivo do Epistula deixam de abrir. Nada é apagado e nada muda no servidor.</p></div>
+            <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--primary" type="button">Trocar chave</button></div>
+          </div>
+        </div>
+
+        <div class="stage stage--sunken">
+          <div class="modal modal--warning" role="dialog" aria-labelledby="m3" style="margin-inline:auto">
+            <div class="modal__head"><svg class="i"><use href="#i-log-out"/></svg><h3 class="modal__title" id="m3">Sair de Trabalho?</h3></div>
+            <div class="modal__body" style="display:grid;gap:var(--space-150)">
+              <p style="margin:0">O Epistula deixa de acessar <b>joao.silva.empresa@exemplo.com</b>. Nada muda no servidor.</p>
+              <label class="confirm-check"><input type="checkbox" class="checkbox">Apagar também os e-mails desta conta guardados neste computador (310 MB).</label>
+            </div>
+            <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--warning" type="button">Sair</button></div>
+          </div>
+          <p class="demo-hint" style="margin-top:var(--space-150)">Marcado, o botão vira <code>.btn--danger</code> "Sair e apagar".</p>
+        </div>
+
+        <div class="stage stage--sunken">
+          <div class="modal" role="dialog" aria-labelledby="m4" style="margin-inline:auto">
+            <div class="modal__head"><svg class="i"><use href="#i-trash"/></svg><h3 class="modal__title" id="m4">Apagar os dados de Trabalho deste computador?</h3></div>
+            <div class="modal__body"><p>As mensagens, pastas e rascunhos de <b>joao.silva.empresa@exemplo.com</b> saem deste computador (310 MB), e a chave de proteção é trocada. Rascunhos que não foram enviados se perdem. As mensagens continuam no servidor.</p></div>
+            <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--danger" type="button">Apagar dados</button></div>
+          </div>
+        </div>
+
+        <div class="stage stage--sunken">
+          <div class="modal" role="dialog" aria-labelledby="m5" style="margin-inline:auto">
+            <div class="modal__head"><svg class="i"><use href="#i-trash"/></svg><h3 class="modal__title" id="m5">Apagar tudo e começar de novo?</h3></div>
+            <div class="modal__body"><p>Todas as mensagens, pastas, rascunhos e ajustes deste computador são apagados, e a senha é desligada. Depois, entre de novo nas contas: as mensagens voltam do servidor.</p></div>
+            <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--danger" type="button">Apagar tudo</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="ds-section" id="link">
+      <div class="ds-head">
+        <p class="eyebrow">L55 · US10 · CA8</p>
+        <h2>Link que leva a outro lugar</h2>
+        <p class="lede">Ao clicar num link cujo texto parece um endereço de outro domínio. Links comuns abrem direto, como hoje, já sem os parâmetros de rastreamento.</p>
+      </div>
+      <div class="stage stage--sunken">
+        <div class="modal modal--warning" role="dialog" aria-labelledby="m6" style="margin-inline:auto">
+          <div class="modal__head"><svg class="i"><use href="#i-warning"/></svg><h3 class="modal__title" id="m6">Este link leva a outro endereço</h3></div>
+          <div class="modal__body" style="display:grid;gap:var(--space-150)">
+            <p style="margin:0">O texto mostra um endereço, mas o link abre outro. Golpes costumam usar esse truque.</p>
+            <dl class="link-check">
+              <div><dt>Mostra</dt><dd>www.meubanco.com.br</dd></div>
+              <div><dt>Abre</dt><dd>https://<mark>meubanco-seguro.xyz</mark>/entrar</dd></div>
+            </dl>
+          </div>
+          <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--warning" type="button">Abrir mesmo assim</button></div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Destaque</dt><dd>Só o domínio de destino ganha <code>mark</code>, para o olho ir direto ao que difere.</dd></div>
+        <div><dt>Rastreamento</dt><dd>Parâmetros como <code>utm_source</code> e <code>fbclid</code> saem antes de abrir, sem aviso (D8).</dd></div>
+      </dl>
+    </section>
+    <section class="ds-section" id="textos">
+      <div class="ds-head">
+        <p class="eyebrow">US10 · CA6 · CA7</p>
+        <h2>Mudanças em ajustes que já existem</h2>
+        <p class="lede">Sem peça nova: só texto e um botão em grupos que já existem.</p>
+      </div>
+      <div class="stage">
+        <div style="display:grid;gap:var(--space-200);max-width:40rem">
+          <div class="settings__group">
+            <h4 class="settings__group-title">Notificações → Privacidade</h4>
+            <div class="setting">
+              <div><div class="setting__label" id="t1">O que aparece na notificação</div><p class="setting__desc">As notificações aparecem na tela bloqueada, e o Windows guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do Epistula.</p></div>
+              <div class="segmented" role="radiogroup" aria-labelledby="t1"><button class="btn btn--compact" type="button" role="radio" aria-checked="true">Só a conta</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Remetente e assunto</button></div>
+            </div>
+          </div>
+          <div class="settings__group">
+            <h4 class="settings__group-title">E-mail → Ler sem conexão</h4>
+            <div class="setting">
+              <div><div class="setting__label" id="t2">Baixar e-mails para ler sem conexão</div><p class="setting__desc">Os e-mails desse período ficam neste computador e abrem na hora. Os maiores que 2 MB baixam ao abrir. Ocupado agora: 1,6 GB.</p></div>
+              <span class="select"><select aria-labelledby="t2"><option selected>Últimos 30 dias</option><option>Últimos 90 dias</option><option>Tudo</option><option>Só ao abrir</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+            </div>
+            <div class="setting">
+              <div><div class="setting__label">E-mails fora do período</div><p class="setting__desc">420 MB de e-mails mais antigos que 30 dias continuam aqui. Apagar só tira o conteúdo deste computador; eles baixam de novo ao abrir.</p></div>
+              <button class="btn btn--subtle" type="button"><svg class="i"><use href="#i-trash"/></svg>Apagar 420 MB</button>
             </div>
           </div>
         </div>

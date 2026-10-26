@@ -58,6 +58,77 @@
           <div><dt>Leitura</dt><dd>Mesma estrutura do <code>.reader</code>: título com <code>.skeleton--title</code>, avatar com <code>.skeleton--avatar</code> e quatro linhas de corpo com <code>.skeleton--line</code>, a última mais curta. Marque o contêiner com <code>aria-busy="true"</code>.</dd></div>
         </dl>
       </section>
+    <section class="ds-section" id="desbloqueio">
+      <div class="ds-head">
+        <p class="eyebrow">L53 · US10 · CA2 · CA3</p>
+        <h2>Tela de desbloqueio</h2>
+        <p class="lede">Aparece ao abrir o app com a senha ligada e depois de um bloqueio. Cobre a janela inteira: nenhuma conta, pasta ou mensagem aparece antes. O foco abre no campo da senha; <kbd>Enter</kbd> desbloqueia.</p>
+      </div>
+      <div style="display:grid;gap:var(--space-300);grid-template-columns:repeat(auto-fit,minmax(22rem,1fr));align-items:start">
+        <figure class="state" style="justify-items:stretch">
+          <div class="unlock">
+            <div class="unlock__card">
+              <span class="unlock__icon" aria-hidden="true"><svg class="i"><use href="#i-lock"/></svg></span>
+              <h2 class="unlock__title">O Epistula está bloqueado</h2>
+              <p class="unlock__text">Digite a senha do Epistula para ver as suas mensagens.</p>
+              <form class="unlock__form" onsubmit="return false">
+                <div class="field">
+                  <label class="field__label" for="u1">Senha do Epistula</label>
+                  <div class="input input--password is-focus"><input id="u1" type="password" value="frase-secreta" autocomplete="current-password"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Mostrar a senha" data-tip="Mostrar a senha"><svg class="i"><use href="#i-eye"/></svg></button></div>
+                </div>
+                <button class="btn btn--primary btn--block" type="submit">Desbloquear</button>
+                <button class="btn btn--link" type="button" style="justify-self:center">Esqueci a senha</button>
+              </form>
+            </div>
+          </div>
+          <figcaption><b>Bloqueado</b>o app só mostra isto; a bandeja continua com "Abrir o Epistula"</figcaption>
+        </figure>
+
+        <figure class="state" style="justify-items:stretch">
+          <div class="unlock">
+            <div class="unlock__card">
+              <span class="unlock__icon" aria-hidden="true"><svg class="i"><use href="#i-lock"/></svg></span>
+              <h2 class="unlock__title">O Epistula está bloqueado</h2>
+              <p class="unlock__text">Digite a senha do Epistula para ver as suas mensagens.</p>
+              <form class="unlock__form" onsubmit="return false">
+                <div class="field">
+                  <label class="field__label" for="u2">Senha do Epistula</label>
+                  <div class="input input--password is-invalid"><input id="u2" type="password" value="errada" aria-invalid="true" aria-describedby="u2-err"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Mostrar a senha"><svg class="i"><use href="#i-eye"/></svg></button></div>
+                  <span class="field__help field__help--error" id="u2-err" role="alert"><svg class="i i--sm"><use href="#i-error"/></svg>Senha incorreta. Tente de novo em 8 segundos.</span>
+                </div>
+                <button class="btn btn--primary btn--block" type="submit" disabled>Desbloquear</button>
+              </form>
+            </div>
+          </div>
+          <figcaption><b>Senha errada</b>mensagem genérica; a espera cresce a cada erro (2, 4, 8… até 5 min) e nada é apagado</figcaption>
+        </figure>
+
+        <figure class="state" style="justify-items:stretch">
+          <div class="unlock">
+            <div class="unlock__card">
+              <span class="unlock__icon" aria-hidden="true"><svg class="i"><use href="#i-lock"/></svg></span>
+              <h2 class="unlock__title">Esqueceu a senha?</h2>
+              <div class="section-message section-message--warning">
+                <svg class="i"><use href="#i-warning"/></svg>
+                <div>
+                  <p class="section-message__title">Não há como recuperar a senha</p>
+                  <p>Ela não fica gravada em lugar nenhum. Sem ela, as mensagens guardadas neste computador não abrem. Elas continuam no servidor: você pode apagar os dados deste computador e entrar de novo nas contas.</p>
+                </div>
+              </div>
+              <div class="unlock__form">
+                <button class="btn btn--danger btn--block" type="button"><svg class="i"><use href="#i-trash"/></svg>Apagar os dados e começar de novo</button>
+                <button class="btn btn--subtle btn--block" type="button">Voltar e tentar a senha</button>
+              </div>
+            </div>
+          </div>
+          <figcaption><b>Esqueci a senha</b>"Apagar" pede confirmação num <code>.modal</code> de perigo (abaixo)</figcaption>
+        </figure>
+      </div>
+      <dl class="guidance">
+        <div><dt>Sem conteúdo</dt><dd>Enquanto bloqueado, a sincronização e o download param, a lista não é montada e as notificações mostram só a conta (D3).</dd></div>
+        <div><dt>Espera</dt><dd>Depois de cada erro o botão fica desabilitado pela espera, com a contagem no texto de ajuda. A espera não é contada no servidor: é só do computador.</dd></div>
+      </dl>
+    </section>
   </main>
 </div>
 <script src="docs.js"></script>
