@@ -1,6 +1,6 @@
 [package]
 name = "epistula"
-version = "0.1.0"
+version = "1.0.0"
 description = "Cliente de e-mail desktop Epistula"
 edition = "2021"
 rust-version = "1.88"
@@ -81,3 +81,8 @@ windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_
 opt-level = 3
 [profile.dev.package.blake2]
 opt-level = 3
+
+# Instalador da release (.github/workflows/release.yml): sem símbolos de depuração no .exe e com otimização entre crates.
+[profile.release]
+lto = "thin"
+strip = "symbols"

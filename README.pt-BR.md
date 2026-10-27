@@ -57,6 +57,14 @@ O que funciona hoje:
 
 - Escrever, responder, responder a todos e encaminhar, com rascunhos salvos cifrados.
 - Pastas e marcadores, sinalizadas com prazo, e mover, arquivar, excluir e marcar como lida, em uma ou várias mensagens, inclusive arrastando para a pasta.
+- Barra de comandos e sincronização em segundo plano com intervalo por conta.
+
+**Busca**
+
+- Em todas as pastas de uma vez, sem internet, numa conta ou em todas (arquivos de e-mail incluídos, cada resultado com o avatar da conta).
+- Pessoas, datas e filtros viram chips no campo de busca: digite operadores como `de:` (ou `from:`), `para:` (ou `to:`), `cc:`, `depois:`, `antes:`, `em:2025`, `tem:anexo` e `na:` para uma pasta, ou escolha nas sugestões, que mostram as pessoas com quem você já trocou e-mails.
+- As buscas recentes ficam neste computador; as buscas salvas aparecem na coluna de pastas, com as não lidas.
+- Aja sobre os resultados como em qualquer lista, ou aplique uma das suas regras a eles, com prévia antes e "Desfazer" depois. Uma busca também pode virar uma regra nova.
 
 **Regras**
 
@@ -99,7 +107,19 @@ O que ainda não existe:
 
 - Outros provedores além do Google. O modelo de dados já prevê Outlook, Yahoo, iCloud, Zoho, GMX, AOL e IMAP genérico.
 - O servidor de login (veja abaixo) e os arquivos `.olm` do Outlook para Mac.
-- Releases assinados. Por enquanto, o caminho é compilar a partir do código.
+- Assinatura de código do instalador (veja [Instalando](#instalando)).
+
+## Instalando
+
+Baixe o `Epistula_<versão>_x64-setup.exe` na página de [Releases](https://github.com/elyosemite/epistulamail/releases). Ele instala só para o seu usuário do Windows, sem pedir administrador, e precisa do Windows 10 ou 11 (64 bits) com o WebView2, que já vem no Windows 11 e é baixado pelo instalador no Windows 10 se faltar.
+
+O instalador ainda não tem assinatura de código, então na primeira execução o Windows SmartScreen mostra "O Windows protegeu o computador". Antes de seguir, confira o arquivo com o SHA-256 publicado na release:
+
+```powershell
+(Get-FileHash .\Epistula_1.0.0_x64-setup.exe).Hash
+```
+
+Se bater, clique em "Mais informações" e depois em "Executar assim mesmo". As versões novas instalam por cima e mantêm as contas e as mensagens. O [CHANGELOG.md](CHANGELOG.md) diz o que cada versão traz.
 
 ## Para onde vamos
 
@@ -203,6 +223,8 @@ Depois:
 pnpm tauri dev      # desenvolvimento
 pnpm tauri build    # instalador
 ```
+
+As releases saem do [`.github/workflows/release.yml`](.github/workflows/release.yml): uma tag `vX.Y.Z` igual à versão do `package.json`, do `src-tauri/Cargo.toml` e do `src-tauri/tauri.conf.json` compila o instalador NSIS com os clientes OAuth dos segredos do repositório e abre uma release em rascunho com a seção da versão no `CHANGELOG.md` e o SHA-256 do instalador. Rodar o workflow à mão compila o mesmo instalador como ensaio, sem release.
 
 ## Testes
 

@@ -1,0 +1,142 @@
+# Release do Epistula: na tag vX.Y.Z, compila o instalador .exe (NSIS) e cria a release no GitHub como rascunho,
+# com as notas da seção da versão no CHANGELOG.md e o SHA-256 do instalador. Quem publica é uma pessoa, depois de
+# revisar o rascunho.
+#
+# "Run workflow" (workflow_dispatch) faz um ensaio: compila o mesmo instalador e o deixa como artefato da execução,
+# sem criar tag nem release.
+#
+# Segredos do repositório (Settings → Secrets and variables → Actions):
+#   EPISTULA_GOOGLE_CLIENT_ID e EPISTULA_GOOGLE_CLIENT_SECRET (obrigatórios): o cliente OAuth "Desktop app" do Google,
+#     embutido no .exe na compilação (provider.rs, option_env!) até existir o servidor de login.
+#   EPISTULA_MS_CLIENT_ID (opcional).
+# O instalador sai sem assinatura de código (ver CHANGELOG.md, "Avisos").
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    name: Instalador Windows
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # A versão vem do tauri.conf.json; os três arquivos precisam concordar e, na tag, bater com ela.
+      - name: Versão
+        id: version
+        shell: pwsh
+        run: |
+          $tauri = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          $node = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $cargo = (Select-String -Path src-tauri/Cargo.toml -Pattern '^version = "(.+)"' | Select-Object -First 1).Matches[0].Groups[1].Value
+          if ($tauri -ne $node -or $tauri -ne $cargo) { throw "Versões diferentes: tauri.conf.json $tauri, package.json $node, Cargo.toml $cargo" }
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$tauri") { throw "A tag $env:GITHUB_REF_NAME não bate com a versão $tauri" }
+          $notes = Get-Content CHANGELOG.md -Raw
+          if ($notes -notmatch "(?m)^## \[$([regex]::Escape($tauri))\]") { throw "CHANGELOG.md não tem a seção [$tauri]" }
+          "version=$tauri" >> $env:GITHUB_OUTPUT
+
+      - name: Credenciais OAuth
+        shell: pwsh
+        env:
+          GOOGLE_ID: ${{ secrets.EPISTULA_GOOGLE_CLIENT_ID }}
+          GOOGLE_SECRET: ${{ secrets.EPISTULA_GOOGLE_CLIENT_SECRET }}
+        run: |
+          if (-not $env:GOOGLE_ID -or -not $env:GOOGLE_SECRET) {
+            throw 'Cadastre os segredos EPISTULA_GOOGLE_CLIENT_ID e EPISTULA_GOOGLE_CLIENT_SECRET no repositório.'
+          }
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Testes do frontend
+        run: pnpm test
+
+      # Perl portátil para o OpenSSL embutido do SQLCipher (src-tauri/.cargo/config.toml aponta para ele).
+      - uses: actions/cache@v4
+        with:
+          path: .tools
+          key: tools-${{ hashFiles('scripts/setup-build-tools.ps1') }}
+      - name: Ferramentas de build
+        shell: pwsh
+        run: ./scripts/setup-build-tools.ps1
+
+      - uses: dtolnay/rust-toolchain@stable
+      # Cache só do build de release, separado do CI.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          shared-key: release
+
+      - name: Testes do backend
+        working-directory: src-tauri
+        run: cargo test --locked
+
+      # O beforeBuildCommand (pnpm build) monta o frontend; o Tauri compila em release e gera o instalador NSIS.
+      - name: Instalador
+        env:
+          EPISTULA_GOOGLE_CLIENT_ID: ${{ secrets.EPISTULA_GOOGLE_CLIENT_ID }}
+          EPISTULA_GOOGLE_CLIENT_SECRET: ${{ secrets.EPISTULA_GOOGLE_CLIENT_SECRET }}
+          EPISTULA_MS_CLIENT_ID: ${{ secrets.EPISTULA_MS_CLIENT_ID }}
+        run: pnpm tauri build --ci --bundles nsis
+
+      - name: SHA-256 e notas
+        id: files
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $exe = Get-ChildItem src-tauri/target/release/bundle/nsis -Filter "*_${env:VERSION}_x64-setup.exe" | Select-Object -First 1
+          if (-not $exe) { throw 'Instalador não encontrado em src-tauri/target/release/bundle/nsis' }
+          $name = "Epistula_${env:VERSION}_x64-setup.exe"
+          New-Item -ItemType Directory -Force out | Out-Null
+          Copy-Item $exe.FullName "out/$name"
+          $hash = (Get-FileHash "out/$name" -Algorithm SHA256).Hash.ToLower()
+          "$hash  $name" | Set-Content -NoNewline -Encoding ascii "out/$name.sha256"
+
+          # Notas: a seção da versão no CHANGELOG.md, sem o título, mais o SHA-256.
+          $text = Get-Content CHANGELOG.md -Raw
+          $start = [regex]::Match($text, "(?m)^## \[$([regex]::Escape($env:VERSION))\].*$")
+          $rest = $text.Substring($start.Index + $start.Length)
+          $next = [regex]::Match($rest, '(?m)^## \[')
+          $section = if ($next.Success) { $rest.Substring(0, $next.Index) } else { $rest }
+          $notes = $section.Trim() + "`n`n### Verificar o download`n`nSHA-256 de ``$name``:`n`n``````text`n$hash`n```````n`nNo PowerShell: ``(Get-FileHash .\$name).Hash``"
+          Set-Content -Encoding utf8 out/notes.md $notes
+          "name=$name" >> $env:GITHUB_OUTPUT
+          Write-Host "$name  $hash"
+
+      - name: Artefato do ensaio
+        if: env.DRY_RUN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: epistula-${{ steps.version.outputs.version }}-windows
+          path: out/
+          retention-days: 7
+
+      - name: Release (rascunho)
+        if: env.DRY_RUN != 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          NAME: ${{ steps.files.outputs.name }}
+        run: |
+          gh release create "v$env:VERSION" "out/$env:NAME" "out/$env:NAME.sha256" `
+            --draft --verify-tag --title "Epistula $env:VERSION" --notes-file out/notes.md

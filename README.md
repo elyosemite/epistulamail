@@ -107,7 +107,19 @@ What does not exist yet:
 
 - Providers other than Google. The data model already covers Outlook, Yahoo, iCloud, Zoho, GMX, AOL and generic IMAP.
 - The sign-in server (see below), and `.olm` files from Outlook for Mac.
-- Signed releases. For now, the way in is building from source.
+- Code signing for the installer (see [Installing](#installing)).
+
+## Installing
+
+Download `Epistula_<version>_x64-setup.exe` from the [Releases](https://github.com/elyosemite/epistulamail/releases) page. It installs for your Windows user only, with no administrator rights, and needs Windows 10 or 11 (64-bit) with WebView2, which ships with Windows 11 and is downloaded by the installer on Windows 10 if missing.
+
+The installer is not code-signed yet, so on first run Windows SmartScreen says "Windows protected your PC". Before going ahead, check the file against the SHA-256 published with the release:
+
+```powershell
+(Get-FileHash .\Epistula_1.0.0_x64-setup.exe).Hash
+```
+
+If it matches, click "More info" and then "Run anyway". Newer versions install over the old one and keep your accounts and messages. [CHANGELOG.md](CHANGELOG.md) lists what each version brings.
 
 ## Where this is going
 
@@ -211,6 +223,8 @@ Then:
 pnpm tauri dev      # development
 pnpm tauri build    # installer
 ```
+
+Releases are built by [`.github/workflows/release.yml`](.github/workflows/release.yml): pushing a `vX.Y.Z` tag that matches the version in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` builds the NSIS installer with the OAuth clients from the repository secrets and opens a draft release with that version's section of `CHANGELOG.md` and the installer's SHA-256. Running the workflow by hand builds the same installer as a test, without a release.
 
 ## Tests
 
