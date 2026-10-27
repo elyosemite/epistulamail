@@ -4,7 +4,7 @@ const { dir, pagination } = Astro.locals.starlightRoute;
 const { prev, next } = pagination;
 ---
 
-<nav class="ds-pager print:hidden" dir={dir} aria-label="Páginas">
+<nav class="ds-pager print:hidden" dir={dir} aria-label={Astro.locals.t("ds.pages")}>
   {
     prev ? (
       <a class="ds-pager__link" href={prev.href} rel="prev">

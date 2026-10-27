@@ -1,0 +1,16 @@
+---
+title: "Cosa esce dal computer"
+description: "Con chi si collega EpistulaMail."
+sidebar:
+  order: 2
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+- **Il tuo provider di posta**: accesso, IMAP, SMTP e la revoca dell'accesso quando esci.
+- **Server di chiavi OpenPGP**: solo quando chiedi di cercare una chiave.
+- **Immagini esterne di un'email**: solo quando le consenti per quel messaggio.
+- **GitHub**: il controllo di nuova versione (il file `latest.json` dell'ultima versione).
+
+Non c'è telemetria, né segnalazione degli errori, né un server di EpistulaMail. L'[informativa sulla privacy](https://www.epistulamail.com/privacidade) (in portoghese) ha i dettagli.

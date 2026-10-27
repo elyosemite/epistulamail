@@ -1,0 +1,17 @@
+---
+title: "Dónde quedan tus datos"
+description: "Las carpetas y los elementos del almacén que usa EpistulaMail."
+sidebar:
+  order: 2
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+| Qué | Dónde |
+|---|---|
+| El programa | `%LOCALAPPDATA%\EpistulaMail` |
+| Base de mensajes y configuración | `%APPDATA%\br.com.epistula.desktop` |
+| Clave de la base y acceso a las cuentas | Administrador de credenciales de Windows, elementos `epistula` |
+
+La base de datos está cifrada: un archivo copiado, una laptop perdida o un disco desechado no revelan nada sin la clave. La clave queda en el almacén de credenciales de Windows, protegida por tu sesión; con la contraseña de EpistulaMail activada, también depende de ella.

@@ -1,0 +1,14 @@
+---
+title: "Versions et releases"
+description: "Comment une nouvelle version est publiée."
+sidebar:
+  order: 3
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+1. `./scripts/release.ps1 <version>` met à jour la version dans les fichiers et ouvre la section dans `CHANGELOG.md`.
+2. Commit, push et le tag `v<version>`.
+3. Le pipeline compile, signe la mise à jour et crée la version en brouillon.
+4. Une fois la version publiée, le site et la notification dans la cloche suivent d'eux-mêmes.

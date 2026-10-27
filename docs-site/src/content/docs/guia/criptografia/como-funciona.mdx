@@ -1,0 +1,19 @@
+---
+title: "Como funciona"
+description: "OpenPGP e S/MIME no mesmo composer."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+O EpistulaMail cifra e assina e-mails com **OpenPGP** e com **S/MIME**.
+
+- Um cadeado no composer liga a criptografia. Ele liga sozinho quando todos os destinatários têm chave ou certificado aceito.
+- A leitura mostra se a mensagem veio cifrada e se a assinatura confere.
+- O assunto também pode ir protegido.
+
+<AppPreview name="crypto" />
+
+**Qual usar?** OpenPGP é o comum entre programas livres (o Thunderbird, por exemplo). S/MIME é o comum em empresas, no Outlook e no Apple Mail.

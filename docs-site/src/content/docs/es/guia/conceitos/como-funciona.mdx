@@ -1,0 +1,21 @@
+---
+title: "Cómo funciona EpistulaMail"
+description: "El camino de un correo desde el servidor hasta tu pantalla."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+EpistulaMail es un programa de escritorio hecho con Tauri (Rust y React). Habla directamente con el servidor de tu correo, con los protocolos de siempre:
+
+- **IMAP** para descargar y organizar los mensajes;
+- **SMTP** para enviar;
+- **OAuth** para iniciar sesión, sin que tu contraseña pase por la app.
+
+Lo que llega se guarda en una base de datos local (SQLCipher, cifrada con AES-256). La lista, la lectura y la búsqueda leen de esa base, por eso se abren rápido y funcionan sin internet. Los cambios que haces (mover, archivar, marcar como leído) se envían después al servidor.
+
+No hay un servidor de EpistulaMail en medio: ningún mensaje, asunto o dirección pasa por nosotros.
+
+<AppPreview name="conversation" />

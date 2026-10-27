@@ -1,0 +1,18 @@
+---
+title: "Password and lock"
+description: "Protect your messages even from people who use your Windows account."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+In **Configurações → Privacidade** (Settings → Privacy):
+
+- **EpistulaMail password**: the database key starts depending on it (Argon2id). The password is not stored anywhere; if you forget it, the messages on this computer will not open, but they stay on the server.
+- **Lock after**: the app closes the database after a period without use.
+- **Lock together with Windows**.
+- **Keep less**: erase from the computer what falls outside the chosen period.
+
+<AppPreview name="unlock" width={26} />

@@ -1,0 +1,18 @@
+---
+title: "Mot de passe et verrouillage"
+description: "Protéger vos messages même des personnes qui utilisent votre session Windows."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Dans **Configurações → Privacidade** (Paramètres → Confidentialité) :
+
+- **Mot de passe d'EpistulaMail** : la clé de la base dépend désormais de lui (Argon2id). Le mot de passe n'est stocké nulle part ; oublié, les messages de cet ordinateur ne s'ouvrent plus, mais ils restent sur le serveur.
+- **Verrouiller après** : l'app ferme la base après un certain temps d'inactivité.
+- **Verrouiller avec Windows**.
+- **Garder moins** : effacer de l'ordinateur ce qui est hors de la période choisie.
+
+<AppPreview name="unlock" width={26} />

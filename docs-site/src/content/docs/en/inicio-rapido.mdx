@@ -1,0 +1,46 @@
+---
+title: "Quickstart"
+description: "Install EpistulaMail, connect your account and read your first email in about five minutes."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Install EpistulaMail, connect your account and read your first email in about five minutes. By the end you will have your inbox synced and stored on your computer in an encrypted database.
+
+## What you need
+
+- **Windows 10 or 11**, 64-bit.
+- **A Gmail account.** Other providers are coming soon; meanwhile you can [open email archives](/en/guia/arquivos/abrir-um-arquivo/) with no account.
+
+## Step by step
+
+<Steps>
+
+1. **Download the installer.** On [epistulamail.com](https://www.epistulamail.com), click "Download EpistulaMail". The file is about 11 MB.
+
+2. **Check the file.** In PowerShell, in the download folder:
+
+   ```powershell
+   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   ```
+
+   The result must match the SHA-256 published in the [release notes](https://github.com/elyosemite/epistulamail/releases/latest).
+
+3. **Install.** The installer is not code-signed yet, so Windows shows "Windows protected your PC". Click **More info** and then **Run anyway**. It installs for your user only, with no administrator rights.
+
+4. **Connect your account.** Open EpistulaMail and choose Gmail. Sign-in happens on Google's page, in your browser; your password never goes through the app.
+
+5. **Read and search.** The most recent emails show up first and the rest arrives in the background. Press <kbd>/</kbd> and type `de: Ana tem:anexo` to try the chip search.
+
+</Steps>
+
+<AppPreview name="search" />
+
+<Aside type="caution" title="While Google reviews the app">
+To read Gmail over IMAP, Google requires a verification that is still in progress. Until it is done, Google's sign-in page may show a warning that the app has not been verified yet.
+</Aside>
+
+## Next step
+
+In [Onboarding](/en/primeira-configuracao/), choose how much to keep offline and turn on the EpistulaMail password.

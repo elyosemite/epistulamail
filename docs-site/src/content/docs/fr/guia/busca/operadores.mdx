@@ -1,0 +1,26 @@
+---
+title: "Chercher avec des puces"
+description: "Personnes, période et filtres sous forme de puces dans le champ de recherche."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Appuyez sur <kbd>/</kbd> pour aller à la recherche. Ce que vous tapez devient des puces que vous pouvez modifier et retirer. Les opérateurs sont en portugais, comme l'interface de l'app :
+
+<AppPreview name="search" />
+
+| Tapez | Devient |
+|---|---|
+| `de: Ana` | l'expéditeur (aussi `from:`) |
+| `para:`, `cc:`, `com:` | destinataire, copie, n'importe lequel (aussi `to:`) |
+| `depois:2026-01-01`, `antes:31/03/2026`, `em:2025` | période |
+| `tem:anexo` | avec pièce jointe |
+| `é:não-lida`, `é:estrela` | non lus, suivis |
+| `na: Arquivo` | dans un dossier |
+
+Deux puces du même rôle s'additionnent (« de Ana ou de Bruno ») ; des rôles différents s'appliquent ensemble. <kbd>Retour arrière</kbd> dans un champ vide sélectionne la dernière puce ; une seconde fois la retire.
+
+La recherche porte sur les messages stockés sur votre ordinateur, dans tous les dossiers, et fonctionne hors ligne.

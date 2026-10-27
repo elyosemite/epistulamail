@@ -1,0 +1,25 @@
+---
+title: "Primera configuración"
+description: "Los ajustes que vale la pena hacer justo después de instalar."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Justo después de conectar la cuenta, estos ajustes dejan EpistulaMail a tu manera. Todos están en **Configurações** (Configuración, en el menú de la cuenta, arriba a la derecha) y se pueden cambiar después. La interfaz de la app está en portugués, así que los menús aparecen como en pantalla.
+
+<Steps>
+
+1. **Cuánto guardar sin conexión.** En **Configurações → Geral** (General), elige *Últimos 30 dias* (últimos 30 días), *Últimos 90 dias* (últimos 90 días), *Tudo* (todo) o *Só ao abrir* (solo al abrir). Lo que entre en ese período se descarga en segundo plano, sin marcarlo como leído, y se abre incluso sin internet.
+
+2. **Contraseña de EpistulaMail.** En **Configurações → Privacidade** (Privacidad), activa la contraseña para proteger tus mensajes incluso de quien usa tu Windows. Elige tras cuánto tiempo sin uso se bloquea la app y si se bloquea junto con Windows.
+
+3. **Notificaciones.** En **Configurações → Notificações** (Notificaciones), elige si la notificación muestra el remitente y el asunto o solo la cuenta, el horario de silencio y si la app se abre con Windows, directo en la bandeja.
+
+4. **Apariencia.** En **Configurações → Aparência** (Apariencia), elige el tema (claro, oscuro o el del sistema), el color de fondo y la densidad de la lista.
+
+5. **Más cuentas.** Con el **+** de la columna de cuentas, conecta otras cuentas o abre un archivo de correo.
+
+</Steps>
+
+<AppPreview name="unlock" width={26} />

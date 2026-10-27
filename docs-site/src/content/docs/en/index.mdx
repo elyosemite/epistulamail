@@ -1,0 +1,38 @@
+---
+title: "EpistulaMail"
+description: "Your email on your computer, encrypted. Install, use and contribute."
+glow: aurora
+tableOfContents: false
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Your email on your computer, encrypted. Everything to install, use and contribute is here: from the first sign-in to the threat model.
+
+<div class="release-banner not-content">
+  <span class="badge-new">New release</span>
+  <b>1.0.2</b>
+  <span>Automatic updates, a new name and the logo in the app.</span>
+  <a href="/en/guia/versoes/historico/">See what changed →</a>
+</div>
+
+<CardGrid>
+  <LinkCard title="Quickstart" description="From download to inbox in about five minutes." href="/en/inicio-rapido/" />
+  <LinkCard title="Installation" description="Requirements, the SmartScreen warning and how to check the SHA-256." href="/en/instalacao/" />
+  <LinkCard title="Search" description="Chips for people, dates and filters, across all accounts." href="/en/guia/busca/operadores/" />
+  <LinkCard title="Encryption" description="OpenPGP and S/MIME in the same composer." href="/en/guia/criptografia/como-funciona/" />
+</CardGrid>
+
+## Where to start
+
+If this is your first time, follow the **Quickstart**: it installs EpistulaMail, connects your account and shows the search. If you already use it, the **Documentation** covers each feature in detail, with what happens behind the scenes and where your data lives.
+
+Everything here applies to Windows 10 and 11 (64-bit). For now, only Gmail accounts can connect; other providers are coming soon. Opening old email archives works with no account at all.
+
+## What EpistulaMail is
+
+- **Yours, with no catch.** There is no EpistulaMail account, no EpistulaMail cloud and no telemetry. No email goes through a server of ours.
+- **Encrypted on disk.** Messages live in a database encrypted with AES-256, with the key in the Windows Credential Manager.
+- **Works offline.** What has been downloaded opens and can be searched without internet.
+- **Open source.** Everything is on [GitHub](https://github.com/elyosemite/epistulamail).

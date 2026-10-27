@@ -1,8 +1,10 @@
 ---
-title: Início rápido
-description: Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinco minutos.
+title: "Início rápido"
+description: "Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinco minutos."
 ---
-import { Steps, Aside } from '@astrojs/starlight/components';
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
 
 Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinco minutos. No fim você terá a caixa de entrada sincronizada, guardada no seu computador num banco cifrado.
 
@@ -32,6 +34,8 @@ Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinc
 5. **Leia e busque.** Os e-mails mais recentes aparecem primeiro e o resto chega em segundo plano. Aperte <kbd>/</kbd> e digite `de: Ana tem:anexo` para ver a busca com chips.
 
 </Steps>
+
+<AppPreview name="search" />
 
 <Aside type="caution" title="Enquanto o Google analisa o app">
 Para ler o Gmail por IMAP, o Google exige uma verificação que ainda está em andamento. Até ela sair, a tela de login do Google pode mostrar um aviso de que o app ainda não foi verificado.

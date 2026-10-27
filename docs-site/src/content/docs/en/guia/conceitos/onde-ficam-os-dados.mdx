@@ -1,0 +1,17 @@
+---
+title: "Where your data lives"
+description: "The folders and credential entries EpistulaMail uses."
+sidebar:
+  order: 2
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+| What | Where |
+|---|---|
+| The program | `%LOCALAPPDATA%\EpistulaMail` |
+| Message database and settings | `%APPDATA%\br.com.epistula.desktop` |
+| Database key and account access | Windows Credential Manager, `epistula` items |
+
+The database is encrypted: a copied file, a lost laptop or a discarded drive reveals nothing without the key. The key lives in the Windows credential vault, protected by your session; with the EpistulaMail password on, it also depends on the password.

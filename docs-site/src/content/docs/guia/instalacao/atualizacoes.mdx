@@ -1,0 +1,21 @@
+---
+title: "Atualizações"
+description: "Como as versões novas chegam ao EpistulaMail instalado."
+sidebar:
+  order: 2
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+A partir da 1.0.2, o EpistulaMail verifica se há versão nova ao abrir e a cada 6 horas.
+
+1. Quando há, aparece **uma vez** no sino: "Nova versão do EpistulaMail".
+2. O clique abre a confirmação com o que mudou.
+3. Em **Atualizar e reiniciar**, o app baixa a versão nova, confere a assinatura dela, fecha, instala e abre de novo.
+
+<AppPreview name="update" />
+
+As contas, as mensagens e as configurações continuam. Um arquivo sem a assinatura certa é recusado, então só versões publicadas pelo projeto são instaladas.
+
+Quem está na 1.0.0 ou na 1.0.1 precisa instalar a 1.0.2 à mão uma vez.

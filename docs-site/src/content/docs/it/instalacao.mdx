@@ -1,0 +1,41 @@
+---
+title: "Installazione"
+description: "Scaricare, verificare e installare EpistulaMail su Windows, e come arrivano le nuove versioni."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+EpistulaMail è distribuito come programma di installazione per Windows, pubblicato a ogni versione su [GitHub](https://github.com/elyosemite/epistulamail/releases/latest) e tramite il pulsante di download del [sito](https://www.epistulamail.com).
+
+## Requisiti
+
+- Windows 10 o 11, 64 bit.
+- WebView2, già incluso in Windows 11. Su Windows 10, il programma di installazione lo scarica se manca.
+- Circa 100 MB liberi per l'app, più lo spazio per i messaggi che conservi.
+
+## Installare
+
+<Steps>
+
+1. Scarica `EpistulaMail_<versione>_x64-setup.exe` dal [sito](https://www.epistulamail.com) o dall'[ultima versione](https://github.com/elyosemite/epistulamail/releases/latest).
+
+2. Confronta lo SHA-256 del file con quello pubblicato nelle note di rilascio:
+
+   ```powershell
+   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   ```
+
+3. Apri il programma di installazione. Sull'avviso di SmartScreen, fai clic su **Ulteriori informazioni** e poi su **Esegui comunque**.
+
+4. EpistulaMail viene installato in `%LOCALAPPDATA%\EpistulaMail`, solo per il tuo utente, con un collegamento nel menu Start.
+
+</Steps>
+
+<Aside type="note" title="Perché l'avviso di SmartScreen?">
+Il programma di installazione non ha ancora un certificato di firma del codice. SmartScreen avvisa per i programmi senza firma e senza cronologia di download. Verificare lo SHA-256 garantisce che il file è quello pubblicato.
+</Aside>
+
+## Nuove versioni
+
+Dalla 1.0.2, quando esce una nuova versione compare un avviso nella campanella delle notifiche. Un clic mostra cosa è cambiato e, se confermi, EpistulaMail la scarica, verifica la firma dell'aggiornamento, la installa e si riapre. Vedi [Aggiornamenti](/it/guia/instalacao/atualizacoes/).

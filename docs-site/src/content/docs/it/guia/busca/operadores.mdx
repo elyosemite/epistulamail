@@ -1,0 +1,26 @@
+---
+title: "Cercare con i chip"
+description: "Persone, periodo e filtri come chip nel campo di ricerca."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Premi <kbd>/</kbd> per andare alla ricerca. Quello che scrivi diventa chip che puoi modificare e togliere. Gli operatori sono in portoghese, come l'interfaccia dell'app:
+
+<AppPreview name="search" />
+
+| Scrivi | Diventa |
+|---|---|
+| `de: Ana` | chi l'ha inviata (anche `from:`) |
+| `para:`, `cc:`, `com:` | destinatario, copia, uno qualsiasi (anche `to:`) |
+| `depois:2026-01-01`, `antes:31/03/2026`, `em:2025` | periodo |
+| `tem:anexo` | con allegato |
+| `é:não-lida`, `é:estrela` | non lette, speciali |
+| `na: Arquivo` | in una cartella |
+
+Due chip con lo stesso ruolo si sommano ("da Ana o da Bruno"); ruoli diversi valgono insieme. <kbd>Backspace</kbd> nel campo vuoto seleziona l'ultimo chip; la seconda volta lo toglie.
+
+La ricerca avviene sui messaggi salvati sul tuo computer, in tutte le cartelle, e funziona offline.

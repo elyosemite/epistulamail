@@ -1,0 +1,15 @@
+---
+title: "Conversations"
+description: "Replies as cards, quoted text tucked away."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+A conversation shows up as one row in the list. When opened, each reply becomes a card; unread ones stay open and quoted text hides behind a "…".
+
+<AppPreview name="conversation" />
+
+Message HTML is cleaned before being shown, with no scripts. Remote images stay blocked until you allow them for that message, because they would tell the sender you opened the email.

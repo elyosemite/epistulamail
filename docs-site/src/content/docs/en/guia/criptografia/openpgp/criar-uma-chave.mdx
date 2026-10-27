@@ -1,0 +1,19 @@
+---
+title: "Create a key"
+description: "Create your OpenPGP key."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+In **Configurações → Criptografia** (Settings → Encryption), create a key for the account. There are three types:
+
+- **Curve25519**: fast, small and accepted by most programs. It is the recommended one.
+- **RSA 4096**: for people who exchange email with older programs.
+- **Post-quantum (experimental)**: ML-KEM-768 with X25519. Few programs can read it yet.
+
+<Aside type="caution" title="Back it up">
+Without a backup, a lost computer takes the key with it, and the messages encrypted to it can no longer be opened. Use the password-protected backup and keep the file off the computer.
+</Aside>

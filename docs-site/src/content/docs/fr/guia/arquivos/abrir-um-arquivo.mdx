@@ -1,0 +1,23 @@
+---
+title: "Ouvrir une archive d'e-mails"
+description: "Des sauvegardes d'autres programmes, sans compte et sans internet."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Sur le premier écran, ou avec le **+** de la colonne des comptes, choisissez **Abrir arquivo de e-mail** (ouvrir une archive d'e-mails), ou déposez le fichier sur la fenêtre.
+
+| Origine | Format |
+|---|---|
+| Google Takeout | `.mbox` (les libellés restent des libellés) |
+| Outlook | `.pst` et `.msg` |
+| Thunderbird | les dossiers du profil |
+| Apple Mail | `.mbox` exporté et `.emlx` |
+| N'importe lequel | `.eml` et Maildir |
+
+Le fichier est lu sur votre ordinateur et copié dans la base chiffrée ; l'original est seulement lu. Avant l'import, vous voyez les dossiers et la place nécessaire ; après, combien sont entrés, combien étaient en double et combien ont échoué.
+
+<AppPreview name="archive" width={34} />

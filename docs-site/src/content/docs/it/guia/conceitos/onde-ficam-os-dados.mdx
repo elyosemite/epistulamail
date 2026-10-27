@@ -1,0 +1,17 @@
+---
+title: "Dove stanno i tuoi dati"
+description: "Le cartelle e gli elementi del vault che usa EpistulaMail."
+sidebar:
+  order: 2
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+| Cosa | Dove |
+|---|---|
+| Il programma | `%LOCALAPPDATA%\EpistulaMail` |
+| Database dei messaggi e impostazioni | `%APPDATA%\br.com.epistula.desktop` |
+| Chiave del database e accesso agli account | Gestione credenziali di Windows, elementi `epistula` |
+
+Il database è cifrato: un file copiato, un portatile perso o un disco buttato non rivelano nulla senza la chiave. La chiave sta nel vault delle credenziali di Windows, protetta dalla tua sessione; con la password di EpistulaMail attiva, dipende anche da questa.

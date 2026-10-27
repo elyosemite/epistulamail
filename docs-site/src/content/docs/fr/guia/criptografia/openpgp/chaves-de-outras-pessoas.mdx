@@ -1,0 +1,19 @@
+---
+title: "Les clés des autres"
+description: "Importer, rechercher et accepter des clés."
+sidebar:
+  order: 2
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Pour chiffrer pour quelqu'un, il vous faut sa clé publique. Elle peut arriver :
+
+- **jointe à un e-mail** ou par l'en-tête **Autocrypt** : elle entre comme « pas encore acceptée » ;
+- **depuis un fichier** ou le presse-papiers ;
+- **par internet**, seulement quand vous le demandez : EpistulaMail interroge le domaine de la personne et `keys.openpgp.org`.
+
+<AppPreview name="keys" />
+
+L'acceptation suit le style de Thunderbird : pas encore, acceptée, vérifiée ou rejetée.

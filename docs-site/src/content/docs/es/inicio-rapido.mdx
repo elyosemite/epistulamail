@@ -1,0 +1,46 @@
+---
+title: "Inicio rápido"
+description: "Instala EpistulaMail, conecta tu cuenta y lee tu primer correo en unos cinco minutos."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Instala EpistulaMail, conecta tu cuenta y lee tu primer correo en unos cinco minutos. Al final tendrás la bandeja de entrada sincronizada y guardada en tu computadora en una base de datos cifrada.
+
+## Qué necesitas
+
+- **Windows 10 u 11**, 64 bits.
+- **Una cuenta de Gmail.** Los demás proveedores llegarán pronto; mientras tanto puedes [abrir archivos de correo](/es/guia/arquivos/abrir-um-arquivo/) sin cuenta.
+
+## Paso a paso
+
+<Steps>
+
+1. **Descarga el instalador.** En [epistulamail.com](https://www.epistulamail.com), haz clic en "Download EpistulaMail". El archivo tiene unos 11 MB.
+
+2. **Comprueba el archivo.** En PowerShell, en la carpeta de descarga:
+
+   ```powershell
+   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   ```
+
+   El resultado debe coincidir con el SHA-256 publicado en las [notas de la versión](https://github.com/elyosemite/epistulamail/releases/latest).
+
+3. **Instala.** El instalador aún no tiene firma de código, así que Windows muestra "Windows protegió tu PC". Haz clic en **Más información** y en **Ejecutar de todas formas**. Se instala solo para tu usuario, sin pedir administrador.
+
+4. **Conecta tu cuenta.** Abre EpistulaMail y elige Gmail. El inicio de sesión ocurre en la página de Google, en tu navegador; tu contraseña nunca pasa por la app.
+
+5. **Lee y busca.** Los correos más recientes aparecen primero y el resto llega en segundo plano. Pulsa <kbd>/</kbd> y escribe `de: Ana tem:anexo` para probar la búsqueda con chips.
+
+</Steps>
+
+<AppPreview name="search" />
+
+<Aside type="caution" title="Mientras Google revisa la app">
+Para leer Gmail por IMAP, Google exige una verificación que todavía está en curso. Hasta que termine, la pantalla de inicio de sesión de Google puede mostrar un aviso de que la app aún no fue verificada.
+</Aside>
+
+## Siguiente paso
+
+En [Primera configuración](/es/primeira-configuracao/), elige cuánto guardar sin conexión y activa la contraseña de EpistulaMail.

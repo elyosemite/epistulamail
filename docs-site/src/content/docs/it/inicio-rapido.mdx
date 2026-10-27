@@ -1,0 +1,46 @@
+---
+title: "Avvio rapido"
+description: "Installa EpistulaMail, collega il tuo account e leggi la prima email in circa cinque minuti."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Installa EpistulaMail, collega il tuo account e leggi la prima email in circa cinque minuti. Alla fine avrai la posta in arrivo sincronizzata e salvata sul tuo computer in un database cifrato.
+
+## Cosa ti serve
+
+- **Windows 10 o 11**, 64 bit.
+- **Un account Gmail.** Gli altri provider arriveranno presto; nel frattempo puoi [aprire archivi di posta](/it/guia/arquivos/abrir-um-arquivo/) senza account.
+
+## Passo dopo passo
+
+<Steps>
+
+1. **Scarica il programma di installazione.** Su [epistulamail.com](https://www.epistulamail.com), fai clic su "Download EpistulaMail". Il file pesa circa 11 MB.
+
+2. **Verifica il file.** In PowerShell, nella cartella del download:
+
+   ```powershell
+   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   ```
+
+   Il risultato deve coincidere con lo SHA-256 pubblicato nelle [note di rilascio](https://github.com/elyosemite/epistulamail/releases/latest).
+
+3. **Installa.** Il programma di installazione non ha ancora la firma del codice, quindi Windows mostra "PC protetto da Windows". Fai clic su **Ulteriori informazioni** e poi su **Esegui comunque**. Si installa solo per il tuo utente, senza diritti di amministratore.
+
+4. **Collega il tuo account.** Apri EpistulaMail e scegli Gmail. L'accesso avviene sulla pagina di Google, nel tuo browser; la tua password non passa mai dall'app.
+
+5. **Leggi e cerca.** Le email più recenti compaiono per prime e il resto arriva in background. Premi <kbd>/</kbd> e scrivi `de: Ana tem:anexo` per provare la ricerca con i chip.
+
+</Steps>
+
+<AppPreview name="search" />
+
+<Aside type="caution" title="Mentre Google esamina l'app">
+Per leggere Gmail tramite IMAP, Google richiede una verifica ancora in corso. Finché non sarà completata, la pagina di accesso di Google potrebbe mostrare un avviso che l'app non è ancora stata verificata.
+</Aside>
+
+## Passo successivo
+
+In [Prima configurazione](/it/primeira-configuracao/), scegli quanto conservare offline e attiva la password di EpistulaMail.

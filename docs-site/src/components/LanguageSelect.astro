@@ -13,19 +13,20 @@ const segments = Astro.url.pathname.split("/").filter(Boolean);
 if (prefixes.includes(segments[0])) segments.shift();
 const rest = segments.length ? `${segments.join("/")}/` : "";
 const hrefFor = (code: string) => (code === "root" ? `/${rest}` : `/${code}/${rest}`);
+const label = Astro.locals.t("ds.language");
 ---
 
 {
   config.isMultilingual && (
     <details class="ds-lang" data-ds-lang>
-      <summary class="ds-lang__button" aria-label="Idioma" title="Idioma">
+      <summary class="ds-lang__button" aria-label={label} title={label}>
         <svg class="ds-lang__globe" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20" />
         </svg>
         <span class="ds-lang__code">{SHORT[current] ?? current.toUpperCase()}</span>
         <svg class="ds-lang__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
       </summary>
-      <div class="ds-lang__menu" role="menu" aria-label="Idioma">
+      <div class="ds-lang__menu" role="menu" aria-label={label}>
         {locales.map(([code, locale]) => (
           <a
             class="ds-lang__item"

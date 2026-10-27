@@ -1,0 +1,22 @@
+---
+title: "Compilare"
+description: "Eseguire EpistulaMail dal codice."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Requisiti: Node.js 24, pnpm 10 e Rust.
+
+```powershell
+git clone https://github.com/elyosemite/epistulamail.git
+cd epistulamail
+pnpm install
+./scripts/setup-build-tools.ps1
+pnpm tauri dev
+pnpm tauri build
+```
+
+`pnpm tauri dev` lo esegue in sviluppo; `pnpm tauri build` genera il programma di installazione. La build di sviluppo usa una cartella dati e voci nel vault tutte sue, quindi non tocca l'EpistulaMail installato. Per collegare account in sviluppo, crea i tuoi client OAuth e mettili in `.env` (vedi il README).

@@ -1,0 +1,41 @@
+---
+title: "Instalación"
+description: "Descargar, comprobar e instalar EpistulaMail en Windows, y cómo llegan las versiones nuevas."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+EpistulaMail se distribuye como un instalador para Windows, publicado en cada versión en [GitHub](https://github.com/elyosemite/epistulamail/releases/latest) y en el botón de descarga del [sitio](https://www.epistulamail.com).
+
+## Requisitos
+
+- Windows 10 u 11, 64 bits.
+- WebView2, que ya viene con Windows 11. En Windows 10, el instalador lo descarga si falta.
+- Unos 100 MB libres para la app, más el espacio de los mensajes que guardes.
+
+## Instalar
+
+<Steps>
+
+1. Descarga `EpistulaMail_<versión>_x64-setup.exe` en el [sitio](https://www.epistulamail.com) o en la [última versión](https://github.com/elyosemite/epistulamail/releases/latest).
+
+2. Compara el SHA-256 del archivo con el publicado en las notas de la versión:
+
+   ```powershell
+   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   ```
+
+3. Abre el instalador. En el aviso de SmartScreen, haz clic en **Más información** y en **Ejecutar de todas formas**.
+
+4. EpistulaMail se instala en `%LOCALAPPDATA%\EpistulaMail`, solo para tu usuario, con acceso directo en el menú Inicio.
+
+</Steps>
+
+<Aside type="note" title="¿Por qué el aviso de SmartScreen?">
+El instalador todavía no tiene certificado de firma de código. SmartScreen avisa de los programas sin firma y sin historial de descargas. Comprobar el SHA-256 garantiza que el archivo es el mismo que se publicó.
+</Aside>
+
+## Versiones nuevas
+
+Desde la 1.0.2, cuando sale una versión nueva aparece un aviso en la campana de notificaciones. Un clic muestra qué cambió y, si confirmas, EpistulaMail la descarga, comprueba la firma de la actualización, la instala y se abre de nuevo. Consulta [Actualizaciones](/es/guia/instalacao/atualizacoes/).

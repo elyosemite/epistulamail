@@ -1,0 +1,25 @@
+---
+title: "Onboarding"
+description: "The settings worth adjusting right after installing."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Right after connecting your account, these settings make EpistulaMail work your way. They are all under **Configurações** (Settings, in the account menu at the top right) and can be changed later. The app's interface is in Portuguese, so menu names are shown as they appear on screen.
+
+<Steps>
+
+1. **How much to keep offline.** In **Configurações → Geral** (General), choose *Últimos 30 dias* (last 30 days), *Últimos 90 dias* (last 90 days), *Tudo* (everything) or *Só ao abrir* (only when opened). Whatever falls in that period is downloaded in the background, without marking it as read, and opens even without internet.
+
+2. **EpistulaMail password.** In **Configurações → Privacidade** (Privacy), turn on the password to protect your messages even from other people using your Windows account. Choose after how long without use the app locks, and whether it locks together with Windows.
+
+3. **Notifications.** In **Configurações → Notificações** (Notifications), choose whether a notification shows the sender and subject or only the account, the quiet hours, and whether the app starts with Windows, straight to the tray.
+
+4. **Appearance.** In **Configurações → Aparência** (Appearance), choose the theme (light, dark or system), the background color and the list density.
+
+5. **More accounts.** With the **+** in the account column, connect other accounts or open an email archive.
+
+</Steps>
+
+<AppPreview name="unlock" width={26} />

@@ -1,0 +1,18 @@
+---
+title: "Password e blocco"
+description: "Proteggere i messaggi anche da chi usa il tuo Windows."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+In **Configurações → Privacidade** (Impostazioni → Privacy):
+
+- **Password di EpistulaMail**: la chiave del database dipende da lei (Argon2id). La password non viene salvata da nessuna parte; se la dimentichi, i messaggi di questo computer non si aprono, ma restano sul server.
+- **Blocca dopo**: l'app chiude il database dopo un periodo di inattività.
+- **Blocca insieme a Windows**.
+- **Conservare meno**: cancellare dal computer ciò che è fuori dal periodo scelto.
+
+<AppPreview name="unlock" width={26} />

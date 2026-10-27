@@ -1,0 +1,19 @@
+---
+title: "Come funziona"
+description: "OpenPGP e S/MIME nello stesso editor."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+EpistulaMail cifra e firma le email con **OpenPGP** e con **S/MIME**.
+
+- Un lucchetto nell'editor attiva la crittografia. Si attiva da solo quando tutti i destinatari hanno una chiave o un certificato accettato.
+- La lettura mostra se il messaggio è arrivato cifrato e se la firma è valida.
+- Anche l'oggetto può essere protetto.
+
+<AppPreview name="crypto" />
+
+**Quale usare?** OpenPGP è comune tra i programmi liberi (Thunderbird, per esempio). S/MIME è comune nelle aziende, in Outlook e in Apple Mail.

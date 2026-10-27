@@ -1,0 +1,23 @@
+---
+title: "Open an email archive"
+description: "Backups from other programs, with no account and no internet."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+On the first screen, or with the **+** in the account column, choose **Abrir arquivo de e-mail** (open email archive), or drop the file on the window.
+
+| Source | Format |
+|---|---|
+| Google Takeout | `.mbox` (labels become labels) |
+| Outlook | `.pst` and `.msg` |
+| Thunderbird | the profile folders |
+| Apple Mail | exported `.mbox` and `.emlx` |
+| Any program | `.eml` and Maildir |
+
+The file is read on your computer and copied into the encrypted database; the original is only read. Before importing you see the folders and how much space it will take; afterwards, how many came in, how many were duplicates and how many failed.
+
+<AppPreview name="archive" width={34} />

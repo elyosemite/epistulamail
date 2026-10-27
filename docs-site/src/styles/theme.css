@@ -56,14 +56,14 @@ h1#_top { letter-spacing: -0.03em; }
 
 /* Cartão da última versão, abaixo do título da capa. */
 .release-banner {
-  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
-  padding: 0.6rem 1rem; border: 1px solid var(--color-border); border-radius: 0.75rem;
-  background: var(--color-surface); color: var(--color-text-subtle); font-size: 0.95rem;
+  display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap;
+  padding: 0.5rem 0.875rem; border: 1px solid var(--color-border); border-radius: 0.75rem;
+  background: var(--color-surface); color: var(--color-text-subtle); font-size: 0.8125rem; line-height: 1.4;
 }
 .release-banner b { color: var(--color-text); }
-.release-banner a { margin-left: auto; font-weight: 600; color: var(--color-text); text-decoration: none; }
+.release-banner a { margin-left: auto; font-weight: 500; color: var(--color-text); text-decoration: none; }
 .release-banner .badge-new {
-  padding: 0.1rem 0.45rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700;
+  padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.04em;
   background: var(--color-bg-success); color: var(--color-text-success);
 }
@@ -86,14 +86,22 @@ h1#_top { letter-spacing: -0.03em; }
 /* Seletor de idioma com o nome inteiro. */
 starlight-lang-select label { --sl-select-width: 9.5em !important; }
 
-/* Capa: o brilho precisa sair da caixa do título para aparecer (ele some sozinho pela máscara). */
-.page-glow.page-glow-title { overflow: visible; }
-.page-glow.page-glow-title::before {
-  opacity: 0.32; inset: -10rem -20% auto -20%; height: 26rem;
-  /* Oval, para não mostrar as bordas da caixa do conteúdo. */
-  -webkit-mask-image: radial-gradient(ellipse 50% 60% at 40% 40%, #000 30%, transparent 75%);
-          mask-image: radial-gradient(ellipse 50% 60% at 40% 40%, #000 30%, transparent 75%);
+/* Capa: o brilho em gradiente (L78) fica no alto da página, à direita, e passa por trás do topo, que fica
+   translúcido nessa página. O título só ganha o texto em gradiente. */
+.page-glow.page-glow-title::before { display: none; }
+:root:has(.page-glow-title) body::before {
+  content: ""; position: absolute; top: -6rem; right: -8rem; z-index: 0;
+  width: min(64rem, 80vw); height: 34rem; pointer-events: none;
+  background: var(--gradient-aurora); opacity: 0.3; filter: blur(80px);
+  -webkit-mask-image: radial-gradient(ellipse 55% 60% at 65% 35%, #000 25%, transparent 75%);
+          mask-image: radial-gradient(ellipse 55% 60% at 65% 35%, #000 25%, transparent 75%);
 }
+:root:has(.page-glow-title) .page { position: relative; z-index: 1; }
+:root:has(.page-glow-title) header.header {
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+:root:has(.page-glow-title) :is(.sidebar-pane, .main-frame, .content-panel, .right-sidebar) { background: transparent; }
 
 /* Grupos dentro da Documentação com peso normal; os dois grupos de cima continuam em destaque. */
 .sidebar-content ul ul summary .group-label span { font-weight: 500; }
@@ -178,3 +186,8 @@ h1#_top, .sl-markdown-content h1 { font-weight: 500; }
 
 /* Separadores dentro do texto continuam (são conteúdo, não layout). */
 .sl-markdown-content hr:not(:where(.not-content *)) { border-bottom-color: var(--color-border); }
+
+/* Telas do app (AppPreview): um quadro com o fundo afundado do DS e a legenda embaixo. */
+.app-preview { margin: 1.5rem 0; display: grid; gap: 0.5rem; }
+.app-preview__frame { display: block; width: 100%; min-height: 6rem; border: 1px solid var(--color-border); border-radius: var(--radius-large, 0.75rem); background: var(--color-surface-sunken); }
+.app-preview__caption { font-size: 0.8125rem; color: var(--color-text-subtle); text-align: center; }

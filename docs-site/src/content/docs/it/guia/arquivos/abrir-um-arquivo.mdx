@@ -1,0 +1,23 @@
+---
+title: "Aprire un archivio di posta"
+description: "Backup di altri programmi, senza account e senza internet."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Nella prima schermata, o con il **+** della colonna degli account, scegli **Abrir arquivo de e-mail** (apri archivio di posta), oppure trascina il file sulla finestra.
+
+| Origine | Formato |
+|---|---|
+| Google Takeout | `.mbox` (le etichette restano etichette) |
+| Outlook | `.pst` e `.msg` |
+| Thunderbird | le cartelle del profilo |
+| Apple Mail | `.mbox` esportato e `.emlx` |
+| Qualsiasi | `.eml` e Maildir |
+
+Il file viene letto sul tuo computer e copiato nel database cifrato; l'originale viene solo letto. Prima di importare vedi le cartelle e quanto spazio occuperà; dopo, quanti sono entrati, quanti erano doppi e quanti non sono riusciti.
+
+<AppPreview name="archive" width={34} />

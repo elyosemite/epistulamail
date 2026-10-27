@@ -1,0 +1,19 @@
+---
+title: "How it works"
+description: "OpenPGP and S/MIME in the same composer."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+EpistulaMail encrypts and signs email with **OpenPGP** and with **S/MIME**.
+
+- A lock in the composer turns encryption on. It turns itself on when every recipient has an accepted key or certificate.
+- The reader shows whether a message arrived encrypted and whether the signature checks out.
+- The subject can be protected too.
+
+<AppPreview name="crypto" />
+
+**Which one?** OpenPGP is common among free software (Thunderbird, for example). S/MIME is common in companies, in Outlook and in Apple Mail.

@@ -1,0 +1,19 @@
+---
+title: "Creare una chiave"
+description: "Creare la tua chiave OpenPGP."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+In **Configurações → Criptografia** (Impostazioni → Crittografia), crea una chiave per l'account. Ci sono tre tipi:
+
+- **Curve25519**: veloce, piccola e accettata dalla maggior parte dei programmi. È quella consigliata.
+- **RSA 4096**: per chi scambia email con programmi più vecchi.
+- **Post-quantistica (sperimentale)**: ML-KEM-768 con X25519. Pochi programmi la leggono ancora.
+
+<Aside type="caution" title="Fai il backup">
+Senza backup, un computer perso porta via la chiave, e i messaggi cifrati per lei non si aprono più. Usa il backup con password e conserva il file fuori dal computer.
+</Aside>

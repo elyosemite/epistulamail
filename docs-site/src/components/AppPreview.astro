@@ -1,0 +1,50 @@
+---
+// Uma tela do app dentro da documentação, feita com o HTML do design system (as mesmas classes do app). Fica num
+// iframe isolado, porque o components.css do app colide com o CSS do Starlight. O quadro segue o tema da página e
+// a altura do conteúdo. As telas são a interface real do EpistulaMail, que hoje só existe em português.
+import sprite from "../generated/sprite.html?raw";
+import { captions, previews } from "../previews";
+
+interface Props {
+  /** Qual tela mostrar (chave de src/previews.ts). */
+  name: keyof typeof previews;
+  /** Largura máxima do conteúdo, em rem (padrão: a coluna inteira). */
+  width?: number;
+}
+const { name, width } = Astro.props;
+const html = previews[name];
+const lang = Astro.locals.starlightRoute.lang;
+const label = captions[name][lang] ?? captions[name]["en"];
+const max = width ? `max-width:${width}rem;` : "";
+const doc = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="stylesheet" href="/ds/fonts.css"><link rel="stylesheet" href="/ds/tokens.css"><link rel="stylesheet" href="/ds/components.css">
+<style>html,body{margin:0;background:transparent}body{padding:20px;font:var(--font-body);color:var(--color-text)}
+.app-preview-root{${max}margin-inline:auto;pointer-events:none}</style></head>
+<body><div hidden>${sprite}</div><div class="app-preview-root" inert>${html}</div></body></html>`;
+---
+
+<figure class="app-preview not-content">
+  <iframe class="app-preview__frame" title={label} srcdoc={doc} tabindex="-1" data-app-preview></iframe>
+  <figcaption class="app-preview__caption">{label}</figcaption>
+</figure>
+
+<script>
+  // Tema da página no quadro e a altura do conteúdo, ao carregar e a cada troca de tema.
+  const frames = () => Array.from(document.querySelectorAll<HTMLIFrameElement>("[data-app-preview]"));
+  const sync = (frame: HTMLIFrameElement) => {
+    const doc = frame.contentDocument;
+    if (!doc?.documentElement) return;
+    doc.documentElement.dataset.theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    frame.style.height = `${doc.documentElement.scrollHeight}px`;
+  };
+  frames().forEach((frame) => {
+    frame.addEventListener("load", () => {
+      sync(frame);
+      // As fontes chegam depois do load: mede de novo.
+      frame.contentDocument?.fonts?.ready.then(() => sync(frame));
+    });
+    if (frame.contentDocument?.readyState === "complete") sync(frame);
+  });
+  new MutationObserver(() => frames().forEach(sync)).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  addEventListener("resize", () => frames().forEach(sync));
+</script>

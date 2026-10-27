@@ -6,7 +6,7 @@ import { defineConfig } from "astro/config";
 
 const REPO = "https://github.com/elyosemite/epistulamail";
 // Perfis nas redes: os botões só aparecem quando o endereço existir.
-const X_URL = "";
+const X_URL = "https://x.com/theyurimelo";
 const DISCORD_URL = "https://discord.gg/5NsPCnAUE";
 
 /** Rótulo em português (idioma padrão) e nos outros idiomas. */

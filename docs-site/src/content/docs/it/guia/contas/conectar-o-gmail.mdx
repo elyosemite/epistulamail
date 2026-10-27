@@ -1,0 +1,18 @@
+---
+title: "Collegare Gmail"
+description: "L'accesso tramite il browser e i permessi che chiede EpistulaMail."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Quando scegli Gmail, EpistulaMail apre la pagina di accesso di Google nel tuo browser. Accedi lì, autorizzi e torni all'app.
+
+EpistulaMail chiede:
+
+- **`https://mail.google.com/`**: leggere, inviare e organizzare le tue email tramite IMAP e SMTP. È l'unico permesso di Google che dà accesso a questi protocolli.
+- **`openid`, `email` e `profile`**: indirizzo, nome e foto, per mostrare l'account.
+
+Dettagli in [Come EpistulaMail usa il tuo account Google](https://www.epistulamail.com/conta-google) (in portoghese).

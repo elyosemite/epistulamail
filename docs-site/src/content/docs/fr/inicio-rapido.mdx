@@ -1,0 +1,46 @@
+---
+title: "Démarrage rapide"
+description: "Installez EpistulaMail, connectez votre compte et lisez votre premier e-mail en cinq minutes environ."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Installez EpistulaMail, connectez votre compte et lisez votre premier e-mail en cinq minutes environ. À la fin, votre boîte de réception sera synchronisée et stockée sur votre ordinateur dans une base de données chiffrée.
+
+## Ce qu'il vous faut
+
+- **Windows 10 ou 11**, 64 bits.
+- **Un compte Gmail.** Les autres fournisseurs arrivent bientôt ; en attendant, vous pouvez [ouvrir des archives d'e-mails](/fr/guia/arquivos/abrir-um-arquivo/) sans compte.
+
+## Étape par étape
+
+<Steps>
+
+1. **Téléchargez l'installateur.** Sur [epistulamail.com](https://www.epistulamail.com), cliquez sur « Download EpistulaMail ». Le fichier fait environ 11 Mo.
+
+2. **Vérifiez le fichier.** Dans PowerShell, dans le dossier du téléchargement :
+
+   ```powershell
+   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   ```
+
+   Le résultat doit être identique au SHA-256 publié dans les [notes de version](https://github.com/elyosemite/epistulamail/releases/latest).
+
+3. **Installez.** L'installateur n'est pas encore signé, donc Windows affiche « Windows a protégé votre ordinateur ». Cliquez sur **Informations complémentaires** puis sur **Exécuter quand même**. Il s'installe pour votre utilisateur uniquement, sans droits d'administrateur.
+
+4. **Connectez votre compte.** Ouvrez EpistulaMail et choisissez Gmail. La connexion se fait sur la page de Google, dans votre navigateur ; votre mot de passe ne passe jamais par l'app.
+
+5. **Lisez et cherchez.** Les e-mails les plus récents apparaissent en premier et le reste arrive en arrière-plan. Appuyez sur <kbd>/</kbd> et tapez `de: Ana tem:anexo` pour essayer la recherche par puces.
+
+</Steps>
+
+<AppPreview name="search" />
+
+<Aside type="caution" title="Pendant que Google examine l'app">
+Pour lire Gmail par IMAP, Google exige une vérification qui est encore en cours. D'ici là, la page de connexion de Google peut afficher un avertissement indiquant que l'app n'a pas encore été vérifiée.
+</Aside>
+
+## Étape suivante
+
+Dans [Première configuration](/fr/primeira-configuracao/), choisissez ce qu'il faut garder hors ligne et activez le mot de passe d'EpistulaMail.

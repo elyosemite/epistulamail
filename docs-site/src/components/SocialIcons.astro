@@ -17,6 +17,7 @@ const ORDER = [
 ];
 const configured = new Map((config.social ?? []).map((l) => [l.icon as string, l]));
 const buttons = ORDER.map((b) => ({ ...b, href: configured.get(b.icon)?.href }));
+const soon = Astro.locals.t("ds.soon");
 ---
 
 {
@@ -26,7 +27,7 @@ const buttons = ORDER.map((b) => ({ ...b, href: configured.get(b.icon)?.href }))
         <svg class="ds-brand" viewBox="0 0 24 24" aria-hidden="true"><path d={PATHS[b.icon]} /></svg>
       </a>
     ) : (
-      <span class="ds-icon-btn is-disabled" role="img" aria-label={`${b.label} (em breve)`} title={`${b.label}: em breve`}>
+      <span class="ds-icon-btn is-disabled" role="img" aria-label={`${b.label} (${soon})`} title={`${b.label}: ${soon}`}>
         <svg class="ds-brand" viewBox="0 0 24 24" aria-hidden="true"><path d={PATHS[b.icon]} /></svg>
       </span>
     ),

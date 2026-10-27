@@ -1,0 +1,18 @@
+---
+title: "Contraseña y bloqueo"
+description: "Proteger los mensajes incluso de quien usa tu Windows."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+En **Configurações → Privacidade** (Configuración → Privacidad):
+
+- **Contraseña de EpistulaMail**: la clave de la base pasa a depender de ella (Argon2id). La contraseña no se guarda en ningún sitio; si la olvidas, los mensajes de esta computadora no se abren, pero siguen en el servidor.
+- **Bloquear después de**: la app cierra la base tras un tiempo sin uso.
+- **Bloquear junto con Windows**.
+- **Guardar menos**: borrar de la computadora lo que está fuera del período elegido.
+
+<AppPreview name="unlock" width={26} />

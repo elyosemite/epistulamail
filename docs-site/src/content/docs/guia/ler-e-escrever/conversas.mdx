@@ -1,0 +1,15 @@
+---
+title: "Conversas"
+description: "Respostas em cartões, citações recolhidas."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Uma conversa aparece como uma linha na lista. Aberta, cada resposta vira um cartão; as não lidas ficam abertas e o texto citado fica atrás de um "…".
+
+<AppPreview name="conversation" />
+
+O HTML das mensagens é limpo antes de ser mostrado, sem scripts. As imagens externas ficam bloqueadas até você liberar naquela mensagem, porque elas avisariam ao remetente que você abriu o e-mail.

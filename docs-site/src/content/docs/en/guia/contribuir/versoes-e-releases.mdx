@@ -1,0 +1,14 @@
+---
+title: "Versions and releases"
+description: "How a new version gets published."
+sidebar:
+  order: 3
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+1. `./scripts/release.ps1 <version>` bumps the version in the files and opens the section in `CHANGELOG.md`.
+2. Commit, push and the `v<version>` tag.
+3. The pipeline builds, signs the update and creates a draft release.
+4. Once the release is published, the website and the bell notice follow on their own.

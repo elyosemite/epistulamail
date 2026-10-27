@@ -1,0 +1,18 @@
+---
+title: "Conectar Gmail"
+description: "El inicio de sesión por el navegador y los permisos que pide EpistulaMail."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Al elegir Gmail, EpistulaMail abre la página de inicio de sesión de Google en tu navegador. Inicias sesión allí, autorizas y vuelves a la app.
+
+EpistulaMail pide:
+
+- **`https://mail.google.com/`**: leer, enviar y organizar tus correos por IMAP y SMTP. Es el único permiso de Google que da acceso a esos protocolos.
+- **`openid`, `email` y `profile`**: tu dirección, nombre y foto, para mostrar la cuenta.
+
+Detalles en [Cómo usa EpistulaMail tu cuenta de Google](https://www.epistulamail.com/conta-google) (en portugués).

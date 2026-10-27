@@ -1,0 +1,11 @@
+---
+title: "History and undo"
+description: "See and undo what your rules did."
+sidebar:
+  order: 2
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+The history keeps 30 days of what each rule did, with **Desfazer** (undo) on each batch. Rules run while EpistulaMail is open (including in the tray); mail that arrived while the app was closed goes through them on the next sync.

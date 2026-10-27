@@ -5,3 +5,5 @@ dist/
 # Gerados por scripts/sync-ds.mjs a partir do design system
 src/styles/ds-tokens.css
 src/styles/ds-pieces.css
+src/generated/
+public/ds/

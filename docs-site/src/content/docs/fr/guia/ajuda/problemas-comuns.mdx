@@ -1,0 +1,17 @@
+---
+title: "Problèmes courants"
+description: "Que faire quand quelque chose ne se passe pas comme prévu."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+**Windows m'empêche d'ouvrir l'installateur.** C'est SmartScreen qui avertit au sujet d'un programme non signé. Vérifiez le SHA-256 et utilisez **Informations complémentaires → Exécuter quand même**.
+
+**Google indique que l'app n'est pas vérifiée.** La vérification de Google est encore en cours. Voir l'avertissement dans le [Démarrage rapide](/fr/inicio-rapido/).
+
+**L'ancienne icône reste dans la barre des tâches.** C'est le cache d'icônes de Windows. Désépinglez puis épinglez de nouveau, ou redémarrez l'Explorateur Windows.
+
+**J'ai oublié le mot de passe d'EpistulaMail.** Il n'est stocké nulle part. Sur l'écran de verrouillage, « Esqueceu a senha? » (mot de passe oublié ?) efface les données de cet ordinateur pour que vous vous reconnectiez à vos comptes ; les messages restent sur le serveur.

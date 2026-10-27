@@ -1,0 +1,19 @@
+---
+title: "Disinstallare"
+description: "Rimuovere EpistulaMail e, se vuoi, i suoi dati."
+sidebar:
+  order: 3
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Disinstallalo da Windows, in **Impostazioni → App → EpistulaMail**.
+
+Il programma di disinstallazione rimuove il programma. Per cancellare anche i dati:
+
+1. Elimina la cartella `%APPDATA%\br.com.epistula.desktop`.
+2. In **Gestione credenziali → Credenziali di Windows**, rimuovi gli elementi del servizio `epistula`.
+3. Se vuoi, revoca l'accesso di EpistulaMail su [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
+
+I messaggi restano sul server della tua posta.

@@ -1,0 +1,23 @@
+---
+title: "Abrir un archivo de correo"
+description: "Copias de otros programas, sin cuenta y sin internet."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+En la primera pantalla, o con el **+** de la columna de cuentas, elige **Abrir arquivo de e-mail** (abrir archivo de correo), o suelta el archivo en la ventana.
+
+| Origen | Formato |
+|---|---|
+| Google Takeout | `.mbox` (las etiquetas siguen siendo etiquetas) |
+| Outlook | `.pst` y `.msg` |
+| Thunderbird | las carpetas del perfil |
+| Apple Mail | `.mbox` exportado y `.emlx` |
+| Cualquiera | `.eml` y Maildir |
+
+El archivo se lee en tu computadora y se copia a la base cifrada; el original solo se lee. Antes de importar ves las carpetas y cuánto ocupará; después, cuántos entraron, cuántos estaban repetidos y cuántos fallaron.
+
+<AppPreview name="archive" width={34} />

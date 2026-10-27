@@ -1,0 +1,15 @@
+---
+title: "Conversazioni"
+description: "Risposte in schede, citazioni raccolte."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Una conversazione compare come una riga nell'elenco. Aperta, ogni risposta diventa una scheda; quelle non lette restano aperte e il testo citato sta dietro un "…".
+
+<AppPreview name="conversation" />
+
+L'HTML dei messaggi viene ripulito prima di essere mostrato, senza script. Le immagini esterne restano bloccate finché non le consenti per quel messaggio, perché avviserebbero il mittente che hai aperto l'email.

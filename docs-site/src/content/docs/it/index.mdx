@@ -1,0 +1,38 @@
+---
+title: "EpistulaMail"
+description: "La tua posta sul tuo computer, cifrata. Installare, usare e contribuire."
+glow: aurora
+tableOfContents: false
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+La tua posta sul tuo computer, cifrata. Qui trovi tutto per installare, usare e contribuire: dal primo accesso al modello delle minacce.
+
+<div class="release-banner not-content">
+  <span class="badge-new">Nuova versione</span>
+  <b>1.0.2</b>
+  <span>Aggiornamento automatico, nome nuovo e il logo nell'app.</span>
+  <a href="/it/guia/versoes/historico/">Vedi cosa è cambiato →</a>
+</div>
+
+<CardGrid>
+  <LinkCard title="Avvio rapido" description="Dal download alla posta in arrivo in circa cinque minuti." href="/it/inicio-rapido/" />
+  <LinkCard title="Installazione" description="Requisiti, l'avviso di SmartScreen e come verificare lo SHA-256." href="/it/instalacao/" />
+  <LinkCard title="Ricerca" description="Chip per persone, date e filtri, in tutti gli account." href="/it/guia/busca/operadores/" />
+  <LinkCard title="Crittografia" description="OpenPGP e S/MIME nello stesso editor." href="/it/guia/criptografia/como-funciona/" />
+</CardGrid>
+
+## Da dove iniziare
+
+Se è la prima volta, segui l'**Avvio rapido**: installa EpistulaMail, collega il tuo account e mostra la ricerca. Se lo usi già, la **Documentazione** spiega ogni funzione nel dettaglio, con quello che succede dietro le quinte e dove restano i tuoi dati.
+
+Tutto ciò che trovi qui vale per Windows 10 e 11 (64 bit). Per ora si possono collegare solo account Gmail; gli altri provider arriveranno presto. Aprire vecchi archivi di posta funziona senza alcun account.
+
+## Cos'è EpistulaMail
+
+- **Tuo, senza trucchi.** Non esiste un account EpistulaMail, un cloud EpistulaMail né telemetria. Nessuna email passa da un nostro server.
+- **Cifrato sul disco.** I messaggi stanno in un database cifrato con AES-256, con la chiave in Gestione credenziali di Windows.
+- **Funziona offline.** Ciò che è stato scaricato si apre e si cerca anche senza internet.
+- **Open source.** È tutto su [GitHub](https://github.com/elyosemite/epistulamail).

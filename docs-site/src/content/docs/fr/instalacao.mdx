@@ -1,0 +1,41 @@
+---
+title: "Installation"
+description: "Télécharger, vérifier et installer EpistulaMail sous Windows, et comment arrivent les nouvelles versions."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+EpistulaMail est distribué sous forme d'installateur Windows, publié à chaque version sur [GitHub](https://github.com/elyosemite/epistulamail/releases/latest) et derrière le bouton de téléchargement du [site](https://www.epistulamail.com).
+
+## Prérequis
+
+- Windows 10 ou 11, 64 bits.
+- WebView2, fourni avec Windows 11. Sous Windows 10, l'installateur le télécharge s'il manque.
+- Environ 100 Mo libres pour l'app, plus la place des messages que vous conservez.
+
+## Installer
+
+<Steps>
+
+1. Téléchargez `EpistulaMail_<version>_x64-setup.exe` sur le [site](https://www.epistulamail.com) ou dans la [dernière version](https://github.com/elyosemite/epistulamail/releases/latest).
+
+2. Comparez le SHA-256 du fichier avec celui publié dans les notes de version :
+
+   ```powershell
+   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   ```
+
+3. Ouvrez l'installateur. Sur l'avertissement SmartScreen, cliquez sur **Informations complémentaires** puis sur **Exécuter quand même**.
+
+4. EpistulaMail est installé dans `%LOCALAPPDATA%\EpistulaMail`, pour votre utilisateur uniquement, avec un raccourci dans le menu Démarrer.
+
+</Steps>
+
+<Aside type="note" title="Pourquoi l'avertissement SmartScreen ?">
+L'installateur n'a pas encore de certificat de signature de code. SmartScreen avertit pour les programmes sans signature ni historique de téléchargements. Vérifier le SHA-256 garantit que le fichier est bien celui qui a été publié.
+</Aside>
+
+## Nouvelles versions
+
+Depuis la 1.0.2, quand une nouvelle version sort, une notification apparaît dans la cloche. Un clic montre ce qui a changé et, si vous confirmez, EpistulaMail la télécharge, vérifie la signature de la mise à jour, l'installe et se rouvre. Voir [Mises à jour](/fr/guia/instalacao/atualizacoes/).

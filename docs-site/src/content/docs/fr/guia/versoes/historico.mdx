@@ -1,0 +1,17 @@
+---
+title: "Historique des versions"
+description: "Ce qui a changé dans chaque version d'EpistulaMail."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+<Timeline label="Versions" items={[{"date": "27 oct. 2026 · 1.0.2", "title": "Mises à jour automatiques", "body": "Notification dans la cloche, confirmation et redémarrage. L'app s'appelle désormais EpistulaMail, avec le logo à l'intérieur.", "state": "current"}, {"date": "27 oct. 2026 · 1.0.1", "title": "Nouvelle icône", "body": "La pomme de terre dans l'app, l'installateur, la barre des tâches et la zone de notification.", "state": "done"}, {"date": "27 oct. 2026 · 1.0.0", "title": "Première version", "body": "Gmail, recherche par puces, règles, OpenPGP et S/MIME, archives d'e-mails et mot de passe d'EpistulaMail.", "state": "done"}]} />
+
+## Ce qui arrive
+
+<Timeline horizontal label="Feuille de route" items={[{"date": "Oct. 2026", "title": "Gmail", "body": "Lecture, envoi et recherche.", "state": "done"}, {"date": "Maintenant", "title": "Vérification Google", "body": "Connexion pour n'importe quel compte.", "state": "current"}, {"date": "Bientôt", "title": "Outlook et IMAP", "body": "D'autres fournisseurs.", "state": "upcoming"}, {"date": "Plus tard", "title": "Sauvegarde chiffrée", "body": "Un compte dans un fichier.", "state": "upcoming"}]} />
+
+Le détail de chaque version se trouve dans le [CHANGELOG](https://github.com/elyosemite/epistulamail/blob/main/CHANGELOG.md) (en portugais).

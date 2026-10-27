@@ -1,0 +1,15 @@
+---
+title: "Escribir y enviar"
+description: "Correo nuevo, responder, reenviar y deshacer el envío."
+sidebar:
+  order: 2
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Escribe un correo nuevo, responde, responde a todos o reenvía. Los borradores se guardan cifrados.
+
+Después de **Enviar**, tienes unos segundos para **Desfazer** (deshacer): el correo solo sale cuando termina el tiempo.
+
+<AppPreview name="undo" />

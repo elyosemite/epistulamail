@@ -1,0 +1,19 @@
+---
+title: "Fonctionnement"
+description: "OpenPGP et S/MIME dans le même éditeur."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+EpistulaMail chiffre et signe les e-mails avec **OpenPGP** et avec **S/MIME**.
+
+- Un cadenas dans l'éditeur active le chiffrement. Il s'active tout seul quand tous les destinataires ont une clé ou un certificat accepté.
+- La lecture indique si le message est arrivé chiffré et si la signature est valide.
+- L'objet peut aussi être protégé.
+
+<AppPreview name="crypto" />
+
+**Lequel utiliser ?** OpenPGP est courant parmi les logiciels libres (Thunderbird, par exemple). S/MIME est courant en entreprise, dans Outlook et dans Apple Mail.

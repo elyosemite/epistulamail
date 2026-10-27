@@ -1,0 +1,13 @@
+---
+title: "Richiedere un certificato"
+description: "I certificati S/MIME in EpistulaMail."
+sidebar:
+  order: 1
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+La coppia di chiavi viene creata sul tuo computer; solo la richiesta va all'autorità di certificazione. Poi importa il certificato emesso, oppure un `.p12` che hai già.
+
+I certificati di chi ti invia messaggi firmati vengono conservati. La fiducia segue le radici di Windows.

@@ -1,0 +1,41 @@
+---
+title: "Installation"
+description: "Download, check and install EpistulaMail on Windows, and how new versions arrive."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+EpistulaMail ships as a Windows installer, published with each release on [GitHub](https://github.com/elyosemite/epistulamail/releases/latest) and behind the download button on the [website](https://www.epistulamail.com).
+
+## Requirements
+
+- Windows 10 or 11, 64-bit.
+- WebView2, which comes with Windows 11. On Windows 10, the installer downloads it if missing.
+- About 100 MB free for the app, plus the space for the messages you keep.
+
+## Install
+
+<Steps>
+
+1. Download `EpistulaMail_<version>_x64-setup.exe` from the [website](https://www.epistulamail.com) or the [latest release](https://github.com/elyosemite/epistulamail/releases/latest).
+
+2. Compare the file's SHA-256 with the one published in the release notes:
+
+   ```powershell
+   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   ```
+
+3. Open the installer. On the SmartScreen warning, click **More info** and then **Run anyway**.
+
+4. EpistulaMail is installed in `%LOCALAPPDATA%\EpistulaMail`, for your user only, with a Start menu shortcut.
+
+</Steps>
+
+<Aside type="note" title="Why the SmartScreen warning?">
+The installer does not have a code-signing certificate yet. SmartScreen warns about programs with no signature and no download history. Checking the SHA-256 guarantees the file is the one that was published.
+</Aside>
+
+## New versions
+
+Since 1.0.2, when a new version is out a notice shows up in the notification bell. One click shows what changed and, if you confirm, EpistulaMail downloads it, checks the update's signature, installs it and opens again. See [Updates](/en/guia/instalacao/atualizacoes/).
