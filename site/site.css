@@ -129,9 +129,9 @@ a { color: var(--color-link); }
 @media (max-width: 48rem) { .site-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Entrada ao rolar (sem animação para quem pediu menos movimento). */
-.site-reveal { opacity: 0; transform: translateY(var(--space-300)); transition: opacity 500ms ease-out, transform 500ms ease-out; }
-.site-reveal.is-visible { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .site-reveal { opacity: 1; transform: none; transition: none; } }
+.js .site-reveal { opacity: 0; transform: translateY(var(--space-300)); transition: opacity 500ms ease-out, transform 500ms ease-out; }
+.js .site-reveal.is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .js .site-reveal { opacity: 1; transform: none; transition: none; } }
 
 @media (max-width: 30rem) { :root { --site-gutter: var(--space-200); } .site-section { padding-block: var(--space-800); } }
 /* Em telas estreitas, o topo fica só com o tema e o download (o GitHub continua no rodapé). */
@@ -156,3 +156,16 @@ a { color: var(--color-link); }
 
 /* Logo do EpistulaMail (sem fundo) no lugar do glifo do wordmark, no topo e no rodapé. */
 .site-logo { display: block; flex: none; width: 1.75rem; height: 1.75rem; object-fit: contain; }
+
+.site-hero__lede { max-width: 34rem; margin: var(--space-300) 0 0; font: var(--font-body-large); color: var(--color-text-subtle); }
+/* Como o app usa a conta Google (pedido da verificação do OAuth): texto à esquerda, permissões à direita. */
+.site-google { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: var(--space-600) var(--site-gap); }
+.site-google__list { display: grid; gap: var(--space-300); }
+.site-google__list article { display: grid; gap: var(--space-100); padding-bottom: var(--space-300); border-bottom: var(--border-width) solid var(--color-border); }
+.site-google__list h3 { display: flex; align-items: center; gap: var(--space-100); margin: 0; font: var(--font-weight-semibold) var(--font-size-body-large)/1.4 var(--font-family-body); color: var(--color-text); }
+.site-google__list h3 .i { color: var(--color-icon-brand); }
+.site-google__list p { margin: 0; font: var(--font-body); color: var(--color-text-subtle); }
+.site-google__legal { font: var(--font-body-small) !important; color: var(--color-text-subtlest) !important; }
+.site-google a, .site-statement a { color: var(--color-link); }
+@media (max-width: 56rem) { .site-google { grid-template-columns: minmax(0, 1fr); } }
+
