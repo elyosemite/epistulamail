@@ -49,6 +49,10 @@ export default defineConfig({
       components: {
         Sidebar: "./src/components/Sidebar.astro",
         PageTitle: "./src/components/PageTitle.astro",
+        SocialIcons: "./src/components/SocialIcons.astro",
+        ThemeSelect: "./src/components/ThemeSelect.astro",
+        LanguageSelect: "./src/components/LanguageSelect.astro",
+        Pagination: "./src/components/Pagination.astro",
       },
       sidebar: [
         {

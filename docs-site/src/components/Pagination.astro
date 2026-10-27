@@ -1,0 +1,26 @@
+---
+// "Anterior" e "Próximo" compactos, como no DS: rótulo pequeno em cima e o título da página no tamanho do texto.
+const { dir, pagination } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+---
+
+<nav class="ds-pager print:hidden" dir={dir} aria-label="Páginas">
+  {
+    prev ? (
+      <a class="ds-pager__link" href={prev.href} rel="prev">
+        <span class="ds-pager__label">‹ {Astro.locals.t("page.previousLink")}</span>
+        <span class="ds-pager__title">{prev.label}</span>
+      </a>
+    ) : (
+      <span />
+    )
+  }
+  {
+    next && (
+      <a class="ds-pager__link ds-pager__link--next" href={next.href} rel="next">
+        <span class="ds-pager__label">{Astro.locals.t("page.nextLink")} ›</span>
+        <span class="ds-pager__title">{next.label}</span>
+      </a>
+    )
+  }
+</nav>

@@ -1,0 +1,60 @@
+---
+// Idioma como no DS (L79): botão com o globo, o código do idioma atual e um menu com os idiomas, cada um no nome da
+// própria língua. Os itens são links para a mesma página no outro idioma (funciona sem JavaScript).
+import config from "virtual:starlight/user-config";
+
+const SHORT: Record<string, string> = { root: "PT-BR", en: "EN", es: "ES", fr: "FR", it: "IT" };
+const locales = Object.entries(config.locales ?? {});
+const prefixes = locales.map(([code]) => code).filter((code) => code !== "root");
+const current = Astro.locals.starlightRoute.locale ?? "root";
+
+// O caminho da página sem o idioma, para montar o mesmo endereço nos outros.
+const segments = Astro.url.pathname.split("/").filter(Boolean);
+if (prefixes.includes(segments[0])) segments.shift();
+const rest = segments.length ? `${segments.join("/")}/` : "";
+const hrefFor = (code: string) => (code === "root" ? `/${rest}` : `/${code}/${rest}`);
+---
+
+{
+  config.isMultilingual && (
+    <details class="ds-lang" data-ds-lang>
+      <summary class="ds-lang__button" aria-label="Idioma" title="Idioma">
+        <svg class="ds-lang__globe" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20" />
+        </svg>
+        <span class="ds-lang__code">{SHORT[current] ?? current.toUpperCase()}</span>
+        <svg class="ds-lang__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </summary>
+      <div class="ds-lang__menu" role="menu" aria-label="Idioma">
+        {locales.map(([code, locale]) => (
+          <a
+            class="ds-lang__item"
+            role="menuitemradio"
+            aria-checked={code === current ? "true" : "false"}
+            href={hrefFor(code)}
+            lang={locale?.lang}
+            hreflang={locale?.lang}
+          >
+            <span>{locale?.label}</span>
+            <span class="ds-lang__meta">{SHORT[code] ?? code.toUpperCase()}</span>
+          </a>
+        ))}
+      </div>
+    </details>
+  )
+}
+
+<script>
+  // Fecha o menu com Esc ou clicando fora.
+  document.querySelectorAll<HTMLDetailsElement>("[data-ds-lang]").forEach((menu) => {
+    document.addEventListener("click", (e) => {
+      if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+    });
+    menu.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        menu.open = false;
+        menu.querySelector("summary")?.focus();
+      }
+    });
+  });
+</script>

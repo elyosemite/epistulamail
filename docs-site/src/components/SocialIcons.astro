@@ -1,0 +1,34 @@
+---
+// Redes no topo, como no DS (L79): botões de ícone com os ícones de marca preenchidos. GitHub, X e Discord aparecem
+// sempre; os que ainda não têm endereço em astro.config.mjs ficam desligados, com "Em breve".
+import config from "virtual:starlight/user-config";
+
+const PATHS: Record<string, string> = {
+  github:
+    "M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z",
+  "x.com": "M18.2 2h3.4l-7.4 8.5L23 22h-6.8l-5.3-7-6.1 7H1.4l7.9-9L1 2h7l4.8 6.4L18.2 2zm-1.2 18h1.9L7 3.9H5L17 20z",
+  discord:
+    "M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18.2 18.2 0 0 0-5.6 0L8.6 3a19.6 19.6 0 0 0-4.9 1.4C.6 9-.3 13.6.1 18.1A19.8 19.8 0 0 0 6.2 21l1.3-2.1c-.7-.3-1.4-.6-2-1l.5-.4a14.1 14.1 0 0 0 12 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.7 19.7 0 0 0 6.1-2.9c.5-5.2-.8-9.8-3.6-13.7zM8.3 15.4c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm7.4 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z",
+};
+const ORDER = [
+  { icon: "github", label: "GitHub" },
+  { icon: "x.com", label: "X" },
+  { icon: "discord", label: "Discord" },
+];
+const configured = new Map((config.social ?? []).map((l) => [l.icon as string, l]));
+const buttons = ORDER.map((b) => ({ ...b, href: configured.get(b.icon)?.href }));
+---
+
+{
+  buttons.map((b) =>
+    b.href ? (
+      <a class="ds-icon-btn" href={b.href} rel="me" aria-label={b.label} title={b.label}>
+        <svg class="ds-brand" viewBox="0 0 24 24" aria-hidden="true"><path d={PATHS[b.icon]} /></svg>
+      </a>
+    ) : (
+      <span class="ds-icon-btn is-disabled" role="img" aria-label={`${b.label} (em breve)`} title={`${b.label}: em breve`}>
+        <svg class="ds-brand" viewBox="0 0 24 24" aria-hidden="true"><path d={PATHS[b.icon]} /></svg>
+      </span>
+    ),
+  )
+}

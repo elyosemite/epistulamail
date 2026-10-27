@@ -1,0 +1,26 @@
+---
+// Tema como no DS: um botão de ícone (lua no claro, sol no escuro) que alterna entre claro e escuro. Sem escolha
+// salva, o Starlight segue o sistema; a escolha fica em localStorage, na mesma chave do Starlight.
+---
+
+<button type="button" class="ds-icon-btn ds-theme" data-ds-theme aria-label="Trocar o tema" title="Trocar o tema">
+  <svg class="ds-theme__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
+  <svg class="ds-theme__sun" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </svg>
+</button>
+
+<script>
+  const KEY = "starlight-theme";
+  document.querySelectorAll<HTMLButtonElement>("[data-ds-theme]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      try {
+        localStorage.setItem(KEY, next);
+      } catch {
+        // Sem armazenamento: a troca vale só nesta página.
+      }
+    });
+  });
+</script>
