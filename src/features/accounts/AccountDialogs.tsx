@@ -110,7 +110,7 @@ export function SignOutDialog({ account, onConfirm, onClose }: { account: Accoun
         </>
       }
     >
-      <p>O Epistula deixa de acessar <b>{account.email}</b> e a conta sai da coluna de contas. As mensagens já salvas continuam neste computador, cifradas, e voltam quando você entrar de novo com o mesmo e-mail.</p>
+      <p>O EpistulaMail deixa de acessar <b>{account.email}</b> e a conta sai da coluna de contas. As mensagens já salvas continuam neste computador, cifradas, e voltam quando você entrar de novo com o mesmo e-mail.</p>
       <p>Nada muda na sua conta de e-mail.</p>
       <ConfirmCheck checked={erase} onChange={setErase}>Apagar também os e-mails desta conta guardados neste computador.</ConfirmCheck>
     </Modal>

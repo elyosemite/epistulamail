@@ -13,22 +13,22 @@
 
 <p align="center"><a href="README.md">English</a> | <b>Português</b></p>
 
-O EpistulaMail (ou só Epistula) é um cliente de e-mail para Windows, de código aberto, que guarda as suas mensagens no seu computador, num banco cifrado com AES-256, e nunca as faz passar por um servidor nosso. Ele conecta as suas contas Google por OAuth, lê e envia direto entre o seu computador e o seu provedor, e abre arquivos de e-mail antigos (Google Takeout, Outlook, Thunderbird, Apple Mail) sem conta e sem rede nenhuma.
+O EpistulaMail é um cliente de e-mail para Windows, de código aberto, que guarda as suas mensagens no seu computador, num banco cifrado com AES-256, e nunca as faz passar por um servidor nosso. Ele conecta as suas contas Google por OAuth, lê e envia direto entre o seu computador e o seu provedor, e abre arquivos de e-mail antigos (Google Takeout, Outlook, Thunderbird, Apple Mail) sem conta e sem rede nenhuma.
 
-**Seu, sem pegadinha.** Não existe conta Epistula, nuvem Epistula, telemetria nem plano pago. A chave do banco fica no Gerenciador de Credenciais do Windows, as imagens externas ficam bloqueadas até você liberar, e as únicas conexões são com o seu provedor (mais um servidor de chaves ou as imagens de quem enviou, e só quando você pede). O [modelo de ameaças](docs/arquitetura-e-ameacas.md) é público, inclusive com os riscos ainda não resolvidos.
+**Seu, sem pegadinha.** Não existe conta EpistulaMail, nuvem EpistulaMail, telemetria nem plano pago. A chave do banco fica no Gerenciador de Credenciais do Windows, as imagens externas ficam bloqueadas até você liberar, e as únicas conexões são com o seu provedor (mais um servidor de chaves ou as imagens de quem enviou, e só quando você pede). O [modelo de ameaças](docs/arquitetura-e-ameacas.md) é público, inclusive com os riscos ainda não resolvidos.
 
 [Site](https://www.epistulamail.com) · [Download](https://github.com/elyosemite/epistulamail/releases/latest) · [Mudanças](CHANGELOG.md) · [Política de privacidade](https://www.epistulamail.com/privacidade) · [Modelo de ameaças](docs/arquitetura-e-ameacas.md) · [Design System](design-system/) · [Histórico de decisões](userstory/)
 
-![Caixa de entrada do Epistula com três contas, pastas e marcadores, a lista de mensagens e uma newsletter aberta no painel de leitura](docs/images/epistula-caixa-de-entrada.png)
+![Caixa de entrada do EpistulaMail com três contas, pastas e marcadores, a lista de mensagens e uma newsletter aberta no painel de leitura](docs/images/epistula-caixa-de-entrada.png)
 
 ## Instalar
 
-Baixe o instalador na [última release](https://github.com/elyosemite/epistulamail/releases/latest) (`Epistula_<versão>_x64-setup.exe`). Ele instala só para o seu usuário do Windows, sem pedir administrador, e precisa do Windows 10 ou 11 (64 bits) com o WebView2, que já vem no Windows 11 e é baixado pelo instalador no Windows 10 se faltar.
+Baixe o instalador na [última release](https://github.com/elyosemite/epistulamail/releases/latest) (`EpistulaMail_<versão>_x64-setup.exe`). Ele instala só para o seu usuário do Windows, sem pedir administrador, e precisa do Windows 10 ou 11 (64 bits) com o WebView2, que já vem no Windows 11 e é baixado pelo instalador no Windows 10 se faltar.
 
 O instalador ainda não tem assinatura de código, então na primeira execução o Windows SmartScreen mostra "O Windows protegeu o computador". Antes de seguir, confira o arquivo com o SHA-256 publicado na release:
 
 ```powershell
-(Get-FileHash .\Epistula_1.0.0_x64-setup.exe).Hash
+(Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
 ```
 
 Se bater, clique em "Mais informações" e depois em "Executar assim mesmo". As versões novas instalam por cima e mantêm as contas e as mensagens. Para compilar a partir do código, veja [Compilando](#compilando).
@@ -40,7 +40,7 @@ Se bater, clique em "Mais informações" e depois em "Executar assim mesmo". As 
    - **Abrir um arquivo de e-mail**: escolha um `.mbox`, `.pst`, `.eml` ou uma pasta de e-mails, ou solte sobre a janela. Sem conta e sem rede.
 2. Os e-mails mais recentes aparecem primeiro; o resto chega em segundo plano e fica disponível sem conexão.
 3. Aperte `/` para buscar: `de: Ana tem:anexo depois:2026-01-01` vira chips que você edita.
-4. Em **Configurações**, escolha quanto guardar sem conexão, crie uma senha do Epistula e o bloqueio automático, e monte as suas regras.
+4. Em **Configurações**, escolha quanto guardar sem conexão, crie uma senha do EpistulaMail e o bloqueio automático, e monte as suas regras.
 
 Enquanto o Google verifica o app, o login com Google fica limitado aos usuários de teste cadastrados no projeto. Abrir arquivos de e-mail funciona para todo mundo.
 
@@ -48,7 +48,7 @@ Enquanto o Google verifica o app, o login com Google fica limitado aos usuários
 
 ## Em poucas palavras
 
-- **Sem conta Epistula e sem nuvem Epistula.** Os seus e-mails vão direto para o seu provedor. O nosso servidor de login (planejado) só participa do login OAuth e nunca vê uma mensagem.
+- **Sem conta EpistulaMail e sem nuvem EpistulaMail.** Os seus e-mails vão direto para o seu provedor. O nosso servidor de login (planejado) só participa do login OAuth e nunca vê uma mensagem.
 - **Abra arquivos antigos, sem internet e sem conta.** Backups do Google Takeout, do Outlook, do Thunderbird e do Apple Mail, lidos do arquivo, sem se conectar a nada.
 - **Tudo cifrado no disco.** Mensagens, assuntos, remetentes e índices ficam num banco AES-256, que já resiste a computadores quânticos.
 - **Abre na hora, até sem internet.** Os e-mails recentes são baixados em segundo plano e abrem do disco.
@@ -62,7 +62,7 @@ Enquanto o Google verifica o app, o login com Google fica limitado aos usuários
 
 O e-mail é o arquivo mais longo da vida digital de quase todo mundo. Contratos, exames, conversas de família, recuperação de senha de tudo. E esse arquivo costuma morar em um único lugar, controlado por outra empresa, acessível por um navegador.
 
-O Epistula parte de três ideias simples:
+O EpistulaMail parte de três ideias simples:
 
 **Seus dados ficam com você.** Cada mensagem que você abre é guardada no seu disco. Se a rede cair, a caixa continua lá. Se o provedor mudar de regra, a sua cópia continua sua.
 
@@ -111,15 +111,15 @@ O que funciona hoje:
 - Tudo pode ser desfeito: o histórico guarda 30 dias do que cada regra fez, com "Desfazer" em cada lote, e um aviso depois de cada sincronização mostra o que foi organizado.
 - Comece por um modelo (Newsletters, Avisos automáticos, Recibos e faturas, Pessoas importantes) ou direto de uma mensagem: "Criar regra…", "Sempre mover deste remetente para…" e "Excluir tudo deste remetente…".
 - "Rodar agora" aplica uma regra aos e-mails que já estão na pasta, e regras de limpeza ("mais antigo que 30 dias", "manter só o mais recente do remetente") rodam uma vez por dia.
-- As regras rodam no Epistula, com o app aberto (inclusive na bandeja), e valem para qualquer provedor. O que chegou com o app fechado passa por elas na sincronização seguinte.
+- As regras rodam no EpistulaMail, com o app aberto (inclusive na bandeja), e valem para qualquer provedor. O que chegou com o app fechado passa por elas na sincronização seguinte.
 
 **Criptografia de ponta a ponta**
 
-- OpenPGP embutido: crie uma chave (Curve25519, RSA 4096 ou uma pós-quântica experimental, com ML-KEM-768 + X25519), importe uma que você já tem ou restaure um backup do Epistula.
+- OpenPGP embutido: crie uma chave (Curve25519, RSA 4096 ou uma pós-quântica experimental, com ML-KEM-768 + X25519), importe uma que você já tem ou restaure um backup do EpistulaMail.
 - Um cadeado no composer criptografa e assina a mensagem. Ele liga sozinho quando todos os destinatários têm chave aceita, e respostas a mensagens criptografadas já começam criptografadas. Dá para esconder também o assunto do servidor.
 - Quem não tem chave aparece antes do envio, com a escolha de buscar a chave na internet (só quando você manda), enviar sem criptografia ou tirar o destinatário.
 - A leitura mostra se a mensagem veio criptografada e se a assinatura confere, com a aceitação da chave no estilo do Thunderbird (ainda não, aceita, verificada, rejeitada).
-- Um gerenciador de chaves com busca, importação de arquivo, da área de transferência ou da internet, exportação e backup protegido por senha. Chaves que chegam por Autocrypt ou anexadas ficam como "ainda não aceita", inclusive a chave anexada dentro de uma mensagem cifrada. A primeira mensagem de alguém novo é conferida com a chave que a pessoa anexou, e o cabeçalho Autocrypt que o Epistula envia é lido pelos outros programas.
+- Um gerenciador de chaves com busca, importação de arquivo, da área de transferência ou da internet, exportação e backup protegido por senha. Chaves que chegam por Autocrypt ou anexadas ficam como "ainda não aceita", inclusive a chave anexada dentro de uma mensagem cifrada. A primeira mensagem de alguém novo é conferida com a chave que a pessoa anexou, e o cabeçalho Autocrypt que o EpistulaMail envia é lido pelos outros programas.
 - S/MIME também, para quem usa Outlook, Apple Mail ou o certificado da empresa: peça um certificado (o par de chaves nasce no seu computador e só o pedido vai para a autoridade certificadora), importe o emitido ou um `.p12` e guarde os certificados de quem manda mensagens assinadas. A confiança segue as raízes do Windows. Um script de CA de teste deixa experimentar sem comprar nada.
 
 **Arquivos de e-mail, sem conta**
@@ -149,12 +149,12 @@ O que ainda não existe:
 
 ### Um servidor de login, e nada mais
 
-Entrar por OAuth faz com que você nunca digite a senha do seu e-mail no Epistula, e permite revogar o acesso a qualquer momento na página do provedor. Para isso, o Epistula precisa de apps registrados no Google (Google Cloud) e na Microsoft (Azure). As configurações deles vão ficar num pequeno servidor do Epistula, e não dentro do instalador, para poderem ser trocadas sem uma versão nova.
+Entrar por OAuth faz com que você nunca digite a senha do seu e-mail no EpistulaMail, e permite revogar o acesso a qualquer momento na página do provedor. Para isso, o EpistulaMail precisa de apps registrados no Google (Google Cloud) e na Microsoft (Azure). As configurações deles vão ficar num pequeno servidor do EpistulaMail, e não dentro do instalador, para poderem ser trocadas sem uma versão nova.
 
 Para que esse servidor serve, e para que não serve:
 
 - Ele participa só do login. IMAP e SMTP continuam indo direto do seu computador para o seu provedor, e nenhuma mensagem, assunto ou contato passa por ele.
-- Ele não tem conta Epistula e não guarda nada sobre os seus e-mails.
+- Ele não tem conta EpistulaMail e não guarda nada sobre os seus e-mails.
 - Sem ele, você continua lendo tudo que já está no computador e abrindo arquivos; só conectar uma conta nova, e em alguns casos renovar o acesso, depende dele.
 
 O que exatamente passa por ele no login (só as configurações do app, ou também a troca que gera os seus tokens) ainda é uma decisão em aberto, registrada no [modelo de ameaças](docs/arquitetura-e-ameacas.md#planejado-servidor-de-login).
@@ -163,7 +163,7 @@ O que exatamente passa por ele no login (só as configurações do app, ou tamb�
 
 Hoje o banco é cifrado contra quem está fora do seu Windows. O próximo passo é protegê-lo também de quem está dentro dele: outra pessoa na sua sessão, o administrador de um domínio corporativo ou alguém com uma cópia do disco e a sua senha do Windows.
 
-- **Senha do Epistula (opcional):** a chave do banco passa a ser protegida por uma chave derivada da sua senha com Argon2id. A senha não fica gravada em lugar nenhum.
+- **Senha do EpistulaMail (opcional):** a chave do banco passa a ser protegida por uma chave derivada da sua senha com Argon2id. A senha não fica gravada em lugar nenhum.
 - **Bloqueio automático:** depois de um tempo sem uso ou quando o Windows bloqueia a tela, o app fecha o banco e apaga a chave da memória.
 - **Nada vaza para fora do banco:** notificações sem conteúdo por padrão, nenhum e-mail no cache do navegador interno, nenhum despejo de memória em disco após uma falha, e um aviso quando o disco não tem BitLocker.
 - **Guardar menos:** apagar do computador os e-mails fora do período escolhido e os de contas que você deixou, trocando a chave do banco em seguida.
@@ -173,11 +173,11 @@ Hoje o banco é cifrado contra quem está fora do seu Windows. O próximo passo 
 
 Mensagens cifradas hoje podem ser capturadas hoje e decifradas daqui a alguns anos, quando houver computadores quânticos capazes de quebrar as trocas de chave atuais. Para e-mail, que costuma ser guardado por décadas, esse risco não é teórico.
 
-A cifra que o Epistula já usa no disco (AES-256) continua forte nesse cenário; não é preciso trocá-la. No caminho até o provedor, o app vai oferecer a troca de chaves híbrida (X25519 com ML-KEM-768), que passa a valer assim que o servidor aceitar. E tudo que vier a usar chave pública (backup aberto em outro computador, sincronização entre dispositivos seus, mensagens cifradas de ponta a ponta) já nasce com esquemas híbridos, para que a proteção não dependa de uma única aposta.
+A cifra que o EpistulaMail já usa no disco (AES-256) continua forte nesse cenário; não é preciso trocá-la. No caminho até o provedor, o app vai oferecer a troca de chaves híbrida (X25519 com ML-KEM-768), que passa a valer assim que o servidor aceitar. E tudo que vier a usar chave pública (backup aberto em outro computador, sincronização entre dispositivos seus, mensagens cifradas de ponta a ponta) já nasce com esquemas híbridos, para que a proteção não dependa de uma única aposta.
 
 ### Backup que você controla
 
-Exportar uma conta inteira para um arquivo cifrado, guardar onde quiser (um disco externo, um pendrive, o serviço de armazenamento da sua escolha) e restaurar em outra máquina sem precisar baixar tudo de novo do provedor. O backup deve ser legível só por quem tem a chave, e o formato deve ser documentado, para que você nunca fique preso ao Epistula.
+Exportar uma conta inteira para um arquivo cifrado, guardar onde quiser (um disco externo, um pendrive, o serviço de armazenamento da sua escolha) e restaurar em outra máquina sem precisar baixar tudo de novo do provedor. O backup deve ser legível só por quem tem a chave, e o formato deve ser documentado, para que você nunca fique preso ao EpistulaMail.
 
 ### Gestão de e-mail de verdade
 
@@ -194,7 +194,7 @@ Seu computador
 
         │ TLS                              │ TLS, só para entrar (planejado)
         ▼                                  ▼
-Seu provedor de e-mail           Servidor de login do Epistula
+Seu provedor de e-mail           Servidor de login do EpistulaMail
 (IMAP, SMTP, OAuth)              configurações OAuth do Google e da Microsoft
 
 Arquivos de e-mail (.mbox, .pst, .eml…)  ──lidos no computador──▶  epistula.db, sem rede (já funciona)
@@ -202,7 +202,7 @@ Arquivos de e-mail (.mbox, .pst, .eml…)  ──lidos no computador──▶  e
 
 Alguns pontos que valem ser ditos com clareza:
 
-- **O seu provedor continua lendo os seus e-mails**, a menos que eles vão criptografados com OpenPGP. O Epistula protege a cópia local e o caminho até ela; o que sai sem criptografia continua legível por quem hospeda a caixa, e mesmo o que vai criptografado mostra ao servidor quem escreveu para quem e quando.
+- **O seu provedor continua lendo os seus e-mails**, a menos que eles vão criptografados com OpenPGP. O EpistulaMail protege a cópia local e o caminho até ela; o que sai sem criptografia continua legível por quem hospeda a caixa, e mesmo o que vai criptografado mostra ao servidor quem escreveu para quem e quando.
 - **Os logs não contêm conteúdo.** Nem assunto, nem remetente, nem endereço da conta. Um teste percorre o app inteiro com marcadores únicos e falha se algum aparecer no log ou em texto puro no arquivo do banco.
 - **Sair de uma conta revoga o acesso** no provedor e apaga o segredo do cofre do sistema. As mensagens já baixadas continuam no disco, cifradas, até que exista a opção de apagá-las.
 - **Um computador comprometido continua comprometido.** Malware rodando na sua sessão consegue ler o que você consegue ler. Nenhum cliente de e-mail resolve isso, e preferimos dizer isso a fingir o contrário.
@@ -217,7 +217,7 @@ Quatro princípios orientam as decisões: densidade com respiro, leitura em prim
 
 ## Compilando
 
-O alvo principal hoje é o Windows. O Epistula é feito com [Tauri 2](https://tauri.app), Rust e React.
+O alvo principal hoje é o Windows. O EpistulaMail é feito com [Tauri 2](https://tauri.app), Rust e React.
 
 Requisitos:
 
@@ -247,6 +247,8 @@ Depois:
 pnpm tauri dev      # desenvolvimento
 pnpm tauri build    # instalador
 ```
+
+O build do instalador também assina os arquivos de atualização, então o `pnpm tauri build` precisa da chave do atualizador em `TAURI_SIGNING_PRIVATE_KEY` (e da senha em `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`). Sem ela, compile com `pnpm tauri build --config '{\"bundle\":{\"createUpdaterArtifacts\":false}}'`. O build de desenvolvimento (`pnpm tauri dev`) usa uma pasta de dados e entradas no cofre só dele, então nunca mexe no EpistulaMail instalado.
 
 As releases saem do [`.github/workflows/release.yml`](.github/workflows/release.yml): uma tag `vX.Y.Z` igual à versão do `package.json`, do `src-tauri/Cargo.toml` e do `src-tauri/tauri.conf.json` compila o instalador NSIS com os clientes OAuth dos segredos do repositório e abre uma release em rascunho com a seção da versão no `CHANGELOG.md` e o SHA-256 do instalador. Rodar o workflow à mão compila o mesmo instalador como ensaio, sem release.
 

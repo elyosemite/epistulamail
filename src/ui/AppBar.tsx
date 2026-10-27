@@ -10,7 +10,7 @@ export function AppBar({ actions, search }: { actions?: ReactNode; search?: Reac
       <span className="appbar__brand">
         <span className="wordmark wordmark--sm">
           <span className="wordmark__glyph" aria-hidden="true"><Icon name="mail" /></span>
-          Epistula
+          EpistulaMail
         </span>
       </span>
       {search && <div className="appbar__search">{search}</div>}

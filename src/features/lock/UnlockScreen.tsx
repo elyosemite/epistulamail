@@ -71,8 +71,8 @@ export function UnlockScreen({ retryIn: initialWait }: { retryIn: number }) {
           </>
         ) : (
           <>
-            <h1 className="unlock__title">O Epistula está bloqueado</h1>
-            <p className="unlock__text">Digite a senha do Epistula para ver as suas mensagens.</p>
+            <h1 className="unlock__title">O EpistulaMail está bloqueado</h1>
+            <p className="unlock__text">Digite a senha do EpistulaMail para ver as suas mensagens.</p>
             <form
               className="unlock__form"
               onSubmit={(e) => {
@@ -81,7 +81,7 @@ export function UnlockScreen({ retryIn: initialWait }: { retryIn: number }) {
               }}
             >
               <PasswordField
-                label="Senha do Epistula"
+                label="Senha do EpistulaMail"
                 autoFocus
                 autoComplete="current-password"
                 value={password}

@@ -34,7 +34,7 @@ export function AppSkeleton() {
       />
       <NavigationBlock>
         <nav className="sidebar app-shell__sidebar" aria-hidden="true"><NavSkeleton /></nav>
-        <section className="app-shell__list" aria-label="Carregando o Epistula" aria-busy="true">
+        <section className="app-shell__list" aria-label="Carregando o EpistulaMail" aria-busy="true">
           <div className="toolbar"><span className="skeleton skeleton--circle" /></div>
           <div className="app-shell__list-body">
             <ThreadList label="Carregando conversas" busy>

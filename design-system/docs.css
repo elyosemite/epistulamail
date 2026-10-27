@@ -71,7 +71,6 @@
   .guidance dt { font: var(--font-label); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtlest); }
   .guidance dd { margin: 0; font: var(--font-body); color: var(--color-text-subtle); max-width: 60ch; }
 
-  .row { display: flex; flex-wrap: wrap; gap: var(--space-150); align-items: center; }
   .stack { display: grid; gap: var(--space-200); }
   .sidebar-demo { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-300); align-items: start; }
   .sidebar-demo .sidebar { border-right: 0; }

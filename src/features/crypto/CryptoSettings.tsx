@@ -151,7 +151,7 @@ export function CryptoSettings({ accounts, initialAccountId, onManageKeys, onMan
           <input type="checkbox" className="toggle" aria-labelledby="crypto-sign" checked={settings.signUnencrypted} onChange={(e) => save({ signUnencrypted: e.target.checked })} />
         </Setting>
         <SectionMessage title="Respostas a mensagens criptografadas são criptografadas">
-          Responder sem criptografia mostraria o texto citado. Se algum destinatário não tiver chave, o Epistula pergunta antes de enviar.
+          Responder sem criptografia mostraria o texto citado. Se algum destinatário não tiver chave, o EpistulaMail pergunta antes de enviar.
         </SectionMessage>
       </SettingsGroup>
 

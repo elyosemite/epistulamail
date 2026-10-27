@@ -18,7 +18,9 @@ use crate::error::AppError;
 use crate::lock::{self, Kek};
 use crate::provider::Provider;
 
-const SERVICE: &str = "epistula";
+/// Serviço no cofre: o build de desenvolvimento usa outro, para nunca ler nem apagar a chave do banco e os
+/// tokens do app instalado (ver `context` em lib.rs).
+const SERVICE: &str = if cfg!(debug_assertions) { "epistula-dev" } else { "epistula" };
 const CHUNK_CHARS: usize = 1000;
 const DB_KEY_ENTRY: &str = "db-key";
 /// Chave nova durante uma troca (US10, CA4), até o banco abrir com ela.

@@ -37,6 +37,8 @@ export function noticeIcon(kind: NoticeKind): { icon: string; tone: "neutral" | 
       return { icon: "inbox", tone: "neutral" };
     case "info":
       return { icon: "bell", tone: "neutral" };
+    case "update":
+      return { icon: "download", tone: "neutral" };
     default:
       return { icon: "mail", tone: "neutral" };
   }

@@ -59,11 +59,11 @@ export function PrivacySettings() {
 
   return (
     <>
-      <SettingsGroup title="Senha do Epistula">
+      <SettingsGroup title="Senha do EpistulaMail">
         <Setting
           labelId="privacy-password"
-          label="Pedir uma senha ao abrir o Epistula"
-          description="Protege as mensagens guardadas neste computador até de quem usa o seu Windows. Desligada, quem entra no seu Windows abre o Epistula."
+          label="Pedir uma senha ao abrir o EpistulaMail"
+          description="Protege as mensagens guardadas neste computador até de quem usa o seu Windows. Desligada, quem entra no seu Windows abre o EpistulaMail."
         >
           <input
             type="checkbox"
@@ -75,7 +75,7 @@ export function PrivacySettings() {
         </Setting>
         {settings.hasPassword && (
           <>
-            <Setting labelId="privacy-idle" label="Bloquear depois de" description="Sem mexer no Epistula por esse tempo.">
+            <Setting labelId="privacy-idle" label="Bloquear depois de" description="Sem mexer no EpistulaMail por esse tempo.">
               <Select labelledBy="privacy-idle" value={settings.lock.minutes} options={LOCK_CHOICES} onChange={(v) => saveLock({ minutes: v as LockMinutes })} />
             </Setting>
             <Setting labelId="privacy-windows" label="Bloquear junto com o Windows" description="Quando a tela do Windows bloquear (Win+L).">
@@ -98,7 +98,7 @@ export function PrivacySettings() {
         </Setting>
         {diskEncrypted === false && (
           <SectionMessage appearance="warning" title="Este disco não está cifrado">
-            O Windows pode copiar partes da memória do Epistula para o disco ao hibernar ou com pouca memória. Ligue a criptografia do disco
+            O Windows pode copiar partes da memória do EpistulaMail para o disco ao hibernar ou com pouca memória. Ligue a criptografia do disco
             (BitLocker) nas Configurações do Windows, em Privacidade e segurança.
           </SectionMessage>
         )}
@@ -142,7 +142,7 @@ export function PrivacySettings() {
           onConfirm={async (password) => {
             await api.setAppPassword(password);
             load();
-            toast({ kind: "success", title: "Senha do Epistula ligada" });
+            toast({ kind: "success", title: "Senha do EpistulaMail ligada" });
           }}
           onClose={() => setDialog(null)}
         />
@@ -161,7 +161,7 @@ export function PrivacySettings() {
           onConfirm={async (current) => {
             await api.removeAppPassword(current);
             load();
-            toast({ kind: "info", title: "Senha do Epistula desligada" });
+            toast({ kind: "info", title: "Senha do EpistulaMail desligada" });
           }}
           onClose={() => setDialog(null)}
         />

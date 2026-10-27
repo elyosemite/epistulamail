@@ -424,7 +424,15 @@ export interface NoticeTarget {
   reconnect?: boolean;
 }
 
-export type NoticeKind = "mail" | "reply" | "summary" | "due" | "failure" | "reauth" | "offline" | "info";
+export type NoticeKind = "mail" | "reply" | "summary" | "due" | "failure" | "reauth" | "offline" | "info" | "update";
+
+/** Versão nova do EpistulaMail (atualização automática). */
+export interface UpdateInfo {
+  version: string;
+  current: string;
+  /** Notas da release (o trecho do CHANGELOG), em Markdown. */
+  notes: string;
+}
 
 /** Uma notificação no histórico do sino (US8, CA7), com o texto que saiu no Windows. */
 export interface Notice {
@@ -768,6 +776,10 @@ export const api = {
   getNotifySettings: () => call<NotifySettings>("get_notify_settings"),
   setNotifySettings: (settings: NotifySettings) => call<NotifySettings>("set_notify_settings", { settings }),
   listNotices: () => call<NoticeList>("list_notices"),
+  /** A versão nova, se houver (no build de desenvolvimento, nunca). */
+  updateStatus: () => call<UpdateInfo | null>("update_status"),
+  /** Baixa, confere a assinatura e instala; o app fecha e abre de novo na versão nova. */
+  installUpdate: () => call<void>("install_update"),
   markNoticesSeen: () => call<void>("mark_notices_seen"),
   setSnooze: (on: boolean) => call<boolean>("set_snooze", { on }),
   /** Baixa em segundo plano as mensagens que o usuário deve abrir em seguida (US9, CA3). */

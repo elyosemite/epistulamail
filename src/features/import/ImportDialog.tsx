@@ -167,10 +167,10 @@ function PickStep({ error, onPick, onClose }: { error?: AppError; onPick: (folde
         <p className="wizard-steps" style={{ margin: 0 }}>Passo 1 de 3</p>
         {error && (
           <SectionMessage appearance="error" title={error.kind === "ImportUnrecognized" ? "Este arquivo não parece ser de e-mail" : "Não foi possível abrir"}>
-            <p>{error.kind === "ImportUnrecognized" ? "O Epistula abre .mbox, .pst, .msg, .eml, .emlx e pastas Maildir. Se é um backup compactado (.zip do Takeout), descompacte antes." : error.message}</p>
+            <p>{error.kind === "ImportUnrecognized" ? "O EpistulaMail abre .mbox, .pst, .msg, .eml, .emlx e pastas Maildir. Se é um backup compactado (.zip do Takeout), descompacte antes." : error.message}</p>
           </SectionMessage>
         )}
-        <p style={{ margin: 0, color: "var(--color-text-subtle)" }}>O arquivo é lido neste computador e copiado para o banco cifrado do Epistula. Nada vai para a internet, e o original não é alterado.</p>
+        <p style={{ margin: 0, color: "var(--color-text-subtle)" }}>O arquivo é lido neste computador e copiado para o banco cifrado do EpistulaMail. Nada vai para a internet, e o original não é alterado.</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-100)" }}>
           <Button appearance="primary" icon="file" onClick={() => onPick(false)}>Escolher arquivo…</Button>
           <Button icon="folder" onClick={() => onPick(true)}>Escolher pasta…</Button>
@@ -260,7 +260,7 @@ function ReviewStep({ scan, into, onBack, onClose, onStart }: ReviewProps) {
           </div>
         </div>
         {!into && (
-          <TextField label="Nome no Epistula" value={name} maxLength={32} onChange={(e) => setName(e.target.value)}>
+          <TextField label="Nome no EpistulaMail" value={name} maxLength={32} onChange={(e) => setName(e.target.value)}>
             <span className="field__help">Aparece na coluna de contas. Dá para trocar depois.</span>
           </TextField>
         )}
@@ -304,7 +304,7 @@ function ReviewStep({ scan, into, onBack, onClose, onStart }: ReviewProps) {
         )}
         {error && <SectionMessage appearance="error" title="Não foi possível começar"><p>{error.message}</p></SectionMessage>}
         <SectionMessage appearance="warning" title="O original continua sem cifra">
-          <p>O Epistula guarda uma cópia cifrada e não mexe no arquivo. Ele continua legível onde está; apague-o você mesmo quando não precisar mais dele.</p>
+          <p>O EpistulaMail guarda uma cópia cifrada e não mexe no arquivo. Ele continua legível onde está; apague-o você mesmo quando não precisar mais dele.</p>
         </SectionMessage>
       </div>
     </Modal>

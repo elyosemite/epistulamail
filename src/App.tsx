@@ -25,6 +25,7 @@ import { HeaderBrand } from "./layout/HeaderBrand";
 import { HeaderSearch } from "./layout/HeaderSearch";
 import { EMPTY_SEARCH, type Search } from "./lib/search";
 import { NotificationBell } from "./layout/NotificationBell";
+import { UpdateDialog } from "./features/update/UpdateDialog";
 import { pickActive, visibleAccounts } from "./lib/accounts";
 import { applyAppearance, cachedAppearance, parseAppearance } from "./lib/appearance";
 import { LIST_DEFAULT } from "./lib/listWidth";
@@ -67,6 +68,7 @@ function Shell() {
   const rulesRequests = useRef(0);
   const [keysRequest, setKeysRequest] = useState<{ fingerprint: string | null; technology?: "openpgp" | "smime" } | null>(null);
   const [bellOpen, setBellOpen] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
   // Pedido ao Mailbox: abrir uma pasta e mensagem (notificação) ou começar um e-mail (bandeja).
   const [request, setRequest] = useState<MailboxRequest | null>(null);
   const requestCount = useRef(0);
@@ -150,7 +152,7 @@ function Shell() {
       await reload();
       select(result.account.id);
       if (result.isNew) setDialog({ kind: "settings", account: result.account, isNew: true });
-      else if (result.wasActive) toast({ kind: "info", title: "Esta conta já está no Epistula" });
+      else if (result.wasActive) toast({ kind: "info", title: "Esta conta já está no EpistulaMail" });
       else toast({ kind: "success", title: `Você entrou de novo em ${result.account.displayName}` });
     },
     [reload, select, toast],
@@ -416,7 +418,7 @@ function Shell() {
       end={
         <>
           <ColumnToggles showFolders={appearance.showFolders} showReader={appearance.showReader} onToggleFolders={toggleFolders} onToggleReader={toggleReader} />
-          <NotificationBell open={bellOpen} onOpenChange={setBellOpen} onOpenTarget={openTarget} onSettings={() => openSettings("notifications")} />
+          <NotificationBell open={bellOpen} onOpenChange={setBellOpen} onOpenTarget={openTarget} onSettings={() => openSettings("notifications")} onUpdate={() => setUpdateOpen(true)} />
           <AccountMenu
             account={active}
             appearance={appearance}
@@ -472,7 +474,6 @@ function Shell() {
       {view.kind === "reconnect" && (
         <div className="app-shell__center app-shell__block">
           <ConnectFlow
-            providerName="Google"
             run={() => api.reconnectAccount(view.account.id)}
             onConnected={onConnected}
             onBack={() => setView({ kind: "mail" })}
@@ -557,7 +558,7 @@ function Shell() {
           onConfirm={async () => {
             try {
               await api.removeArchive(dialog.account.id);
-              toast({ kind: "info", title: `${dialog.account.displayName} saiu do Epistula`, description: "As mensagens foram apagadas deste computador. O arquivo original continua onde estava." });
+              toast({ kind: "info", title: `${dialog.account.displayName} saiu do EpistulaMail`, description: "As mensagens foram apagadas deste computador. O arquivo original continua onde estava." });
             } catch (error) {
               toast({ kind: "error", title: "Não foi possível remover", description: isAppError(error) ? error.message : "Tente de novo em instantes." });
             }
@@ -568,6 +569,7 @@ function Shell() {
       )}
     </AppLayout>
     {overlays}
+    {updateOpen && <UpdateDialog onClose={() => setUpdateOpen(false)} />}
     </>
   );
 }

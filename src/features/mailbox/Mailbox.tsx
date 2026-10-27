@@ -761,7 +761,7 @@ export function Mailbox({ account, accounts, initialFolderId, search, onSearchCh
       </SectionMessage>
     ) : account.status === "needs_reauth" ? (
       <SectionMessage appearance="warning" title="Reconecte esta conta" actions={[{ label: "Reconectar", onClick: onReconnect }]}>
-        O servidor de e-mail encerrou o acesso do Epistula a {account.email}. As mensagens salvas continuam disponíveis.
+        O servidor de e-mail encerrou o acesso do EpistulaMail a {account.email}. As mensagens salvas continuam disponíveis.
       </SectionMessage>
     ) : searching && searchTruncated ? (
       <SectionMessage title="Mostrando os 200 resultados mais recentes">

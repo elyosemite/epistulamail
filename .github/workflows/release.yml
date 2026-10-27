@@ -9,6 +9,9 @@
 #   EPISTULA_GOOGLE_CLIENT_ID e EPISTULA_GOOGLE_CLIENT_SECRET (obrigatórios): o cliente OAuth "Desktop app" do Google,
 #     embutido no .exe na compilação (provider.rs, option_env!) até existir o servidor de login.
 #   EPISTULA_MS_CLIENT_ID (opcional).
+#   TAURI_SIGNING_PRIVATE_KEY e TAURI_SIGNING_PRIVATE_KEY_PASSWORD (obrigatórios): a chave que assina o instalador para
+#     a atualização automática; o app só instala o que a chave pública do tauri.conf.json confere. Perder a chave
+#     impede atualizar quem já instalou: guarde uma cópia fora do computador.
 # O instalador sai sem assinatura de código (ver CHANGELOG.md, "Avisos").
 name: Release
 
@@ -95,6 +98,8 @@ jobs:
           EPISTULA_GOOGLE_CLIENT_ID: ${{ secrets.EPISTULA_GOOGLE_CLIENT_ID }}
           EPISTULA_GOOGLE_CLIENT_SECRET: ${{ secrets.EPISTULA_GOOGLE_CLIENT_SECRET }}
           EPISTULA_MS_CLIENT_ID: ${{ secrets.EPISTULA_MS_CLIENT_ID }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm tauri build --ci --bundles nsis
 
       - name: SHA-256 e notas
@@ -105,9 +110,15 @@ jobs:
         run: |
           $exe = Get-ChildItem src-tauri/target/release/bundle/nsis -Filter "*_${env:VERSION}_x64-setup.exe" | Select-Object -First 1
           if (-not $exe) { throw 'Instalador não encontrado em src-tauri/target/release/bundle/nsis' }
-          $name = "Epistula_${env:VERSION}_x64-setup.exe"
+          # O nome do arquivo segue o nome do produto (tauri.conf.json), como o do Tauri.
+          $product = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).productName
+          $name = "${product}_${env:VERSION}_x64-setup.exe"
           New-Item -ItemType Directory -Force out | Out-Null
           Copy-Item $exe.FullName "out/$name"
+          # Assinatura da atualização automática (createUpdaterArtifacts): o .sig ao lado do instalador.
+          $sig = Get-Content "$($exe.FullName).sig" -Raw
+          if (-not $sig) { throw 'Assinatura do instalador (.sig) não encontrada: confira os segredos TAURI_SIGNING_*' }
+          Set-Content -NoNewline -Encoding ascii "out/$name.sig" $sig.Trim()
           $hash = (Get-FileHash "out/$name" -Algorithm SHA256).Hash.ToLower()
           "$hash  $name" | Set-Content -NoNewline -Encoding ascii "out/$name.sha256"
 
@@ -121,6 +132,16 @@ jobs:
           $download = "**[Baixar o instalador para Windows ($name)]($url)** (64 bits, sem assinatura de código: veja os avisos abaixo)`n`n"
           $notes = $download + $section.Trim() + "`n`n### Verificar o download`n`nSHA-256 de ``$name``:`n`n``````text`n$hash`n```````n`nNo PowerShell: ``(Get-FileHash .\$name).Hash``"
           Set-Content -Encoding utf8 out/notes.md $notes
+
+          # latest.json: o que o app instalado consulta em releases/latest/download/latest.json. Só vale depois
+          # de a release ser publicada (rascunho não é "latest").
+          $latest = [ordered]@{
+            version  = $env:VERSION
+            notes    = $section.Trim()
+            pub_date = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+            platforms = [ordered]@{ "windows-x86_64" = [ordered]@{ signature = $sig.Trim(); url = $url } }
+          }
+          $latest | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8NoBOM out/latest.json
           "name=$name" >> $env:GITHUB_OUTPUT
           Write-Host "$name  $hash"
 
@@ -140,5 +161,5 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           NAME: ${{ steps.files.outputs.name }}
         run: |
-          gh release create "v$env:VERSION" "out/$env:NAME" "out/$env:NAME.sha256" `
-            --draft --verify-tag --title "Epistula $env:VERSION" --notes-file out/notes.md
+          gh release create "v$env:VERSION" "out/$env:NAME" "out/$env:NAME.sha256" "out/$env:NAME.sig" out/latest.json `
+            --draft --verify-tag --title "EpistulaMail $env:VERSION" --notes-file out/notes.md

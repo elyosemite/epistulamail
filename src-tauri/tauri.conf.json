@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Epistula",
-  "version": "1.0.1",
+  "productName": "EpistulaMail",
+  "version": "1.0.2",
   "identifier": "br.com.epistula.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Epistula",
+        "title": "EpistulaMail",
         "width": 1280,
         "height": 800,
         "minWidth": 960,
@@ -29,20 +29,29 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "publisher": "Epistula",
+    "createUpdaterArtifacts": true,
+    "publisher": "EpistulaMail",
     "copyright": "© 2026 Yuri Melo",
     "category": "Productivity",
     "shortDescription": "Cliente de e-mail desktop",
-    "longDescription": "Cliente de e-mail que guarda as mensagens no seu computador, num banco cifrado, sem passar por um servidor do Epistula.",
-    "homepage": "https://github.com/elyosemite/epistulamail",
+    "longDescription": "Cliente de e-mail que guarda as mensagens no seu computador, num banco cifrado, sem passar por um servidor do EpistulaMail.",
+    "homepage": "https://www.epistulamail.com",
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "windows": {
       "nsis": {
         "installMode": "currentUser",
         "installerIcon": "icons/icon.ico",
+        "installerHooks": "windows/hooks.nsh",
         "languages": ["PortugueseBR"],
         "displayLanguageSelector": false
       }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDAzQ0JCNzcwRTJDQzkxQkEKUldTNmtjemljTGZMQTBZZFpwUW9Ha1R6Z3U2ZS9UR29EUytCMjArQndCUWJ5czBtelVnTHpMMzUK",
+      "endpoints": ["https://github.com/elyosemite/epistulamail/releases/latest/download/latest.json"],
+      "windows": { "installMode": "passive" }
     }
   }
 }

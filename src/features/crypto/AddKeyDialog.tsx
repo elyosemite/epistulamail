@@ -91,7 +91,7 @@ export function AddKeyDialog({ account, onClose, onAdded }: { account: Account; 
           options={[
             { value: "create", icon: "sparkle", title: "Criar uma chave nova", description: `Para ${account.email}. Leva alguns segundos.` },
             { value: "import", icon: "upload", title: "Importar uma chave que já tenho", description: "Arquivo .asc, .gpg ou .key, de outro programa ou computador." },
-            { value: "restore", icon: "download", title: "Restaurar um backup do Epistula", description: "O arquivo que você salvou ao criar a chave." },
+            { value: "restore", icon: "download", title: "Restaurar um backup do EpistulaMail", description: "O arquivo que você salvou ao criar a chave." },
           ]}
         />
       </Modal>

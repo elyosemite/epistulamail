@@ -2,6 +2,27 @@
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o [SemVer](https://semver.org/lang/pt-BR/). O pipeline de release (`.github/workflows/release.yml`) usa a seção da versão como notas da release.
 
+## [1.0.2] - 2026-10-27
+
+### Novidades
+
+- Atualização automática: quando sai uma versão nova, aparece um aviso no sino. Um clique mostra o que mudou e, se você confirmar, o EpistulaMail baixa a versão nova, confere a assinatura dela, instala e abre de novo. As contas e as mensagens continuam.
+
+### Mudou
+
+- O app passa a se chamar EpistulaMail: na janela, na bandeja, nos avisos, no menu Iniciar, no instalador (`EpistulaMail_<versão>_x64-setup.exe`) e na lista de programas do Windows. A instalação anterior ("Epistula") é substituída sem perder dados.
+- O instalador usa o ícone do EpistulaMail.
+- A tela de login não cita mais o nome do provedor.
+
+### Corrigido
+
+- Espaçamento e alinhamento dos botões e campos nas telas de criptografia, chaves, certificados e regras.
+
+### Avisos
+
+- A atualização automática vale a partir desta versão: para chegar a ela, instale a 1.0.2 por cima uma vez. Daqui em diante, as próximas chegam pelo sino.
+- O instalador continua sem assinatura de código: confira o SHA-256 abaixo antes de executar.
+
 ## [1.0.1] - 2026-10-27
 
 ### Mudou

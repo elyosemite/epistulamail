@@ -38,7 +38,7 @@ pub struct Target {
 /// Uma notificação pronta: título e até duas linhas.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Note {
-    /// Tipo, para o ícone no sino: mail, reply, summary, due, failure, reauth, offline, info.
+    /// Tipo, para o ícone no sino: mail, reply, summary, due, failure, reauth, offline, info, update.
     pub kind: &'static str,
     /// Remetente, para o avatar no sino (só com a privacidade "Remetente e assunto").
     pub sender: Option<String>,
@@ -150,7 +150,7 @@ pub fn new_mail_notes(settings: &NotifySettings, account_id: &str, account_name:
             acc
         });
         let line1 = if !full {
-            "Abra o Epistula para ler.".to_owned()
+            "Abra o EpistulaMail para ler.".to_owned()
         } else if names.len() > 3 {
             format!("{} e mais {}", names[..3].join(", "), names.len() - 3)
         } else {
@@ -173,7 +173,7 @@ pub fn new_mail_notes(settings: &NotifySettings, account_id: &str, account_name:
                 target: target(m),
             }
         } else {
-            Note { kind: "mail", sender: None, title: format!("Novo e-mail em {account_name}"), line1: "Abra o Epistula para ler.".into(), line2: String::new(), target: target(m) }
+            Note { kind: "mail", sender: None, title: format!("Novo e-mail em {account_name}"), line1: "Abra o EpistulaMail para ler.".into(), line2: String::new(), target: target(m) }
         });
     }
     notes
@@ -322,7 +322,7 @@ pub fn closed_summary(account_id: &str, account_name: &str, mails: &[NewMail]) -
         kind: "summary",
         sender: None,
         title: format!("{what} em {account_name}"),
-        line1: "Chegaram enquanto o Epistula estava fechado.".into(),
+        line1: "Chegaram enquanto o EpistulaMail estava fechado.".into(),
         line2: String::new(),
         target: Some(newest_target(account_id, &mails.iter().collect::<Vec<_>>())),
     }
@@ -429,6 +429,20 @@ pub fn connection(app: &AppHandle, account_id: &str, online: bool) {
     };
 }
 
+/// Versão nova do EpistulaMail (atualização automática): só no sino. O clique abre a confirmação, que mostra
+/// o que mudou e reinicia o app.
+pub fn update_available(app: &AppHandle, version: &str) {
+    let note = Note {
+        kind: "update",
+        sender: None,
+        title: format!("Nova versão do EpistulaMail: {version}"),
+        line1: "Clique para ver o que mudou e atualizar.".into(),
+        line2: String::new(),
+        target: None,
+    };
+    record(app, std::slice::from_ref(&note));
+}
+
 /// Primeira vez que a janela fecha: avisa que o app continua na bandeja (CA5).
 pub fn tray_hint(app: &AppHandle) {
     show(
@@ -436,7 +450,7 @@ pub fn tray_hint(app: &AppHandle) {
         Note {
             kind: "info",
             sender: None,
-            title: "O Epistula continua na bandeja".into(),
+            title: "O EpistulaMail continua na bandeja".into(),
             line1: "Para avisar sobre e-mails novos.".into(),
             line2: "Para sair, use Sair no ícone da bandeja.".into(),
             target: None,
@@ -552,7 +566,7 @@ async fn due_today(app: &AppHandle, settings: &NotifySettings, today: String) {
         let mut line1 = match (&first, settings.privacy == "full") {
             (Some(hit), true) if total > 1 => format!("{} e mais {}.", hit.message.subject, total - 1),
             (Some(hit), true) => hit.message.subject.clone(),
-            _ => "Abra o Epistula para ver.".into(),
+            _ => "Abra o EpistulaMail para ver.".into(),
         };
         if counts.overdue > 0 {
             line1.push_str(&format!(" {} {} atrasada{}.", counts.overdue, if counts.overdue == 1 { "está" } else { "estão" }, if counts.overdue == 1 { "" } else { "s" }));

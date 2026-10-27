@@ -65,7 +65,7 @@ export function ArchiveSettings({ accounts, onOpenFile }: { accounts: Account[];
           onConfirm={async () => {
             try {
               await api.removeArchive(removing.id);
-              toast({ kind: "info", title: `${removing.displayName} saiu do Epistula`, description: "As mensagens foram apagadas deste computador." });
+              toast({ kind: "info", title: `${removing.displayName} saiu do EpistulaMail`, description: "As mensagens foram apagadas deste computador." });
             } catch {
               toast({ kind: "error", title: "Não foi possível remover", description: "Tente de novo em instantes." });
             }

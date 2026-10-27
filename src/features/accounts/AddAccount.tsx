@@ -31,7 +31,6 @@ export function AddAccount({ first, onConnected, onCancel, onOpenFile }: AddAcco
   if (picked) {
     return (
       <ConnectFlow
-        providerName={picked.name}
         run={() => api.connectAccount(picked.id)}
         onConnected={onConnected}
         onBack={() => setPicked(null)}
@@ -43,7 +42,7 @@ export function AddAccount({ first, onConnected, onCancel, onOpenFile }: AddAcco
     <div style={{ display: "grid", gap: "var(--space-300)" }}>
       <EmptyState
         title={first ? "Conecte seu e-mail ou abra um arquivo" : "Adicionar conta"}
-        description="Escolha o serviço do seu e-mail. O login acontece no navegador, na página do provedor; o Epistula nunca vê sua senha."
+        description="Escolha o serviço do seu e-mail. O login acontece no navegador, na página do provedor; o EpistulaMail nunca vê sua senha."
         actions={first ? undefined : <Button appearance="subtle" onClick={onCancel}>Cancelar</Button>}
       />
       {providers === null ? <Spinner size="lg" label="Carregando provedores" /> : <ProviderGrid providers={providers} onPick={setPicked} />}
@@ -60,14 +59,13 @@ export function AddAccount({ first, onConnected, onCancel, onOpenFile }: AddAcco
 type FlowState = { step: "waiting" } | { step: "failed"; error: AppError };
 
 interface ConnectFlowProps {
-  providerName: string;
   run: () => Promise<Connected>;
   onConnected: (result: Connected) => void;
   onBack: () => void;
 }
 
 /** Login no navegador: começa ao montar, mostra a espera e o erro com "Tentar de novo". */
-export function ConnectFlow({ providerName, run, onConnected, onBack }: ConnectFlowProps) {
+export function ConnectFlow({ run, onConnected, onBack }: ConnectFlowProps) {
   const [state, setState] = useState<FlowState>({ step: "waiting" });
   const cancelledByUser = useRef(false);
   const started = useRef(false);
@@ -103,9 +101,9 @@ export function ConnectFlow({ providerName, run, onConnected, onBack }: ConnectF
   if (state.step === "waiting") {
     return (
       <EmptyState
-        media={<Spinner size="lg" className="empty__spinner" label={`Aguardando autorização do ${providerName}`} />}
+        media={<Spinner size="lg" className="empty__spinner" label="Aguardando a autorização no navegador" />}
         title="Continue no navegador"
-        description={`Abrimos a página de login do ${providerName}. Autorize o acesso do Epistula e volte para cá.`}
+        description="Abrimos a página de login do seu e-mail no navegador. Autorize o acesso do EpistulaMail e volte para cá."
         actions={<Button appearance="subtle" onClick={cancel}>Cancelar</Button>}
       />
     );

@@ -39,6 +39,7 @@ mod smime_store;
 mod store;
 mod sync;
 mod tray;
+mod updater;
 
 use db::Db;
 use error::AppError;
@@ -141,6 +142,28 @@ async fn startup(state: &AppState) {
     state.save_index().await;
 }
 
+/// Build de desenvolvimento (`tauri dev`): outro identificador e outro nome. O identificador decide a pasta de
+/// dados (`%APPDATA%\<identificador>`), a instância única e as notificações do Windows; com ele diferente, o dev
+/// nunca abre nem migra o banco do app instalado. O cofre também muda (`secrets::SERVICE`).
+const DEV_SUFFIX: &str = ".dev";
+
+fn context() -> tauri::Context {
+    let mut context = tauri::generate_context!();
+    if cfg!(debug_assertions) {
+        let config = context.config_mut();
+        config.identifier.push_str(DEV_SUFFIX);
+        if let Some(window) = config.app.windows.first_mut() {
+            window.title.push_str(" (desenvolvimento)");
+        }
+    }
+    context
+}
+
+/// Nome da entrada de "Abrir ao iniciar o Windows": fixo, para não mudar com o nome do produto, e outro no dev.
+fn autostart_name() -> &'static str {
+    if cfg!(debug_assertions) { "Epistula Dev" } else { "Epistula" }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 /// Início do processo, para medir quanto a primeira tela demora (`app_ready`).
 pub static STARTED_AT: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
@@ -164,7 +187,9 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| notify::bring_to_front(app)))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_autostart::Builder::new().args(["--minimized"]).build())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updater::Updates::default())
+        .plugin(tauri_plugin_autostart::Builder::new().app_name(autostart_name()).args(["--minimized"]).build())
         .on_window_event(|window, event| {
             // Fechar a janela a esconde na bandeja, para as notificações continuarem (US8, CA5).
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -223,6 +248,7 @@ pub fn run() {
             privacy::watch_windows_lock(app.handle());
             rule_runner::start_cleanup(app.handle());
             notify::start(app.handle());
+            updater::start(app.handle());
             tray::create(app.handle())?;
             // Aberto com o Windows (D8): fica só na bandeja. Senão, a janela aparece.
             if !std::env::args().any(|a| a == "--minimized") {
@@ -341,8 +367,10 @@ pub fn run() {
             commands::rule_history,
             commands::undo_rule_run,
             commands::rule_suggestions,
+            updater::update_status,
+            updater::install_update,
         ])
-        .build(tauri::generate_context!());
+        .build(context());
 
     let app = match app {
         Ok(app) => app,

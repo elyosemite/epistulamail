@@ -22,9 +22,9 @@ use crate::provider::{OAuthClient, Provider};
 const CALLBACK_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 const MAX_REQUEST_BYTES: usize = 16 * 1024;
 
-const CALLBACK_PAGE: &str = "<!doctype html><html lang=\"pt-BR\"><meta charset=\"utf-8\"><title>Epistula</title>\
+const CALLBACK_PAGE: &str = "<!doctype html><html lang=\"pt-BR\"><meta charset=\"utf-8\"><title>EpistulaMail</title>\
 <body style=\"font-family:system-ui,sans-serif;display:grid;place-items:center;height:100vh;margin:0\">\
-<p>Pronto. Você já pode fechar esta aba e voltar para o Epistula.</p></body></html>";
+<p>Pronto. Você já pode fechar esta aba e voltar para o EpistulaMail.</p></body></html>";
 
 /// Tokens da conta, zerados na memória ao sair de uso (US10, CA5).
 pub struct Tokens {

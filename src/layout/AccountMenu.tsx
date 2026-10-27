@@ -130,9 +130,9 @@ export function AccountMenu({ account, appearance, offline, open, onOpenChange, 
               <MenuSeparator />
             </>
           )}
-          {onLock && <MenuItem label="Bloquear o Epistula" icon="lock" kbd="Ctrl+Shift+L" onSelect={() => { onOpenChange(false); onLock(); }} />}
+          {onLock && <MenuItem label="Bloquear o EpistulaMail" icon="lock" kbd="Ctrl+Shift+L" onSelect={() => { onOpenChange(false); onLock(); }} />}
           {local ? (
-            <MenuItem label="Remover do Epistula…" icon="trash" danger onSelect={run(onRemove)} />
+            <MenuItem label="Remover do EpistulaMail…" icon="trash" danger onSelect={run(onRemove)} />
           ) : (
             <MenuItem label={`Sair de ${account.displayName}`} icon="log-out" disabled={account.status === "signed_out"} onSelect={() => { onOpenChange(false); onSignOut(); }} />
           )}

@@ -13,22 +13,22 @@
 
 <p align="center"><b>English</b> | <a href="README.pt-BR.md">Português</a></p>
 
-EpistulaMail (Epistula for short) is an open-source desktop email client for Windows that keeps your messages on your own computer, in an AES-256 encrypted database, and never routes them through a server of ours. It connects your Google accounts over OAuth, reads and sends straight between your computer and your provider, and opens old email archives (Gmail Takeout, Outlook, Thunderbird, Apple Mail) with no account and no network at all.
+EpistulaMail is an open-source desktop email client for Windows that keeps your messages on your own computer, in an AES-256 encrypted database, and never routes them through a server of ours. It connects your Google accounts over OAuth, reads and sends straight between your computer and your provider, and opens old email archives (Gmail Takeout, Outlook, Thunderbird, Apple Mail) with no account and no network at all.
 
-**Yours, with no catch.** There is no Epistula account, no Epistula cloud, no telemetry and no paid tier. The database key lives in the Windows Credential Manager, remote images stay blocked until you allow them, and the only network calls are the ones to your provider (plus a key server or a sender's images, and only when you ask). The [threat model](docs/arquitetura-e-ameacas.md) is public, and so are the risks not solved yet.
+**Yours, with no catch.** There is no EpistulaMail account, no EpistulaMail cloud, no telemetry and no paid tier. The database key lives in the Windows Credential Manager, remote images stay blocked until you allow them, and the only network calls are the ones to your provider (plus a key server or a sender's images, and only when you ask). The [threat model](docs/arquitetura-e-ameacas.md) is public, and so are the risks not solved yet.
 
 [Website](https://www.epistulamail.com) · [Download](https://github.com/elyosemite/epistulamail/releases/latest) · [Changelog](CHANGELOG.md) · [Privacy policy](https://www.epistulamail.com/privacidade) · [Threat model](docs/arquitetura-e-ameacas.md) · [Design system](design-system/) · [Decision history](userstory/)
 
-![Epistula inbox with three accounts, folders and labels, the message list and an open newsletter in the reading pane](docs/images/epistula-caixa-de-entrada.png)
+![EpistulaMail inbox with three accounts, folders and labels, the message list and an open newsletter in the reading pane](docs/images/epistula-caixa-de-entrada.png)
 
 ## Install
 
-Download the installer from the [latest release](https://github.com/elyosemite/epistulamail/releases/latest) (`Epistula_<version>_x64-setup.exe`). It installs for your Windows user only, with no administrator rights, and needs Windows 10 or 11 (64-bit) with WebView2, which ships with Windows 11 and is downloaded by the installer on Windows 10 if missing.
+Download the installer from the [latest release](https://github.com/elyosemite/epistulamail/releases/latest) (`EpistulaMail_<version>_x64-setup.exe`). It installs for your Windows user only, with no administrator rights, and needs Windows 10 or 11 (64-bit) with WebView2, which ships with Windows 11 and is downloaded by the installer on Windows 10 if missing.
 
 The installer is not code-signed yet, so on first run Windows SmartScreen says "Windows protected your PC". Before going ahead, check the file against the SHA-256 published with the release:
 
 ```powershell
-(Get-FileHash .\Epistula_1.0.0_x64-setup.exe).Hash
+(Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
 ```
 
 If it matches, click "More info" and then "Run anyway". Newer versions install over the old one and keep your accounts and messages. To build from source instead, see [Building](#building).
@@ -40,7 +40,7 @@ If it matches, click "More info" and then "Run anyway". Newer versions install o
    - **Open an email archive**: pick a `.mbox`, `.pst`, `.eml` or a mail folder, or drop it on the window. No account and no network.
 2. Recent mail shows up first; the rest arrives in the background and stays readable offline.
 3. Press `/` to search: `de: Ana tem:anexo depois:2026-01-01` turns into chips you can edit.
-4. In **Settings**, pick how much mail to keep offline, set an Epistula password and the automatic lock, and create rules.
+4. In **Settings**, pick how much mail to keep offline, set an EpistulaMail password and the automatic lock, and create rules.
 
 While Google's verification of the app is in progress, signing in with Google is limited to the test users registered in the project. Opening archives works for everyone.
 
@@ -48,7 +48,7 @@ While Google's verification of the app is in progress, signing in with Google is
 
 ## At a glance
 
-- **No Epistula account, no Epistula cloud.** Your mail goes straight to your provider. Our sign-in server (planned) only takes part in the OAuth login and never sees a message.
+- **No EpistulaMail account, no EpistulaMail cloud.** Your mail goes straight to your provider. Our sign-in server (planned) only takes part in the OAuth login and never sees a message.
 - **Open old archives, offline and with no account.** Gmail Takeout, Outlook, Thunderbird and Apple Mail backups, read from the file, without connecting to anything.
 - **Everything on disk is encrypted.** Messages, subjects, senders and indexes live in an AES-256 database, which already holds up against quantum computers.
 - **Opens instantly, even offline.** Recent mail is downloaded in the background and opens from disk.
@@ -62,7 +62,7 @@ While Google's verification of the app is in progress, signing in with Google is
 
 Email is the longest-running archive in most people's digital lives. Contracts, medical results, family threads, the password reset for everything else. And that archive usually lives in a single place, run by someone else, reachable through a browser tab.
 
-Epistula starts from three simple ideas:
+EpistulaMail starts from three simple ideas:
 
 **Your data stays with you.** Every message you open is stored on your disk. If the network drops, your mailbox is still there. If your provider changes its rules, your copy is still yours.
 
@@ -111,15 +111,15 @@ What works today:
 - Everything can be undone: the history keeps 30 days of what each rule did, with Undo on each batch, and a notice after each sync shows what got organized.
 - Start from a template (Newsletters, Automatic notices, Receipts and invoices, Important people) or straight from a message: "Create rule…", "Always move from this sender to…" and "Delete everything from this sender…".
 - "Run now" applies a rule to the mail already in a folder, and cleanup rules ("older than 30 days", "keep only the newest from this sender") run once a day.
-- Rules run inside Epistula while it's open (including in the tray) and work with any provider. Mail that arrived while the app was closed goes through them on the next sync.
+- Rules run inside EpistulaMail while it's open (including in the tray) and work with any provider. Mail that arrived while the app was closed goes through them on the next sync.
 
 **End-to-end encryption**
 
-- OpenPGP built in: create a key (Curve25519, RSA 4096, or an experimental post-quantum one with ML-KEM-768 + X25519), import one you already have, or restore an Epistula backup.
+- OpenPGP built in: create a key (Curve25519, RSA 4096, or an experimental post-quantum one with ML-KEM-768 + X25519), import one you already have, or restore an EpistulaMail backup.
 - A lock in the composer encrypts and signs the message. It turns itself on when every recipient has an accepted key, and replies to encrypted mail start encrypted. The subject can be hidden from the server too.
 - Recipients without a key are flagged before sending, with the choice to look their key up online (only when you say so), send without encryption, or remove them.
 - Reading shows whether a message was encrypted and whether the signature checks out, with the key's acceptance in Thunderbird's style (not yet, accepted, verified, rejected).
-- A key manager with search, import from a file, the clipboard or the internet, export and a password-protected backup. Keys arriving by Autocrypt or as an attachment are stored as "not yet accepted", including a key attached inside an encrypted message. The first message from someone new is checked against the key they attached, and the Autocrypt header Epistula sends can be read by other programs.
+- A key manager with search, import from a file, the clipboard or the internet, export and a password-protected backup. Keys arriving by Autocrypt or as an attachment are stored as "not yet accepted", including a key attached inside an encrypted message. The first message from someone new is checked against the key they attached, and the Autocrypt header EpistulaMail sends can be read by other programs.
 - S/MIME too, for people on Outlook, Apple Mail or a company certificate: request a certificate (the key pair is created on your computer and only the request goes to the certificate authority), import the issued one or a `.p12`, and keep the certificates of whoever sends you signed mail. Trust follows the root certificates in Windows. A test CA script lets you try it without buying anything.
 
 **Email archives, with no account**
@@ -149,12 +149,12 @@ What does not exist yet:
 
 ### A sign-in server, and nothing more
 
-Signing in with OAuth means you never type your email password into Epistula, and you can revoke access at any time on your provider's page. For that, Epistula needs registered apps with Google (Google Cloud) and Microsoft (Azure). Their settings will live on a small Epistula server instead of inside the installer, so they can be rotated without a new release.
+Signing in with OAuth means you never type your email password into EpistulaMail, and you can revoke access at any time on your provider's page. For that, EpistulaMail needs registered apps with Google (Google Cloud) and Microsoft (Azure). Their settings will live on a small EpistulaMail server instead of inside the installer, so they can be rotated without a new release.
 
 What that server is for, and what it is not:
 
 - It takes part in the login only. IMAP and SMTP keep going straight from your computer to your provider, and no message, subject or address book passes through it.
-- It has no Epistula account and stores nothing about your mail.
+- It has no EpistulaMail account and stores nothing about your mail.
 - Without it you can still read everything already on your computer and open archives; only connecting a new account, and renewing access in some cases, depends on it.
 
 Exactly what passes through it during the login (only the app's settings, or also the exchange that produces your tokens) is still an open decision, written down in the [threat model](docs/arquitetura-e-ameacas.md#planejado-servidor-de-login).
@@ -163,7 +163,7 @@ Exactly what passes through it during the login (only the app's settings, or als
 
 Today the database is encrypted against anyone outside your Windows session. The next step is to protect it from people inside it too: someone else using your session, the administrator of a corporate domain, or anyone holding a copy of the disk and your Windows password.
 
-- **Epistula password (optional):** the database key gets wrapped by a key derived from your password with Argon2id. The password itself is never stored.
+- **EpistulaMail password (optional):** the database key gets wrapped by a key derived from your password with Argon2id. The password itself is never stored.
 - **Automatic lock:** after a period of inactivity, or when Windows locks the screen, the app closes the database and wipes the key from memory.
 - **Nothing leaks outside the database:** content-free notifications by default, no email in the embedded browser's cache, no crash dumps written to disk, and a heads-up when the disk has no BitLocker.
 - **Keep less:** erase from your computer the mail outside your chosen period and the mail of accounts you signed out of, rotating the database key afterwards.
@@ -173,11 +173,11 @@ Today the database is encrypted against anyone outside your Windows session. The
 
 Data encrypted today can be captured today and decrypted years from now, once quantum computers can break the key exchanges in use. For email, which people keep for decades, that risk is not theoretical.
 
-The encryption Epistula already uses on disk (AES-256) holds up in that scenario; there is no need to replace it. On the way to your provider, the app will offer the hybrid key exchange (X25519 with ML-KEM-768), which kicks in as soon as the server accepts it. And anything built on public keys (backups opened on another machine, sync between your own devices, end-to-end encrypted messages) will start out with hybrid schemes, so protection never rests on a single bet.
+The encryption EpistulaMail already uses on disk (AES-256) holds up in that scenario; there is no need to replace it. On the way to your provider, the app will offer the hybrid key exchange (X25519 with ML-KEM-768), which kicks in as soon as the server accepts it. And anything built on public keys (backups opened on another machine, sync between your own devices, end-to-end encrypted messages) will start out with hybrid schemes, so protection never rests on a single bet.
 
 ### Backups you control
 
-Export a whole account to an encrypted file, keep it wherever you like (an external drive, a USB stick, the storage service of your choice) and restore it on another machine without downloading everything from the provider again. Only the key holder should be able to read it, and the format will be documented, so you are never locked into Epistula.
+Export a whole account to an encrypted file, keep it wherever you like (an external drive, a USB stick, the storage service of your choice) and restore it on another machine without downloading everything from the provider again. Only the key holder should be able to read it, and the format will be documented, so you are never locked into EpistulaMail.
 
 ### Real email management
 
@@ -194,7 +194,7 @@ Your computer
 
         │ TLS                              │ TLS, only to sign in (planned)
         ▼                                  ▼
-Your email provider              Epistula sign-in server
+Your email provider              EpistulaMail sign-in server
 (IMAP, SMTP, OAuth)              OAuth app settings for Google and Microsoft
 
 Email archives (.mbox, .pst, .eml…)  ──read locally──▶  epistula.db, with no network (works today)
@@ -202,7 +202,7 @@ Email archives (.mbox, .pst, .eml…)  ──read locally──▶  epistula.db,
 
 A few things worth saying plainly:
 
-- **Your provider can still read your email** unless it goes encrypted with OpenPGP. Epistula protects the local copy and the path to it; whatever leaves without encryption stays readable by whoever hosts the mailbox, and even encrypted mail shows the server who wrote to whom and when.
+- **Your provider can still read your email** unless it goes encrypted with OpenPGP. EpistulaMail protects the local copy and the path to it; whatever leaves without encryption stays readable by whoever hosts the mailbox, and even encrypted mail shows the server who wrote to whom and when.
 - **Logs contain no content.** No subject, no sender, no account address. A test walks through the whole app with unique markers and fails if any of them shows up in the logs or in plain text in the database file.
 - **Signing out revokes access** at the provider and deletes the secret from the credential vault. Messages already downloaded stay on disk, encrypted, until there is an option to erase them.
 - **A compromised computer stays compromised.** Malware running in your session can read whatever you can read. No email client fixes that, and we would rather say so than pretend otherwise.
@@ -217,7 +217,7 @@ Four principles guide the decisions: density with breathing room, reading first,
 
 ## Building
 
-The main target today is Windows. Epistula is built with [Tauri 2](https://tauri.app), Rust and React.
+The main target today is Windows. EpistulaMail is built with [Tauri 2](https://tauri.app), Rust and React.
 
 Requirements:
 
@@ -247,6 +247,8 @@ Then:
 pnpm tauri dev      # development
 pnpm tauri build    # installer
 ```
+
+The installer build also signs the update files, so `pnpm tauri build` needs the updater key in `TAURI_SIGNING_PRIVATE_KEY` (and its password in `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`). Without it, build with `pnpm tauri build --config '{\"bundle\":{\"createUpdaterArtifacts\":false}}'`. Development builds (`pnpm tauri dev`) use their own data folder and credential entries, so they never touch an installed EpistulaMail.
 
 Releases are built by [`.github/workflows/release.yml`](.github/workflows/release.yml): pushing a `vX.Y.Z` tag that matches the version in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` builds the NSIS installer with the OAuth clients from the repository secrets and opens a draft release with that version's section of `CHANGELOG.md` and the installer's SHA-256. Running the workflow by hand builds the same installer as a test, without a release.
 

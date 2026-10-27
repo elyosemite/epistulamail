@@ -70,7 +70,7 @@ export function MessageView({ account, messageId, badge, compose, onCloseCompose
         if (result.warning) setMisleading({ url, text, warning: result.warning });
       })
       .catch(() =>
-        toast({ kind: "warning", title: "Este link não pode ser aberto", description: "Só links da web e de e-mail saem do Epistula." }),
+        toast({ kind: "warning", title: "Este link não pode ser aberto", description: "Só links da web e de e-mail saem do EpistulaMail." }),
       );
   }, [toast]);
   const linkDialog = misleading && (

@@ -47,7 +47,7 @@ function Templates({ onPick, onBlank }: { onPick: (name: string, spec: RuleSpec)
           <path d="M14 20h68L56 52v20l-16 8V52z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
           <path d="m60 74 6 6 14-14" stroke="var(--color-icon-success)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <h2 className="empty__title">Deixe o Epistula arrumar a Caixa de entrada</h2>
+        <h2 className="empty__title">Deixe o EpistulaMail arrumar a Caixa de entrada</h2>
         <p className="empty__desc">Uma regra olha cada e-mail que chega e faz o que você pediu: mover, arquivar, marcar ou excluir. Comece por um modelo ou crie a sua.</p>
       </div>
       <div className="rule-templates">
@@ -177,7 +177,7 @@ export function RulesSettings({ accounts, initialAccountId, request }: RulesSett
           onReorder={reorder}
         />
       )}
-      <SettingNote>As regras organizam os e-mails que chegam com o Epistula aberto, inclusive na bandeja. O que chegou com ele fechado passa pelas regras na próxima sincronização.</SettingNote>
+      <SettingNote>As regras organizam os e-mails que chegam com o EpistulaMail aberto, inclusive na bandeja. O que chegou com ele fechado passa pelas regras na próxima sincronização.</SettingNote>
 
       {dialog?.kind === "run" && (
         <RunNowDialog

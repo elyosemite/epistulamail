@@ -323,7 +323,7 @@ function PassphraseDialog({ onClose, onSubmit }: { onClose: () => void; onSubmit
       }
     >
       <form onSubmit={(e) => { e.preventDefault(); if (passphrase) void submit(); }}>
-        <PasswordField label="Senha da chave" value={passphrase} autoComplete="off" error={error} help="Depois de importada, a chave fica protegida pela criptografia do Epistula." onChange={(e) => setPassphrase(e.target.value)} />
+        <PasswordField label="Senha da chave" value={passphrase} autoComplete="off" error={error} help="Depois de importada, a chave fica protegida pela criptografia do EpistulaMail." onChange={(e) => setPassphrase(e.target.value)} />
       </form>
     </Modal>
   );
@@ -363,7 +363,7 @@ export function SearchKeyDialog({ initialEmail = "", onClose, onFound }: { initi
       <form style={{ display: "grid", gap: "var(--space-150)" }} onSubmit={(e) => { e.preventDefault(); if (valid) void search(); }}>
         <TextField label="E-mail" type="email" value={email} autoComplete="off" onChange={(e) => setEmail(e.target.value)} />
         <p className="setting__desc" style={{ margin: 0 }}>
-          O Epistula pergunta ao domínio {domain} e a keys.openpgp.org. Quem responde a busca fica sabendo que alguém procurou este endereço.
+          O EpistulaMail pergunta ao domínio {domain} e a keys.openpgp.org. Quem responde a busca fica sabendo que alguém procurou este endereço.
           A chave chega como "ainda não aceita".
         </p>
         {error && <SectionMessage appearance="warning" title={error} />}

@@ -35,7 +35,7 @@ export function ProviderGrid({ providers, wide, onPick }: { providers: ProviderO
           </li>
         ))}
       </ul>
-      <span className="visually-hidden" id={soonId}>Ainda não disponível no Epistula.</span>
+      <span className="visually-hidden" id={soonId}>Ainda não disponível no EpistulaMail.</span>
     </>
   );
 }

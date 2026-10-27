@@ -45,7 +45,7 @@ export function AccountsBar({ accounts, activeId, onSelect, onAdd, onEdit, onMov
   const entries = (a: Account, index: number): MenuEntry[] => {
     const access: MenuEntry =
       a.status === "local"
-        ? { label: "Remover do Epistula…", icon: "trash", onSelect: () => onRemove(a) }
+        ? { label: "Remover do EpistulaMail…", icon: "trash", onSelect: () => onRemove(a) }
         : a.status === "active"
         ? { label: "Sair desta conta", icon: "log-out", onSelect: () => onSignOut(a) }
         : { label: a.status === "signed_out" ? "Entrar de novo" : "Reconectar", icon: "log-in", onSelect: () => onReconnect(a) };

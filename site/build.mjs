@@ -46,7 +46,7 @@ async function latestRelease() {
   const page = `https://github.com/${REPO}/releases`;
   const fallback = () => {
     const version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
-    return { download: `${page}/download/v${version}/Epistula_${version}_x64-setup.exe`, page: `${page}/tag/v${version}`, label: `Versão ${version}` };
+    return { download: `${page}/download/v${version}/EpistulaMail_${version}_x64-setup.exe`, page: `${page}/tag/v${version}`, label: `Versão ${version}` };
   };
   try {
     const headers = { accept: "application/vnd.github+json", "user-agent": "epistula-site-build" };

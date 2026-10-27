@@ -21,12 +21,12 @@ struct SnoozeItem(std::sync::Mutex<MenuItem<tauri::Wry>>);
 
 /// Monta o menu conforme a senha e o bloqueio.
 fn menu(app: &AppHandle, has_password: bool, locked: bool) -> tauri::Result<Menu<tauri::Wry>> {
-    let open = MenuItem::with_id(app, "open", "Abrir o Epistula", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", "Abrir o EpistulaMail", true, None::<&str>)?;
     let compose = MenuItem::with_id(app, "compose", "Novo e-mail", true, None::<&str>)?;
     let sync_now = MenuItem::with_id(app, "sync", "Sincronizar agora", true, None::<&str>)?;
     let snooze = MenuItem::with_id(app, SNOOZE_ID, "Não perturbe por 1 hora", true, None::<&str>)?;
-    let lock = MenuItem::with_id(app, "lock", "Bloquear o Epistula", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Sair do Epistula", true, None::<&str>)?;
+    let lock = MenuItem::with_id(app, "lock", "Bloquear o EpistulaMail", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Sair do EpistulaMail", true, None::<&str>)?;
     match app.try_state::<SnoozeItem>() {
         Some(item) => {
             if let Ok(mut current) = item.0.lock() {
@@ -63,7 +63,7 @@ pub fn update_menu(app: &AppHandle) {
 pub fn create(app: &AppHandle) -> tauri::Result<()> {
     let state = app.state::<AppState>();
     let menu = menu(app, state.lock.has_password(), !state.db.is_open())?;
-    let mut builder = TrayIconBuilder::with_id(TRAY_ID).tooltip("Epistula").menu(&menu).show_menu_on_left_click(false);
+    let mut builder = TrayIconBuilder::with_id(TRAY_ID).tooltip("EpistulaMail").menu(&menu).show_menu_on_left_click(false);
     if let Some(icon) = app.default_window_icon() {
         builder = builder.icon(icon.clone());
     }
@@ -143,9 +143,9 @@ pub fn refresh(app: &AppHandle) {
         let Ok(unread) = state.db.call(|c| store::inbox_unread_total(c)).await else { return };
         if let Some(tray) = app.tray_by_id(TRAY_ID) {
             let tip = match unread {
-                0 => "Epistula".to_owned(),
-                1 => "Epistula · 1 não lida".to_owned(),
-                n => format!("Epistula · {n} não lidas"),
+                0 => "EpistulaMail".to_owned(),
+                1 => "EpistulaMail · 1 não lida".to_owned(),
+                n => format!("EpistulaMail · {n} não lidas"),
             };
             let _ = tray.set_tooltip(Some(tip));
         }

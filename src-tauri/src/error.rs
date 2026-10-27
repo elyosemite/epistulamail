@@ -23,19 +23,19 @@ pub enum AppError {
     CursorExpired,
     #[error("Esta mensagem não está mais nesta pasta.")]
     MessageNotFound,
-    #[error("Esta mensagem é grande demais para abrir no Epistula (limite de 25 MB).")]
+    #[error("Esta mensagem é grande demais para abrir no EpistulaMail (limite de 25 MB).")]
     MessageTooLarge,
     #[error("Referência inválida. Recarregue a lista.")]
     InvalidId,
     #[error("Este link não pode ser aberto.")]
     UnsupportedLink,
-    #[error("O Epistula não está configurado para este provedor.")]
+    #[error("O EpistulaMail não está configurado para este provedor.")]
     Config,
     #[error("Não foi possível acessar os dados salvos neste computador.")]
     Storage,
-    #[error("Esta conta não está mais no Epistula.")]
+    #[error("Esta conta não está mais no EpistulaMail.")]
     AccountNotFound,
-    #[error("Este provedor ainda não está disponível no Epistula.")]
+    #[error("Este provedor ainda não está disponível no EpistulaMail.")]
     ProviderUnavailable,
     #[error("Você saiu desta conta. Entre de novo para atualizar as mensagens.")]
     SignedOut,
@@ -57,8 +57,10 @@ pub enum AppError {
     InvalidRecipient,
     #[error("Os anexos passam do limite de 25 MB.")]
     AttachmentsTooLarge,
-    #[error("O Epistula está bloqueado. Digite a senha para continuar.")]
+    #[error("O EpistulaMail está bloqueado. Digite a senha para continuar.")]
     Locked,
+    #[error("Não foi possível atualizar o EpistulaMail. Tente de novo mais tarde.")]
+    UpdateFailed,
     #[error("Senha incorreta.")]
     WrongPassword,
     #[error("Aguarde um pouco antes de tentar de novo.")]
@@ -119,6 +121,7 @@ impl AppError {
             AppError::InvalidRecipient => "InvalidRecipient",
             AppError::AttachmentsTooLarge => "AttachmentsTooLarge",
             AppError::Locked => "Locked",
+            AppError::UpdateFailed => "UpdateFailed",
             AppError::WrongPassword => "WrongPassword",
             AppError::UnlockWait => "UnlockWait",
             AppError::WeakPassword => "WeakPassword",

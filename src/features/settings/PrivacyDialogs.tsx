@@ -108,7 +108,7 @@ export function ChangePasswordDialog({ onConfirm, onClose }: { onConfirm: (curre
 
   return (
     <Modal
-      title="Trocar a senha do Epistula"
+      title="Trocar a senha do EpistulaMail"
       onClose={onClose}
       footer={
         <>
@@ -159,7 +159,7 @@ export function RemovePasswordDialog({ onConfirm, onClose }: { onConfirm: (curre
 
   return (
     <Modal
-      title="Desligar a senha do Epistula?"
+      title="Desligar a senha do EpistulaMail?"
       icon="lock"
       appearance="warning"
       onClose={onClose}
@@ -171,7 +171,7 @@ export function RemovePasswordDialog({ onConfirm, onClose }: { onConfirm: (curre
       }
     >
       <Body>
-        <p style={{ margin: 0 }}>Quem entrar no seu Windows passa a abrir o Epistula sem senha.</p>
+        <p style={{ margin: 0 }}>Quem entrar no seu Windows passa a abrir o EpistulaMail sem senha.</p>
         <PasswordField label="Senha atual" autoFocus autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} error={failure} />
       </Body>
     </Modal>
@@ -206,7 +206,7 @@ export function RotateKeyDialog({ onConfirm, onClose }: { onConfirm: () => Promi
         </>
       }
     >
-      <p>Tudo que está guardado neste computador é cifrado de novo com uma chave nova. Cópias antigas do arquivo do Epistula deixam de abrir. Nada é apagado e nada muda no servidor.</p>
+      <p>Tudo que está guardado neste computador é cifrado de novo com uma chave nova. Cópias antigas do arquivo do EpistulaMail deixam de abrir. Nada é apagado e nada muda no servidor.</p>
     </Modal>
   );
 }

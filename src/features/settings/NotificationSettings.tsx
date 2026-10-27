@@ -94,7 +94,7 @@ export function NotificationSettings({ accounts }: { accounts: Account[] }) {
         </SettingList>
       </SettingsGroup>
       <SettingsGroup title="Privacidade">
-        <Setting labelId="notify-privacy" label="O que aparece na notificação" description={'As notificações aparecem na tela bloqueada, e o Windows guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do Epistula.'}>
+        <Setting labelId="notify-privacy" label="O que aparece na notificação" description={'As notificações aparecem na tela bloqueada, e o Windows guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do EpistulaMail.'}>
           <Segmented label="O que aparece na notificação" labelledBy="notify-privacy" options={PRIVACY} value={settings.privacy} onChange={(privacy) => change({ privacy })} />
         </Setting>
       </SettingsGroup>
@@ -112,7 +112,7 @@ export function NotificationSettings({ accounts }: { accounts: Account[] }) {
         <Setting labelId="notify-tray" label="Continuar na bandeja do sistema" description="Para receber notificações com a janela fechada. Para sair, use Sair no ícone da bandeja.">
           {toggle("trayOnClose", "notify-tray")}
         </Setting>
-        <Setting labelId="notify-autostart" label="Abrir o Epistula ao iniciar o Windows" description="Abre direto na bandeja, sem mostrar a janela.">
+        <Setting labelId="notify-autostart" label="Abrir o EpistulaMail ao iniciar o Windows" description="Abre direto na bandeja, sem mostrar a janela.">
           {toggle("autostart", "notify-autostart")}
         </Setting>
       </SettingsGroup>

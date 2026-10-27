@@ -16,12 +16,14 @@ interface NotificationBellProps {
   onOpenTarget: (target: NoticeTarget) => void;
   /** Configurações → Notificações. */
   onSettings: () => void;
+  /** "Nova versão do EpistulaMail": abre a confirmação da atualização. */
+  onUpdate: () => void;
 }
 
 const EMPTY: List = { items: [], unseen: 0, quiet: false, snoozed: false };
 
 /** O sino com as notificações dos últimos 7 dias. Abrir o painel marca todas como vistas. */
-export function NotificationBell({ open, onOpenChange, onOpenTarget, onSettings }: NotificationBellProps) {
+export function NotificationBell({ open, onOpenChange, onOpenTarget, onSettings, onUpdate }: NotificationBellProps) {
   const trigger = useRef<HTMLButtonElement>(null);
   const closing = useRef(false);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
@@ -71,7 +73,8 @@ export function NotificationBell({ open, onOpenChange, onOpenTarget, onSettings 
 
   const pick = (notice: Notice) => {
     onOpenChange(false);
-    if (notice.target) onOpenTarget(notice.target);
+    if (notice.kind === "update") onUpdate();
+    else if (notice.target) onOpenTarget(notice.target);
   };
 
   const media = (n: Notice) => {

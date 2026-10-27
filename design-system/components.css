@@ -187,6 +187,10 @@ kbd, .kbd {
 .chip .avatar { width: 1.25rem; height: 1.25rem; font-size: 0.5625rem; }
 .chip-input { flex-wrap: wrap; padding-block: var(--space-050); gap: var(--space-050); }
 .chip-input > input { min-width: 8rem; }
+/* Linha de controles (botões, campos curtos) lado a lado, quebrando quando falta espaço. Usada nas páginas do DS
+   e no app (criptografia, chaves, certificados, regras); antes só existia em docs.css, que o app não carrega. */
+.row { display: flex; flex-wrap: wrap; gap: var(--space-150); align-items: center; }
+
 /* Sugestões clicáveis abaixo de um campo (ex.: nomes de conta) */
 .chip-group { display: flex; flex-wrap: wrap; gap: var(--space-075); }
 
