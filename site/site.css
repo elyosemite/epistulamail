@@ -153,3 +153,6 @@ a { color: var(--color-link); }
 /* Contribuir: texto e os comandos do git clone lado a lado. */
 .site-contribute { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--site-gap); align-items: center; }
 @media (max-width: 860px) { .site-contribute { grid-template-columns: minmax(0, 1fr); } }
+
+/* Logo do EpistulaMail (sem fundo) no lugar do glifo do wordmark, no topo e no rodapé. */
+.site-logo { display: block; flex: none; width: 1.75rem; height: 1.75rem; object-fit: contain; }

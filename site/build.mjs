@@ -98,6 +98,10 @@ async function build() {
   mkdirSync(join(dist, "images"), { recursive: true });
   copyFileSync(join(root, "docs", "images", "epistula-janela.webp"), join(dist, "images", "epistula-janela.webp"));
 
+  // A logo do EpistulaMail (favicon, marca no topo e no rodapé), gerada da mesma imagem dos ícones do app.
+  mkdirSync(join(dist, "images", "logo"), { recursive: true });
+  for (const name of readdirSync(join(here, "images", "logo"))) copyFileSync(join(here, "images", "logo", name), join(dist, "images", "logo", name));
+
   // Fotos dos avatares (domínio público, créditos em images/people/CREDITS.md).
   mkdirSync(join(dist, "images", "people"), { recursive: true });
   for (const name of readdirSync(join(here, "images", "people")).filter((n) => n.endsWith(".webp"))) {
@@ -116,7 +120,7 @@ async function build() {
   console.log(`build: dist/ pronto (${release.label}, ${release.download})`);
 }
 
-const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".woff2": "font/woff2" };
+const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".woff2": "font/woff2", ".png": "image/png", ".webp": "image/webp", ".ico": "image/x-icon" };
 
 function serve() {
   createServer((req, res) => {
