@@ -110,7 +110,7 @@ a { color: var(--color-link); }
 
 /* ---------- Chamada final ---------- */
 .site-cta { display: grid; justify-items: center; gap: var(--space-400); padding-block: calc(var(--space-1000) * 2); text-align: center; }
-.site-cta .pem-box { max-height: none; padding: var(--space-300); text-align: left; font-size: var(--font-size-code); }
+.site-cta .pem-box, .site-contribute .pem-box { max-height: none; padding: var(--space-300); text-align: left; font-size: var(--font-size-code); }
 .site-cta__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-100); }
 
 /* ---------- Rodapé em colunas ---------- */
@@ -139,3 +139,10 @@ a { color: var(--color-link); }
 .site-doc a { color: var(--color-link); }
 .site-doc__lede { font-size: var(--font-size-body-large) !important; line-height: 1.5 !important; }
 
+/* Versão da última release, abaixo do botão de download. */
+.site-version { margin: var(--space-200) 0 0; font: var(--font-body-small); color: var(--color-text-subtlest); }
+.site-version a { color: var(--color-link); }
+.site-cta .site-version { max-width: 40rem; margin-top: 0; text-align: center; }
+/* Contribuir: texto e os comandos do git clone lado a lado. */
+.site-contribute { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--site-gap); align-items: center; }
+@media (max-width: 860px) { .site-contribute { grid-template-columns: minmax(0, 1fr); } }

@@ -27,7 +27,7 @@
     <div class="site-header__end">
       <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
       <a class="btn" href="https://github.com/elyosemite/epistulamail">GitHub</a>
-      <a class="btn btn--primary" href="#comecar">Como instalar</a>
+      <a class="btn btn--primary" href="{{release.download}}"><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
     </div>
   </div>
 </header>
@@ -39,9 +39,10 @@
       <div>
         <h1 class="site-display">E-mail no seu computador. Cifrado.</h1>
         <div class="site-hero__actions">
-          <a class="btn btn--primary" href="#comecar"><svg class="i"><use href="#i-download"/></svg>Como instalar</a>
+          <a class="btn btn--primary" href="{{release.download}}"><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
           <a class="btn" href="#recursos">Ver os recursos</a>
         </div>
+        <p class="site-version">{{release.label}} · Windows 10 e 11, 64 bits · grátis · <a href="{{release.page}}">notas da versão</a></p>
       </div>
       <span class="site-hero__mark" aria-hidden="true"><svg class="i"><use href="#i-mail"/></svg></span>
       <ul class="site-hero__lines" aria-label="Em poucas palavras">
@@ -307,14 +308,30 @@
   <section class="site-container site-cta" id="comecar" aria-labelledby="s-comecar">
     <h2 class="site-display" id="s-comecar">Seus e-mails, do seu lado.</h2>
     <div class="site-cta__actions">
-      <a class="btn btn--primary" href="https://github.com/elyosemite/epistulamail#building"><svg class="i"><use href="#i-file"/></svg>Como compilar</a>
-      <a class="btn" href="https://github.com/elyosemite/epistulamail">Ver no GitHub</a>
+      <a class="btn btn--primary" href="{{release.download}}"><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
+      <a class="btn" href="{{release.page}}">Notas da versão</a>
     </div>
-    <pre class="pem-box" aria-label="Comandos para compilar no Windows">git clone https://github.com/elyosemite/epistulamail
+    <p class="site-version">{{release.label}} · Windows 10 e 11, 64 bits. O instalador ainda não tem assinatura de código: confira o SHA-256 publicado nas notas da versão antes de executar.</p>
+  </section>
+
+  <!-- ================================================================== contribuir -->
+  <section class="site-section" id="contribuir" aria-labelledby="s-contribuir">
+    <div class="site-container site-contribute">
+      <div style="display:grid;gap:var(--space-200)">
+        <h2 class="site-h2" id="s-contribuir">Quer contribuir?</h2>
+        <p class="site-statement">O Epistula é código aberto. <span>Dá para clonar o repositório, rodar o app na sua máquina e mandar uma melhoria, um relato de problema ou uma ideia de interface.</span></p>
+        <div class="site-cta__actions" style="justify-content:flex-start">
+          <a class="btn" href="https://github.com/elyosemite/epistulamail"><svg class="i"><use href="#i-link"/></svg>Código no GitHub</a>
+          <a class="btn btn--subtle" href="https://github.com/elyosemite/epistulamail/issues">Issues</a>
+        </div>
+      </div>
+      <pre class="pem-box" aria-label="Comandos para rodar o Epistula a partir do código, no Windows">git clone https://github.com/elyosemite/epistulamail.git
 cd epistulamail
 pnpm install
 ./scripts/setup-build-tools.ps1
-pnpm tauri build</pre>
+pnpm tauri dev      # rodar em desenvolvimento
+pnpm tauri build    # gerar o instalador</pre>
+    </div>
   </section>
 </main>
 
@@ -323,7 +340,7 @@ pnpm tauri build</pre>
     <div class="site-footer__grid">
       <div>
         <h4>Produto</h4>
-        <ul><li><a href="#recursos">Recursos</a></li><li><a href="#seguranca">Segurança</a></li><li><a href="#para-onde">Para onde vamos</a></li><li><a href="#comecar">Como instalar</a></li></ul>
+        <ul><li><a href="#recursos">Recursos</a></li><li><a href="#seguranca">Segurança</a></li><li><a href="#para-onde">Para onde vamos</a></li><li><a href="#comecar">Download</a></li><li><a href="#contribuir">Contribuir</a></li></ul>
       </div>
       <div>
         <h4>Projeto</h4>

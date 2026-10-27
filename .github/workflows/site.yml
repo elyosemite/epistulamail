@@ -1,5 +1,6 @@
 # Site do Epistula (site/): build e publicação na Vercel. Roda só quando o site, as peças do design system que
-# ele usa ou este arquivo mudam. Push no main publica em produção; pull request publica uma prévia.
+# ele usa ou este arquivo mudam. Push no main publica em produção; pull request publica uma prévia. Publicar uma
+# release do app também republica o site, para o botão de download e a versão apontarem para ela.
 # Segredos (Settings → Secrets → Actions): VERCEL_TOKEN, VERCEL_ORG_ID e VERCEL_PROJECT_ID. Sem eles (fork, ou
 # antes de configurar), o site é montado e conferido, mas não publicado.
 name: Site
@@ -20,6 +21,8 @@ on:
       - "design-system/components.css"
       - "design-system/docs.js"
       - ".github/workflows/site.yml"
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -41,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
-      name: ${{ github.event_name == 'push' && 'site-production' || 'site-preview' }}
+      name: ${{ (github.event_name == 'push' || github.event_name == 'release') && 'site-production' || 'site-preview' }}
       url: ${{ steps.deploy.outputs.url }}
     steps:
       - uses: actions/checkout@v4
@@ -56,8 +59,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # O build consulta a última release publicada (botão de download e versão).
       - name: Montar o site
         working-directory: site
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: node build.mjs
 
       - name: Publicar na Vercel
@@ -66,7 +72,8 @@ jobs:
         working-directory: site
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          PRODUCTION: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PRODUCTION: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'release' }}
         shell: bash
         run: |
           set -euo pipefail

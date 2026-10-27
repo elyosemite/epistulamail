@@ -35,7 +35,46 @@ const FONTS = [
   ["@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2", "JetBrains Mono", 500],
 ];
 
-function build() {
+const REPO = "elyosemite/epistulamail";
+
+/**
+ * A última release publicada (rascunhos não contam), para o botão de download e a versão do site. Sem rede ou sem
+ * release publicada, o botão leva à lista de releases e a versão vem do package.json.
+ */
+async function latestRelease() {
+  const page = `https://github.com/${REPO}/releases`;
+  const fallback = () => {
+    const version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
+    return { download: `${page}/latest`, page, label: `Versão ${version}` };
+  };
+  try {
+    const headers = { accept: "application/vnd.github+json", "user-agent": "epistula-site-build" };
+    if (process.env.GITHUB_TOKEN) headers.authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+    const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers, signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) {
+      console.warn(`build: sem release publicada (${res.status}); usando a versão do package.json`);
+      return fallback();
+    }
+    const release = await res.json();
+    const exe = release.assets?.find((a) => a.name.endsWith("-setup.exe"));
+    return {
+      download: exe?.browser_download_url ?? release.html_url,
+      page: release.html_url,
+      label: `Versão ${String(release.tag_name).replace(/^v/, "")}`,
+    };
+  } catch (error) {
+    console.warn(`build: não foi possível consultar a release (${error.message}); usando a versão do package.json`);
+    return fallback();
+  }
+}
+
+function withRelease(html, release) {
+  const escape = (v) => v.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  return html.replace(/\{\{release\.(download|page|label)\}\}/g, (_, key) => escape(release[key]));
+}
+
+async function build() {
+  const release = await latestRelease();
   rmSync(dist, { recursive: true, force: true });
   mkdirSync(join(dist, "ds"), { recursive: true });
   mkdirSync(join(dist, "fonts"), { recursive: true });
@@ -69,9 +108,11 @@ function build() {
   for (const file of ["index.html", "privacidade.html", "termos.html"]) {
     const page = readFileSync(join(here, file), "utf8");
     if (!page.includes("<!-- ds-icons -->")) fail(`${file} sem o marcador <!-- ds-icons -->`);
-    writeFileSync(join(dist, file), page.replace("<!-- ds-icons -->", sprite));
+    const html = withRelease(page.replace("<!-- ds-icons -->", sprite), release);
+    if (html.includes("{{release.")) fail(`${file} com marcador de release desconhecido`);
+    writeFileSync(join(dist, file), html);
   }
-  console.log("build: dist/ pronto");
+  console.log(`build: dist/ pronto (${release.label}, ${release.download})`);
 }
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".woff2": "font/woff2" };
@@ -88,5 +129,5 @@ function serve() {
   }).listen(4321, () => console.log("build: http://localhost:4321"));
 }
 
-build();
+await build();
 if (process.argv.includes("--serve")) serve();
