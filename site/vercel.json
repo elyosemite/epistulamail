@@ -4,7 +4,10 @@
   "outputDirectory": "dist",
   "installCommand": "",
   "framework": null,
-  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/privacidade", "destination": "/privacidade.html" },
+    { "source": "/termos", "destination": "/termos.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
