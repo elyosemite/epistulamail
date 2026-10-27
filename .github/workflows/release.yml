@@ -111,13 +111,15 @@ jobs:
           $hash = (Get-FileHash "out/$name" -Algorithm SHA256).Hash.ToLower()
           "$hash  $name" | Set-Content -NoNewline -Encoding ascii "out/$name.sha256"
 
-          # Notas: a seção da versão no CHANGELOG.md, sem o título, mais o SHA-256.
+          # Notas: o link do instalador, a seção da versão no CHANGELOG.md (sem o título) e o SHA-256.
           $text = Get-Content CHANGELOG.md -Raw
           $start = [regex]::Match($text, "(?m)^## \[$([regex]::Escape($env:VERSION))\].*$")
           $rest = $text.Substring($start.Index + $start.Length)
           $next = [regex]::Match($rest, '(?m)^## \[')
           $section = if ($next.Success) { $rest.Substring(0, $next.Index) } else { $rest }
-          $notes = $section.Trim() + "`n`n### Verificar o download`n`nSHA-256 de ``$name``:`n`n``````text`n$hash`n```````n`nNo PowerShell: ``(Get-FileHash .\$name).Hash``"
+          $url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/v$env:VERSION/$name"
+          $download = "**[Baixar o instalador para Windows ($name)]($url)** (64 bits, sem assinatura de código: veja os avisos abaixo)`n`n"
+          $notes = $download + $section.Trim() + "`n`n### Verificar o download`n`nSHA-256 de ``$name``:`n`n``````text`n$hash`n```````n`nNo PowerShell: ``(Get-FileHash .\$name).Hash``"
           Set-Content -Encoding utf8 out/notes.md $notes
           "name=$name" >> $env:GITHUB_OUTPUT
           Write-Host "$name  $hash"
