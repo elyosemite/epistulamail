@@ -58,6 +58,7 @@ export default defineConfig({
           ...t("Comece aqui", "Get Started", "Primeros pasos", "Bien démarrer", "Per iniziare"),
           items: [
             { slug: "index", ...t("Visão geral", "Overview", "Descripción general", "Vue d'ensemble", "Panoramica") },
+            { slug: "por-que-o-epistulamail", ...t("Por que o EpistulaMail", "Why EpistulaMail", "Por qué EpistulaMail", "Pourquoi EpistulaMail", "Perché EpistulaMail") },
             { slug: "inicio-rapido", ...t("Início rápido", "Quickstart", "Inicio rápido", "Démarrage rapide", "Avvio rapido") },
             { slug: "instalacao", ...t("Instalação", "Installation", "Instalación", "Installation", "Installazione") },
             { slug: "primeira-configuracao", ...t("Primeira configuração", "Onboarding", "Primera configuración", "Première configuration", "Prima configurazione") },

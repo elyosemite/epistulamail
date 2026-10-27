@@ -1,0 +1,16 @@
+---
+title: "Por que o EpistulaMail"
+description: "Segurança de verdade, criptografia pós-quântica e uma interface pensada em você. Os motivos para usar o EpistulaMail."
+---
+
+O e-mail é o arquivo mais antigo da vida digital de quase todo mundo. Contratos, resultados de exames, conversas de família e a senha de recuperação de todo o resto vivem ali. Na maioria dos casos, esse arquivo inteiro fica numa única máquina, administrada por outra pessoa, aberta por uma aba do navegador. O EpistulaMail nasce de uma ideia simples: esse arquivo deveria ser seu.
+
+A segurança aqui não é prometida, ela é mostrada. Tudo o que você abre fica num banco de dados cifrado com AES-256, incluindo assuntos, remetentes e índices, com a chave guardada no Gerenciador de Credenciais do Windows. Uma cópia do arquivo, um notebook esquecido no táxi ou um disco descartado não revelam nada sem essa chave. O HTML de terceiros é limpo antes de aparecer na tela, e as imagens remotas, os pixels espiões que contam para quem mandou o e-mail que você abriu, ficam bloqueadas até você permitir, uma mensagem de cada vez. O modelo de ameaças é público, com os riscos que ainda não resolvemos escritos junto.
+
+O EpistulaMail já pensa no computador quântico. Dados cifrados hoje podem ser capturados hoje e abertos daqui a alguns anos, quando as máquinas quânticas conseguirem quebrar as trocas de chave em uso. Para um e-mail que as pessoas guardam por décadas, esse risco não é teórico. Por isso a cifra do disco, o AES-256, já aguenta esse cenário, e tudo o que nasce de chaves públicas começa com esquemas híbridos, como o ML-KEM-768 junto do X25519, para a proteção nunca depender de uma aposta só. No OpenPGP você cria uma chave Curve25519, RSA 4096 ou uma experimental pós-quântica, e cifra e assina direto no editor.
+
+Uma interface só é segura se as pessoas conseguirem usá-la. O EpistulaMail vem de um design system próprio, guiado por quatro princípios: densidade com respiro, leitura primeiro, um gesto por ação e estado sempre visível. As conversas viram cartões, cada resposta no seu lugar e o texto citado escondido. A busca usa chips de pessoa, período e filtros. As regras se leem como frases, do tipo "se o remetente contém @loja.com, mover para Compras", com prévia ao vivo antes de salvar e desfazer depois. E o que já foi baixado abre e se busca mesmo sem internet.
+
+A governança dos seus dados é a parte mais importante e a mais simples de explicar. Não existe conta EpistulaMail, não existe nuvem EpistulaMail e não existe telemetria. Nenhuma mensagem, assunto ou endereço passa por um servidor nosso. O login do Google acontece na página do Google, e a sua senha nunca passa pelo aplicativo. Os registros do app não guardam conteúdo nenhum, e existe um teste que percorre o aplicativo inteiro com marcadores únicos e falha se qualquer um deles aparecer nos logs. Os seus dados ficam onde sempre deveriam ter ficado: com você.
+
+E tudo isso é código aberto. O EpistulaMail está no GitHub, e o contribuidor principal acredita de verdade neste projeto e na força que a comunidade de software livre exerce sobre os programas que as pessoas usam. Segurança se prova, não se promete, e um código que qualquer pessoa pode ler é a única forma honesta de provar que um cliente de e-mail faz o que diz.
