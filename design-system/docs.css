@@ -212,7 +212,7 @@
   .ds-head h1 { margin: 0; font: var(--font-hero); letter-spacing: var(--letter-spacing-hero); }
   .page-top { display: flex; align-items: center; gap: var(--space-150); flex-wrap: wrap; padding-top: var(--space-300); }
   .page-top .wordmark { font-size: 1rem; text-decoration: none; }
-  .page-top .wordmark__glyph { width: 1.75rem; height: 1.75rem; }
+  .page-top .wordmark__glyph, .page-top .wordmark__logo { width: 1.75rem; height: 1.75rem; }
   .crumb { display: flex; align-items: center; gap: var(--space-150); font: var(--font-body-small); color: var(--color-text-subtlest); }
   .crumb::before { content: "/"; color: var(--color-border-bold); }
   .doc-nav__home { margin-bottom: var(--space-100); }
@@ -239,6 +239,7 @@
 }
 .os-toast__app { display: flex; align-items: center; gap: var(--space-075); font: var(--font-body-small); color: var(--color-text-subtle); }
 .os-toast__app .wordmark__glyph { width: 1rem; height: 1rem; border-radius: var(--radius-small); }
+.os-toast__app .wordmark__logo { width: 1rem; height: 1rem; }
 .os-toast__app .wordmark__glyph .i { width: .7rem; height: .7rem; }
 .os-toast__app .x { margin-left: auto; color: var(--color-icon-subtle); }
 .os-toast__main { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-150); align-items: start; }
@@ -250,7 +251,7 @@
 .os-icon--warning { background: var(--color-bg-warning); color: var(--color-icon-warning); }
 .taskbar { display: flex; align-items: center; gap: var(--space-200); padding: var(--space-100) var(--space-200); border-radius: var(--radius-medium); background: var(--color-surface-sunken); }
 .taskbar__app { position: relative; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-small); }
-.taskbar__app .wordmark__glyph { width: 1.75rem; height: 1.75rem; }
+.taskbar__app .wordmark__glyph, .taskbar__app .wordmark__logo { width: 1.75rem; height: 1.75rem; }
 .taskbar__dot { position: absolute; right: 2px; bottom: 2px; width: .75rem; height: .75rem; border-radius: 50%; background: var(--color-bg-brand-bold); box-shadow: 0 0 0 2px var(--color-surface-sunken); }
 .tray { display: flex; align-items: center; gap: var(--space-150); font: var(--font-body-small); color: var(--color-text-subtle); }
 .tray__tip { padding: var(--space-050) var(--space-100); border-radius: var(--radius-small); background: var(--color-surface-overlay); box-shadow: var(--shadow-overlay); color: var(--color-text); }

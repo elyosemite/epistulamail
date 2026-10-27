@@ -180,7 +180,7 @@ const EPISTULA_PAGES = [
   const i = flat.findIndex(p => p.id === page);
   if (i >= 0) {
     main.insertAdjacentHTML('afterbegin', `<div class="page-top">
-      <a class="wordmark" href="index.html"><span class="wordmark__glyph"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</a>
+      <a class="wordmark" href="index.html"><img class="wordmark__logo" src="images/epistulamail-logo-120.png" alt="">EpistulaMail</a>
       <span class="crumb">${flat[i].group}</span>
       <button class="btn btn--subtle theme-toggle" id="theme-toggle" type="button" aria-label="Alternar tema"></button>
     </div>`);

@@ -1,11 +1,10 @@
-// DS: header.html · .appbar__brand com .wordmark.wordmark--sm
-import { Icon } from "../ui/Icon";
+// DS: header.html (logo L76) · .appbar__brand com .wordmark.wordmark--sm
 
 export function HeaderBrand() {
   return (
     <span className="appbar__brand">
       <span className="wordmark wordmark--sm">
-        <span className="wordmark__glyph" aria-hidden="true"><Icon name="mail" /></span>
+        <img className="wordmark__logo" src="/epistulamail-logo.png" alt="" />
         EpistulaMail
       </span>
     </span>

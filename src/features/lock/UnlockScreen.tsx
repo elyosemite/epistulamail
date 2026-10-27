@@ -1,10 +1,9 @@
-// DS: carregamento.html "Tela de desbloqueio" (L53) · .unlock, __card, __icon, __title, __text, __form; campos.html
+// DS: carregamento.html "Tela de desbloqueio" (L53) · .unlock, __card, __title, __text, __form, com a .brand-logo (L76); campos.html
 // .input--password (L54); mensagens.html .section-message--warning; modais.html "Apagar tudo e começar de novo?"
 import { useEffect, useState } from "react";
 import { retryLabel } from "../../lib/lock";
 import { api, isAppError } from "../../lib/tauri";
 import { Button } from "../../ui/Button";
-import { Icon } from "../../ui/Icon";
 import { Modal } from "../../ui/Modal";
 import { PasswordField } from "../../ui/PasswordField";
 import { SectionMessage } from "../../ui/SectionMessage";
@@ -56,7 +55,7 @@ export function UnlockScreen({ retryIn: initialWait }: { retryIn: number }) {
   return (
     <div className="unlock">
       <div className="unlock__card">
-        <span className="unlock__icon" aria-hidden="true"><Icon name="lock" /></span>
+        <img className="brand-logo" src="/epistulamail-logo.png" alt="" />
         {forgot ? (
           <>
             <h1 className="unlock__title">Esqueceu a senha?</h1>

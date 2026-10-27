@@ -976,8 +976,9 @@ html.is-grabbing, html.is-grabbing * { cursor: grabbing !important; user-select:
 .compose.is-sending { opacity: .6; pointer-events: none; }
 
 /* ==========================================================================
-   Marca (wordmark): glyph azul com o envelope + nome do produto
-   Padrão 32px para capas e telas de boas-vindas; --sm 24px para o header.
+   Marca (wordmark): a logo do EpistulaMail + nome do produto
+   Padrão 32px para capas e telas de boas-vindas; --sm 24px para o header. O glyph azul com o envelope
+   (.wordmark__glyph) fica para ícones de "e-mail"; a marca é a logo (L76).
    ========================================================================== */
 .wordmark {
   display: inline-flex; align-items: center; gap: var(--space-100);
@@ -991,6 +992,12 @@ html.is-grabbing, html.is-grabbing * { cursor: grabbing !important; user-select:
 }
 .wordmark--sm { font: var(--font-card); letter-spacing: var(--letter-spacing-card); }
 .wordmark--sm .wordmark__glyph { width: 1.5rem; height: 1.5rem; border-radius: var(--radius-small); }
+/* L76 · Logo do EpistulaMail no wordmark: a imagem sem fundo no lugar do glyph, do mesmo tamanho (32px; 24px no
+   --sm), igual nos temas claro e escuro. Decorativa (alt=""): o nome fica como texto ao lado. */
+.wordmark__logo { display: block; flex: none; width: 2rem; height: 2rem; object-fit: contain; }
+.wordmark--sm .wordmark__logo { width: 1.5rem; height: 1.5rem; }
+/* L76 · A logo sozinha e maior, acima do título (tela de bloqueio). */
+.brand-logo { display: block; width: 4rem; height: 4rem; object-fit: contain; }
 
 /* ==========================================================================
    Header global (ADS Atlassian Navigation, adaptado)
