@@ -38,14 +38,15 @@ const FONTS = [
 const REPO = "elyosemite/epistulamail";
 
 /**
- * A última release publicada (rascunhos não contam), para o botão de download e a versão do site. Sem rede ou sem
- * release publicada, o botão leva à lista de releases e a versão vem do package.json.
+ * A última release publicada (rascunhos não contam), para o botão de download e a versão do site. O botão aponta
+ * sempre para o próprio .exe: sem rede ou sem release publicada, o da versão do package.json, com o nome que o
+ * release.yml dá ao instalador.
  */
 async function latestRelease() {
   const page = `https://github.com/${REPO}/releases`;
   const fallback = () => {
     const version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
-    return { download: `${page}/latest`, page, label: `Versão ${version}` };
+    return { download: `${page}/download/v${version}/Epistula_${version}_x64-setup.exe`, page: `${page}/tag/v${version}`, label: `Versão ${version}` };
   };
   try {
     const headers = { accept: "application/vnd.github+json", "user-agent": "epistula-site-build" };
@@ -58,7 +59,7 @@ async function latestRelease() {
     const release = await res.json();
     const exe = release.assets?.find((a) => a.name.endsWith("-setup.exe"));
     return {
-      download: exe?.browser_download_url ?? release.html_url,
+      download: exe?.browser_download_url ?? fallback().download,
       page: release.html_url,
       label: `Versão ${String(release.tag_name).replace(/^v/, "")}`,
     };
