@@ -1,0 +1,42 @@
+---
+title: Início rápido
+description: Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinco minutos.
+---
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinco minutos. No fim você terá a caixa de entrada sincronizada, guardada no seu computador num banco cifrado.
+
+## O que você precisa
+
+- **Windows 10 ou 11**, 64 bits.
+- **Uma conta Gmail.** Os outros provedores vêm em breve; enquanto isso, dá para [abrir arquivos de e-mail](/guia/arquivos/abrir-um-arquivo/) sem conta.
+
+## Passo a passo
+
+<Steps>
+
+1. **Baixe o instalador.** Em [epistulamail.com](https://www.epistulamail.com), clique em "Download EpistulaMail". O arquivo tem uns 11 MB.
+
+2. **Confira o arquivo.** No PowerShell, na pasta do download:
+
+   ```powershell
+   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   ```
+
+   O resultado tem que ser igual ao SHA-256 publicado nas [notas da versão](https://github.com/elyosemite/epistulamail/releases/latest).
+
+3. **Instale.** O instalador ainda não tem assinatura de código, então o Windows mostra "O Windows protegeu o computador". Clique em **Mais informações** e em **Executar assim mesmo**. Ele instala só para o seu usuário, sem pedir administrador.
+
+4. **Conecte a sua conta.** Abra o EpistulaMail e escolha o Gmail. O login acontece na página do Google, no seu navegador; a sua senha nunca passa pelo app.
+
+5. **Leia e busque.** Os e-mails mais recentes aparecem primeiro e o resto chega em segundo plano. Aperte <kbd>/</kbd> e digite `de: Ana tem:anexo` para ver a busca com chips.
+
+</Steps>
+
+<Aside type="caution" title="Enquanto o Google analisa o app">
+Para ler o Gmail por IMAP, o Google exige uma verificação que ainda está em andamento. Até ela sair, a tela de login do Google pode mostrar um aviso de que o app ainda não foi verificado.
+</Aside>
+
+## Próximo passo
+
+Em [Primeira configuração](/primeira-configuracao/), escolha quanto guardar sem conexão e ligue a senha do EpistulaMail.

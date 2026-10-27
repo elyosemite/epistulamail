@@ -1,0 +1,18 @@
+{
+  "name": "epistulamail-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync-ds": "node scripts/sync-ds.mjs",
+    "dev": "node scripts/sync-ds.mjs && astro dev",
+    "build": "node scripts/sync-ds.mjs && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.42.7",
+    "@fontsource/inter": "5.2.5",
+    "@fontsource/jetbrains-mono": "5.2.5",
+    "astro": "7.4.2",
+    "sharp": "^0.34.0"
+  }
+}

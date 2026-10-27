@@ -1,0 +1,20 @@
+---
+// Título da página. Com `glow` no frontmatter (só páginas de destaque, como a capa), ganha o brilho em gradiente do DS
+// atrás (L78, .page-glow) e o título em gradiente (.text-gradient).
+import Default from "@astrojs/starlight/components/PageTitle.astro";
+
+const { data } = Astro.locals.starlightRoute.entry;
+const glow = (data as { glow?: string }).glow;
+---
+
+{
+  glow ? (
+    <div class:list={["page-glow", `page-glow--${glow}`, "page-glow-title"]}>
+      <h1 id="_top">
+        <span class="text-gradient">{data.title}</span>
+      </h1>
+    </div>
+  ) : (
+    <Default />
+  )
+}

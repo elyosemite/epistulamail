@@ -1,0 +1,13 @@
+---
+title: "Criar uma regra"
+description: "Organizar os e-mails assim que chegam."
+sidebar:
+  order: 1
+---
+
+Uma regra se lê como uma frase: "Se **De** contém `@loja.com` → **Mover para** Compras".
+
+- **Condições**: remetente, domínio, Para e Cc, "enviado só para mim", assunto, trecho do texto, lista de e-mails, anexos, tamanho, lida e estrela; com "todas" ou "qualquer uma" e exceções.
+- **Ações**: mover, arquivar, excluir (sempre para a Lixeira), marcador, marcar como lida, estrela, sinalizar com prazo, não notificar e notificar sempre.
+
+Antes de salvar, a prévia mostra quantos e quais e-mails a regra pegaria. Dá para começar de um modelo ou de uma mensagem ("Criar regra…").

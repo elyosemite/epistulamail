@@ -1,0 +1,52 @@
+---
+// Sidebar como a do OpenClaw. Fora das seções, a de sempre: "Comece aqui" e a lista da "Documentação". Dentro de uma
+// seção da Documentação, só as sub-páginas dela, abertas, com um botão no topo que volta à lista completa (sem sair da
+// página). Sem JavaScript, a lista da seção continua lá e o botão leva à capa.
+import Default from "@astrojs/starlight/components/Sidebar.astro";
+import SidebarSublist from "@astrojs/starlight/components/SidebarSublist.astro";
+
+type Entry = (typeof Astro.locals.starlightRoute.sidebar)[number];
+
+const { sidebar, locale } = Astro.locals.starlightRoute;
+const hasCurrent = (e: Entry): boolean => (e.type === "link" ? e.isCurrent : e.entries.some(hasCurrent));
+const open = (e: Entry): Entry => (e.type === "group" ? { ...e, collapsed: false, entries: e.entries.map(open) } : e);
+
+const documentation = sidebar[1];
+const section =
+  documentation?.type === "group" ? documentation.entries.find((e) => e.type === "group" && hasCurrent(e)) : undefined;
+const home = locale ? `/${locale}/` : "/";
+---
+
+{
+  section && section.type === "group" ? (
+    <div class="ds-drill" data-ds-drill>
+      <a class="ds-drill__back" href={home} data-ds-drill-back>
+        <span aria-hidden="true">‹</span>
+        {section.label}
+      </a>
+      <div data-ds-drill-section>
+        <SidebarSublist sublist={section.entries.map(open)} />
+      </div>
+      <div data-ds-drill-all hidden>
+        <Default />
+      </div>
+    </div>
+  ) : (
+    <Default />
+  )
+}
+
+<script>
+  // "‹ Seção" mostra a lista completa no lugar da seção, sem navegar.
+  document.querySelectorAll<HTMLElement>("[data-ds-drill]").forEach((drill) => {
+    const back = drill.querySelector<HTMLAnchorElement>("[data-ds-drill-back]");
+    const section = drill.querySelector<HTMLElement>("[data-ds-drill-section]");
+    const all = drill.querySelector<HTMLElement>("[data-ds-drill-all]");
+    back?.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (section) section.hidden = true;
+      if (all) all.hidden = false;
+      back.hidden = true;
+    });
+  });
+</script>

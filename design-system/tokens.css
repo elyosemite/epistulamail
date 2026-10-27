@@ -377,3 +377,13 @@
     --duration-slow: 0ms;
   }
 }
+
+/* L77 · Gradientes (no espírito dos da Tailwind), feitos das cores do DS com color-mix. Como usam var(), acompanham
+   o tema: no escuro as cores dos ícones ficam mais claras. Só para o início de páginas de destaque (L78). */
+:root {
+  --gradient-ocean:  linear-gradient(120deg, var(--color-icon-brand), color-mix(in srgb, var(--color-label-teal-text) 70%, var(--color-icon-success)));
+  --gradient-aurora: linear-gradient(120deg, var(--color-icon-brand), var(--color-icon-discovery) 50%, color-mix(in srgb, var(--color-label-magenta-text) 80%, white));
+  --gradient-sunset: linear-gradient(120deg, var(--color-icon-warning), color-mix(in srgb, var(--color-label-magenta-text) 85%, white));
+  --gradient-meadow: linear-gradient(120deg, var(--color-icon-success), color-mix(in srgb, var(--color-label-teal-text) 80%, var(--color-icon-brand)));
+  --gradient-potato: linear-gradient(120deg, color-mix(in srgb, var(--color-icon-warning) 55%, var(--color-canvas-sand)), var(--color-icon-success));
+}

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.astro/
+.vercel/
+# Gerados por scripts/sync-ds.mjs a partir do design system
+src/styles/ds-tokens.css
+src/styles/ds-pieces.css

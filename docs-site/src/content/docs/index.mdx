@@ -1,0 +1,36 @@
+---
+title: EpistulaMail
+description: O seu e-mail no seu computador, cifrado. Instalar, usar e contribuir.
+glow: aurora
+tableOfContents: false
+---
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+O seu e-mail no seu computador, cifrado. Aqui está tudo para instalar, usar e contribuir: do primeiro login ao modelo de ameaças.
+
+<div class="release-banner not-content">
+  <span class="badge-new">Nova versão</span>
+  <b>1.0.2</b>
+  <span>Atualização automática, nome novo e a logo no app.</span>
+  <a href="/guia/versoes/historico/">Ver o que mudou →</a>
+</div>
+
+<CardGrid>
+  <LinkCard title="Início rápido" description="Do download à caixa de entrada em uns cinco minutos." href="/inicio-rapido/" />
+  <LinkCard title="Instalação" description="Requisitos, o aviso do SmartScreen e como conferir o SHA-256." href="/instalacao/" />
+  <LinkCard title="Busca" description="Chips de pessoa, período e filtros, em todas as contas." href="/guia/busca/operadores/" />
+  <LinkCard title="Criptografia" description="OpenPGP e S/MIME no mesmo composer." href="/guia/criptografia/como-funciona/" />
+</CardGrid>
+
+## Por onde começar
+
+Se é a primeira vez, siga o **Início rápido**: ele instala o EpistulaMail, conecta a sua conta e mostra a busca. Se você já usa, a **Documentação** tem cada recurso em detalhe, com o que acontece por trás e onde os seus dados ficam.
+
+Tudo o que está aqui vale para o Windows 10 e 11 (64 bits). Por enquanto, só contas Gmail conectam; os outros provedores vêm em breve. Abrir arquivos de e-mail antigos funciona sem conta nenhuma.
+
+## O que o EpistulaMail é
+
+- **Seu, sem pegadinha.** Não existe conta do EpistulaMail, nuvem do EpistulaMail nem telemetria. Nenhum e-mail passa por um servidor nosso.
+- **Cifrado no disco.** As mensagens ficam num banco cifrado com AES-256, com a chave no Gerenciador de Credenciais do Windows.
+- **Funciona sem internet.** O que foi baixado abre e é buscado mesmo offline.
+- **Código aberto.** Tudo está em [GitHub](https://github.com/elyosemite/epistulamail).

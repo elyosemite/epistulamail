@@ -1,0 +1,14 @@
+---
+title: "Onde ficam os seus dados"
+description: "As pastas e os itens do cofre que o EpistulaMail usa."
+sidebar:
+  order: 2
+---
+
+| O quê | Onde |
+|---|---|
+| O programa | `%LOCALAPPDATA%\EpistulaMail` |
+| Banco de mensagens e configurações | `%APPDATA%\br.com.epistula.desktop` |
+| Chave do banco e acesso às contas | Gerenciador de Credenciais do Windows, itens `epistula` |
+
+O banco é cifrado: um arquivo copiado, um notebook perdido ou um disco descartado não revelam nada sem a chave. A chave fica no cofre do Windows, protegida pela sua sessão; com a senha do EpistulaMail ligada, ela também depende da senha.

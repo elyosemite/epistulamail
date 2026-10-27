@@ -17,7 +17,7 @@ EpistulaMail is an open-source desktop email client for Windows that keeps your 
 
 **Yours, with no catch.** There is no EpistulaMail account, no EpistulaMail cloud, no telemetry and no paid tier. The database key lives in the Windows Credential Manager, remote images stay blocked until you allow them, and the only network calls are the ones to your provider (plus a key server or a sender's images, and only when you ask). The [threat model](docs/arquitetura-e-ameacas.md) is public, and so are the risks not solved yet.
 
-[Website](https://www.epistulamail.com) · [Download](https://github.com/elyosemite/epistulamail/releases/latest) · [Changelog](CHANGELOG.md) · [Privacy policy](https://www.epistulamail.com/privacidade) · [Threat model](docs/arquitetura-e-ameacas.md) · [Design system](design-system/) · [Decision history](userstory/)
+[Website](https://www.epistulamail.com) · [Docs](https://docs.epistulamail.com) · [Download](https://github.com/elyosemite/epistulamail/releases/latest) · [Changelog](CHANGELOG.md) · [Privacy policy](https://www.epistulamail.com/privacidade) · [Threat model](docs/arquitetura-e-ameacas.md) · [Design system](design-system/) · [Decision history](userstory/)
 
 ![EpistulaMail inbox with three accounts, folders and labels, the message list and an open newsletter in the reading pane](docs/images/epistula-caixa-de-entrada.png)
 

@@ -1747,3 +1747,52 @@ html.is-grabbing, html.is-grabbing * { cursor: grabbing !important; user-select:
 .import-summary dt { font: var(--font-body-small); color: var(--color-text-subtle); }
 .import-summary dd { margin: 0; font: var(--font-section); color: var(--color-text); font-variant-numeric: tabular-nums; }
 .import-summary .is-danger dd { color: var(--color-text-danger); }
+
+/* ==========================================================================
+   Documentação e páginas de destaque (L78–L80, US docs). O trecho entre os marcadores é copiado para o site de
+   documentação (docs-site/scripts/sync-ds.mjs), que não carrega o resto deste arquivo.
+   ========================================================================== */
+/* @docs-site:start */
+/* Amostra de gradiente (páginas do DS). */
+.gradient-swatch { display: grid; align-content: end; min-height: 6rem; padding: var(--space-150); border-radius: var(--radius-large); color: #fff; font: var(--font-weight-semibold) var(--font-size-body)/1.3 var(--font-family-body); text-shadow: 0 1px 2px rgb(0 0 0 / .25); }
+
+/* ---------- L78 · Brilho no topo da página e título em gradiente (só no início de páginas de destaque) ---------- */
+.page-glow { position: relative; isolation: isolate; overflow: hidden; }
+.page-glow::before {
+  content: ""; position: absolute; inset: -8rem -10% auto -10%; height: min(30rem, 140%); z-index: -1;
+  background: var(--page-glow, var(--gradient-aurora)); opacity: .22; filter: blur(64px); pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 85%); mask-image: linear-gradient(to bottom, #000 30%, transparent 85%);
+}
+.page-glow--ocean  { --page-glow: var(--gradient-ocean); }
+.page-glow--aurora { --page-glow: var(--gradient-aurora); }
+.page-glow--sunset { --page-glow: var(--gradient-sunset); }
+.page-glow--meadow { --page-glow: var(--gradient-meadow); }
+.page-glow--potato { --page-glow: var(--gradient-potato); }
+.text-gradient { background: var(--page-glow, var(--gradient-aurora)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ---------- L79 · Ícones de marca (preenchidos, não traço) e o seletor de idioma ---------- */
+.i--brand { fill: currentColor; stroke: none; }
+.lang-button { display: inline-flex; align-items: center; gap: var(--space-075); }
+.lang-button__code { font: var(--font-weight-semibold) var(--font-size-body-small)/1 var(--font-family-body); letter-spacing: .02em; color: var(--color-text-subtle); }
+
+/* ---------- L80 · Timeline vertical e horizontal ---------- */
+.timeline { --tl-marker: 1.5rem; margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-300); }
+.timeline__item { position: relative; display: grid; grid-template-columns: var(--tl-marker) minmax(0, 1fr); column-gap: var(--space-200); }
+.timeline__marker { position: relative; z-index: 1; display: grid; place-items: center; width: var(--tl-marker); height: var(--tl-marker); border-radius: 50%; border: 2px solid var(--color-border); background: var(--color-surface); color: var(--color-text-inverse); }
+.timeline__marker .i { width: .875rem; height: .875rem; }
+.timeline__item:not(:last-child)::after { content: ""; position: absolute; left: calc(var(--tl-marker) / 2 - 1px); top: var(--tl-marker); bottom: calc(var(--space-300) * -1); width: 2px; background: var(--color-border); }
+.timeline__item.is-done .timeline__marker { border-color: var(--color-bg-brand-bold); background: var(--color-bg-brand-bold); }
+.timeline__item.is-done:not(:last-child)::after { background: var(--color-bg-brand-bold); }
+.timeline__item.is-current .timeline__marker { border-color: var(--color-bg-brand-bold); box-shadow: 0 0 0 4px var(--color-bg-selected); }
+.timeline__item.is-current .timeline__marker::after { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-bg-brand-bold); }
+.timeline__content { display: grid; gap: var(--space-050); padding-top: .125rem; }
+.timeline__date { font: var(--font-label); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtlest); }
+.timeline__title { margin: 0; font: var(--font-weight-semibold) var(--font-size-body-large)/1.35 var(--font-family-body); color: var(--color-text); }
+.timeline__body { margin: 0; font: var(--font-body); color: var(--color-text-subtle); }
+.timeline__item.is-upcoming .timeline__title { color: var(--color-text-subtle); }
+/* Horizontal: a linha atravessa os marcadores; o texto fica embaixo. Rola na largura em telas estreitas. */
+.timeline--horizontal { grid-auto-flow: column; grid-auto-columns: minmax(10rem, 1fr); gap: 0; overflow-x: auto; padding-bottom: var(--space-100); }
+.timeline--horizontal .timeline__item { grid-template-columns: 1fr; row-gap: var(--space-150); padding-right: var(--space-200); }
+.timeline--horizontal .timeline__item:not(:last-child)::after { left: var(--tl-marker); right: 0; top: calc(var(--tl-marker) / 2 - 1px); bottom: auto; width: auto; height: 2px; }
+/* @docs-site:end */
+

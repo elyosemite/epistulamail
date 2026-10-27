@@ -1,0 +1,24 @@
+---
+title: Histórico de versões
+description: O que mudou em cada versão do EpistulaMail.
+sidebar:
+  order: 1
+---
+import Timeline from '../../../../components/Timeline.astro';
+
+<Timeline label="Versões" items={[
+  { date: "27 out 2026 · 1.0.2", title: "Atualização automática", body: "Aviso no sino, confirmação e reinício. O app passa a se chamar EpistulaMail, com a logo dentro dele.", state: "current" },
+  { date: "27 out 2026 · 1.0.1", title: "Ícone novo", body: "A batata no app, no instalador, na barra de tarefas e na bandeja." },
+  { date: "27 out 2026 · 1.0.0", title: "Primeira versão", body: "Gmail, busca com chips, regras, OpenPGP e S/MIME, arquivos de e-mail e senha do EpistulaMail." },
+]} />
+
+## O que vem por aí
+
+<Timeline horizontal label="Roteiro" items={[
+  { date: "Out 2026", title: "Gmail", body: "Leitura, envio e busca.", state: "done" },
+  { date: "Agora", title: "Verificação do Google", body: "Login para qualquer conta.", state: "current" },
+  { date: "Em breve", title: "Outlook e IMAP", body: "Outros provedores.", state: "upcoming" },
+  { date: "Depois", title: "Backup cifrado", body: "Uma conta num arquivo.", state: "upcoming" },
+]} />
+
+O detalhe de cada versão está no [CHANGELOG](https://github.com/elyosemite/epistulamail/blob/main/CHANGELOG.md).

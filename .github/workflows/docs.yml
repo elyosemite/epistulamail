@@ -1,0 +1,82 @@
+# Documentação do EpistulaMail (docs-site/, Starlight): build e publicação na Vercel em docs.epistulamail.com. Como o
+# site, publica pela CLI da Vercel com um token, sem ligar o GitHub à Vercel. Push no main publica em produção; pull
+# request publica uma prévia. Roda quando a documentação, as partes do design system que ela copia ou este arquivo mudam.
+# Segredos: VERCEL_TOKEN e VERCEL_ORG_ID (os mesmos do site) e VERCEL_DOCS_PROJECT_ID. Sem eles, só monta.
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs-site/**"
+      - "design-system/tokens.css"
+      - "design-system/components.css"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    paths:
+      - "docs-site/**"
+      - "design-system/tokens.css"
+      - "design-system/components.css"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_DOCS_PROJECT_ID }}
+  # Versão fixa da CLI: atualizar de propósito, não a cada execução.
+  VERCEL_CLI: vercel@63.1.2
+
+jobs:
+  docs:
+    name: Build e publicação da documentação
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ github.event_name == 'push' && 'docs-production' || 'docs-preview' }}
+      url: ${{ steps.deploy.outputs.url }}
+    defaults:
+      run:
+        working-directory: docs-site
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: docs-site/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+
+      # sync-ds (tokens e peças do design system) + astro build (com a busca do Pagefind).
+      - name: Montar a documentação
+        run: pnpm build
+
+      - name: Publicar na Vercel
+        id: deploy
+        if: env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != ''
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          PRODUCTION: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$PRODUCTION" = "true" ]; then target=production; prod=--prod; else target=preview; prod=; fi
+          npx --yes "$VERCEL_CLI" pull --yes --environment="$target" --token="$VERCEL_TOKEN"
+          npx --yes "$VERCEL_CLI" build $prod --token="$VERCEL_TOKEN"
+          url=$(npx --yes "$VERCEL_CLI" deploy --prebuilt $prod --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Documentação publicada ($target): $url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Sem segredos da Vercel
+        if: env.VERCEL_ORG_ID == '' || env.VERCEL_PROJECT_ID == ''
+        run: echo "Documentação montada, mas não publicada (segredos da Vercel não configurados)." >> "$GITHUB_STEP_SUMMARY"

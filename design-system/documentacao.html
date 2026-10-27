@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Documentação · Epistula Design System</title>
+<meta name="description" content="Gradientes, ícones de marca, seletor de idioma, timelines e o layout de docs.epistulamail.com.">
+<script>
+  // Esta página se mostra a si mesma no tema escuro num iframe: ?tema=escuro&so=<id da composição>.
+  (function () {
+    var q = new URLSearchParams(location.search);
+    if (q.get('tema') === 'escuro') document.documentElement.dataset.theme = 'dark';
+    else { try { var t = localStorage.getItem('epistula-ds-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {} }
+    if (q.get('so')) document.documentElement.dataset.solo = q.get('so');
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+<style>
+/* Composição da documentação: não é peça do DS; o equivalente vive no tema do Starlight (docs-site). */
+/* ---------- Composição da documentação (Starlight com os tokens do DS) ---------- */
+.docs-demo { display: grid; grid-template-rows: auto 1fr; min-width: 68rem; background: var(--color-surface); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); overflow: hidden; color: var(--color-text); }
+.docs-top { display: grid; grid-template-columns: 16rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-300); height: 3.5rem; padding-inline: var(--space-250); border-bottom: var(--border-width) solid var(--color-border); }
+.docs-top__brand { display: flex; align-items: center; gap: var(--space-100); font: var(--font-weight-semibold) var(--font-size-body-large)/1 var(--font-family-heading); }
+.docs-top__brand small { font: var(--font-body); color: var(--color-text-subtle); }
+.docs-top .input--search { max-width: 26rem; width: 100%; justify-self: center; }
+.docs-top__end { display: flex; align-items: center; gap: var(--space-050); }
+.docs-top__sep { width: var(--border-width); height: 1.25rem; background: var(--color-border); margin-inline: var(--space-050); }
+.docs-body { display: grid; grid-template-columns: 16rem minmax(0, 1fr) 13rem; min-height: 44rem; }
+.docs-side { padding: var(--space-250) var(--space-150); border-right: var(--border-width) solid var(--color-border); display: grid; align-content: start; gap: var(--space-250); }
+.docs-side .nav-group { gap: var(--space-025); }
+.docs-side__more { margin-left: auto; color: var(--color-icon-subtle); }
+.docs-side__more .i { width: .875rem; height: .875rem; }
+.docs-back { display: flex; align-items: center; gap: var(--space-100); padding: var(--space-100) var(--space-150); border-radius: var(--radius-medium); background: var(--color-bg-neutral); font: var(--font-weight-semibold) var(--font-size-body)/1.3 var(--font-family-body); color: var(--color-text); }
+.docs-main { padding: var(--space-500) var(--space-600) var(--space-800); display: grid; align-content: start; gap: var(--space-250); min-width: 0; }
+.docs-main h1 { margin: 0; font: var(--font-weight-bold) 2.5rem/1.1 var(--font-family-heading); letter-spacing: -0.03em; }
+.docs-main h2 { margin: var(--space-200) 0 0; font: var(--font-weight-semibold) 1.5rem/1.2 var(--font-family-heading); letter-spacing: -0.02em; }
+/* Texto corrido: :where() zera a especificidade, para avisos, cartões e rótulos manterem o próprio estilo. */
+:where(.docs-main) :where(p, li) { font: var(--font-body-large); color: var(--color-text); margin: 0; }
+.docs-main ul { margin: 0; padding-left: var(--space-300); display: grid; gap: var(--space-075); }
+.docs-lede { font: var(--font-body-large); color: var(--color-text-subtle); max-width: 42rem; }
+.docs-crumbs { display: flex; gap: var(--space-075); font: var(--font-body-small); color: var(--color-text-subtle); }
+.docs-eyebrow { margin: 0; font: var(--font-weight-semibold) var(--font-size-body-small)/1 var(--font-family-body); color: var(--color-text-brand); }
+.docs-release { display: flex; align-items: center; gap: var(--space-150); padding: var(--space-100) var(--space-200); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: var(--color-surface); font: var(--font-body); color: var(--color-text-subtle); }
+.docs-release b { color: var(--color-text); }
+.docs-release a { margin-left: auto; font-weight: var(--font-weight-semibold); color: var(--color-text); text-decoration: none; }
+.docs-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); overflow: hidden; background: var(--color-surface); }
+.docs-card { display: grid; gap: var(--space-100); align-content: start; padding: var(--space-250); }
+.docs-card + .docs-card { border-left: var(--border-width) solid var(--color-border); }
+.docs-card__icon { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-medium); border: var(--border-width) solid var(--color-border); color: var(--color-icon-brand); }
+.docs-card h3 { margin: var(--space-100) 0 0; font: var(--font-weight-semibold) var(--font-size-body-large)/1.3 var(--font-family-body); }
+.docs-card p { font: var(--font-body); color: var(--color-text-subtle); }
+.docs-steps { display: grid; gap: var(--space-300); margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.docs-steps > li { position: relative; display: grid; gap: var(--space-150); padding-left: var(--space-500); counter-increment: step; }
+.docs-steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; border: var(--border-width) solid var(--color-border); font: var(--font-weight-semibold) var(--font-size-body-small)/1 var(--font-family-body); color: var(--color-text-brand); background: var(--color-surface); }
+.docs-steps > li::after { content: ""; position: absolute; left: .875rem; top: 2rem; bottom: calc(var(--space-300) * -1); width: var(--border-width); background: var(--color-border); }
+.docs-steps > li:last-child::after { display: none; }
+.docs-steps h3 { margin: 0; font: var(--font-weight-semibold) var(--font-size-body-large)/1.75rem var(--font-family-body); }
+.docs-code { margin: 0; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: var(--color-bg-neutral); overflow: hidden; }
+.docs-code__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-075) var(--space-150); border-bottom: var(--border-width) solid var(--color-border); font: var(--font-label); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtlest); }
+.docs-code pre { margin: 0; padding: var(--space-150) var(--space-200); font: var(--font-size-code)/1.6 var(--font-family-code); color: var(--color-text); overflow-x: auto; }
+.docs-toc { padding: var(--space-500) var(--space-200); display: grid; align-content: start; gap: var(--space-075); font: var(--font-body-small); }
+.docs-toc p { display: flex; align-items: center; gap: var(--space-075); margin: 0 0 var(--space-050); color: var(--color-text-subtle); }
+.docs-toc a { color: var(--color-text-subtle); text-decoration: none; padding: var(--space-050) var(--space-100); border-radius: var(--radius-small); }
+.docs-toc a[aria-current] { color: var(--color-text-selected); background: var(--color-bg-selected); font-weight: var(--font-weight-medium); }
+.docs-pager { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-200); margin-top: var(--space-300); }
+.docs-pager a { display: grid; gap: var(--space-050); padding: var(--space-200); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); text-decoration: none; color: var(--color-text); font: var(--font-weight-semibold) var(--font-size-body)/1.3 var(--font-family-body); }
+.docs-pager a span { font: var(--font-body-small); color: var(--color-text-subtle); }
+.docs-pager a:last-child { text-align: right; }
+
+/* Tema escuro do rascunho: a própria página, num iframe, mostrando só uma composição. */
+.dark-frame { width: 100%; height: 60rem; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: #000; }
+html[data-solo] .doc-nav { display: none; }
+html[data-solo] .doc { display: block; padding: 0; }
+html[data-solo] main { padding: 0; max-width: none; }
+html[data-solo] main > section { display: none; }
+html[data-solo="capa"] #capa, html[data-solo="pagina"] #pagina { display: block; padding: 0; margin: 0; border: 0; }
+html[data-solo] .ds-section > .ds-head, html[data-solo] .ds-section > .guidance { display: none; }
+html[data-solo] .stage { padding: 0; border: 0; background: none; }
+html[data-solo] .docs-demo { border-radius: 0; border: 0; min-width: 0; }
+</style>
+</head>
+<body data-page="documentacao">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="docs">
+      <div class="ds-head">
+        <p class="eyebrow">L77–L80</p>
+        <h1>Documentação</h1>
+        <p class="lede">O layout de <code>docs.epistulamail.com</code>, no formato da documentação do OpenClaw e feito com o <b>Starlight</b> (Astro) sobre os tokens do DS, e as peças novas que ele pede: gradientes, ícones de marca, seletor de idioma e timelines.</p>
+      </div>
+      <dl class="guidance">
+        <div><dt>Estrutura</dt><dd>Dois grupos na sidebar, como no OpenClaw. <b>Comece aqui</b> (Get Started) leva a páginas de passos. <b>Documentação</b> leva a seções com sub-páginas na própria sidebar, com um "voltar" no topo.</dd></div>
+        <div><dt>Topo</dt><dd>Logo e "Docs", busca (<kbd>Ctrl</kbd> <kbd>K</kbd>), GitHub, X, Discord, idioma e tema.</dd></div>
+        <div><dt>Idiomas</dt><dd>Português (Brasil), English, Español, Français e Italiano por enquanto. O Starlight gera uma pasta por idioma; os que faltarem mostram a página em inglês com um aviso.</dd></div>
+      </dl>
+    </section>
+
+    <!-- ===================================================================== L77 -->
+    <section class="ds-section" id="gradientes">
+      <div class="ds-head"><p class="eyebrow">L77</p><h2>Gradientes</h2><p class="lede">Cinco gradientes feitos das cores do DS com <code>color-mix</code>; no tema escuro ficam mais claros.</p></div>
+      <div class="stage">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:var(--space-200)">
+          <div class="gradient-swatch" style="background:var(--gradient-ocean)">Ocean</div>
+          <div class="gradient-swatch" style="background:var(--gradient-aurora)">Aurora</div>
+          <div class="gradient-swatch" style="background:var(--gradient-sunset)">Sunset</div>
+          <div class="gradient-swatch" style="background:var(--gradient-meadow)">Meadow</div>
+          <div class="gradient-swatch" style="background:var(--gradient-potato)">Potato</div>
+        </div>
+      </div>
+      <dl class="guidance"><div><dt>L78 · brilho do topo</dt><dd><code>.page-glow</code> (com <code>--ocean</code>, <code>--aurora</code>, <code>--sunset</code>, <code>--meadow</code>, <code>--potato</code>): o gradiente desfocado atrás do título, que some antes do conteúdo. <code>.text-gradient</code> pinta só o título principal. Na composição da capa, abaixo.</dd></div><div><dt>Onde usar</dt><dd>Só no início de páginas de destaque (capa da documentação, novidades). Nunca atrás de texto longo nem no app de e-mail.</dd></div></dl>
+    </section>
+
+    <!-- ===================================================================== L79 -->
+    <section class="ds-section" id="topo">
+      <div class="ds-head"><p class="eyebrow">L79</p><h2>Ícones de marca e idioma</h2><p class="lede">GitHub, X e Discord como <code>.btn--icon</code> com <code>.i--brand</code> (preenchido, não traço). O idioma abre um <code>.menu</code> com os cinco idiomas.</p></div>
+      <div class="stage">
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-600);align-items:start">
+          <figure class="state">
+            <div style="display:flex;align-items:center;gap:var(--space-050)">
+              <span class="btn btn--subtle btn--icon" aria-label="GitHub" data-tip="GitHub"><svg class="i i--brand"><use href="#i-github"/></svg></span>
+              <span class="btn btn--subtle btn--icon" aria-label="X" data-tip="X"><svg class="i i--brand"><use href="#i-x-brand"/></svg></span>
+              <span class="btn btn--subtle btn--icon" aria-label="Discord" data-tip="Discord"><svg class="i i--brand"><use href="#i-discord"/></svg></span>
+            </div>
+            <figcaption><b>Redes</b>só o ícone, com o nome no tooltip e no rótulo acessível</figcaption>
+          </figure>
+          <figure class="state">
+            <div style="display:grid;gap:var(--space-050);justify-items:start">
+              <span class="btn btn--subtle lang-button" aria-haspopup="menu" aria-expanded="true"><svg class="i"><use href="#i-globe"/></svg><span class="lang-button__code">PT-BR</span><svg class="i i--sm"><use href="#i-chevron-down"/></svg></span>
+              <div class="menu" role="menu" aria-label="Idioma" style="position:static;min-width:13rem">
+                <button class="menu-item is-selected" role="menuitemradio" aria-checked="true" type="button"><span class="menu-item__text">Português (Brasil)</span><span class="menu-item__meta">PT-BR</span></button>
+                <button class="menu-item" role="menuitemradio" aria-checked="false" type="button"><span class="menu-item__text">English</span><span class="menu-item__meta">EN</span></button>
+                <button class="menu-item" role="menuitemradio" aria-checked="false" type="button"><span class="menu-item__text">Español</span><span class="menu-item__meta">ES</span></button>
+                <button class="menu-item" role="menuitemradio" aria-checked="false" type="button"><span class="menu-item__text">Français</span><span class="menu-item__meta">FR</span></button>
+                <button class="menu-item" role="menuitemradio" aria-checked="false" type="button"><span class="menu-item__text">Italiano</span><span class="menu-item__meta">IT</span></button>
+              </div>
+            </div>
+            <figcaption><b>Idioma aberto</b>o nome de cada idioma na língua dele; o código ao lado</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== L80 -->
+    <section class="ds-section" id="timeline">
+      <div class="ds-head"><p class="eyebrow">L80</p><h2>Timeline</h2><p class="lede"><code>.timeline</code> na vertical (histórico de versões, passos de um processo longo) e <code>.timeline--horizontal</code> (roteiro, etapas curtas). Três estados: <code>.is-done</code>, <code>.is-current</code> e <code>.is-upcoming</code>.</p></div>
+      <div class="stage">
+        <div style="display:grid;gap:var(--space-600);align-items:start">
+          <figure class="state" style="justify-items:stretch;max-width:36rem">
+            <ol class="timeline" aria-label="Versões">
+              <li class="timeline__item is-current"><span class="timeline__marker" aria-hidden="true"></span><div class="timeline__content"><span class="timeline__date">27 out 2026 · 1.0.2</span><p class="timeline__title">Atualização automática</p><p class="timeline__body">Aviso no sino, confirmação e reinício. Nome EpistulaMail e a logo no app.</p></div></li>
+              <li class="timeline__item is-done"><span class="timeline__marker" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><div class="timeline__content"><span class="timeline__date">27 out 2026 · 1.0.1</span><p class="timeline__title">Ícone novo</p><p class="timeline__body">A batata no app, no instalador e na bandeja.</p></div></li>
+              <li class="timeline__item is-done"><span class="timeline__marker" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><div class="timeline__content"><span class="timeline__date">27 out 2026 · 1.0.0</span><p class="timeline__title">Primeira versão</p><p class="timeline__body">Busca, regras, criptografia e arquivos de e-mail.</p></div></li>
+            </ol>
+            <figcaption><b>Vertical</b>versões, da mais nova para a mais antiga</figcaption>
+          </figure>
+          <figure class="state" style="justify-items:stretch">
+            <ol class="timeline timeline--horizontal" aria-label="Roteiro">
+              <li class="timeline__item is-done"><span class="timeline__marker" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span><div class="timeline__content"><span class="timeline__date">Out 2026</span><p class="timeline__title">Gmail</p><p class="timeline__body">Leitura, envio e busca.</p></div></li>
+              <li class="timeline__item is-current"><span class="timeline__marker" aria-hidden="true"></span><div class="timeline__content"><span class="timeline__date">Agora</span><p class="timeline__title">Verificação do Google</p><p class="timeline__body">Login para qualquer conta.</p></div></li>
+              <li class="timeline__item is-upcoming"><span class="timeline__marker" aria-hidden="true"></span><div class="timeline__content"><span class="timeline__date">Em breve</span><p class="timeline__title">Outlook e IMAP</p><p class="timeline__body">Outros provedores.</p></div></li>
+              <li class="timeline__item is-upcoming"><span class="timeline__marker" aria-hidden="true"></span><div class="timeline__content"><span class="timeline__date">Depois</span><p class="timeline__title">Backup cifrado</p><p class="timeline__body">Uma conta num arquivo.</p></div></li>
+            </ol>
+            <figcaption><b>Horizontal</b>roteiro; rola na largura em telas estreitas</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== capa -->
+    <section class="ds-section" id="capa">
+      <div class="ds-head"><p class="eyebrow">Composição · Starlight</p><h2>Capa da documentação</h2><p class="lede">Sidebar com os dois grupos: <b>Comece aqui</b> (páginas de passos) e <b>Documentação</b> (seções com sub-páginas, marcadas com a seta). O brilho L78 fica atrás do título.</p></div>
+      <div class="stage stage--flush scroll-x">
+        <div class="docs-demo">
+          <header class="docs-top">
+            <span class="docs-top__brand"><img class="wordmark__logo" src="images/epistulamail-logo-120.png" alt="" style="width:1.75rem;height:1.75rem">EpistulaMail <small>Docs</small></span>
+            <div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar na documentação" aria-label="Buscar na documentação"><kbd>Ctrl K</kbd></div>
+            <div class="docs-top__end">
+              <span class="btn btn--subtle btn--icon" aria-label="GitHub"><svg class="i i--brand"><use href="#i-github"/></svg></span>
+              <span class="btn btn--subtle btn--icon" aria-label="X"><svg class="i i--brand"><use href="#i-x-brand"/></svg></span>
+              <span class="btn btn--subtle btn--icon" aria-label="Discord"><svg class="i i--brand"><use href="#i-discord"/></svg></span>
+              <span class="docs-top__sep" aria-hidden="true"></span>
+              <span class="btn btn--subtle lang-button"><svg class="i"><use href="#i-globe"/></svg><span class="lang-button__code">PT-BR</span><svg class="i i--sm"><use href="#i-chevron-down"/></svg></span>
+              <span class="btn btn--subtle btn--icon" aria-label="Tema"><svg class="i"><use href="#i-moon"/></svg></span>
+            </div>
+          </header>
+          <div class="docs-body">
+            <nav class="docs-side" aria-label="Documentação">
+              <div class="nav-group"><div class="nav-heading">Comece aqui</div>
+                <span class="nav-item" aria-current="page"><svg class="i"><use href="#i-sparkle"/></svg><span class="nav-item__text">Visão geral</span></span>
+                <span class="nav-item"><svg class="i"><use href="#i-play"/></svg><span class="nav-item__text">Início rápido</span></span>
+                <span class="nav-item"><svg class="i"><use href="#i-download"/></svg><span class="nav-item__text">Instalação</span></span>
+                <span class="nav-item"><svg class="i"><use href="#i-list"/></svg><span class="nav-item__text">Primeira configuração</span></span>
+                <span class="nav-item"><svg class="i"><use href="#i-settings"/></svg><span class="nav-item__text">Configuração</span></span>
+              </div>
+              <div class="nav-group"><div class="nav-heading">Documentação</div>
+                <span class="nav-item"><span class="nav-item__text">Comece aqui</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Instalação</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Contas e provedores</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Ler e escrever</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Busca</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Regras</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Criptografia</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Arquivos de e-mail</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Privacidade e segurança</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">MCP</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Agentes de IA</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Contribuir</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Versões</span><span class="lozenge lozenge--success" style="margin-left:auto">1.0.2</span><span class="docs-side__more" style="margin-left:var(--space-050)"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Ajuda</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+              </div>
+            </nav>
+            <div class="docs-main page-glow page-glow--aurora" style="grid-column:2 / 4">
+              <div style="display:grid;gap:var(--space-150)">
+                <h1><span class="text-gradient">EpistulaMail</span></h1>
+                <p class="docs-lede">O seu e-mail no seu computador, cifrado. Aqui está tudo para instalar, usar e contribuir: do primeiro login ao modelo de ameaças.</p>
+              </div>
+              <div class="docs-release"><span class="lozenge lozenge--success">Nova versão</span><b>1.0.2</b><span>Atualização automática, nome novo e a logo no app.</span><a href="#">Ver o que mudou →</a></div>
+              <div class="docs-cards">
+                <div class="docs-card"><span class="docs-card__icon"><svg class="i"><use href="#i-play"/></svg></span><h3>Início rápido</h3><p>Do download à caixa de entrada em cinco minutos.</p></div>
+                <div class="docs-card"><span class="docs-card__icon"><svg class="i"><use href="#i-download"/></svg></span><h3>Instalação</h3><p>Requisitos, SmartScreen e como conferir o SHA-256.</p></div>
+                <div class="docs-card"><span class="docs-card__icon"><svg class="i"><use href="#i-search"/></svg></span><h3>Busca</h3><p>Chips de pessoa, período e filtros, em todas as contas.</p></div>
+                <div class="docs-card"><span class="docs-card__icon"><svg class="i"><use href="#i-lock"/></svg></span><h3>Criptografia</h3><p>OpenPGP e S/MIME no mesmo composer.</p></div>
+              </div>
+              <h2>Por onde começar</h2>
+              <p>Se é a primeira vez, siga o <b>Início rápido</b>: ele instala o EpistulaMail, conecta a sua conta e mostra a busca. Se você já usa, a <b>Documentação</b> tem cada recurso em detalhe, com o que acontece por trás e onde os seus dados ficam.</p>
+              <p>Tudo o que está aqui vale para o Windows 10 e 11. Por enquanto, só contas Gmail conectam; os outros provedores vêm em breve.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== página de passos (Comece aqui) -->
+    <section class="ds-section" id="passos">
+      <div class="ds-head"><p class="eyebrow">Composição · Comece aqui</p><h2>Página de passos: Início rápido</h2><p class="lede">Cada item de <b>Comece aqui</b> é uma página com passos numerados. O índice da direita acompanha os passos.</p></div>
+      <div class="stage stage--flush scroll-x">
+        <div class="docs-demo">
+          <header class="docs-top">
+            <span class="docs-top__brand"><img class="wordmark__logo" src="images/epistulamail-logo-120.png" alt="" style="width:1.75rem;height:1.75rem">EpistulaMail <small>Docs</small></span>
+            <div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar na documentação" aria-label="Buscar na documentação"><kbd>Ctrl K</kbd></div>
+            <div class="docs-top__end"><span class="btn btn--subtle btn--icon"><svg class="i i--brand"><use href="#i-github"/></svg></span><span class="btn btn--subtle btn--icon"><svg class="i i--brand"><use href="#i-x-brand"/></svg></span><span class="btn btn--subtle btn--icon"><svg class="i i--brand"><use href="#i-discord"/></svg></span><span class="docs-top__sep"></span><span class="btn btn--subtle lang-button"><svg class="i"><use href="#i-globe"/></svg><span class="lang-button__code">PT-BR</span><svg class="i i--sm"><use href="#i-chevron-down"/></svg></span><span class="btn btn--subtle btn--icon"><svg class="i"><use href="#i-moon"/></svg></span></div>
+          </header>
+          <div class="docs-body">
+            <nav class="docs-side" aria-label="Documentação">
+              <div class="nav-group"><div class="nav-heading">Comece aqui</div>
+                <span class="nav-item"><svg class="i"><use href="#i-sparkle"/></svg><span class="nav-item__text">Visão geral</span></span>
+                <span class="nav-item" aria-current="page"><svg class="i"><use href="#i-play"/></svg><span class="nav-item__text">Início rápido</span></span>
+                <span class="nav-item"><svg class="i"><use href="#i-download"/></svg><span class="nav-item__text">Instalação</span></span>
+                <span class="nav-item"><svg class="i"><use href="#i-list"/></svg><span class="nav-item__text">Primeira configuração</span></span>
+                <span class="nav-item"><svg class="i"><use href="#i-settings"/></svg><span class="nav-item__text">Configuração</span></span>
+              </div>
+              <div class="nav-group"><div class="nav-heading">Documentação</div>
+                <span class="nav-item"><span class="nav-item__text">Comece aqui</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Instalação</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Contas e provedores</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Busca</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">Criptografia</span><span class="docs-side__more"><svg class="i"><use href="#i-chevron-right"/></svg></span></span>
+                <span class="nav-item"><span class="nav-item__text">…</span></span>
+              </div>
+            </nav>
+            <article class="docs-main">
+              <div class="docs-crumbs"><span>Comece aqui</span><span>/</span><span style="color:var(--color-text)">Início rápido</span></div>
+              <div style="display:grid;gap:var(--space-150)">
+                <p class="docs-eyebrow">Comece aqui</p>
+                <h1>Início rápido</h1>
+                <p class="docs-lede">Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinco minutos. No fim você terá a caixa de entrada sincronizada, guardada no seu computador num banco cifrado.</p>
+              </div>
+              <h2 id="precisa">O que você precisa</h2>
+              <ul><li><b>Windows 10 ou 11</b>, 64 bits</li><li><b>Uma conta Gmail.</b> Os outros provedores vêm em breve; enquanto isso, dá para abrir arquivos de e-mail sem conta.</li></ul>
+              <h2 id="passos-lista">Passo a passo</h2>
+              <ol class="docs-steps">
+                <li><h3>Baixe o instalador</h3><p>Em <b>epistulamail.com</b>, clique em "Download EpistulaMail". O arquivo tem uns 11 MB. Antes de abrir, confira se ele é o mesmo que foi publicado:</p><div class="docs-code"><div class="docs-code__head">PowerShell<svg class="i i--sm"><use href="#i-copy"/></svg></div><pre>(Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash</pre></div><p>O resultado tem que ser igual ao SHA-256 das notas da versão.</p></li>
+                <li><h3>Instale</h3><p>O instalador ainda não tem assinatura de código, então o Windows mostra "O Windows protegeu o computador". Clique em <b>Mais informações</b> e em <b>Executar assim mesmo</b>. Ele instala só para o seu usuário, sem pedir administrador.</p></li>
+                <li><h3>Conecte a sua conta</h3><p>Abra o EpistulaMail e escolha <b>Gmail</b>. O login acontece na página do Google, no seu navegador; a sua senha nunca passa pelo app. Enquanto o Google analisa o app, pode aparecer um aviso de que ele ainda não foi verificado.</p></li>
+                <li><h3>Leia e busque</h3><p>Os e-mails mais recentes aparecem primeiro e o resto chega em segundo plano. Aperte <kbd>/</kbd> e digite <code>de: Ana tem:anexo</code> para ver a busca com chips.</p></li>
+              </ol>
+              <div class="section-message"><svg class="i"><use href="#i-info"/></svg><div><p class="section-message__title">Próximo passo</p><p>Em <b>Primeira configuração</b>, escolha quanto guardar sem conexão e ligue a senha do EpistulaMail.</p></div></div>
+              <div class="docs-pager"><a href="#"><span>Anterior</span>Visão geral</a><a href="#"><span>Próximo</span>Instalação</a></div>
+            </article>
+            <aside class="docs-toc" aria-label="Nesta página">
+              <p><svg class="i i--sm"><use href="#i-list"/></svg>Nesta página</p>
+              <a href="#precisa">O que você precisa</a>
+              <a href="#passos-lista" aria-current="true">Passo a passo</a>
+              <a href="#">Baixe o instalador</a>
+              <a href="#">Instale</a>
+              <a href="#">Conecte a sua conta</a>
+              <a href="#">Leia e busque</a>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== página de seção (Documentação) -->
+    <section class="ds-section" id="pagina">
+      <div class="ds-head"><p class="eyebrow">Composição · Documentação</p><h2>Página de seção: Criptografia → Criar uma chave</h2><p class="lede">Ao entrar numa seção da <b>Documentação</b>, a sidebar mostra só as sub-páginas dela, em grupos, com "voltar" no topo. Página preenchida com texto.</p></div>
+      <div class="stage stage--flush scroll-x">
+        <div class="docs-demo">
+          <header class="docs-top">
+            <span class="docs-top__brand"><img class="wordmark__logo" src="images/epistulamail-logo-120.png" alt="" style="width:1.75rem;height:1.75rem">EpistulaMail <small>Docs</small></span>
+            <div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar na documentação" aria-label="Buscar na documentação"><kbd>Ctrl K</kbd></div>
+            <div class="docs-top__end"><span class="btn btn--subtle btn--icon"><svg class="i i--brand"><use href="#i-github"/></svg></span><span class="btn btn--subtle btn--icon"><svg class="i i--brand"><use href="#i-x-brand"/></svg></span><span class="btn btn--subtle btn--icon"><svg class="i i--brand"><use href="#i-discord"/></svg></span><span class="docs-top__sep"></span><span class="btn btn--subtle lang-button"><svg class="i"><use href="#i-globe"/></svg><span class="lang-button__code">PT-BR</span><svg class="i i--sm"><use href="#i-chevron-down"/></svg></span><span class="btn btn--subtle btn--icon"><svg class="i"><use href="#i-moon"/></svg></span></div>
+          </header>
+          <div class="docs-body">
+            <nav class="docs-side" aria-label="Criptografia">
+              <span class="docs-back"><svg class="i i--sm"><use href="#i-chevron-left"/></svg>Criptografia</span>
+              <div class="nav-group"><div class="nav-heading">Visão geral</div>
+                <span class="nav-item"><span class="nav-item__text">Como funciona</span></span>
+                <span class="nav-item"><span class="nav-item__text">OpenPGP ou S/MIME?</span></span>
+              </div>
+              <div class="nav-group"><div class="nav-heading">OpenPGP</div>
+                <span class="nav-item" aria-current="page"><span class="nav-item__text">Criar uma chave</span></span>
+                <span class="nav-item"><span class="nav-item__text">Importar e exportar</span></span>
+                <span class="nav-item"><span class="nav-item__text">Chaves de outras pessoas</span></span>
+                <span class="nav-item"><span class="nav-item__text">Backup com senha</span></span>
+              </div>
+              <div class="nav-group"><div class="nav-heading">S/MIME</div>
+                <span class="nav-item"><span class="nav-item__text">Pedir um certificado</span></span>
+                <span class="nav-item"><span class="nav-item__text">Importar um .p12</span></span>
+                <span class="nav-item"><span class="nav-item__text">Confiança e raízes</span></span>
+              </div>
+              <div class="nav-group"><div class="nav-heading">Ajuda</div>
+                <span class="nav-item"><span class="nav-item__text">Problemas comuns</span></span>
+              </div>
+            </nav>
+            <article class="docs-main">
+              <div class="docs-crumbs"><span>Documentação</span><span>/</span><span>Criptografia</span><span>/</span><span style="color:var(--color-text)">Criar uma chave</span></div>
+              <div style="display:grid;gap:var(--space-150)">
+                <p class="docs-eyebrow">OpenPGP</p>
+                <h1>Criar uma chave</h1>
+                <p class="docs-lede">Uma chave OpenPGP deixa você cifrar e assinar e-mails. Ela é criada no seu computador e a parte secreta nunca sai dele, a não ser no backup que você mesmo salvar.</p>
+              </div>
+              <h2 id="tipo">Qual tipo escolher</h2>
+              <p>O EpistulaMail oferece três tipos. Na dúvida, fique com o primeiro: é o que funciona com quase todos os programas.</p>
+              <ul><li><b>Curve25519</b>: rápida, pequena e aceita pela maioria dos programas. É a recomendada.</li><li><b>RSA 4096</b>: para quem troca e-mail com programas antigos que não conhecem curvas elípticas.</li><li><b>Pós-quântica (experimental)</b>: ML-KEM-768 com X25519, contra computadores quânticos. Poucos programas leem ainda.</li></ul>
+              <h2 id="criar">Criar</h2>
+              <p>Em <b>Configurações → Criptografia</b>, clique em <b>Criar uma chave</b>, escolha a conta e o tipo. Em segundos a chave aparece na lista, já ligada à conta.</p>
+              <div class="section-message section-message--warning"><svg class="i"><use href="#i-warning"/></svg><div><p class="section-message__title">Faça o backup agora</p><p>Se o seu computador estragar sem backup, as mensagens cifradas para essa chave não abrem mais. Use <b>Backup com senha</b> e guarde o arquivo fora do computador.</p></div></div>
+              <h2 id="compartilhar">Compartilhar a chave pública</h2>
+              <p>Para alguém cifrar e-mails para você, essa pessoa precisa da sua chave pública. O EpistulaMail já manda a chave no cabeçalho Autocrypt dos e-mails que você envia; você também pode exportar e enviar o arquivo.</p>
+              <div class="docs-pager"><a href="#"><span>Anterior</span>OpenPGP ou S/MIME?</a><a href="#"><span>Próximo</span>Importar e exportar</a></div>
+            </article>
+            <aside class="docs-toc" aria-label="Nesta página">
+              <p><svg class="i i--sm"><use href="#i-list"/></svg>Nesta página</p>
+              <a href="#tipo" aria-current="true">Qual tipo escolher</a>
+              <a href="#criar">Criar</a>
+              <a href="#compartilhar">Compartilhar a chave pública</a>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== tema escuro -->
+    <section class="ds-section" id="escuro">
+      <div class="ds-head"><p class="eyebrow">Tema escuro</p><h2>As mesmas páginas no escuro</h2><p class="lede">Esta página carregada de novo no tema escuro, mostrando a capa e a página de seção. Os gradientes ficam mais claros e o brilho continua sutil.</p></div>
+      <div style="display:grid;gap:var(--space-400)">
+        <iframe class="dark-frame" title="Capa no tema escuro" src="documentacao.html?tema=escuro&amp;so=capa" loading="lazy"></iframe>
+        <iframe class="dark-frame" title="Página de seção no tema escuro" src="documentacao.html?tema=escuro&amp;so=pagina" loading="lazy"></iframe>
+      </div>
+    </section>
+
+    <section class="ds-section" id="pendencias">
+      <div class="ds-head"><h2>Peças</h2></div>
+      <dl class="guidance">
+        <div><dt>L77 · L78</dt><dd>Os cinco <code>--gradient-*</code> em <code>tokens.css</code>; <code>.page-glow</code> e <code>.text-gradient</code> em <code>components.css</code>.</dd></div>
+        <div><dt>L79</dt><dd><code>.i--brand</code> e os ícones <code>github</code>, <code>x-brand</code> e <code>discord</code> no sprite; <code>.lang-button</code> com o menu de idiomas.</dd></div>
+        <div><dt>L80</dt><dd><code>.timeline</code> (vertical) e <code>.timeline--horizontal</code>, com <code>.is-done</code>, <code>.is-current</code> e <code>.is-upcoming</code>.</dd></div>
+        <div><dt>Documentação</dt><dd>Starlight em <code>docs-site/</code>, publicado em <code>docs.epistulamail.com</code> por pipeline próprio. "Comece aqui": Visão geral, Início rápido, Instalação, Primeira configuração (Onboarding), Configuração. "Documentação": Comece aqui, Instalação, Contas e provedores, Ler e escrever, Busca, Regras, Criptografia, Arquivos de e-mail, Privacidade e segurança, MCP, Agentes de IA, Contribuir, Versões, Ajuda.</dd></div>
+        <div><dt>A definir</dt><dd>Os endereços do X e do Discord (ainda não existem perfis). MCP e Agentes de IA entram como "em breve" até existirem no app.</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

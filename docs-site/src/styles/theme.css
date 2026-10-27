@@ -1,0 +1,106 @@
+/* Tema do Starlight com os tokens do design system do EpistulaMail. O Starlight define as cores em :root (escuro)
+   e em :root[data-theme='light']; aqui as duas apontam para os tokens, que já mudam com data-theme. */
+:root,
+:root[data-theme='light'] {
+  --sl-font: var(--font-family-body);
+  --sl-font-mono: var(--font-family-code);
+
+  --sl-color-accent-low: var(--color-bg-selected);
+  --sl-color-accent: var(--color-bg-brand-bold);
+  --sl-color-accent-high: var(--color-text-selected);
+  --sl-color-text-accent: var(--color-text-brand);
+
+  --sl-color-white: var(--color-text);
+  --sl-color-gray-1: var(--color-text);
+  --sl-color-gray-2: var(--color-text-subtle);
+  --sl-color-gray-3: var(--color-text-subtlest);
+  --sl-color-gray-4: var(--color-border-bold);
+  --sl-color-gray-5: var(--color-border);
+  --sl-color-gray-6: var(--color-bg-neutral);
+  --sl-color-gray-7: var(--color-surface-sunken);
+  --sl-color-black: var(--color-surface);
+  --sl-color-bg: var(--color-surface);
+  --sl-color-bg-nav: var(--color-surface);
+  --sl-color-bg-sidebar: var(--color-surface);
+  --sl-color-bg-inline-code: var(--color-bg-neutral);
+  --sl-color-hairline: var(--color-border);
+  --sl-color-hairline-light: var(--color-border);
+  --sl-color-hairline-shade: var(--color-border);
+
+  --sl-content-width: 46rem;
+  --sl-sidebar-width: 17rem;
+}
+
+/* Títulos com a fonte e o espaçamento do DS. */
+.sl-markdown-content :is(h1, h2, h3),
+h1#_top {
+  font-family: var(--font-family-heading);
+  letter-spacing: -0.02em;
+}
+h1#_top { letter-spacing: -0.03em; }
+
+/* Links do conteúdo na cor de link do DS. */
+.sl-markdown-content a:not(:where(.not-content *)) { color: var(--color-link); }
+
+/* Item atual da sidebar como no app (fundo de seleção, texto de seleção). */
+.sidebar-content a[aria-current='page'] {
+  background: var(--color-bg-selected);
+  color: var(--color-text-selected);
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+/* Capa: o brilho (L78) atrás do título e o título em gradiente, só onde a página pede (frontmatter glow). */
+.page-glow-title { padding-block: 0.5rem 1rem; }
+.page-glow-title h1 { font-size: clamp(2.5rem, 5vw, 3.5rem); }
+
+/* Cartão da última versão, abaixo do título da capa. */
+.release-banner {
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+  padding: 0.6rem 1rem; border: 1px solid var(--color-border); border-radius: 0.75rem;
+  background: var(--color-surface); color: var(--color-text-subtle); font-size: 0.95rem;
+}
+.release-banner b { color: var(--color-text); }
+.release-banner a { margin-left: auto; font-weight: 600; color: var(--color-text); text-decoration: none; }
+.release-banner .badge-new {
+  padding: 0.1rem 0.45rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  background: var(--color-bg-success); color: var(--color-text-success);
+}
+
+/* Botão "voltar" da sidebar de uma seção (ver components/Sidebar.astro). */
+.ds-drill__back {
+  display: flex; align-items: center; gap: 0.5rem; width: 100%;
+  margin-bottom: 1rem; padding: 0.55rem 0.75rem; border: 0; border-radius: 0.5rem;
+  background: var(--color-bg-neutral); color: var(--color-text);
+  font: 600 0.95rem/1.3 var(--font-family-body); text-align: start; cursor: pointer;
+}
+.ds-drill__back:hover { background: var(--color-bg-selected); }
+
+/* ---------- Ajustes de layout ---------- */
+
+/* Título do site: na cor do texto, com "Docs" ao lado, como no OpenClaw. */
+.site-title { color: var(--color-text); gap: 0.6rem; font-family: var(--font-family-heading); }
+.site-title::after { content: "Docs"; font: 400 var(--sl-text-base)/1 var(--font-family-body); color: var(--color-text-subtle); }
+
+/* Seletor de idioma com o nome inteiro. */
+starlight-lang-select label { --sl-select-width: 9.5em !important; }
+
+/* Capa: o brilho precisa sair da caixa do título para aparecer (ele some sozinho pela máscara). */
+.page-glow.page-glow-title { overflow: visible; }
+.page-glow.page-glow-title::before {
+  opacity: 0.32; inset: -10rem -20% auto -20%; height: 26rem;
+  /* Oval, para não mostrar as bordas da caixa do conteúdo. */
+  -webkit-mask-image: radial-gradient(ellipse 50% 60% at 40% 40%, #000 30%, transparent 75%);
+          mask-image: radial-gradient(ellipse 50% 60% at 40% 40%, #000 30%, transparent 75%);
+}
+
+/* Grupos dentro da Documentação com peso normal; os dois grupos de cima continuam em destaque. */
+.sidebar-content ul ul summary .group-label span { font-weight: 500; }
+
+/* Sidebar de uma seção: o botão de voltar sem sublinhado e as páginas no tamanho normal. */
+.ds-drill__back { text-decoration: none; }
+.ds-drill .top-level > li > a.large { font-size: var(--sl-text-sm); font-weight: 400; color: var(--color-text-subtle); }
+.ds-drill .top-level > li > a.large[aria-current='page'] { color: var(--color-text-selected); font-weight: 600; }
+
+/* Timeline dentro do texto: espaço antes e depois. */
+.sl-markdown-content .timeline { margin-block: 1.5rem 2rem; }
