@@ -64,9 +64,13 @@ function build() {
     copyFileSync(join(here, "images", "people", name), join(dist, "images", "people", name));
   }
 
-  const page = readFileSync(join(here, "index.html"), "utf8");
-  if (!page.includes("<!-- ds-icons -->")) fail("index.html sem o marcador <!-- ds-icons -->");
-  writeFileSync(join(dist, "index.html"), page.replace("<!-- ds-icons -->", `<div hidden>${iconSprite()}</div>`));
+  // A página inicial, a política de privacidade e os termos de uso (pedidos pela tela de consentimento do OAuth).
+  const sprite = `<div hidden>${iconSprite()}</div>`;
+  for (const file of ["index.html", "privacidade.html", "termos.html"]) {
+    const page = readFileSync(join(here, file), "utf8");
+    if (!page.includes("<!-- ds-icons -->")) fail(`${file} sem o marcador <!-- ds-icons -->`);
+    writeFileSync(join(dist, file), page.replace("<!-- ds-icons -->", sprite));
+  }
   console.log("build: dist/ pronto");
 }
 

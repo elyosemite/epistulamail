@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Política de privacidade · Epistula</title>
+<meta name="description" content="O que o Epistula acessa, onde guarda e com quem fala.">
+<meta name="color-scheme" content="light dark">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="ds/tokens.css">
+<link rel="stylesheet" href="ds/components.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<!-- ds-icons -->
+<a class="btn btn--primary site-skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="site-header">
+  <div class="site-container site-header__inner">
+    <a class="wordmark wordmark--sm" href="./#topo" aria-label="Epistula, início"><span class="wordmark__glyph"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</a>
+    <nav class="site-nav" aria-label="Seções">
+      <a href="./#recursos">Recursos</a>
+      <a href="./#seguranca">Segurança</a>
+      <a href="./#para-onde">Para onde vamos</a>
+    </nav>
+    <div class="site-header__end">
+      <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
+      <a class="btn" href="https://github.com/elyosemite/epistulamail">GitHub</a>
+      <a class="btn btn--primary" href="./#comecar">Como instalar</a>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo">
+  <article class="site-container site-doc">
+    <p class="site-label">Em vigor desde 27 de outubro de 2026</p>
+    <h1 class="site-h2">Política de privacidade</h1>
+    <p class="site-doc__lede">O Epistula é um programa de e-mail que roda no seu computador. Não existe conta do Epistula, servidor do Epistula que receba as suas mensagens nem coleta de dados de uso. Esta página diz o que o programa acessa, onde guarda e com quem ele se conecta.</p>
+
+    <h2>Quem somos</h2>
+    <p>O Epistula é um projeto de código aberto mantido por Yuri Melo. O código está em <a href="https://github.com/elyosemite/epistulamail">github.com/elyosemite/epistulamail</a>, e qualquer pessoa pode conferir o que está escrito aqui.</p>
+
+    <h2>Dados que o Epistula acessa</h2>
+    <p>Quando você conecta uma conta Google, o Epistula pede ao Google permissão para:</p>
+    <ul>
+      <li><b>Ler, enviar e organizar e-mails</b> (escopo <code>https://mail.google.com/</code>), pelo IMAP e pelo SMTP. É o único escopo do Google que dá acesso a esses protocolos.</li>
+      <li><b>Saber quem é você</b> (escopos <code>openid</code>, <code>email</code> e <code>profile</code>): o seu endereço de e-mail, o nome e a foto do perfil, para mostrar a conta no app.</li>
+    </ul>
+    <p>Esses dados são usados só para mostrar, buscar, escrever, enviar e organizar os seus e-mails dentro do app, a seu pedido. Eles não são usados para publicidade, não são vendidos, não são compartilhados com ninguém e não são usados para treinar modelos de inteligência artificial.</p>
+
+    <h2>Onde os dados ficam</h2>
+    <ul>
+      <li>As mensagens, os contatos, as pastas e as configurações ficam <b>só no seu computador</b>, num banco de dados cifrado com AES-256 (SQLCipher).</li>
+      <li>A chave desse banco e os tokens de acesso às contas ficam no Gerenciador de Credenciais do Windows, protegidos pela sua sessão.</li>
+      <li>A sua senha do Google nunca passa pelo Epistula: o login acontece na página do Google, no seu navegador.</li>
+      <li>Os registros de diagnóstico do app não contêm conteúdo de mensagens, endereços, assuntos, senhas ou tokens.</li>
+    </ul>
+
+    <h2>Com quem o Epistula se conecta</h2>
+    <ul>
+      <li><b>Google</b>: para o login (OAuth), para receber e enviar e-mails (IMAP e SMTP) e para cancelar o acesso quando você sai da conta.</li>
+      <li><b>Servidores de chaves OpenPGP</b> (como <code>keys.openpgp.org</code>): só quando você pede para procurar a chave de alguém.</li>
+      <li><b>Imagens externas de um e-mail</b>: ficam bloqueadas e só são baixadas, direto do servidor de quem enviou, quando você permite naquela mensagem.</li>
+    </ul>
+    <p>O Epistula não envia dados para nenhum servidor próprio, nem para serviços de análise, publicidade ou relatórios de erro.</p>
+
+    <h2>Uso limitado dos dados do Google</h2>
+    <p>O uso e a transferência, para qualquer outro aplicativo, das informações recebidas das APIs do Google seguem a <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de Dados do Usuário dos Serviços de API do Google</a>, incluindo os requisitos de Uso Limitado.</p>
+    <p lang="en">Epistula's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+
+    <h2>Como apagar os seus dados</h2>
+    <ul>
+      <li><b>Sair de uma conta</b> no Epistula cancela o acesso junto ao Google e, se você escolher, apaga do computador as mensagens daquela conta.</li>
+      <li><b>Desinstalar</b> o Epistula pelo Windows remove o programa; os dados ficam em <code>%APPDATA%\br.com.epistula.desktop</code> e as credenciais no Gerenciador de Credenciais do Windows (itens "epistula"), e podem ser apagados por lá.</li>
+      <li>Você também pode cancelar o acesso a qualquer momento em <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
+    </ul>
+
+    <h2>Crianças</h2>
+    <p>O Epistula não é dirigido a menores de 13 anos e não coleta dados de ninguém.</p>
+
+    <h2>Mudanças</h2>
+    <p>Se esta política mudar, a nova versão é publicada nesta página, com a data no topo, e o histórico fica no repositório do projeto.</p>
+
+    <h2>Contato</h2>
+    <p>Dúvidas sobre privacidade: abra uma <a href="https://github.com/elyosemite/epistulamail/issues">issue no GitHub</a>. Para relatar um problema de segurança em sigilo, use <a href="https://github.com/elyosemite/epistulamail/security">a página de segurança do projeto</a>.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="site-container">
+    <div class="site-footer__grid">
+      <div>
+        <h4>Produto</h4>
+        <ul><li><a href="./#recursos">Recursos</a></li><li><a href="./#seguranca">Segurança</a></li><li><a href="./#para-onde">Para onde vamos</a></li><li><a href="./#comecar">Como instalar</a></li></ul>
+      </div>
+      <div>
+        <h4>Projeto</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail">Código no GitHub</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/design-system">Design system</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/userstory">Histórico de decisões</a></li></ul>
+      </div>
+      <div>
+        <h4>Segurança</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail/blob/main/docs/arquitetura-e-ameacas.md">Modelo de ameaças</a></li><li><a href="https://github.com/elyosemite/epistulamail/security">Relatar um problema</a></li><li><a href="privacidade">Política de privacidade</a></li><li><a href="termos">Termos de uso</a></li></ul>
+      </div>
+      <div>
+        <h4>Contribuir</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail/issues">Issues</a></li><li><a href="https://github.com/elyosemite/epistulamail/pulls">Pull requests</a></li></ul>
+      </div>
+    </div>
+    <div class="site-footer__legal">
+      <a class="wordmark wordmark--sm" href="./#topo" style="text-decoration:none;color:var(--color-text)"><span class="wordmark__glyph"><svg class="i"><use href="#i-mail"/></svg></span>Epistula</a>
+      <span>Licença a definir. Sem cookies, sem rastreamento, nada de terceiros.</span>
+    </div>
+  </div>
+</footer>
+<script src="site.js"></script>
+</body>
+</html>

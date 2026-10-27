@@ -129,3 +129,13 @@ a { color: var(--color-link); }
 @media (prefers-reduced-motion: reduce) { .site-reveal { opacity: 1; transform: none; transition: none; } }
 
 @media (max-width: 30rem) { :root { --site-gutter: var(--space-200); } .site-section { padding-block: var(--space-800); } }
+
+/* Páginas de texto: política de privacidade e termos de uso. */
+.site-doc { display: grid; gap: var(--space-200); max-width: 46rem; padding-block: var(--space-800) var(--space-1000); }
+.site-doc h2 { margin: var(--space-300) 0 0; font: var(--font-weight-semibold) var(--font-size-section)/1.3 var(--font-family-heading); color: var(--color-text); }
+.site-doc p, .site-doc li { margin: 0; font: var(--font-body); color: var(--color-text-subtle); }
+.site-doc ul { display: grid; gap: var(--space-100); margin: 0; padding-inline-start: var(--space-300); }
+.site-doc b { color: var(--color-text); }
+.site-doc a { color: var(--color-link); }
+.site-doc__lede { font-size: var(--font-size-body-large) !important; line-height: 1.5 !important; }
+
