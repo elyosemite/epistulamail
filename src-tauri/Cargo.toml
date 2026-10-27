@@ -1,6 +1,6 @@
 [package]
 name = "epistula"
-version = "1.0.0"
+version = "1.0.1"
 description = "Cliente de e-mail desktop Epistula"
 edition = "2021"
 rust-version = "1.88"

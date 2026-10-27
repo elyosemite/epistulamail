@@ -2,6 +2,16 @@
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o [SemVer](https://semver.org/lang/pt-BR/). O pipeline de release (`.github/workflows/release.yml`) usa a seção da versão como notas da release.
 
+## [1.0.1] - 2026-10-27
+
+### Mudou
+
+- Novo ícone do EpistulaMail no app, no instalador, na barra de tarefas, no menu Iniciar e na bandeja do sistema, sem fundo e legível de 16 a 256 px.
+
+### Avisos
+
+- O instalador continua sem assinatura de código: confira o SHA-256 abaixo antes de executar. Instale por cima da 1.0.0; as contas e as mensagens continuam.
+
 ## [1.0.0] - 2026-10-27
 
 Primeira versão publicada, para Windows 10 e 11 (64 bits).
