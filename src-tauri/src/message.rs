@@ -42,6 +42,9 @@ pub struct MessageHeader {
     /// Só nos resultados de busca: id opaco dessa pasta.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub folder_id: Option<String>,
+    /// Só nos resultados de busca (US16): a conta da mensagem, para a busca em todas as contas.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub account_id: Option<String>,
 }
 
 /// Pasta de uma conta: id da conta + id da pasta no banco local. Viaja como texto opaco.

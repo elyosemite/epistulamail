@@ -453,6 +453,87 @@ pub async fn run_now(state: &AppState, account_id: String, rule_id: i64, folder:
     Ok(done.messages.len())
 }
 
+/// Fatos das mensagens pedidas (`(pasta, uid)`), agrupados por pasta, na conta. Pastas onde a regra
+/// nunca roda (Enviados, Rascunhos, Lixeira, Spam) ficam de fora.
+fn facts_of(c: &rusqlite::Connection, account_id: &str, keys: &[(i64, u32)], today: chrono::NaiveDate) -> Result<Vec<(FolderRow, Vec<Facts>)>, AppError> {
+    let mut by_folder: BTreeMap<i64, Vec<i64>> = BTreeMap::new();
+    for &(folder, uid) in keys {
+        if let Some(m) = store::message_by_uid(c, folder, uid)? {
+            by_folder.entry(folder).or_default().push(m.id);
+        }
+    }
+    let mut out = Vec::new();
+    for (folder_id, ids) in by_folder {
+        let folder = store::folder_of_account(c, account_id, folder_id)?;
+        if never_runs_in(folder.role) {
+            continue;
+        }
+        let facts = store::rule_facts(c, folder.id, Some(&ids), None, today)?;
+        out.push((folder, facts));
+    }
+    Ok(out)
+}
+
+/// Prévia de uma regra sobre resultados da busca (US16): quantos ela pegaria e alguns deles.
+pub async fn preview_on(state: &AppState, account_id: String, rule_id: i64, keys: Vec<(i64, u32)>) -> Result<Preview, AppError> {
+    let today = Local::now().date_naive();
+    state
+        .db
+        .call(move |c| {
+            let account = store::require_account(c, &account_id)?;
+            let rule = store::get_rule(c, &account_id, rule_id)?;
+            let groups = facts_of(c, &account_id, &keys, today)?;
+            let hits: Vec<&Facts> = groups.iter().flat_map(|(_, f)| f.iter()).filter(|f| rules::matches(&rule.spec, f, &account.email)).collect();
+            Ok(Preview {
+                checked: keys.len(),
+                count: hits.len(),
+                sample: hits
+                    .iter()
+                    .take(PREVIEW_SAMPLE)
+                    .map(|f| PreviewItem { from: if f.from_name.is_empty() { f.from_address.clone() } else { f.from_name.clone() }, subject: f.subject.clone(), date: String::new() })
+                    .collect(),
+                shadowed: None,
+            })
+        })
+        .await
+}
+
+/// Aplica uma regra a resultados da busca (US16), pasta por pasta, como "Rodar agora": vai para o
+/// histórico com "Desfazer". Devolve quantos e-mails a regra afetou.
+pub async fn apply_on(state: &AppState, account_id: String, rule_id: i64, keys: Vec<(i64, u32)>) -> Result<usize, AppError> {
+    let today = Local::now().date_naive();
+    let id = account_id.clone();
+    let (account, rule, groups) = state
+        .db
+        .call(move |c| {
+            let account = store::require_account(c, &id)?;
+            let row = store::get_rule(c, &id, rule_id)?;
+            Ok((account, Rule { id: row.id, name: row.name, spec: row.spec }, facts_of(c, &id, &keys, today)?))
+        })
+        .await?;
+    if account.status != AccountStatus::Active {
+        return Err(AppError::SignedOut);
+    }
+    let rules = vec![rule];
+    let mut done = 0;
+    for (folder, facts) in groups {
+        let items: Vec<(Facts, Plan)> = facts
+            .into_iter()
+            .map(|f| {
+                let p = rules::plan(&rules, &f, &account.email);
+                (f, p)
+            })
+            .filter(|(_, p)| !p.steps.is_empty())
+            .collect();
+        if items.is_empty() {
+            continue;
+        }
+        done += execute(state, &account, &folder, &rules, items, "manual").await?.messages.len();
+    }
+    tracing::info!(count = done, "regra aplicada a resultados da busca");
+    Ok(done)
+}
+
 /// Limpeza diária (CA8): regras com "mais antigo que" ou "não é o mais recente do remetente", uma vez
 /// por dia, com o app desbloqueado. Também tira do histórico os lotes com mais de 30 dias (D8).
 pub fn start_cleanup(app: &AppHandle) {

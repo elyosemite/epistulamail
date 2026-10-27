@@ -4,6 +4,7 @@
 // DS: carregamento.html · linhas .thread com .skeleton; etiquetas.html · .label (pasta na busca); menus.html · .lozenge de prazo
 // DS: threads.html "Densidade" (US7) · .thread-list (Confortável), --standard (Padrão), --compact; .thread__snippet, .thread__icons
 // DS: threads.html "Lista por conversa" (US8, L48) · .thread__count ao lado dos participantes
+// DS: busca.html "Resultados" (L75) · .thread__account, a conta do resultado na busca em todas as contas
 import type { Density } from "../lib/tauri";
 import { forwardRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { IconButton } from "./Button";
@@ -43,6 +44,8 @@ interface ThreadRowProps {
   badge?: ReactNode;
   /** Pasta da mensagem nos resultados de busca (`.label`). */
   folder?: string;
+  /** Avatar da conta do resultado (busca em todas as contas, `.thread__account`). */
+  account?: ReactNode;
   /** Começo do texto; só aparece na densidade Confortável. */
   snippet?: string;
   hasFiles?: boolean;
@@ -57,7 +60,7 @@ const stop = (fn: () => void) => (event: MouseEvent) => {
 };
 
 export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function ThreadRow(
-  { from, subject, date, unread, starred, open, checked, onOpen, onCheck, onKeyDown, onPointerDown, onHover, onToggleStar, onToggleRead, badge, folder, snippet, hasFiles, hasImages, count },
+  { from, subject, date, unread, starred, open, checked, onOpen, onCheck, onKeyDown, onPointerDown, onHover, onToggleStar, onToggleRead, badge, folder, account, snippet, hasFiles, hasImages, count },
   ref,
 ) {
   const cls = ["thread", unread && "is-unread", checked && "is-checked", open && "is-open"].filter(Boolean).join(" ");
@@ -124,6 +127,7 @@ export const ThreadRow = forwardRef<HTMLDivElement, ThreadRowProps>(function Thr
         )}
       </div>
       <div className="thread__subject">
+        {account}
         {folder && <span className="label">{folder}</span>}
         <span className="thread__subject-text">{subject}</span>
         {(hasFiles || hasImages) && (

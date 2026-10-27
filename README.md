@@ -57,7 +57,14 @@ What works today:
 
 - Compose, reply, reply all and forward, with drafts saved encrypted.
 - Folders and labels, flags with due dates, and move, archive, delete and mark as read for one message or many, including drag and drop onto a folder.
-- Search, a command bar, and background sync with a per-account interval.
+- A command bar, and background sync with a per-account interval.
+
+**Search**
+
+- Search every folder at once, offline, in one account or across all of them (email archives included, each result with its account's avatar).
+- People, dates and filters turn into chips in the search field: type operators such as `de:` (or `from:`), `para:` (or `to:`), `cc:`, `depois:`, `antes:`, `em:2025`, `tem:anexo` and `na:` for a folder, or pick them from the suggestions, which list the people you already exchanged mail with.
+- Recent searches stay on this computer; saved searches show up in the folder column with their unread count.
+- Act on the results like any list, or apply one of your rules to them, with a preview first and Undo afterwards. A search can also become a new rule.
 
 **Rules**
 
@@ -138,7 +145,7 @@ Export a whole account to an encrypted file, keep it wherever you like (an exter
 
 ### Real email management
 
-Full-text local search, offline included. Rules that also run on the server, with the app closed. Snoozing messages. A unified view across accounts. Signatures, templates and scheduled send. Other providers (Outlook over Microsoft OAuth, Yahoo, iCloud and generic IMAP). Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
+Full-text local search over the whole message body, offline included. Rules that also run on the server, with the app closed. Snoozing messages. A unified view across accounts. Signatures, templates and scheduled send. Other providers (Outlook over Microsoft OAuth, Yahoo, iCloud and generic IMAP). Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
 
 ## How your information is handled
 

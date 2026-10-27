@@ -13,6 +13,8 @@ interface EmailItemProps {
   checked: boolean;
   /** Pasta da mensagem (resultados de busca). */
   folderName?: string;
+  /** Conta da mensagem (busca em todas as contas). */
+  account?: ReactNode;
   badge?: ReactNode;
   onOpen: () => void;
   onCheck: (range: boolean) => void;
@@ -25,7 +27,7 @@ interface EmailItemProps {
 
 /** Um e-mail na lista. */
 export const EmailItem = forwardRef<HTMLDivElement, EmailItemProps>(function EmailItem(
-  { message, open, checked, folderName, badge, onOpen, onCheck, onKeyDown, onPointerDown, onHover, onToggleStar, onToggleRead },
+  { message, open, checked, folderName, account, badge, onOpen, onCheck, onKeyDown, onPointerDown, onHover, onToggleStar, onToggleRead },
   ref,
 ) {
   return (
@@ -48,6 +50,7 @@ export const EmailItem = forwardRef<HTMLDivElement, EmailItemProps>(function Ema
       onToggleRead={onToggleRead}
       badge={badge}
       folder={folderName}
+      account={account}
       snippet={message.snippet}
       hasFiles={message.hasFiles}
       hasImages={message.hasImages}

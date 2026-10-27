@@ -36,9 +36,11 @@ interface NavItemProps {
   overdue?: boolean;
   /** O contador é uma quantidade, não de não lidas: sem o destaque de `.has-unread`. */
   plainCount?: boolean;
+  /** Menu de contexto (clique direito ou Shift+F10), ex.: excluir uma busca salva. */
+  onMenu?: (anchor: { x: number; y: number }) => void;
 }
 
-export function NavItem({ icon, label, count, current, onSelect, drop, dropId, overdue, plainCount }: NavItemProps) {
+export function NavItem({ icon, label, count, current, onSelect, drop, dropId, overdue, plainCount, onMenu }: NavItemProps) {
   const hasCount = !!count && count > 0;
   const unread = hasCount && !plainCount;
   const cls = ["nav-item", unread && "has-unread", drop === "target" && "is-drop-target", drop === "blocked" && "is-drop-blocked", overdue && "is-overdue"].filter(Boolean).join(" ");
@@ -50,6 +52,18 @@ export function NavItem({ icon, label, count, current, onSelect, drop, dropId, o
       aria-label={unread ? `${label}, ${count} não lidas` : hasCount ? `${label}, ${count}` : label}
       data-tip={label}
       onClick={onSelect}
+      aria-haspopup={onMenu ? "menu" : undefined}
+      onContextMenu={onMenu && ((e) => {
+        e.preventDefault();
+        onMenu({ x: e.clientX, y: e.clientY });
+      })}
+      onKeyDown={onMenu && ((e) => {
+        if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+          e.preventDefault();
+          const r = e.currentTarget.getBoundingClientRect();
+          onMenu({ x: r.left, y: r.bottom + 4 });
+        }
+      })}
       data-drop-folder={dropId}
     >
       <Icon name={icon} />

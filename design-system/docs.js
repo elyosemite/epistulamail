@@ -122,6 +122,11 @@ const EPISTULA_PAGES = [
         "Organizar os e-mails assim que chegam."
       ],
       [
+        "busca",
+        "Busca",
+        "Pessoas, período e filtros como chips; buscas salvas."
+      ],
+      [
         "arquivos",
         "Arquivos de e-mail",
         "Abrir backups de outros programas, sem conta."

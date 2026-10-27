@@ -30,6 +30,7 @@ mod rule_runner;
 mod rules;
 mod sanitize;
 mod send;
+mod search;
 mod secrets;
 mod session;
 mod smime;
@@ -257,6 +258,15 @@ pub fn run() {
             commands::set_flags,
             commands::open_external_link,
             commands::search_messages,
+            commands::search_contacts,
+            commands::recent_searches,
+            commands::add_recent_search,
+            commands::clear_recent_searches,
+            commands::list_saved_searches,
+            commands::save_search,
+            commands::delete_saved_search,
+            commands::preview_rule_on,
+            commands::apply_rule_on,
             commands::move_messages,
             commands::delete_messages,
             commands::archive_messages,

@@ -1,9 +1,12 @@
 // Composição de layout: Header (com a CommandBar), NavigationBlock (FoldersColumn + EmailListColumn) e ContentColumn.
 // DS: toasts.html (desfazer e erros), mensagens.html (.section-message "Você saiu desta conta" / "Reconecte esta conta" /
-// busca local), modais.html (confirmar exclusão definitiva na Lixeira)
+// busca local), modais.html (confirmar exclusão definitiva na Lixeira); busca.html (US16): barra dos resultados
+// (L74), conta de cada resultado (L75), "Aplicar regra…", "Salvar busca" e buscas salvas na coluna de pastas
 import { QuickRuleDialog, type QuickIntent } from "../rules/RuleDialogs";
 import type { RulesRequest } from "../rules/RulesSettings";
-import { emailsLabel } from "../../lib/rules";
+import { emailsLabel, suggestedName } from "../../lib/rules";
+import { accountInitial, avatarColorClass } from "../../lib/accounts";
+import { fromQuery, hasCriteria, ruleFromSearch, searchLabel, toQuery, type Search } from "../../lib/search";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { bucketLabel, flagDates, visibleBuckets } from "../../lib/flagged";
 import { canReceive } from "../../lib/folders";
@@ -28,12 +31,17 @@ import {
   type MessageHeader,
   type Moved,
   type RuleSuggestions,
+  type SavedSearch,
 } from "../../lib/tauri";
 import { CommandBar } from "../../layout/CommandBar";
 import { ContentColumn } from "../../layout/ContentColumn";
 import { EmailListColumn, type ListState } from "../../layout/EmailListColumn";
 import { FoldersColumn } from "../../layout/FoldersColumn";
 import { NavigationBlock } from "../../layout/NavigationBlock";
+import { SearchResultsBar } from "../../layout/SearchResultsBar";
+import { AccountAvatar } from "../../ui/AccountAvatar";
+import { EmptyState } from "../../ui/EmptyState";
+import { ApplyRuleDialog } from "../search/ApplyRuleDialog";
 import { Button } from "../../ui/Button";
 import { Lozenge } from "../../ui/Lozenge";
 import { Modal } from "../../ui/Modal";
@@ -49,8 +57,11 @@ export type MailboxRequest =
 interface MailboxProps {
   account: Account;
   initialFolderId: string | null;
-  /** Busca do header (US4, CA1); a partir de 2 caracteres, a lista mostra os resultados. */
-  query: string;
+  /** Todas as contas: a conta de cada resultado na busca em todas (US16). */
+  accounts: Account[];
+  /** Busca do header (US16): com algum chip ou 2 letras, a lista mostra os resultados. */
+  search: Search;
+  onSearchChange: (search: Search) => void;
   /** Configurações abertas: os comandos ficam inertes (US5, D2). */
   settingsOpen: boolean;
   /** Monta o bloco do header com a barra de comandos desta caixa. */
@@ -96,7 +107,7 @@ interface Removal {
   failedTitle: (count: number) => string;
 }
 
-export function Mailbox({ account, initialFolderId, query, settingsOpen, renderHeader, density, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange, appRequest, onOpenRules, onManageKeys }: MailboxProps) {
+export function Mailbox({ account, accounts, initialFolderId, search, onSearchChange, settingsOpen, renderHeader, density, onFolderChange, onAccessLost, onReconnect, onReaderOpenChange, appRequest, onOpenRules, onManageKeys }: MailboxProps) {
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [folder, setFolder] = useState<Folder | null>(null);
   const [pager, setPager] = useState<Pager>(firstPage);
@@ -114,6 +125,12 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
   const [compose, setCompose] = useState<ComposeState | null>(null);
   const [confirmPurge, setConfirmPurge] = useState<MessageHeader[] | null>(null);
   const [searchTruncated, setSearchTruncated] = useState(false);
+  const [searchReload, setSearchReload] = useState(0);
+  const [saved, setSaved] = useState<SavedSearch[]>([]);
+  const [saving, setSaving] = useState<{ name: string; busy: boolean; error: string | null } | null>(null);
+  const [applyRule, setApplyRule] = useState<{ accountId: string; ids: string[] } | null>(null);
+  // Pastas das outras contas (busca em todas): papel de cada resultado e destinos de "Mover".
+  const [otherFolders, setOtherFolders] = useState<Record<string, Folder[]>>({});
   const toast = useToast();
   const request = useRef(0);
   // Leitura das mensagens atuais sem fazer callbacks estáveis dependerem da lista inteira.
@@ -139,7 +156,9 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
   const readerOpenRef = useRef(onReaderOpenChange);
   readerOpenRef.current = onReaderOpenChange;
   const accessLost = useCallback(() => accessLostRef.current(), []);
-  const searching = query.trim().length >= 2;
+  const searching = hasCriteria(search);
+  const searchQuery = useMemo(() => toQuery(search), [search]);
+  const queryKey = JSON.stringify(searchQuery);
   // Busca ou sinalizadas: mensagens de várias pastas, sem paginação nem contadores da pasta.
   const crossFolder = searching || flagBucket !== null;
   const searchingRef = useRef(crossFolder);
@@ -300,33 +319,57 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
     setFlagReload((n) => n + 1);
   }, [loadFlagCounts]);
 
-  // Busca local (US4, CA1): 250 ms depois da última tecla.
+  // Busca local (US4 CA1, US16): 250 ms depois da última mudança nos chips ou no texto.
   useEffect(() => {
     if (!searching) return;
     const token = ++request.current;
-    setList({ status: "loading" });
-    setChecked(emptySelection);
-    select(null);
+    if (searchReload === 0) {
+      setList({ status: "loading" });
+      setChecked(emptySelection);
+      select(null);
+    }
     const timer = setTimeout(() => {
-      api.searchMessages(account.id, query.trim())
+      api.searchMessages(account.id, JSON.parse(queryKey))
         .then((page) => {
           if (token !== request.current) return;
           setSearchTruncated(page.truncated);
           setList({ status: "ready", items: page.items, total: page.items.length });
+          setChecked((sel) => prune(sel, page.items.map((m) => m.id)));
         })
         .catch((error) => {
           if (token !== request.current) return;
           setList({ status: "error", error: isAppError(error) ? error : FALLBACK });
         });
-    }, SEARCH_DELAY_MS);
+    }, searchReload === 0 ? SEARCH_DELAY_MS : 0);
     return () => clearTimeout(timer);
-  }, [account.id, query, searching, select]);
+  }, [account.id, queryKey, searching, searchReload, select]);
+  useEffect(() => setSearchReload(0), [queryKey]);
+
+  // Buscas salvas (US16): na coluna de pastas, com as não lidas de cada uma.
+  const loadSaved = useCallback(() => {
+    api.listSavedSearches(account.id).then(setSaved).catch(() => undefined);
+  }, [account.id]);
+  useEffect(() => loadSaved(), [loadSaved]);
+
+  // Abrir um resultado guarda a busca nas recentes (só neste computador).
+  const recentKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!searching || !selectedId || recentKey.current === queryKey) return;
+    recentKey.current = queryKey;
+    void api.addRecentSearch({ label: searchLabel(search), query: searchQuery }).catch(() => undefined);
+  }, [searching, selectedId, queryKey, search, searchQuery]);
+  useEffect(() => {
+    if (!searching) recentKey.current = null;
+  }, [searching]);
 
   // A sincronização em segundo plano avisa quando a pasta ou a lista de pastas mudou.
   useEffect(() => {
     const offs = [
       onBackendEvent("mailbox-updated", ({ accountId, folderId }) => {
-        if (accountId === account.id) loadFlagCounts();
+        if (accountId === account.id) {
+          loadFlagCounts();
+          loadSaved();
+        }
         const current = folderRef.current;
         if (accountId !== account.id || !current || current.id !== folderId) return;
         void loadPage(current, pagerRef.current, true);
@@ -363,7 +406,7 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
       }),
     ];
     return () => offs.forEach((off) => off());
-  }, [account.id, loadFlagCounts, loadFolders, loadPage]);
+  }, [account.id, loadFlagCounts, loadFolders, loadPage, loadSaved]);
 
   const refresh = useCallback(async () => {
     if (!folder) return;
@@ -442,10 +485,25 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
   };
   const allFolders = useMemo(() => folders ?? [], [folders]);
   const sourceFolderId = crossFolder ? null : folder?.id ?? null;
+  const accountIdOf = (m: MessageHeader) => m.accountId ?? account.id;
+  const foldersOf = useCallback((id: string) => (id === account.id ? allFolders : otherFolders[id] ?? []), [account.id, allFolders, otherFolders]);
   const roleOf = useCallback(
-    (m: MessageHeader) => allFolders.find((f) => f.id === (crossFolder ? m.folderId : folder?.id))?.role,
-    [allFolders, folder?.id, crossFolder],
+    (m: MessageHeader) => (crossFolder ? foldersOf(m.accountId ?? account.id).find((f) => f.id === m.folderId) : allFolders.find((f) => f.id === folder?.id))?.role,
+    [account.id, allFolders, folder?.id, crossFolder, foldersOf],
   );
+
+  // Busca em todas as contas: as pastas das outras contas, para o papel de cada resultado (Lixeira pede confirmação).
+  useEffect(() => {
+    const missing = [...new Set(items.map((m) => m.accountId ?? account.id))].filter((id) => id !== account.id && !otherFolders[id]);
+    for (const id of missing) {
+      api.listFolders(id).then((all) => setOtherFolders((map) => ({ ...map, [id]: all }))).catch(() => setOtherFolders((map) => ({ ...map, [id]: [] })));
+    }
+  }, [items, account.id, otherFolders]);
+
+  // Ações em lote agem numa conta só (o backend recusa misturar): a conta dos alvos, ou `null` se forem de várias.
+  const targetAccounts = [...new Set(targets.map(accountIdOf))];
+  const targetAccount = targetAccounts.length === 1 ? accounts.find((a) => a.id === targetAccounts[0]) ?? account : targets.length === 0 ? account : null;
+  const accountOf = (m: MessageHeader | null) => (m ? accounts.find((a) => a.id === accountIdOf(m)) ?? account : account);
 
   // ------------------------------------------------------------ excluir, arquivar, mover em lote (US4 CA4–CA5, US5 CA2–CA3)
 
@@ -507,7 +565,7 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           action: {
             label: "Desfazer",
             onClick: () => {
-              api.undoMove(account.id, batch)
+              api.undoMove(messages[0].accountId ?? account.id, batch)
                 .then((back) => {
                   restore(new Set(back));
                   changed();
@@ -580,13 +638,16 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
   }, [removeWithUndo]);
 
   const onMove = useCallback((targetId: string) => {
-    moveTo(targets, targetId, allFolders.find((f) => f.id === targetId)?.name ?? "a pasta");
-  }, [allFolders, moveTo, targets]);
+    const owner = targets[0] ? targets[0].accountId ?? account.id : account.id;
+    moveTo(targets, targetId, foldersOf(owner).find((f) => f.id === targetId)?.name ?? "a pasta");
+  }, [account.id, foldersOf, moveTo, targets]);
 
   const onCreateAndMove = useCallback(async (name: string) => {
     if (targets.length === 0) return;
-    const created = await api.createFolder(account.id, name);
-    await loadFolders();
+    const owner = targets[0].accountId ?? account.id;
+    const created = await api.createFolder(owner, name);
+    if (owner === account.id) await loadFolders();
+    else setOtherFolders((map) => ({ ...map, [owner]: [...(map[owner] ?? []), created] }));
     moveTo(targets, created.id, created.name);
   }, [account.id, loadFolders, moveTo, targets]);
 
@@ -702,14 +763,63 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
       <SectionMessage appearance="warning" title="Reconecte esta conta" actions={[{ label: "Reconectar", onClick: onReconnect }]}>
         O servidor de e-mail encerrou o acesso do Epistula a {account.email}. As mensagens salvas continuam disponíveis.
       </SectionMessage>
-    ) : searching ? (
-      <SectionMessage title="Buscando nas mensagens salvas neste computador">
-        {searchTruncated ? "Mostrando os 200 resultados mais recentes. Refine a busca para ver outros." : "Mensagens que ainda não foram baixadas não aparecem aqui."}
+    ) : searching && searchTruncated ? (
+      <SectionMessage title="Mostrando os 200 resultados mais recentes">
+        Acrescente uma pessoa, um período ou outro filtro para ver os outros.
       </SectionMessage>
     ) : null;
 
+  const savedNow = saved.find((s) => JSON.stringify(s.query) === queryKey) ?? null;
+  const runSaved = (s: SavedSearch) => {
+    setFlagBucket(null);
+    onSearchChange(fromQuery(s.query, allFolders.find((f) => f.id === s.query.folder)?.name));
+  };
+  const setScope = (allAccounts: boolean) =>
+    onSearchChange({ ...search, allAccounts, chips: allAccounts ? search.chips.filter((c) => c.kind !== "folder") : search.chips });
+  const saveSearch = async () => {
+    if (!saving) return;
+    setSaving({ ...saving, busy: true, error: null });
+    try {
+      await api.saveSearch(account.id, saving.name, searchQuery);
+      setSaving(null);
+      loadSaved();
+      toast({ kind: "success", title: `Busca "${saving.name.trim()}" salva`, description: "Ela fica na coluna de pastas." });
+    } catch {
+      setSaving({ ...saving, busy: false, error: "Não foi possível salvar a busca." });
+    }
+  };
+  const deleteSaved = async (s: SavedSearch) => {
+    try {
+      await api.deleteSavedSearch(s.id);
+      loadSaved();
+      toast({ kind: "info", title: `Busca "${s.name}" excluída` });
+    } catch {
+      toast({ kind: "error", title: "Não foi possível excluir a busca salva" });
+    }
+  };
+  const searchBar = searching ? (
+    <SearchResultsBar
+      count={list.status === "ready" ? list.items.length : null}
+      truncated={searchTruncated}
+      allAccounts={search.allAccounts}
+      oldestFirst={search.oldestFirst}
+      saved={!!savedNow}
+      onScope={setScope}
+      onOrder={(oldestFirst) => onSearchChange({ ...search, oldestFirst })}
+      onSave={() => setSaving({ name: searchLabel(search).slice(0, 60), busy: false, error: null })}
+    />
+  ) : null;
+  const ruleTarget = targetAccount;
+  const applyRuleBlocked = !ruleTarget
+    ? "Marque resultados de uma conta só para aplicar uma regra"
+    : ruleTarget.status === "local"
+      ? "Arquivos de e-mail não têm regras"
+      : ruleTarget.status !== "active"
+        ? "Entre de novo nesta conta para aplicar regras"
+        : null;
+
   const listName = searching
-    ? `Resultados para “${query.trim()}”`
+    ? `Resultados para “${searchLabel(search)}”`
     : flagBucket
       ? `Sinalizadas: ${bucketLabel(flagBucket)}`
       : folder?.name ?? "Mensagens";
@@ -721,13 +831,13 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
     <>
       {renderHeader(
         <CommandBar
-          account={account}
-          folders={allFolders}
+          account={targetAccount ?? account}
+          folders={foldersOf((targetAccount ?? account).id)}
           sourceFolderId={sourceFolderId}
           targets={targets}
           roleOf={roleOf}
-          readOnly={account.status !== "active" && account.status !== "local"}
-          local={account.status === "local"}
+          readOnly={!targetAccount || (targetAccount.status !== "active" && targetAccount.status !== "local")}
+          local={(targetAccount ?? account).status === "local"}
           inert={settingsOpen}
           onNew={onNew}
           onDelete={onDelete}
@@ -738,6 +848,8 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           onToggleRead={onToggleRead}
           onFollowup={(change) => void onFollowup(change)}
           onRule={(intent) => void startRule(intent)}
+          onApplyRule={searching ? () => ruleTarget && setApplyRule({ accountId: ruleTarget.id, ids: targets.map((m) => m.id) }) : undefined}
+          applyRuleBlocked={applyRuleBlocked}
         />,
       )}
       {quickRule && (
@@ -758,6 +870,58 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           onClose={() => setQuickRule(null)}
         />
       )}
+      {applyRule && (
+        <ApplyRuleDialog
+          accountId={applyRule.accountId}
+          messageIds={applyRule.ids}
+          folders={foldersOf(applyRule.accountId)}
+          onApplied={(count, rule) => {
+            toast({
+              kind: "success",
+              title: `Regra "${rule.name}" aplicada a ${emailsLabel(count)}`,
+              action: { label: "Ver histórico", onClick: () => onOpenRules({ accountId: applyRule.accountId, history: true }) },
+            });
+            setSearchReload((n) => n + 1);
+            refreshFlagged();
+            void loadFolders();
+          }}
+          onCreate={() => {
+            const spec = ruleFromSearch(search);
+            setApplyRule(null);
+            onOpenRules({ accountId: applyRule.accountId, draft: { name: spec.conditions.length > 0 ? suggestedName(spec) : "", spec } });
+          }}
+          onClose={() => setApplyRule(null)}
+        />
+      )}
+      {saving && (
+        <Modal
+          title="Salvar busca"
+          initialFocus="#saved-search-name"
+          onClose={() => setSaving(null)}
+          footer={
+            <>
+              <Button appearance="subtle" onClick={() => setSaving(null)}>Cancelar</Button>
+              <Button appearance="primary" loading={saving.busy} disabled={!saving.name.trim()} onClick={() => void saveSearch()}>Salvar</Button>
+            </>
+          }
+        >
+          <form
+            className="field"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (saving.name.trim()) void saveSearch();
+            }}
+          >
+            <label className="field__label" htmlFor="saved-search-name">Nome</label>
+            <div className={["input", saving.error && "is-invalid"].filter(Boolean).join(" ")}>
+              <input id="saved-search-name" maxLength={60} value={saving.name} onChange={(e) => setSaving({ ...saving, name: e.target.value, error: null })} />
+            </div>
+            <span className={saving.error ? "field__help field__help--error" : "field__help"} role={saving.error ? "alert" : undefined}>
+              {saving.error ?? (search.allAccounts ? "Aparece na coluna de pastas de todas as contas." : `Aparece na coluna de pastas de ${account.displayName}.`)}
+            </span>
+          </form>
+        </Modal>
+      )}
       <NavigationBlock>
         <FoldersColumn
           folders={folders}
@@ -767,6 +931,7 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           drag={dragging ? { sourceId: sourceFolderId, hoveredId: dropHover } : null}
           onSelect={(f) => {
             setFlagBucket(null);
+            if (searching) onSearchChange({ chips: [], text: "", allAccounts: false, oldestFirst: false });
             setFolder(f);
           }}
           onSelectFlag={(bucket) => {
@@ -775,6 +940,10 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           }}
           local={account.status === "local"}
           importing={importing}
+          saved={saved}
+          currentSavedId={searching ? savedNow?.id ?? null : null}
+          onSelectSaved={runSaved}
+          onDeleteSaved={(s) => void deleteSaved(s)}
         />
         <EmailListColumn
           folderName={listName}
@@ -789,6 +958,15 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
           syncing={syncing}
           canRefresh={account.status === "active"}
           notice={notice}
+          searchBar={searchBar}
+          emptySearch={
+            <EmptyState
+              title={search.allAccounts ? "Nenhum resultado" : "Nenhum resultado nesta conta"}
+              description="Tente outras palavras, tire um filtro ou busque pelo nome ou e-mail de quem enviou."
+              actions={search.allAccounts ? undefined : <Button onClick={() => setScope(true)}>Buscar em todas as contas</Button>}
+            />
+          }
+          renderAccount={search.allAccounts ? (m) => <ResultAccount account={accountOf(m)} /> : undefined}
           renderBadge={(m) => <DueBadge followup={m.followup} />}
           onOpen={select}
           onCheck={onCheck}
@@ -807,7 +985,7 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
       </NavigationBlock>
       <ContentColumn>
         <MessageView
-          account={account}
+          account={accountOf(selected)}
           messageId={selectedId}
           badge={selected ? <DueBadge followup={selected.followup} /> : null}
           compose={compose}
@@ -844,5 +1022,15 @@ export function Mailbox({ account, initialFolderId, query, settingsOpen, renderH
         </Modal>
       )}
     </>
+  );
+}
+
+/** Conta de um resultado na busca em todas as contas (L75): avatar mínimo antes da pasta. */
+function ResultAccount({ account }: { account: Account }) {
+  const local = account.status === "local";
+  return (
+    <span className="thread__account" role="img" aria-label={local ? `Arquivo ${account.displayName}` : `Conta ${account.displayName}`} data-tip={account.displayName}>
+      <AccountAvatar initial={accountInitial(account.displayName)} colorClass={avatarColorClass(account.color)} photo={account.photo} size="xs" archive={local} />
+    </span>
   );
 }

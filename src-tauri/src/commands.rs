@@ -316,6 +316,7 @@ fn header_of(account_id: &str, folder_id: i64, m: store::ListedMessage, folder: 
         thread: m.thread,
         folder_name: folder,
         folder_id: in_results.then(|| FolderKey { account: account_id.to_owned(), folder: folder_id }.encode()),
+        account_id: in_results.then(|| account_id.to_owned()),
     }
 }
 
@@ -568,32 +569,98 @@ pub struct SearchPage {
     pub truncated: bool,
 }
 
-const MIN_QUERY_CHARS: usize = 2;
-const MAX_QUERY_CHARS: usize = 200;
-
+/// A busca (US16): a consulta montada pelos chips, numa conta ou em todas.
 #[tauri::command]
-pub async fn search_messages(state: State<'_, AppState>, account_id: String, query: String) -> Result<SearchPage, AppError> {
+pub async fn search_messages(state: State<'_, AppState>, account_id: String, query: crate::search::SearchQuery) -> Result<SearchPage, AppError> {
     let id = self::account_id(&account_id)?;
-    let query = query.trim().to_owned();
-    let chars = query.chars().count();
-    if chars < MIN_QUERY_CHARS {
+    query.validate()?;
+    if query.is_empty() {
         return Ok(SearchPage { items: Vec::new(), truncated: false });
     }
-    if chars > MAX_QUERY_CHARS || query.chars().any(char::is_control) {
-        return Err(AppError::InvalidInput);
-    }
     let account = id.clone();
-    let hits = state.db.call(move |c| {
-        store::require_account(c, &account)?;
-        store::search(c, &account, &query)
-    })
-    .await?;
-    let page = hits_page(&id, hits);
-    tracing::info!(results = page.items.len(), truncated = page.truncated, "busca local");
-    Ok(page)
+    let mut hits = state.db.call(move |c| crate::search::search(c, &account, &query)).await?;
+    let truncated = hits.len() > crate::search::LIMIT as usize;
+    hits.truncate(crate::search::LIMIT as usize);
+    let items: Vec<MessageHeader> = hits.into_iter().map(|h| header_of(&h.account_id, h.folder_id, h.message, Some(h.folder_name))).collect();
+    tracing::info!(results = items.len(), truncated, "busca local");
+    Ok(SearchPage { items, truncated })
 }
 
-/// Resultados com a pasta de cada mensagem (busca e sinalizadas), cortados no limite.
+/// Pessoas para os chips de De, Para e Cc (US16): pelo começo do nome ou do endereço.
+#[tauri::command]
+pub async fn search_contacts(state: State<'_, AppState>, account_id: String, term: String, all_accounts: bool) -> Result<Vec<crate::search::Contact>, AppError> {
+    let id = self::account_id(&account_id)?;
+    state.db.call(move |c| crate::search::contacts(c, &id, all_accounts, &term)).await
+}
+
+#[tauri::command]
+pub async fn recent_searches(state: State<'_, AppState>) -> Result<Vec<crate::search::Recent>, AppError> {
+    state.db.call(|c| crate::search::recent(c)).await
+}
+
+#[tauri::command]
+pub async fn add_recent_search(state: State<'_, AppState>, recent: crate::search::Recent) -> Result<Vec<crate::search::Recent>, AppError> {
+    state.db.call(move |c| crate::search::add_recent(c, recent)).await
+}
+
+#[tauri::command]
+pub async fn clear_recent_searches(state: State<'_, AppState>) -> Result<(), AppError> {
+    state.db.call(|c| crate::search::clear_recent(c)).await
+}
+
+#[tauri::command]
+pub async fn list_saved_searches(state: State<'_, AppState>, account_id: String) -> Result<Vec<crate::search::Saved>, AppError> {
+    let id = self::account_id(&account_id)?;
+    state.db.call(move |c| crate::search::saved(c, &id)).await
+}
+
+#[tauri::command]
+pub async fn save_search(state: State<'_, AppState>, account_id: String, name: String, query: crate::search::SearchQuery) -> Result<i64, AppError> {
+    let id = self::account_id(&account_id)?;
+    let saved = state.db.call(move |c| crate::search::save(c, &id, &name, &query)).await?;
+    tracing::info!("busca salva");
+    Ok(saved)
+}
+
+#[tauri::command]
+pub async fn delete_saved_search(state: State<'_, AppState>, id: i64) -> Result<(), AppError> {
+    state.db.call(move |c| crate::search::delete_saved(c, id)).await
+}
+
+/// Prévia de uma regra sobre resultados da busca (US16): quantos ela pegaria, sem rede.
+#[tauri::command]
+pub async fn preview_rule_on(state: State<'_, AppState>, account_id: String, rule_id: i64, message_ids: Vec<String>) -> Result<rule_runner::Preview, AppError> {
+    let id = self::account_id(&account_id)?;
+    let keys = message_keys_of(&id, &message_ids)?;
+    rule_runner::preview_on(&state, id, rule_id, keys).await
+}
+
+/// Aplica uma regra a resultados da busca (US16), com histórico e "Desfazer" como "Rodar agora".
+#[tauri::command]
+pub async fn apply_rule_on(state: State<'_, AppState>, account_id: String, rule_id: i64, message_ids: Vec<String>) -> Result<usize, AppError> {
+    let id = self::account_id(&account_id)?;
+    let keys = message_keys_of(&id, &message_ids)?;
+    let done = rule_runner::apply_on(&state, id, rule_id, keys).await?;
+    state.emit_accounts_changed();
+    Ok(done)
+}
+
+/// `(pasta, uid)` de ids de mensagem, todos da conta pedida.
+fn message_keys_of(account_id: &str, ids: &[String]) -> Result<Vec<(i64, u32)>, AppError> {
+    if ids.is_empty() || ids.len() > crate::search::LIMIT as usize {
+        return Err(AppError::InvalidId);
+    }
+    ids.iter()
+        .map(|id| {
+            let k = MessageKey::decode(id)?;
+            if k.account != account_id {
+                return Err(AppError::InvalidId);
+            }
+            Ok((k.folder, k.uid))
+        })
+        .collect()
+}
+
 fn hits_page(account_id: &str, mut hits: Vec<store::SearchHit>) -> SearchPage {
     let truncated = hits.len() > store::SEARCH_LIMIT as usize;
     hits.truncate(store::SEARCH_LIMIT as usize);

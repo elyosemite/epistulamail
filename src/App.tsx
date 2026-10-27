@@ -23,6 +23,7 @@ import { ColumnToggles } from "./layout/ColumnToggles";
 import { Header } from "./layout/Header";
 import { HeaderBrand } from "./layout/HeaderBrand";
 import { HeaderSearch } from "./layout/HeaderSearch";
+import { EMPTY_SEARCH, type Search } from "./lib/search";
 import { NotificationBell } from "./layout/NotificationBell";
 import { pickActive, visibleAccounts } from "./lib/accounts";
 import { applyAppearance, cachedAppearance, parseAppearance } from "./lib/appearance";
@@ -58,7 +59,7 @@ function Shell() {
   const [readerOpen, setReaderOpen] = useState(false);
   const [offline, setOffline] = useState<Record<string, boolean>>({});
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
+  const [search, setSearch] = useState<Search>(EMPTY_SEARCH);
   const [listWidth, setListWidth] = useState(LIST_DEFAULT);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState("general");
@@ -139,7 +140,7 @@ function Shell() {
 
   const select = useCallback((id: string) => {
     setActiveId(id);
-    setQuery("");
+    setSearch(EMPTY_SEARCH);
     setView({ kind: "mail" });
     setReaderOpen(false);
   }, []);
@@ -271,7 +272,7 @@ function Shell() {
     const account = accountsRef.current?.find((a) => a.id === target.accountId);
     if (!account) return;
     setActiveId(account.id);
-    setQuery("");
+    setSearch(EMPTY_SEARCH);
     setSettingsOpen(false);
     setDialog(null);
     if (target.reconnect) return setView({ kind: "reconnect", account });
@@ -401,12 +402,13 @@ function Shell() {
       search={
         <HeaderSearch
           ref={searchRef}
-          value={query}
-          placeholder={`Buscar em ${active.displayName}`}
+          accountId={active.id}
+          search={search}
+          placeholder={search.allAccounts ? "Buscar em todas as contas" : `Buscar em ${active.displayName}`}
           inert={!showMail || settingsOpen}
-          onChange={setQuery}
+          onChange={setSearch}
           onEscape={() => {
-            setQuery("");
+            setSearch(EMPTY_SEARCH);
             searchRef.current?.blur();
           }}
         />
@@ -481,7 +483,9 @@ function Shell() {
         <Mailbox
           key={active.id}
           account={active}
-          query={query}
+          accounts={accounts}
+          search={search}
+          onSearchChange={setSearch}
           settingsOpen={settingsOpen}
           renderHeader={renderHeader}
           density={appearance.density}

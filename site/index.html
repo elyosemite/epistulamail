@@ -157,6 +157,53 @@
     </div>
   </section>
 
+  <!-- ================================================================== busca -->
+  <section class="site-section" id="busca" aria-labelledby="s-busca">
+    <div class="site-container site-feature site-feature--flip site-reveal">
+      <h2 class="site-h2" id="s-busca">Ache qualquer e-mail, de qualquer conta</h2>
+      <div class="site-side">
+        <p class="site-statement">Digite "de: Ana" e a busca vira um chip: <span>pessoa, período e anexo à vista, em todas as contas e sem internet.</span></p>
+        <div style="display:grid;gap:var(--space-150)">
+          <p class="site-label">Recursos</p>
+          <ul class="site-list">
+            <li>Pessoas, período e filtros como chips</li>
+            <li>Todas as contas e arquivos de uma vez</li>
+            <li>Regras aplicadas aos resultados</li>
+            <li>Buscas salvas na coluna de pastas</li>
+          </ul>
+        </div>
+      </div>
+      <figure class="site-visual" style="margin:0" aria-label="O campo de busca com chips de pessoa, período e anexo, as sugestões de pessoas e os resultados de três contas">
+        <div class="site-visual__stage" aria-hidden="true">
+          <div class="site-panel" style="display:grid;gap:var(--space-150);padding:var(--space-200)">
+            <div class="input input--search chip-input is-focus"><svg class="i"><use href="#i-search"/></svg>
+              <span class="chip"><span class="chip__op">De</span><span class="avatar avatar--green">AR<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="chip__name">Ana Ribeiro</span><span class="chip__remove"><svg class="i i--sm"><use href="#i-x"/></svg></span></span>
+              <span class="chip chip--filter"><svg class="i"><use href="#i-clock"/></svg><span class="chip__name">Este ano</span><span class="chip__remove"><svg class="i i--sm"><use href="#i-x"/></svg></span></span>
+              <span class="chip chip--filter"><svg class="i"><use href="#i-clip"/></svg><span class="chip__name">Com anexo</span><span class="chip__remove"><svg class="i i--sm"><use href="#i-x"/></svg></span></span>
+              <input value="contrato de: ca" tabindex="-1" aria-hidden="true"></div>
+            <div class="menu menu--wide" style="position:static">
+              <div class="menu__heading">Pessoas</div>
+              <span class="menu-item is-selected"><span class="avatar avatar--sm avatar--magenta">CL<img class="avatar__img" alt="" src="images/people/pessoa-3.webp"></span><span class="menu-item__text">Carla Lima</span><span class="menu-item__meta">carla@lumen.com.br · 214</span></span>
+              <span class="menu-item"><span class="avatar avatar--sm avatar--teal">CM<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="menu-item__text">Caio Moreira</span><span class="menu-item__meta">caio@estudio.art · 9</span></span>
+            </div>
+            <div style="border:var(--border-width) solid var(--color-border);border-radius:var(--radius-large);overflow:hidden">
+              <div class="search-bar">
+                <span class="search-bar__count">3 resultados</span>
+                <div class="segmented"><span class="btn btn--compact" aria-checked="false">Esta conta</span><span class="btn btn--compact" aria-checked="true">Todas as contas</span></div>
+                <div class="search-bar__end"><span class="btn btn--subtle btn--compact"><svg class="i"><use href="#i-plus"/></svg>Salvar busca</span></div>
+              </div>
+              <div class="thread-list thread-list--standard">
+                <div class="thread is-unread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Ana Ribeiro</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="avatar avatar--xs avatar--purple thread__account">T</span><span class="label">Caixa de entrada</span><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
+                <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Ana Ribeiro</span></div><div class="thread__meta"><span class="thread__date">2 set</span></div><div class="thread__subject"><span class="avatar avatar--xs thread__account">P</span><span class="label label--purple">Jurídico</span><span class="thread__subject-text">Contrato do apartamento assinado</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
+                <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Ana Ribeiro</span></div><div class="thread__meta"><span class="thread__date">mar</span></div><div class="thread__subject"><span class="avatar avatar--xs avatar--archive thread__account"><svg class="i"><use href="#i-archive"/></svg></span><span class="label">Enviados</span><span class="thread__subject-text">Minuta do contrato antigo</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
   <!-- ================================================================== mais recursos -->
   <section class="site-section" aria-labelledby="s-mais">
     <div class="site-container">
@@ -193,15 +240,21 @@
 
         <article class="site-tile site-reveal">
           <div class="site-tile__visual" aria-hidden="true">
-            <div class="site-panel" style="display:grid;gap:var(--space-150);padding:var(--space-200)">
-              <div class="input input--search is-focus"><svg class="i"><use href="#i-search"/></svg><span class="label label--blue">de: marina</span><span class="label">tem: anexo</span><input value="contrato" tabindex="-1" aria-hidden="true"></div>
-              <div class="thread-list">
-                <div class="thread is-unread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="label">Caixa de entrada</span><span class="thread__subject-text">Revisão do contrato</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">Segue a versão 3 com os ajustes da cláusula 7.2.</div></div>
-                <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">2 set</span></div><div class="thread__subject"><span class="label label--purple">Jurídico</span><span class="thread__subject-text">Contrato assinado</span></div><div class="thread__snippet">Anexo o PDF com as duas assinaturas.</div></div>
-              </div>
+            <div class="site-panel" style="display:grid;grid-template-columns:minmax(0,13rem);gap:var(--space-150);padding:var(--space-200)">
+              <nav class="sidebar" style="padding:0">
+                <div class="nav-group">
+                  <span class="nav-item"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></span>
+                  <span class="nav-item"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span>
+                </div>
+                <div class="nav-group">
+                  <div class="nav-heading">Buscas salvas</div>
+                  <span class="nav-item has-unread" aria-current="page"><svg class="i"><use href="#i-search"/></svg><span class="nav-item__text">Contratos com a Ana</span><span class="nav-item__count">3</span></span>
+                  <span class="nav-item"><svg class="i"><use href="#i-search"/></svg><span class="nav-item__text">Notas fiscais deste ano</span></span>
+                </div>
+              </nav>
             </div>
           </div>
-          <div class="site-tile__text"><h3>Busca</h3><p>Todas as pastas de uma vez, sem internet, com <code>de:</code> e <code>tem:anexo</code> como etiquetas.</p></div>
+          <div class="site-tile__text"><h3>Buscas salvas</h3><p>Uma busca que você repete vira um item na coluna de pastas, com as não lidas. Os operadores <code>de:</code>, <code>depois:</code> e <code>tem:anexo</code> continuam valendo.</p></div>
         </article>
 
         <article class="site-tile site-reveal">

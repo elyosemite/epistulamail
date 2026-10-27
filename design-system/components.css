@@ -190,6 +190,28 @@ kbd, .kbd {
 /* Sugestões clicáveis abaixo de um campo (ex.: nomes de conta) */
 .chip-group { display: flex; flex-wrap: wrap; gap: var(--space-075); }
 
+/* L73 (US16) · Chip de filtro na busca: período, anexo, pasta, estado. Ícone no lugar do avatar e o tom da marca,
+   para não se confundir com o chip de pessoa. Clicar edita; o x remove. .chip__op diz o papel da pessoa (De, Para, Cc). */
+.chip--filter { background: var(--color-bg-selected); border-color: transparent; color: var(--color-text-selected); }
+.chip--filter > .i { width: 14px; height: 14px; margin-inline-start: var(--space-050); color: var(--color-icon-brand); }
+.chip--filter:hover, .chip--filter.is-hover { background: var(--color-bg-selected-hovered); }
+.chip__op { color: var(--color-text-subtle); font-weight: var(--font-weight-regular); }
+.chip--filter .chip__op { color: var(--color-text-selected); opacity: .8; }
+.chip--filter.is-selected { border-color: var(--color-border-selected); }
+/* No header, os chips não quebram linha: o campo fica da altura dos outros e os nomes encurtam. */
+.appbar__search .chip-input { flex-wrap: nowrap; overflow: hidden; }
+.appbar__search .chip-input > .chip { flex: 0 1 auto; min-width: 0; max-width: 14rem; }
+.appbar__search .chip-input > input { min-width: 6rem; }
+.chip > button.chip__body { display: inline-flex; align-items: center; gap: var(--space-050); min-width: 0; border: 0; padding: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+
+/* L74 (US16) · Barra dos resultados: quantos, onde buscar, ordem e salvar. Fica entre a barra de comandos e a lista. */
+.search-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-100) var(--space-200); padding: var(--space-100) var(--space-150); border-bottom: var(--border-width) solid var(--color-border); background: var(--color-surface); }
+.search-bar__count { font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); color: var(--color-text); }
+.search-bar__end { display: flex; align-items: center; gap: var(--space-100); margin-left: auto; }
+
+/* L75 (US16) · Conta de cada resultado (busca em todas as contas): avatar mínimo antes da pasta. */
+.thread__account { flex: none; }
+
 /* ==========================================================================
    Seleção: checkbox e toggle (ADS Checkbox / Toggle)
    ========================================================================== */

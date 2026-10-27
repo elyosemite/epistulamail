@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rascunho US16 · Epistula Design System</title>
+<meta name="description" content="Busca com pessoas, período, filtros, todas as contas e regras nos resultados.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+<style>
+/* Peças novas do rascunho (L73–L75). Só tokens; depois da aprovação vão para components.css. */
+
+/* L73 · Chip de filtro na busca: período, anexo, pasta, estado. Ícone no lugar do avatar e o tom da marca,
+   para não se confundir com o chip de pessoa. Clicar edita; o x remove. */
+.chip--filter { background: var(--color-bg-selected); border-color: transparent; color: var(--color-text-selected); }
+.chip--filter > .i { width: 14px; height: 14px; margin-inline-start: var(--space-050); color: var(--color-icon-brand); }
+.chip--filter:hover, .chip--filter.is-hover { background: var(--color-bg-selected-hovered); }
+.chip__op { color: var(--color-text-subtle); font-weight: var(--font-weight-regular); }
+.chip--filter .chip__op { color: var(--color-text-selected); opacity: .8; }
+
+/* L74 · Barra dos resultados: quantos, onde buscar, ordem e salvar. Fica entre a barra de comandos e a lista. */
+.search-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-100) var(--space-200); padding: var(--space-100) var(--space-150); border-bottom: var(--border-width) solid var(--color-border); background: var(--color-surface); }
+.search-bar__count { font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); color: var(--color-text); }
+.search-bar__end { display: flex; align-items: center; gap: var(--space-100); margin-left: auto; }
+
+/* L75 · Conta de cada resultado (busca em todas as contas): avatar mínimo antes da pasta. */
+.thread__account { flex: none; }
+</style>
+</head>
+<body data-page="rascunho-us16">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="us16">
+      <div class="ds-head">
+        <p class="eyebrow">Rascunho · US16 · L73–L75</p>
+        <h1>Busca</h1>
+        <p class="lede">Pessoas, período e filtros como chips no próprio campo, busca em todas as contas, ações em lote e regras aplicadas aos resultados. Composição de <code>.input--search</code> com <code>.chip-input</code>, <code>.chip</code>, <code>.menu</code>, <code>.segmented</code>, <code>.toolbar</code>, <code>.thread</code>, <code>.modal</code>, <code>.choice-card</code>, <code>.rule-preview</code>, <code>.nav-item</code> e <code>.empty</code>, mais três peças novas: <b>L73</b> chip de filtro, <b>L74</b> barra dos resultados e <b>L75</b> conta de cada resultado.</p>
+      </div>
+      <dl class="guidance">
+        <div><dt>Ideia central</dt><dd>O que a pessoa digita vira algo que ela vê: "de: Yuri Melo" vira o chip de Yuri, "últimos 30 dias" vira um chip de período. Cada chip se edita com um clique e sai com o x ou com Backspace.</dd></div>
+        <div><dt>Dois jeitos de chegar</dt><dd>Digitando operadores (<code>de:</code>, <code>para:</code>, <code>depois:</code>…) ou escolhendo nas sugestões que aparecem ao focar o campo. Os dois dão o mesmo chip.</dd></div>
+        <div><dt>Nada vai para a rede</dt><dd>A busca é nas mensagens guardadas neste computador, em todas as pastas, e funciona sem internet.</dd></div>
+      </dl>
+    </section>
+
+    <!-- ===================================================================== campo -->
+    <section class="ds-section" id="campo">
+      <div class="ds-head">
+        <p class="eyebrow">CA1 · L73</p>
+        <h2>O campo com chips</h2>
+        <p class="lede">O campo de busca do header passa a ser um <code>.input.input--search.chip-input</code>: os chips quebram linha se precisar, e o texto livre fica no fim.</p>
+      </div>
+      <div class="stage">
+        <div style="display:grid;gap:var(--space-300);max-width:45rem">
+          <figure class="state" style="justify-items:stretch">
+            <div class="input input--search chip-input is-focus"><svg class="i"><use href="#i-search"/></svg>
+              <span class="chip"><span class="chip__op">De</span><span class="avatar avatar--purple">YM</span><span class="chip__name">Yuri Melo</span><button class="chip__remove" type="button" aria-label="Tirar o filtro De Yuri Melo"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <span class="chip chip--filter"><svg class="i"><use href="#i-clock"/></svg><span class="chip__name">Últimos 30 dias</span><button class="chip__remove" type="button" aria-label="Tirar o período"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <span class="chip chip--filter"><svg class="i"><use href="#i-clip"/></svg><span class="chip__name">Com anexo</span><button class="chip__remove" type="button" aria-label="Tirar o filtro com anexo"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <input value="contrato" aria-label="Buscar"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Limpar a busca"><svg class="i"><use href="#i-x"/></svg></button></div>
+            <figcaption><b>Pessoa, período, anexo e texto</b>"de: Yuri Melo" virou o chip de pessoa (com o rótulo "De"); os filtros usam o L73</figcaption>
+          </figure>
+          <figure class="state" style="justify-items:stretch">
+            <div class="input input--search chip-input is-focus"><svg class="i"><use href="#i-search"/></svg>
+              <span class="chip"><span class="chip__op">Para</span><span class="avatar avatar--green">AR</span><span class="chip__name">Ana Ribeiro</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <span class="chip is-external"><span class="chip__op">Para</span><span class="avatar avatar--orange">J</span><span class="chip__name">joao@parceiro.com</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <span class="chip chip--filter"><svg class="i"><use href="#i-folder"/></svg><span class="chip__name">Em Jurídico</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <span class="chip chip--filter"><svg class="i"><use href="#i-lock"/></svg><span class="chip__name">Cifradas</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <input aria-label="Buscar" placeholder="Buscar"></div>
+            <figcaption><b>Dois destinatários</b>dois chips do mesmo papel somam: Ana ou joão; quem não está nos contatos aparece como externo</figcaption>
+          </figure>
+          <figure class="state" style="justify-items:stretch">
+            <div class="input input--search chip-input"><svg class="i"><use href="#i-search"/></svg>
+              <span class="chip is-selected"><span class="chip__op">De</span><span class="avatar avatar--purple">YM</span><span class="chip__name">Yuri Melo</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <input aria-label="Buscar"></div>
+            <figcaption><b>Backspace</b>com o campo vazio, o último chip fica selecionado; na segunda vez, sai (como no "Para")</figcaption>
+          </figure>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Rótulo do chip</dt><dd><code>.chip__op</code> diz o papel da pessoa: De, Para ou Cc. Sem rótulo, a pessoa vale em qualquer campo ("com: Ana").</dd></div>
+        <div><dt>Nome ou e-mail</dt><dd>"de: Yuri", "de: yuri@exemplo.com" e "de: Yuri Melo" chegam ao mesmo chip quando há um contato só; com mais de um, a sugestão pede para escolher.</dd></div>
+      </dl>
+    </section>
+
+    <!-- ===================================================================== sugestões -->
+    <section class="ds-section" id="sugestoes">
+      <div class="ds-head">
+        <p class="eyebrow">CA1 · CA2</p>
+        <h2>Sugestões</h2>
+        <p class="lede">Um <code>.menu.menu--wide</code> preso ao campo, da largura dele. Setas escolhem, Enter vira chip, Esc fecha.</p>
+      </div>
+      <div class="stage stage--sunken">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(22rem,1fr));gap:var(--space-400);align-items:start">
+          <figure class="state" style="justify-items:stretch">
+            <div class="input input--search chip-input is-focus"><svg class="i"><use href="#i-search"/></svg><input value="de: yu" aria-label="Buscar"></div>
+            <div class="menu menu--wide" role="listbox" aria-label="Pessoas" style="position:static;margin-top:var(--space-050)">
+              <div class="menu__heading">Pessoas</div>
+              <button class="menu-item is-selected" type="button" role="option" aria-selected="true"><span class="avatar avatar--sm avatar--purple">YM</span><span class="menu-item__text">Yuri Melo</span><span class="menu-item__meta">yuri@exemplo.com · 214</span></button>
+              <button class="menu-item" type="button" role="option"><span class="avatar avatar--sm avatar--teal">YS</span><span class="menu-item__text">Yumi Sato</span><span class="menu-item__meta">yumi.sato@lumen.com.br · 9</span></button>
+              <button class="menu-item" type="button" role="option"><span class="avatar avatar--sm">Y</span><span class="menu-item__text">yuri.melo@empresa.com</span><span class="menu-item__meta">3</span></button>
+              <div class="menu__sep" role="separator"></div>
+              <button class="menu-item" type="button" role="option"><svg class="i"><use href="#i-search"/></svg><span class="menu-item__text">Buscar "yu" no remetente</span></button>
+            </div>
+            <figcaption><b>Digitando um operador</b>contatos que já escreveram ou receberam, com quantas mensagens; o número ajuda a escolher entre dois endereços da mesma pessoa</figcaption>
+          </figure>
+          <figure class="state" style="justify-items:stretch">
+            <div class="input input--search chip-input is-focus"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar em todas as pastas" aria-label="Buscar"></div>
+            <div class="menu menu--wide" role="listbox" aria-label="Sugestões" style="position:static;margin-top:var(--space-050)">
+              <div class="menu__heading">Recentes</div>
+              <button class="menu-item" type="button" role="option"><svg class="i"><use href="#i-history"/></svg><span class="menu-item__text">contrato · de Yuri Melo · com anexo</span></button>
+              <button class="menu-item" type="button" role="option"><svg class="i"><use href="#i-history"/></svg><span class="menu-item__text">nota fiscal · este ano</span></button>
+              <div class="menu__sep" role="separator"></div>
+              <div class="menu__heading">Filtros</div>
+              <button class="menu-item" type="button" role="option"><svg class="i"><use href="#i-user"/></svg><span class="menu-item__text">De, Para ou Cc…</span><kbd>de:</kbd></button>
+              <button class="menu-item" type="button" role="option"><svg class="i"><use href="#i-clock"/></svg><span class="menu-item__text">Período…</span><kbd>depois:</kbd></button>
+              <button class="menu-item" type="button" role="option"><svg class="i"><use href="#i-clip"/></svg><span class="menu-item__text">Com anexo</span><kbd>tem:anexo</kbd></button>
+              <button class="menu-item" type="button" role="option"><svg class="i"><use href="#i-mail"/></svg><span class="menu-item__text">Não lidas</span><kbd>é:não-lida</kbd></button>
+              <button class="menu-item" type="button" role="option"><svg class="i"><use href="#i-folder"/></svg><span class="menu-item__text">Numa pasta…</span><kbd>na:</kbd></button>
+            </div>
+            <figcaption><b>Campo vazio</b>as últimas buscas (só neste computador) e os filtros, cada um com o operador para quem prefere digitar</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== período -->
+    <section class="ds-section" id="periodo">
+      <div class="ds-head">
+        <p class="eyebrow">CA3</p>
+        <h2>Período</h2>
+        <p class="lede">"Período…" ou clicar no chip de período abre um <code>.menu</code> com atalhos e o intervalo personalizado (<code>.menu__form</code> com dois campos de data).</p>
+      </div>
+      <div class="stage stage--sunken">
+        <div class="menu menu--wide" role="menu" aria-label="Período" style="position:static;max-width:22rem">
+          <div class="menu__heading">Período</div>
+          <button class="menu-item" type="button" role="menuitemradio" aria-checked="false"><span class="menu-item__text">Hoje</span></button>
+          <button class="menu-item" type="button" role="menuitemradio" aria-checked="false"><span class="menu-item__text">Últimos 7 dias</span></button>
+          <button class="menu-item is-selected" type="button" role="menuitemradio" aria-checked="true"><span class="menu-item__text">Últimos 30 dias</span><svg class="i"><use href="#i-check"/></svg></button>
+          <button class="menu-item" type="button" role="menuitemradio" aria-checked="false"><span class="menu-item__text">Este ano</span></button>
+          <button class="menu-item" type="button" role="menuitemradio" aria-checked="false"><span class="menu-item__text">Qualquer data</span></button>
+          <div class="menu__sep" role="separator"></div>
+          <div class="menu__heading">Intervalo</div>
+          <div class="menu__form">
+            <div class="input"><input type="date" value="2026-01-01" aria-label="De"></div>
+            <span style="color:var(--color-text-subtle)">a</span>
+            <div class="input"><input type="date" value="2026-03-31" aria-label="Até"></div>
+          </div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Digitando</dt><dd><code>depois:2026-01-01</code>, <code>antes:31/03/2026</code> e <code>em:2025</code> viram o mesmo chip ("1 jan a 31 mar 2026", "Em 2025").</dd></div>
+      </dl>
+    </section>
+
+    <!-- ===================================================================== resultados -->
+    <section class="ds-section" id="resultados">
+      <div class="ds-head">
+        <p class="eyebrow">CA4 · L74 · L75</p>
+        <h2>Resultados e onde buscar</h2>
+        <p class="lede">A <b>L74</b> fica entre a barra de comandos e a lista: quantos, "Esta conta | Todas as contas" (<code>.segmented</code>), a ordem e "Salvar busca". Em todas as contas, cada resultado leva o avatar da conta (<b>L75</b>) antes da pasta.</p>
+      </div>
+      <div class="stage stage--flush">
+        <div style="max-width:46rem">
+          <div class="search-bar">
+            <span class="search-bar__count">128 resultados</span>
+            <div class="segmented" role="radiogroup" aria-label="Onde buscar"><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Esta conta</button><button class="btn btn--compact" type="button" role="radio" aria-checked="true">Todas as contas</button></div>
+            <div class="search-bar__end">
+              <span class="select"><select aria-label="Ordem"><option>Mais recentes</option><option>Mais antigas</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
+              <button class="btn btn--subtle btn--compact" type="button"><svg class="i"><use href="#i-plus"/></svg>Salvar busca</button>
+            </div>
+          </div>
+          <div class="thread-list thread-list--standard" role="list" aria-label="Resultados">
+            <div class="thread is-unread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Yuri Melo</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="avatar avatar--xs avatar--purple thread__account" aria-label="Conta Trabalho">T</span><span class="label">Caixa de entrada</span><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
+            <div class="thread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Yuri Melo</span></div><div class="thread__meta"><span class="thread__date">2 set</span></div><div class="thread__subject"><span class="avatar avatar--xs thread__account" aria-label="Conta Pessoal">P</span><span class="label label--purple">Jurídico</span><span class="thread__subject-text">Contrato do apartamento assinado</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
+            <div class="thread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Yuri Melo</span></div><div class="thread__meta"><span class="thread__date">2015</span></div><div class="thread__subject"><span class="avatar avatar--xs avatar--archive thread__account" aria-label="Arquivo Caixa de 2015"><svg class="i"><use href="#i-archive"/></svg></span><span class="label">Enviados</span><span class="thread__subject-text">Minuta do contrato antigo</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
+          </div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Arquivos locais</dt><dd>"Todas as contas" inclui os arquivos de e-mail (US15), com o avatar do arquivo.</dd></div>
+        <div><dt>Abrir um resultado</dt><dd>Abre a conversa na conta dele; a conta ativa não muda até a pessoa sair da busca.</dd></div>
+        <div><dt>Sem resultados</dt><dd>"Nenhum resultado nesta conta" com o botão "Buscar em todas as contas" (<code>.empty</code>).</dd></div>
+      </dl>
+    </section>
+
+    <!-- ===================================================================== seleção e regras -->
+    <section class="ds-section" id="lote">
+      <div class="ds-head">
+        <p class="eyebrow">CA5 · CA6</p>
+        <h2>Ações nos resultados e aplicar regra</h2>
+        <p class="lede">Marcar resultados troca a barra pela seleção (<code>.toolbar.is-selecting</code>), com "Selecionar todos os 128". "Aplicar regra…" abre um <code>.modal</code> com as regras da conta (<code>.choice-card</code>) e a prévia (<code>.rule-preview</code>).</p>
+      </div>
+      <div class="stage stage--flush">
+        <div style="max-width:46rem">
+          <div class="toolbar is-selecting">
+            <input type="checkbox" class="checkbox" checked aria-label="Desmarcar">
+            <span class="toolbar__count">50 selecionados · <button class="btn btn--link" type="button">Selecionar todos os 128</button></span>
+            <button class="btn btn--subtle btn--icon" type="button" aria-label="Arquivar"><svg class="i"><use href="#i-archive"/></svg></button>
+            <button class="btn btn--subtle btn--icon" type="button" aria-label="Mover"><svg class="i"><use href="#i-folder-move"/></svg></button>
+            <button class="btn btn--subtle btn--icon" type="button" aria-label="Excluir"><svg class="i"><use href="#i-trash"/></svg></button>
+            <button class="btn btn--subtle btn--icon" type="button" aria-label="Marcar como lida"><svg class="i"><use href="#i-mail-open"/></svg></button>
+            <span class="toolbar__sep" aria-hidden="true"></span>
+            <button class="btn btn--subtle btn--compact" type="button"><svg class="i"><use href="#i-filter"/></svg>Aplicar regra…</button>
+          </div>
+        </div>
+      </div>
+      <div class="stage stage--sunken">
+        <div class="modal modal--medium" role="dialog" aria-labelledby="apply-title" style="margin-inline:auto">
+          <div class="modal__head"><h3 class="modal__title" id="apply-title">Aplicar regra a 128 resultados</h3></div>
+          <div class="modal__body" style="display:grid;gap:var(--space-200)">
+            <div class="choice-list" role="radiogroup" aria-label="Regra">
+              <label class="choice-card is-selected"><input type="radio" name="rule" checked><span class="choice-card__icon"><svg class="i"><use href="#i-filter"/></svg></span><span><span class="choice-card__title">Contratos</span><span class="rule-sentence">Se <span class="rule-term">Assunto contém contrato</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action"><svg class="i"><use href="#i-folder-move"/></svg>Mover para Jurídico</span></span></span></label>
+              <label class="choice-card"><input type="radio" name="rule"><span class="choice-card__icon"><svg class="i"><use href="#i-filter"/></svg></span><span><span class="choice-card__title">Recibos</span><span class="rule-sentence">Se <span class="rule-term">Assunto contém nota fiscal</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action"><svg class="i"><use href="#i-tag"/></svg>Financeiro</span></span></span></label>
+              <label class="choice-card"><input type="radio" name="rule"><span class="choice-card__icon"><svg class="i"><use href="#i-plus"/></svg></span><span><span class="choice-card__title">Criar uma regra com esta busca…</span><span class="choice-card__desc">As condições começam com os chips da busca.</span></span></label>
+            </div>
+            <aside class="rule-preview" aria-live="polite">
+              <p class="rule-preview__count">Pegaria 41 dos 128</p>
+              <p class="rule-preview__hint">A regra só age nos resultados que cumprem as condições dela.</p>
+              <ul class="rule-preview__list">
+                <li class="rule-preview__item"><b>Yuri Melo</b><span>Revisão do contrato: Fornecedor Lumen</span><span>10:42</span></li>
+                <li class="rule-preview__item"><b>Yuri Melo</b><span>Contrato do apartamento assinado</span><span>2 set</span></li>
+              </ul>
+            </aside>
+          </div>
+          <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--primary" type="button">Aplicar a 41</button></div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Desfazer</dt><dd>O que a regra fez vai para o histórico das regras (US12), com "Desfazer"; o toast também oferece.</dd></div>
+        <div><dt>Várias contas</dt><dd>Com resultados de mais de uma conta, a lista mostra as regras de cada conta separadas, e cada uma só age na conta dela. Arquivos locais não têm regras (D7 da US15).</dd></div>
+        <div><dt>Criar regra</dt><dd>"Criar uma regra com esta busca…" abre o editor de regras com De, Para, Assunto e Anexo vindos dos chips.</dd></div>
+      </dl>
+    </section>
+
+    <!-- ===================================================================== buscas salvas -->
+    <section class="ds-section" id="salvas">
+      <div class="ds-head">
+        <p class="eyebrow">CA7</p>
+        <h2>Buscas salvas</h2>
+        <p class="lede">"Salvar busca" pede um nome e a busca aparece na coluna de pastas, num grupo próprio, com o número de não lidas.</p>
+      </div>
+      <div class="stage">
+        <nav class="sidebar" aria-label="Pastas (exemplo)" style="max-width:15rem;border:1px solid var(--color-border);border-radius:var(--radius-large)">
+          <div class="nav-group">
+            <span class="nav-item"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span>
+          </div>
+          <div class="nav-group">
+            <div class="nav-heading">Buscas salvas</div>
+            <span class="nav-item has-unread" aria-current="page"><svg class="i"><use href="#i-search"/></svg><span class="nav-item__text">Contratos com o Yuri</span><span class="nav-item__count">3</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-search"/></svg><span class="nav-item__text">Notas fiscais deste ano</span></span>
+          </div>
+        </nav>
+      </div>
+    </section>
+
+    <section class="ds-section" id="pendencias">
+      <div class="ds-head"><h2>Para aprovar</h2></div>
+      <dl class="guidance">
+        <div><dt>L73</dt><dd>Chip de filtro <code>.chip--filter</code> (ícone, tom da marca) e o rótulo <code>.chip__op</code> (De, Para, Cc) no chip de pessoa.</dd></div>
+        <div><dt>L74</dt><dd>Barra dos resultados <code>.search-bar</code>: quantos, onde buscar, ordem e salvar.</dd></div>
+        <div><dt>L75</dt><dd>Conta de cada resultado <code>.thread__account</code> (avatar mínimo antes da pasta).</dd></div>
+        <div><dt>Fora deste rascunho</dt><dd>Busca no texto das mensagens (índice de texto completo): não muda a tela, só o que é encontrado. Fica como decisão da story.</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

@@ -144,6 +144,8 @@ export interface MessageHeader {
   /** Só em resultados de busca: a pasta da mensagem. */
   folderName?: string;
   folderId?: string;
+  /** Só em resultados de busca: a conta da mensagem (busca em todas as contas, US16). */
+  accountId?: string;
 }
 
 /** Uma linha da lista por conversa (US8, D1): quantas mensagens, quem participa e o estado do todo. */
@@ -454,6 +456,46 @@ export interface SearchPage {
   truncated: boolean;
 }
 
+/** A consulta da busca (US16), montada pelos chips em `lib/search.ts`. */
+export interface SearchQuery {
+  text: string;
+  from: string[];
+  to: string[];
+  cc: string[];
+  /** Em qualquer papel: De, Para ou Cc. */
+  with: string[];
+  /** `AAAA-MM-DD`, inclusive. */
+  after: string | null;
+  before: string | null;
+  hasAttachment: boolean;
+  unread: boolean;
+  starred: boolean;
+  /** Id de uma pasta; só numa conta. */
+  folder: string | null;
+  allAccounts: boolean;
+  oldestFirst: boolean;
+}
+
+export interface SearchContact {
+  name: string;
+  address: string;
+  count: number;
+}
+
+export interface RecentSearch {
+  label: string;
+  query: SearchQuery;
+}
+
+export interface SavedSearch {
+  id: number;
+  name: string;
+  /** `null`: em todas as contas. */
+  accountId: string | null;
+  query: SearchQuery;
+  unread: number;
+}
+
 export type DraftKind = "new" | "reply" | "reply_all" | "forward";
 
 export interface DraftContent {
@@ -676,7 +718,17 @@ export const api = {
   /** Abre sem rastreamento; se o texto do link mostra outro domínio, devolve o aviso sem abrir (US10, CA8). */
   openExternalLink: (url: string, text: string | null = null, confirmed = false) =>
     call<LinkOpened>("open_external_link", { url, text, confirmed }),
-  searchMessages: (accountId: string, query: string) => call<SearchPage>("search_messages", { accountId, query }),
+  searchMessages: (accountId: string, query: SearchQuery) => call<SearchPage>("search_messages", { accountId, query }),
+  searchContacts: (accountId: string, term: string, allAccounts: boolean) => call<SearchContact[]>("search_contacts", { accountId, term, allAccounts }),
+  recentSearches: () => call<RecentSearch[]>("recent_searches"),
+  addRecentSearch: (recent: RecentSearch) => call<RecentSearch[]>("add_recent_search", { recent }),
+  clearRecentSearches: () => call<void>("clear_recent_searches"),
+  listSavedSearches: (accountId: string) => call<SavedSearch[]>("list_saved_searches", { accountId }),
+  saveSearch: (accountId: string, name: string, query: SearchQuery) => call<number>("save_search", { accountId, name, query }),
+  deleteSavedSearch: (id: number) => call<void>("delete_saved_search", { id }),
+  /** Prévia de uma regra sobre resultados da busca, todos da mesma conta (US16). */
+  previewRuleOn: (accountId: string, ruleId: number, messageIds: string[]) => call<RulePreview>("preview_rule_on", { accountId, ruleId, messageIds }),
+  applyRuleOn: (accountId: string, ruleId: number, messageIds: string[]) => call<number>("apply_rule_on", { accountId, ruleId, messageIds }),
   moveMessages: (messageIds: string[], targetFolderId: string) => call<Moved>("move_messages", { messageIds, targetFolderId }),
   deleteMessages: (messageIds: string[]) => call<Moved>("delete_messages", { messageIds }),
   archiveMessages: (messageIds: string[]) => call<Moved>("archive_messages", { messageIds }),

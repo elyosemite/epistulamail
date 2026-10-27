@@ -812,6 +812,10 @@ pub struct Participant {
     pub mine: bool,
 }
 
+pub(crate) fn listed_row(r: &Row<'_>) -> rusqlite::Result<ListedMessage> {
+    listed_from(r)
+}
+
 fn listed_from(r: &Row<'_>) -> rusqlite::Result<ListedMessage> {
     let has_followup: bool = r.get(7)?;
     Ok(ListedMessage {
@@ -831,7 +835,7 @@ fn listed_from(r: &Row<'_>) -> rusqlite::Result<ListedMessage> {
 }
 
 /// Sem a prévia (estrutura ainda não lida), o clipe segue o palpite do cabeçalho (`multipart/mixed`).
-const LISTED_COLUMNS: &str = "mf.uid, m.subject, m.from_name, m.from_address, m.date, m.seen, m.flagged,
+pub(crate) const LISTED_COLUMNS: &str = "mf.uid, m.subject, m.from_name, m.from_address, m.date, m.seen, m.flagged,
     fu.message_id IS NOT NULL, fu.due_date, fu.completed_at,
     m.snippet, CASE WHEN m.snippet IS NULL THEN m.has_attachments ELSE m.has_files END, m.has_images,
     CASE WHEN m.thread_id IS NULL OR m.thread_id = '' THEN '#' || m.id ELSE m.thread_id END";
@@ -1861,31 +1865,6 @@ pub struct SearchHit {
     pub message: ListedMessage,
 }
 
-/// Busca nas mensagens salvas da conta (assunto, remetente, destinatários). Cada mensagem aparece
-/// uma vez, na primeira pasta da ordem da sidebar em que está. Devolve até `SEARCH_LIMIT + 1`.
-pub fn search(conn: &Connection, account_id: &str, query: &str) -> Result<Vec<SearchHit>, AppError> {
-    let pattern = like_pattern(query.trim());
-    let mut st = conn
-        .prepare_cached(&format!(
-            "SELECT {LISTED_COLUMNS}, f.id, f.display_name
-             FROM message m
-             JOIN message_folder mf ON mf.message_id = m.id
-             JOIN folder f ON f.id = mf.folder_id
-             LEFT JOIN message_followup fu ON fu.message_id = m.id
-             WHERE m.account_id = ?1
-               AND (m.subject LIKE ?2 ESCAPE '\\' OR m.from_name LIKE ?2 ESCAPE '\\' OR m.from_address LIKE ?2 ESCAPE '\\'
-                    OR m.to_json LIKE ?2 ESCAPE '\\' OR m.cc_json LIKE ?2 ESCAPE '\\')
-               AND f.position = (SELECT min(f2.position) FROM message_folder mf2 JOIN folder f2 ON f2.id = mf2.folder_id WHERE mf2.message_id = m.id)
-             ORDER BY m.date DESC LIMIT ?3"
-        ))
-        .map_err(sql_error("busca"))?;
-    let rows = st
-        .query_map(params![account_id, pattern, SEARCH_LIMIT + 1], |r| {
-            Ok(SearchHit { message: listed_from(r)?, folder_id: r.get(14)?, folder_name: r.get(15)? })
-        })
-        .map_err(sql_error("busca"))?;
-    rows.collect::<Result<_, _>>().map_err(sql_error("busca"))
-}
 
 // ---------------------------------------------------------------- sinalizadas (US6, CA6)
 
@@ -2022,13 +2001,13 @@ pub struct AppearanceChange {
     pub show_reader: Option<bool>,
 }
 
-fn app_setting(conn: &Connection, key: &str) -> Result<Option<String>, AppError> {
+pub(crate) fn app_setting(conn: &Connection, key: &str) -> Result<Option<String>, AppError> {
     conn.query_row("SELECT value FROM app_setting WHERE key = ?1", [key], |r| r.get(0))
         .optional()
         .map_err(sql_error("ajuste do app"))
 }
 
-fn set_app_setting(conn: &Connection, key: &str, value: &str) -> Result<(), AppError> {
+pub(crate) fn set_app_setting(conn: &Connection, key: &str, value: &str) -> Result<(), AppError> {
     conn.execute(
         "INSERT INTO app_setting (key, value) VALUES (?1, ?2) ON CONFLICT (key) DO UPDATE SET value = excluded.value",
         params![key, value],
@@ -2817,6 +2796,7 @@ pub(crate) mod tests {
             s3.headers = vec![header(1, "<z@x>", "Contrato de outra conta", false)];
             apply_snapshot(c, other_inbox.id, &s3).unwrap();
 
+            let search = |c: &Connection, id: &str, text: &str| crate::search::search(c, id, &crate::search::SearchQuery { text: text.into(), ..Default::default() });
             let hits = search(c, &a.id, "contrato").unwrap();
             assert_eq!(hits.len(), 1, "a mesma mensagem em duas pastas aparece uma vez, e só da conta pedida");
             assert_eq!((hits[0].folder_id, hits[0].message.uid), (inbox.id, 1));
@@ -3209,7 +3189,7 @@ pub(crate) mod tests {
             let att = AttachmentInfo { name: "AnexoMarcador.pdf".into(), mime_type: "application/pdf".into(), size: 1 };
             save_body(c, m.id, b"CorpoMarcador", &[att]).unwrap();
             set_local_flags(c, m.id, MessageFlags { seen: true, flagged: true }).unwrap();
-            assert_eq!(search(c, &a.id, "AssuntoMarcador").unwrap().len(), 1);
+            assert_eq!(crate::search::search(c, &a.id, &crate::search::SearchQuery { text: "AssuntoMarcador".into(), ..Default::default() }).unwrap().len(), 1);
             let draft = DraftContent { to: vec!["redacao.marcador@gmail.com".into()], cc: vec![], bcc: vec![], subject: "Re: AssuntoMarcador".into(), body: "CorpoMarcador".into() };
             save_draft(c, &a.id, DraftKind::Reply, Some(m.id), &draft).unwrap();
             set_followup(c, m.id, FollowupChange::Set(Some("2026-10-24"))).unwrap();

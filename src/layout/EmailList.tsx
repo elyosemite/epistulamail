@@ -31,6 +31,8 @@ interface EmailListProps extends DragHandlers {
   /** Arrastar desligado (conta sem acesso ao servidor). */
   canDrag: boolean;
   renderBadge: (message: MessageHeader) => ReactNode;
+  /** Avatar da conta de cada resultado (busca em todas as contas). */
+  renderAccount?: (message: MessageHeader) => ReactNode;
   onOpen: (id: string) => void;
   onCheck: (id: string, range: boolean) => void;
   onCheckAll: () => void;
@@ -46,7 +48,7 @@ const folderAt = (x: number, y: number) => document.elementFromPoint(x, y)?.clos
 
 /** A lista de e-mails da pasta (ou da busca, ou de um prazo das sinalizadas). */
 export function EmailList(props: EmailListProps) {
-  const { label, items, density, openId, checked, showFolder, canDrag, renderBadge, onOpen, onCheck, onCheckAll, onClearChecked, onToggleStar, onToggleRead } = props;
+  const { label, items, density, openId, checked, showFolder, canDrag, renderBadge, renderAccount, onOpen, onCheck, onCheckAll, onClearChecked, onToggleStar, onToggleRead } = props;
   const rows = useRef(new Map<string, HTMLDivElement>());
   const hoverTimer = useRef<number | undefined>(undefined);
   const hover = (id: string, inside: boolean) => {
@@ -159,6 +161,7 @@ export function EmailList(props: EmailListProps) {
             checked={checked.has(m.id)}
             folderName={showFolder ? m.folderName ?? undefined : undefined}
             badge={renderBadge(m)}
+            account={renderAccount?.(m)}
             onOpen={() => {
               if (suppressClick.current) {
                 suppressClick.current = false;

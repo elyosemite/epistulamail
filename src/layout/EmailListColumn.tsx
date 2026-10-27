@@ -1,6 +1,6 @@
 // Composição de DS: threads.html (.toolbar com checkbox da página, .is-selecting, .toolbar__count e paginação),
 // espacamento.html (.app-shell__list no bloco de navegação), carregamento.html (skeleton e .spinner--sm de
-// sincronização), vazios.html (.empty)
+// sincronização), vazios.html (.empty); busca.html (US16): .search-bar (L74) acima da lista
 import type { ReactNode } from "react";
 import { canGoBack, rangeLabel, type Pager } from "../lib/pagination";
 import type { AppError, Density, FolderRole, MessageHeader } from "../lib/tauri";
@@ -40,6 +40,12 @@ interface EmailListColumnProps extends DragHandlers {
   canDrag: boolean;
   /** Prazo da sinalização de cada linha. */
   renderBadge: (message: MessageHeader) => ReactNode;
+  /** Avatar da conta de cada resultado (busca em todas as contas, L75). */
+  renderAccount?: (message: MessageHeader) => ReactNode;
+  /** Barra dos resultados da busca (L74), entre a toolbar e a lista; com ela, a toolbar não repete a contagem. */
+  searchBar?: ReactNode;
+  /** Busca sem resultados: a ação de buscar em todas as contas. */
+  emptySearch?: ReactNode;
   onOpen: (id: string) => void;
   onCheck: (id: string, range: boolean) => void;
   onCheckAll: () => void;
@@ -57,7 +63,7 @@ export function EmailListColumn(props: EmailListColumnProps) {
   const loading = state.status === "loading";
   const selecting = checked.size > 0;
 
-  const end = state.status === "ready" && (searching ? (
+  const end = state.status === "ready" && (props.searchBar ? null : searching ? (
     <span>{state.items.length === 1 ? "1 resultado" : `${state.items.length.toLocaleString("pt-BR")} resultados`}</span>
   ) : (
     <>
@@ -91,6 +97,7 @@ export function EmailListColumn(props: EmailListColumnProps) {
           </>
         )}
       </Toolbar>
+      {props.searchBar}
       <div className="app-shell__list-body">
         {notice && <div style={{ padding: "var(--space-150) var(--space-200) 0" }}>{notice}</div>}
         {state.status === "loading" && (
@@ -108,7 +115,7 @@ export function EmailListColumn(props: EmailListColumnProps) {
         )}
         {state.status === "ready" && state.items.length === 0 && (
           searching
-            ? <EmptyState title="Nenhuma mensagem encontrada" description="Tente outras palavras, o nome ou o e-mail de quem enviou." />
+            ? props.emptySearch ?? <EmptyState title="Nenhuma mensagem encontrada" description="Tente outras palavras, o nome ou o e-mail de quem enviou." />
             : folderRole === "inbox"
             ? <EmptyState art="done" title="Tudo em dia" description="Não há mensagens na Caixa de entrada." />
             : <EmptyState title="Nenhuma mensagem nesta pasta" description={`${folderName} está vazia.`} />
@@ -122,6 +129,7 @@ export function EmailListColumn(props: EmailListColumnProps) {
             checked={checked}
             showFolder={!!searching}
             renderBadge={renderBadge}
+            renderAccount={props.renderAccount}
             onOpen={props.onOpen}
             onCheck={props.onCheck}
             onCheckAll={props.onCheckAll}

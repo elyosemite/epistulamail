@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Icon } from "./Icon";
 
-type Size = "sm" | "md" | "lg";
+type Size = "xs" | "sm" | "md" | "lg";
 
 interface AccountAvatarProps {
   initial: string;

@@ -1,6 +1,6 @@
 // Composição de DS: header.html (.commandbar, segunda linha do bloco do header), menus.html (.menu "Mover para" com
 // .menu__search, .menu__form e .menu__empty; menu de resposta; menu "Sinalizar" com .menu-item__meta), modais.html
-// (.folder-picker)
+// (.folder-picker); busca.html "Ações nos resultados" (US16): "Aplicar regra…" nos resultados da busca
 import type { QuickIntent } from "../features/rules/RuleDialogs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { canReceive, folderIcon } from "../lib/folders";
@@ -40,6 +40,10 @@ interface CommandBarProps {
   onFollowup: (change: FollowupAction) => void;
   /** "Criar regra…" e os atalhos de uma ação (US12, CA5), a partir da mensagem aberta. */
   onRule: (intent: QuickIntent) => void;
+  /** Só na busca (US16): aplicar uma regra da conta aos resultados marcados. */
+  onApplyRule?: () => void;
+  /** Por que "Aplicar regra…" está desligado (resultados de mais de uma conta, arquivo local). */
+  applyRuleBlocked?: string | null;
 }
 
 /** Atalhos de teclado da barra (fora de campos de texto). */
@@ -49,7 +53,7 @@ function isTyping(target: EventTarget | null): boolean {
 
 /** Barra de comandos: novo e-mail, excluir, arquivar, mover, responder, lida e sinalizar. */
 export function CommandBar(props: CommandBarProps) {
-  const { account, folders, sourceFolderId, targets, roleOf, readOnly, local, inert, onNew, onDelete, onArchive, onMove, onCreateAndMove, onReply, onToggleRead, onFollowup, onRule } = props;
+  const { account, folders, sourceFolderId, targets, roleOf, readOnly, local, inert, onNew, onDelete, onArchive, onMove, onCreateAndMove, onReply, onToggleRead, onFollowup, onRule, onApplyRule, applyRuleBlocked } = props;
   const [menu, setMenu] = useState<OpenMenu>(null);
   const [picker, setPicker] = useState(false);
   const [recent, setRecent] = useState<Folder[]>([]);
@@ -196,6 +200,13 @@ export function CommandBar(props: CommandBarProps) {
             expanded={menu?.kind === "more"}
             disabled={disabled || !single}
             onClick={(b) => setMenu({ kind: "more", anchor: anchorBelow(b) })}
+          />}
+          {onApplyRule && <CommandButton
+            icon="filter"
+            label="Aplicar regra…"
+            tip={applyRuleBlocked ?? "Aplicar uma regra aos resultados marcados"}
+            disabled={disabled || !!applyRuleBlocked}
+            onClick={onApplyRule}
           />}
         </CommandGroup>
       </CommandToolbar>
