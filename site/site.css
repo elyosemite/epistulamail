@@ -50,7 +50,7 @@ a { color: var(--color-link); }
 .site-band--sunken { background: var(--color-surface-sunken); }
 .site-eyebrow {
   margin: 0 0 var(--space-200);
-  font: var(--font-weight-medium) var(--font-size-label)/var(--line-height-label) var(--font-family-code);
+  font: var(--font-label);
   letter-spacing: var(--letter-spacing-label); text-transform: uppercase;
   color: var(--color-text-subtlest);
 }
@@ -73,7 +73,7 @@ a { color: var(--color-link); }
 .site-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-150); margin-top: var(--space-500); }
 .site-hero__intro .site-hero__actions { justify-content: center; }
 .site-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-100) var(--space-400); margin: var(--space-400) 0 0; padding: 0; list-style: none; }
-.site-facts li { display: flex; align-items: center; gap: var(--space-100); font: var(--font-weight-medium) var(--font-size-label)/var(--line-height-label) var(--font-family-code); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtle); }
+.site-facts li { display: flex; align-items: center; gap: var(--space-100); font: var(--font-label); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtle); }
 .site-facts .i { color: var(--color-icon-brand); }
 /* A janela do app, recortada sem o papel de parede (cantos transparentes), flutuando no centro. */
 .site-hero__media {
@@ -140,7 +140,7 @@ a { color: var(--color-link); }
 /* ---------- Rodapé ---------- */
 .site-footer { padding-block: var(--space-800) var(--space-600); }
 .site-footer__grid { display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: var(--space-400); }
-.site-footer h4 { margin: 0 0 var(--space-200); font: var(--font-weight-medium) var(--font-size-label)/var(--line-height-label) var(--font-family-code); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtlest); }
+.site-footer h4 { margin: 0 0 var(--space-200); font: var(--font-label); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtlest); }
 .site-footer ul { display: grid; gap: var(--space-100); margin: 0; padding: 0; list-style: none; }
 .site-footer a { color: var(--color-text-subtle); text-decoration: none; font: var(--font-body); }
 .site-footer a:hover { color: var(--color-text); text-decoration: underline; }
