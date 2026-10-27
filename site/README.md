@@ -23,11 +23,13 @@ node build.mjs --serve   # http://localhost:4321
 
 O workflow `.github/workflows/site.yml` roda só quando `site/`, `design-system/tokens.css`, `components.css` ou `docs.js` mudam. Push no `main` publica em produção; pull request publica uma prévia (o endereço aparece no resumo da execução).
 
-Para ligar:
+A Vercel não é ligada ao GitHub: quem publica é o workflow, com a CLI da Vercel e um token. A Vercel nunca lê o repositório.
 
-1. Na Vercel, crie um projeto (pode ser vazio, sem conectar o repositório: quem publica é o workflow). Em **Settings → General**, deixe **Root Directory** em branco e o **Framework Preset** como "Other".
-2. Gere um token em **Account Settings → Tokens**.
-3. Pegue o `orgId` e o `projectId`: rode `npx vercel@63.1.2 link` dentro de `site/` e copie de `site/.vercel/project.json` (a pasta `.vercel` fica fora do git).
-4. No GitHub, em **Settings → Secrets and variables → Actions**, crie `VERCEL_TOKEN`, `VERCEL_ORG_ID` e `VERCEL_PROJECT_ID`.
+Configuração (já feita; refazer só ao trocar de conta ou de token):
 
-Sem os segredos, o workflow monta o site e para antes de publicar.
+1. Na Vercel, **Account Settings → Tokens**: um token com escopo na conta.
+2. O projeto `epistula` foi criado pela API, sem repositório ligado e com o preset "Other":
+   `POST https://api.vercel.com/v11/projects?teamId=<time>` com `{"name":"epistula","framework":null}`. O `teamId` é o `defaultTeamId` de `GET https://api.vercel.com/v2/user`.
+3. No GitHub, em **Settings → Secrets and variables → Actions**: `VERCEL_TOKEN`, `VERCEL_ORG_ID` (o id do time) e `VERCEL_PROJECT_ID` (o `id` devolvido na criação).
+
+Ao vencer o token, gere outro e troque só o segredo `VERCEL_TOKEN`. Sem os segredos, o workflow monta o site e para antes de publicar.
