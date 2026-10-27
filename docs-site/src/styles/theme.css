@@ -23,9 +23,10 @@
   --sl-color-bg-nav: var(--color-surface);
   --sl-color-bg-sidebar: var(--color-surface);
   --sl-color-bg-inline-code: var(--color-bg-neutral);
-  --sl-color-hairline: var(--color-border);
-  --sl-color-hairline-light: var(--color-border);
-  --sl-color-hairline-shade: var(--color-border);
+  /* Sem linhas dividindo o layout (topo, sidebar, índice e abaixo do título): o espaço e o fundo separam. */
+  --sl-color-hairline: transparent;
+  --sl-color-hairline-light: transparent;
+  --sl-color-hairline-shade: transparent;
 
   --sl-content-width: 46rem;
   --sl-sidebar-width: 17rem;
@@ -174,3 +175,6 @@ h1#_top, .sl-markdown-content h1 { font-weight: 600; }
 .ds-drill__back { font-weight: 500; }
 h1#_top, .sl-markdown-content h1 { font-weight: 500; }
 .starlight-aside__title, .right-sidebar-panel h2, starlight-toc h2 { font-weight: 500; }
+
+/* Separadores dentro do texto continuam (são conteúdo, não layout). */
+.sl-markdown-content hr:not(:where(.not-content *)) { border-bottom-color: var(--color-border); }
