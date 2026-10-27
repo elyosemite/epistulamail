@@ -50,10 +50,6 @@ h1#_top { letter-spacing: -0.03em; }
   font-weight: var(--font-weight-semibold, 600);
 }
 
-/* Capa: o brilho (L78) atrás do título e o título em gradiente, só onde a página pede (frontmatter glow). */
-.page-glow-title { padding-block: 0.5rem 1rem; }
-.page-glow-title h1 { font-size: clamp(2.5rem, 5vw, 3.5rem); }
-
 /* Cartão da última versão, abaixo do título da capa. */
 .release-banner {
   display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap;
@@ -85,23 +81,6 @@ h1#_top { letter-spacing: -0.03em; }
 
 /* Seletor de idioma com o nome inteiro. */
 starlight-lang-select label { --sl-select-width: 9.5em !important; }
-
-/* Capa: o brilho em gradiente (L78) fica no alto da página, à direita, e passa por trás do topo, que fica
-   translúcido nessa página. O título só ganha o texto em gradiente. */
-.page-glow.page-glow-title::before { display: none; }
-:root:has(.page-glow-title) body::before {
-  content: ""; position: absolute; top: -6rem; right: -8rem; z-index: 0;
-  width: min(64rem, 80vw); height: 34rem; pointer-events: none;
-  background: var(--gradient-aurora); opacity: 0.3; filter: blur(80px);
-  -webkit-mask-image: radial-gradient(ellipse 55% 60% at 65% 35%, #000 25%, transparent 75%);
-          mask-image: radial-gradient(ellipse 55% 60% at 65% 35%, #000 25%, transparent 75%);
-}
-:root:has(.page-glow-title) .page { position: relative; z-index: 1; }
-:root:has(.page-glow-title) header.header {
-  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
-  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-}
-:root:has(.page-glow-title) :is(.sidebar-pane, .main-frame, .content-panel, .right-sidebar) { background: transparent; }
 
 /* Grupos dentro da Documentação com peso normal; os dois grupos de cima continuam em destaque. */
 .sidebar-content ul ul summary .group-label span { font-weight: 500; }
