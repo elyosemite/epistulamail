@@ -76,8 +76,51 @@
       <p class="site-lead">Cada tela abaixo é o próprio Epistula, montado com as mesmas peças do app.</p>
 
       <div class="site-features" style="margin-top:var(--space-1000)">
-        <!-- 1 · imagem, texto -->
+        <!-- 1 · imagem, texto: várias contas -->
         <article class="site-feature site-reveal">
+          <figure class="site-feature__media site-shot" style="margin:0" aria-label="Coluna de contas com quatro contas e a lista das contas com o intervalo de sincronização">
+            <div class="site-shot__zoom" aria-hidden="true">
+              <div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--space-100)">
+                <nav class="account-rail" style="border-radius:var(--radius-large);background:var(--color-surface)">
+                  <div class="account-rail__list" role="list">
+                    <div role="listitem"><span class="account-rail__item" aria-current="true"><span class="avatar avatar--lg avatar--purple">T<img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span><span class="badge badge--primary account-rail__badge">12</span><span class="account-rail__name">Trabalho</span></span></div>
+                    <div role="listitem"><span class="account-rail__item"><span class="avatar avatar--lg">P<img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span><span class="badge badge--primary account-rail__badge">4</span><span class="account-rail__name">Pessoal</span></span></div>
+                    <div role="listitem"><span class="account-rail__item"><span class="avatar avatar--lg avatar--orange">F<img class="avatar__img" alt="" src="images/people/pessoa-4.webp"></span><span class="account-rail__name">Família</span></span></div>
+                    <div role="listitem"><span class="account-rail__item"><span class="avatar avatar--lg avatar--archive"><svg class="i"><use href="#i-archive"/></svg></span><span class="account-rail__name">Arquivo</span></span></div>
+                  </div>
+                  <div class="account-rail__sep" role="separator"></div>
+                  <span class="account-rail__add"><svg class="i"><use href="#i-plus"/></svg></span>
+                </nav>
+                <div class="site-shot__panel" style="display:grid;gap:var(--space-200);padding:var(--space-200)">
+                  <div class="settings__group" style="margin:0">
+                    <h4 class="settings__group-title">Contas</h4>
+                    <div class="setting-list">
+                      <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--purple">T<img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span><div class="setting-list__name"><span class="setting-list__title">Trabalho</span><span class="setting-list__sub">rafael.dias@lumen.com.br</span></div><span class="lozenge">A cada 5 min</span></div>
+                      <div class="setting-list__row setting-list__row--toggle"><span class="avatar">P<img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span><div class="setting-list__name"><span class="setting-list__title">Pessoal</span><span class="setting-list__sub">rafael.dias@exemplo.com</span></div><span class="lozenge">A cada 1 min</span></div>
+                      <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--orange">F<img class="avatar__img" alt="" src="images/people/pessoa-4.webp"></span><div class="setting-list__name"><span class="setting-list__title">Família</span><span class="setting-list__sub">familia.dias@exemplo.com</span></div><span class="lozenge">Manualmente</span></div>
+                    </div>
+                  </div>
+                  <ul class="provider-grid" role="list">
+                    <li><span class="provider-card"><span class="provider-card__icon"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">Gmail</span><span class="provider-card__desc">Entrar com o Google</span></span></span></li>
+                    <li><span class="provider-card"><span class="provider-card__icon"><svg class="i"><use href="#i-mail"/></svg></span><span class="provider-card__text"><span class="provider-card__name">Outlook</span><span class="provider-card__desc">Microsoft 365</span></span></span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </figure>
+          <div class="site-feature__text">
+            <p class="site-eyebrow">Várias contas</p>
+            <h3>Trabalho, pessoal e família, a um clique.</h3>
+            <p>Conecte quantas contas quiser. Cada uma tem nome, cor e a foto do perfil, e fica na coluna à esquerda com as não lidas. O login acontece na página do provedor: a sua senha nunca passa pelo Epistula.</p>
+            <ul class="site-feature__points">
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Ctrl+1 a Ctrl+9 trocam de conta</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Intervalo de sincronização próprio para cada conta</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- 2 · texto, imagem: sem conexão -->
+        <article class="site-feature site-feature--text-first site-reveal">
           <figure class="site-feature__media site-shot" style="margin:0" aria-label="Lista de conversas com o aviso de que o computador está sem conexão">
             <div class="site-shot__zoom" aria-hidden="true">
               <div class="site-shot__panel" style="display:grid;gap:var(--space-100);padding:var(--space-100)">
@@ -101,7 +144,33 @@
           </div>
         </article>
 
-        <!-- 2 · texto, imagem -->
+        <!-- 3 · imagem, texto: busca -->
+        <article class="site-feature site-reveal">
+          <figure class="site-feature__media site-shot" style="margin:0" aria-label="Busca por contrato, de Marina, com anexo, e os resultados de várias pastas">
+            <div class="site-shot__zoom" aria-hidden="true">
+              <div class="site-shot__panel" style="display:grid;gap:var(--space-150);padding:var(--space-200)">
+                <div class="input input--search is-focus"><svg class="i"><use href="#i-search"/></svg><span class="label label--blue">de: marina</span><span class="label">tem: anexo</span><input value="contrato" tabindex="-1" aria-hidden="true"><span class="btn btn--subtle btn--icon btn--compact"><svg class="i"><use href="#i-x"/></svg></span></div>
+                <div class="section-message"><svg class="i"><use href="#i-search"/></svg><div><p class="section-message__title">Buscando nas mensagens salvas neste computador</p><p>3 conversas em 2 pastas. Funciona sem internet.</p></div></div>
+                <div class="thread-list">
+                  <div class="thread is-unread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="label">Caixa de entrada</span><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">Segue a versão 3 do contrato com os ajustes da cláusula 7.2.</div></div>
+                  <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">2 set</span></div><div class="thread__subject"><span class="label label--purple">Jurídico</span><span class="thread__subject-text">Contrato assinado, versão final</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">Anexo o PDF com as duas assinaturas.</div></div>
+                  <div class="thread"><input type="checkbox" class="checkbox thread__check" tabindex="-1"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">12 ago</span></div><div class="thread__subject"><span class="label label--purple">Jurídico</span><span class="thread__subject-text">Minuta do contrato de serviços</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">Primeira versão para a gente discutir na quinta.</div></div>
+                </div>
+              </div>
+            </div>
+          </figure>
+          <div class="site-feature__text">
+            <p class="site-eyebrow">Busca</p>
+            <h3>Ache o contrato antes de terminar de digitar.</h3>
+            <p>A busca olha todas as pastas da conta de uma vez, nas mensagens guardadas no computador. Operadores como <code>de:</code>, <code>para:</code> e <code>tem:anexo</code> viram etiquetas no campo, para você ver o filtro que está valendo.</p>
+            <ul class="site-feature__points">
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>"/" ou Ctrl+E levam à busca de qualquer lugar</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Cada resultado mostra a pasta de onde veio</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- 4 · texto, imagem: rastreamento -->
         <article class="site-feature site-feature--text-first site-reveal">
           <figure class="site-feature__media site-shot" style="margin:0" aria-label="Mensagem com as imagens externas bloqueadas">
             <div class="site-shot__zoom" aria-hidden="true">
@@ -125,7 +194,7 @@
           </div>
         </article>
 
-        <!-- 3 · imagem, texto -->
+        <!-- 5 · imagem, texto: regras -->
         <article class="site-feature site-reveal">
           <figure class="site-feature__media site-shot" style="margin:0" aria-label="Regras na ordem em que rodam, cada uma lida como uma frase">
             <div class="site-shot__zoom" aria-hidden="true">
@@ -149,43 +218,82 @@
           </div>
         </article>
 
-        <!-- 4 · texto, imagem -->
+        <!-- 6 · texto, imagem: OpenPGP -->
         <article class="site-feature site-feature--text-first site-reveal">
-          <figure class="site-feature__media site-shot" style="margin:0" aria-label="Resposta criptografada e assinada, com a chave de cada destinatário">
+          <figure class="site-feature__media site-shot" style="margin:0" aria-label="Chaves OpenPGP de quatro pessoas, com a situação de cada uma, e uma mensagem cifrada com a assinatura verificada">
             <div class="site-shot__zoom" aria-hidden="true">
               <div class="site-shot__panel" style="display:grid;gap:var(--space-200);padding:var(--space-200)">
-                <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg avatar--green">AR</span><div style="min-width:0"><div class="message__from">Ana Ribeiro <span class="message__addr">&lt;ana@lumen.com.br&gt;</span></div><div class="sec-status"><span class="sec-badge"><svg class="i"><use href="#i-lock"/></svg>Criptografada</span><span class="sec-badge"><svg class="i"><use href="#i-badge-check"/></svg>Assinatura verificada</span></div></div><span class="message__time">10:42</span></div></div>
+                <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg avatar--green">AR<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><div style="min-width:0"><div class="message__from">Ana Ribeiro <span class="message__addr">&lt;ana@lumen.com.br&gt;</span></div><div class="sec-status"><span class="sec-badge"><svg class="i"><use href="#i-lock"/></svg>Criptografada · OpenPGP</span><span class="sec-badge"><svg class="i"><use href="#i-badge-check"/></svg>Assinatura verificada</span></div></div><span class="message__time">10:42</span></div></div>
+                <table class="key-table">
+                  <thead><tr><th>Nome e e-mail</th><th>ID</th><th>Situação</th></tr></thead>
+                  <tbody>
+                    <tr><td><span class="key-table__who"><b>Ana Ribeiro</b>ana@lumen.com.br</span></td><td class="key-table__id">5C21 08AA 91F3</td><td><span class="lozenge lozenge--success">Verificada</span></td></tr>
+                    <tr><td><span class="key-table__who"><b>Paulo Henrique</b>paulo@exemplo.org</span></td><td class="key-table__id">19FE 7A02 BB65</td><td><span class="lozenge lozenge--inprogress">Aceita</span> <span class="lozenge lozenge--new">Pós-quântica</span></td></tr>
+                    <tr><td><span class="key-table__who"><b>Davi Santos</b>davi@estudio.art</span></td><td class="key-table__id">E7D0 44B1 0C9A</td><td><span class="lozenge">Ainda não aceita</span></td></tr>
+                    <tr><td><span class="key-table__who"><b>Rafael Dias</b>rafael.dias@lumen.com.br</span></td><td class="key-table__id">A1C0 3D9E 2F17</td><td><span class="lozenge lozenge--success">Minha</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </figure>
+          <div class="site-feature__text">
+            <p class="site-eyebrow">OpenPGP</p>
+            <h3>Nem o seu provedor lê o que vai cifrado.</h3>
+            <p>Crie uma chave em segundos (Curve25519, RSA 4096 ou uma pós-quântica experimental) ou traga a que você já usa. O cadeado no composer liga sozinho quando todos os destinatários têm chave aceita, e o assunto também pode ir escondido.</p>
+            <ul class="site-feature__points">
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Chaves chegam pelo Autocrypt e ficam como "ainda não aceita" até você decidir</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Selos dizem se a assinatura confere e de quem é a chave</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Backup da chave protegido por senha</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- 7 · imagem, texto: S/MIME -->
+        <article class="site-feature site-reveal">
+          <figure class="site-feature__media site-shot" style="margin:0" aria-label="Certificado S/MIME com a cadeia confiável e o composer pronto para enviar com S/MIME">
+            <div class="site-shot__zoom" aria-hidden="true">
+              <div class="site-shot__panel" style="display:grid;gap:var(--space-200);padding:var(--space-200)">
+                <div class="key-manager__bar"><div class="segmented" role="tablist"><span class="btn btn--compact" role="tab" aria-checked="true">Meus</span><span class="btn btn--compact" role="tab" aria-checked="false">Pessoas · 8</span><span class="btn btn--compact" role="tab" aria-checked="false">Pedidos</span></div></div>
+                <aside class="key-details" style="border:var(--border-width) solid var(--color-border);border-radius:var(--radius-medium);padding:var(--space-200)">
+                  <div style="display:flex;align-items:center;gap:var(--space-150)"><span class="avatar avatar--lg avatar--purple">RD<img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span><h3 class="key-details__title" style="margin:0">Rafael Dias</h3><span class="lozenge lozenge--success">Assinar e criptografar</span></div>
+                  <dl>
+                    <dt>E-mail</dt><dd>rafael.dias@lumen.com.br</dd>
+                    <dt>Emissor</dt><dd>Autoridade certificadora da empresa</dd>
+                    <dt>Cadeia</dt><dd>Confiável (raiz no Windows)</dd>
+                    <dt>Vale até</dt><dd>10 out 2027</dd>
+                  </dl>
+                  <div class="field"><span class="field__label">Impressão digital SHA-256</span><span class="fingerprint fingerprint--compact"><span>4E:1A:90:C7</span><span>…</span><span>B2:7F:03:6D</span></span></div>
+                </aside>
                 <div class="compose compose--inline">
-                  <div class="compose__bar"><span class="compose__title">Responder</span></div>
-                  <div class="compose__fields"><div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR</span><span class="chip__name">Ana Ribeiro</span><span class="chip__key"><svg class="i"><use href="#i-lock"/></svg></span></span></div></div>
-                  <div class="compose__security"><span class="btn btn--subtle btn--compact" aria-pressed="true"><svg class="i"><use href="#i-lock"/></svg>Criptografar</span><span class="btn btn--subtle btn--compact" aria-pressed="true"><svg class="i"><use href="#i-signature"/></svg>Assinar</span><span class="compose__security-tech">OpenPGP</span></div>
-                  <div class="compose__foot"><span class="btn btn--primary"><svg class="i"><use href="#i-lock"/></svg>Enviar criptografado</span></div>
+                  <div class="compose__fields"><div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--teal">PH<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="chip__name">Paulo Henrique</span><span class="chip__key"><svg class="i"><use href="#i-certificate"/></svg></span></span></div></div>
+                  <div class="compose__security"><span class="btn btn--subtle btn--compact" aria-pressed="true"><svg class="i"><use href="#i-lock"/></svg>Criptografar</span><span class="btn btn--subtle btn--compact" aria-pressed="true"><svg class="i"><use href="#i-signature"/></svg>Assinar</span><span class="compose__security-tech">S/MIME<span class="btn btn--link" style="margin-left:var(--space-075)">Trocar</span></span></div>
                 </div>
               </div>
             </div>
           </figure>
           <div class="site-feature__text">
-            <p class="site-eyebrow">Criptografia de ponta a ponta</p>
-            <h3>Nem o seu provedor lê o que vai cifrado.</h3>
-            <p>OpenPGP embutido, com chaves Curve25519 e uma opção pós-quântica experimental, e S/MIME para quem usa Outlook, Apple Mail ou o certificado da empresa. O cadeado liga sozinho quando todos os destinatários têm chave.</p>
+            <p class="site-eyebrow">Certificados S/MIME</p>
+            <h3>Fala a língua do Outlook e do certificado da empresa.</h3>
+            <p>Peça um certificado sem sair do app: o par de chaves nasce no seu computador e só o pedido vai para a autoridade certificadora. Importe o emitido ou um <code>.p12</code>, e o certificado de quem assina chega sozinho na primeira mensagem.</p>
             <ul class="site-feature__points">
-              <li><svg class="i i--sm"><use href="#i-check"/></svg>O assunto também pode ir escondido</li>
-              <li><svg class="i i--sm"><use href="#i-check"/></svg>Selos que dizem se a assinatura confere e de quem é a chave</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Confiança pelas raízes do Windows, com a cadeia à vista</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>OpenPGP ou S/MIME, o composer escolhe pelo que cada destinatário tem</li>
+              <li><svg class="i i--sm"><use href="#i-check"/></svg>Script de CA de teste para experimentar sem comprar nada</li>
             </ul>
           </div>
         </article>
 
-        <!-- 5 · imagem, texto -->
-        <article class="site-feature site-reveal">
+        <!-- 8 · texto, imagem: arquivos antigos -->
+        <article class="site-feature site-feature--text-first site-reveal">
           <figure class="site-feature__media site-shot site-shot--plain" style="margin:0" aria-label="Resumo da importação de um backup antigo">
             <div class="site-shot__zoom site-shot__zoom--center" aria-hidden="true" style="transform:scale(1.05)">
               <div class="modal" style="margin-inline:auto">
-                <div class="modal__head"><h3 class="modal__title">Gmail antigo está pronto</h3></div>
+                <div class="modal__head"><h3 class="modal__title">Caixa de 2015 está pronta</h3></div>
                 <div class="modal__body" style="display:grid;gap:var(--space-200)">
                   <dl class="import-summary"><div><dt>Entraram</dt><dd>47.034</dd></div><div><dt>Repetidas</dt><dd>81</dd></div><div><dt>Falharam</dt><dd>0</dd></div></dl>
                   <div class="section-message section-message--success"><svg class="i"><use href="#i-success"/></svg><div><p class="section-message__title">Nada saiu deste computador</p><p>O backup foi lido aqui e copiado para o banco cifrado.</p></div></div>
                 </div>
-                <div class="modal__foot"><span class="btn btn--primary">Abrir Gmail antigo</span></div>
+                <div class="modal__foot"><span class="btn btn--primary">Abrir Caixa de 2015</span></div>
               </div>
             </div>
           </figure>
@@ -200,8 +308,8 @@
           </div>
         </article>
 
-        <!-- 6 · texto, imagem -->
-        <article class="site-feature site-feature--text-first site-reveal">
+        <!-- 9 · imagem, texto: senha -->
+        <article class="site-feature site-reveal">
           <figure class="site-feature__media site-shot site-shot--plain" style="margin:0" aria-label="O Epistula bloqueado, pedindo a senha">
             <div class="site-shot__zoom site-shot__zoom--center" aria-hidden="true" style="transform:scale(1.05)">
               <div class="unlock__card" style="margin-inline:auto">

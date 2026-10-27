@@ -3,7 +3,7 @@
 // fontes empacotadas (nenhuma requisição a terceiros) e o sprite de ícones extraído de docs.js, como no app.
 //   node build.mjs          → dist/
 //   node build.mjs --serve  → dist/ e um servidor local em http://localhost:4321
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -57,6 +57,12 @@ function build() {
   // A janela do app recortada da captura do README (docs/images), sem o papel de parede.
   mkdirSync(join(dist, "images"), { recursive: true });
   copyFileSync(join(root, "docs", "images", "epistula-janela.webp"), join(dist, "images", "epistula-janela.webp"));
+
+  // Fotos dos avatares (domínio público, créditos em images/people/CREDITS.md).
+  mkdirSync(join(dist, "images", "people"), { recursive: true });
+  for (const name of readdirSync(join(here, "images", "people")).filter((n) => n.endsWith(".webp"))) {
+    copyFileSync(join(here, "images", "people", name), join(dist, "images", "people", name));
+  }
 
   const page = readFileSync(join(here, "index.html"), "utf8");
   if (!page.includes("<!-- ds-icons -->")) fail("index.html sem o marcador <!-- ds-icons -->");
