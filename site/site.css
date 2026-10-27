@@ -42,15 +42,20 @@ a { color: var(--color-link); }
 
 /* ---------- Abertura: título à esquerda, símbolo no centro, três linhas à direita ---------- */
 .site-hero { display: grid; align-content: center; min-height: calc(100svh - var(--site-header-height) - var(--space-1000) * 2); padding-block: var(--space-1000); }
-.site-hero__grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--site-gap); align-items: center; }
+.site-hero__grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.35fr) minmax(0, 0.8fr); gap: var(--site-gap); align-items: center; }
 .site-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-100); margin-top: var(--space-400); }
-.site-hero__mark { justify-self: center; display: grid; place-items: center; width: clamp(8rem, 16vw, 13rem); aspect-ratio: 1; border-radius: var(--radius-large); background: var(--color-bg-brand-bold); color: var(--color-text-inverse); box-shadow: var(--shadow-overlay); }
-.site-hero__mark .i { width: 55%; height: 55%; }
+/* No lugar de um ícone: peças do DS (mensagem cifrada, toast de envio) empilhadas, como um recorte do app. */
+.site-hero__stack { position: relative; display: grid; padding-block: var(--space-300) 6rem; pointer-events: none; }
+.site-hero__stack .site-panel { padding: var(--space-250); border: var(--border-width) solid var(--color-border); box-shadow: var(--shadow-raised); }
+.site-hero__stack .message__body { margin-top: var(--space-200); font: var(--font-body); color: var(--color-text-subtle); }
+.site-hero__stack .message__body p { margin: 0 0 var(--space-100); }
+.site-hero__stack .toast { position: absolute; inset-inline-start: calc(var(--space-400) * -1); bottom: 0; width: min(20rem, 90%); box-shadow: var(--shadow-overlay); }
 .site-hero__lines { justify-self: end; display: grid; gap: var(--space-150); margin: 0; padding: 0; list-style: none; }
 .site-hero__lines li { font: var(--font-body-large); color: var(--color-text); }
 @media (max-width: 60rem) {
   .site-hero__grid { grid-template-columns: minmax(0, 1fr); }
-  .site-hero__mark { justify-self: start; order: -1; width: 6rem; }
+  .site-hero__stack { max-width: 30rem; }
+  .site-hero__stack .toast { inset-inline-start: auto; inset-inline-end: 0; }
   .site-hero__lines { justify-self: start; }
 }
 
@@ -129,6 +134,8 @@ a { color: var(--color-link); }
 @media (prefers-reduced-motion: reduce) { .site-reveal { opacity: 1; transform: none; transition: none; } }
 
 @media (max-width: 30rem) { :root { --site-gutter: var(--space-200); } .site-section { padding-block: var(--space-800); } }
+/* Em telas estreitas, o topo fica só com o tema e o download (o GitHub continua no rodapé). */
+@media (max-width: 30rem) { .site-header__end .btn:not(.btn--primary):not(.btn--icon) { display: none; } }
 
 /* Páginas de texto: política de privacidade e termos de uso. */
 .site-doc { display: grid; gap: var(--space-200); max-width: 46rem; padding-block: var(--space-800) var(--space-1000); }
