@@ -1,14 +1,50 @@
-# Epistula
+# EpistulaMail — Your email, on your computer, encrypted
 
-**English** | [Português](README.pt-BR.md)
+<p align="center">
+  <img src="branding/epistulamail-logo-512.png" width="160" height="160" alt="EpistulaMail">
+</p>
 
-A desktop email client that keeps your messages on your own computer, encrypted, and never routes them through a server of ours.
+<p align="center">
+  <a href="https://github.com/elyosemite/epistulamail/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/elyosemite/epistulamail/ci.yml?branch=main&style=flat-square&label=ci" alt="CI status"></a>
+  <a href="https://github.com/elyosemite/epistulamail/releases/latest"><img src="https://img.shields.io/github/v/release/elyosemite/epistulamail?style=flat-square&label=release" alt="Latest release"></a>
+  <a href="https://github.com/elyosemite/epistulamail/releases/latest"><img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4?style=flat-square" alt="Windows 10 | 11"></a>
+  <a href="https://www.epistulamail.com"><img src="https://img.shields.io/badge/site-epistulamail.com-1D7AFC?style=flat-square" alt="Site"></a>
+</p>
 
-Epistula connects your accounts, downloads what you need to read and stores it in a local database protected by AES-256. The key lives in your operating system's credential vault. There is no Epistula account and no Epistula cloud. The only server of ours on the way will be a sign-in server, for the OAuth login with Google and Microsoft; your mail goes straight between your computer and your provider. And opening an email archive (a Gmail, Outlook, Thunderbird or Apple Mail backup) will need no account and no connection to us at all.
+<p align="center"><b>English</b> | <a href="README.pt-BR.md">Português</a></p>
+
+EpistulaMail (Epistula for short) is an open-source desktop email client for Windows that keeps your messages on your own computer, in an AES-256 encrypted database, and never routes them through a server of ours. It connects your Google accounts over OAuth, reads and sends straight between your computer and your provider, and opens old email archives (Gmail Takeout, Outlook, Thunderbird, Apple Mail) with no account and no network at all.
+
+**Yours, with no catch.** There is no Epistula account, no Epistula cloud, no telemetry and no paid tier. The database key lives in the Windows Credential Manager, remote images stay blocked until you allow them, and the only network calls are the ones to your provider (plus a key server or a sender's images, and only when you ask). The [threat model](docs/arquitetura-e-ameacas.md) is public, and so are the risks not solved yet.
+
+[Website](https://www.epistulamail.com) · [Download](https://github.com/elyosemite/epistulamail/releases/latest) · [Changelog](CHANGELOG.md) · [Privacy policy](https://www.epistulamail.com/privacidade) · [Threat model](docs/arquitetura-e-ameacas.md) · [Design system](design-system/) · [Decision history](userstory/)
 
 ![Epistula inbox with three accounts, folders and labels, the message list and an open newsletter in the reading pane](docs/images/epistula-caixa-de-entrada.png)
 
-> Epistula is under active development. Reading, sending, organizing, rules, conversations, notifications, offline reading, multiple accounts, end-to-end encryption (OpenPGP and S/MIME) and opening email archives from other programs, with no account, work today. Next up: the sign-in server and encrypted backups. [Current state](#current-state) lists exactly what exists right now.
+## Install
+
+Download the installer from the [latest release](https://github.com/elyosemite/epistulamail/releases/latest) (`Epistula_<version>_x64-setup.exe`). It installs for your Windows user only, with no administrator rights, and needs Windows 10 or 11 (64-bit) with WebView2, which ships with Windows 11 and is downloaded by the installer on Windows 10 if missing.
+
+The installer is not code-signed yet, so on first run Windows SmartScreen says "Windows protected your PC". Before going ahead, check the file against the SHA-256 published with the release:
+
+```powershell
+(Get-FileHash .\Epistula_1.0.0_x64-setup.exe).Hash
+```
+
+If it matches, click "More info" and then "Run anyway". Newer versions install over the old one and keep your accounts and messages. To build from source instead, see [Building](#building).
+
+## Quick start
+
+1. Open EpistulaMail and choose how to start:
+   - **Connect a Google account**: the sign-in happens on Google's page, in your browser. Your password never passes through the app.
+   - **Open an email archive**: pick a `.mbox`, `.pst`, `.eml` or a mail folder, or drop it on the window. No account and no network.
+2. Recent mail shows up first; the rest arrives in the background and stays readable offline.
+3. Press `/` to search: `de: Ana tem:anexo depois:2026-01-01` turns into chips you can edit.
+4. In **Settings**, pick how much mail to keep offline, set an Epistula password and the automatic lock, and create rules.
+
+While Google's verification of the app is in progress, signing in with Google is limited to the test users registered in the project. Opening archives works for everyone.
+
+> EpistulaMail is under active development. [Current state](#current-state) lists exactly what exists right now, and [CHANGELOG.md](CHANGELOG.md) what each version brings.
 
 ## At a glance
 
@@ -107,19 +143,7 @@ What does not exist yet:
 
 - Providers other than Google. The data model already covers Outlook, Yahoo, iCloud, Zoho, GMX, AOL and generic IMAP.
 - The sign-in server (see below), and `.olm` files from Outlook for Mac.
-- Code signing for the installer (see [Installing](#installing)).
-
-## Installing
-
-Download `Epistula_<version>_x64-setup.exe` from the [Releases](https://github.com/elyosemite/epistulamail/releases) page. It installs for your Windows user only, with no administrator rights, and needs Windows 10 or 11 (64-bit) with WebView2, which ships with Windows 11 and is downloaded by the installer on Windows 10 if missing.
-
-The installer is not code-signed yet, so on first run Windows SmartScreen says "Windows protected your PC". Before going ahead, check the file against the SHA-256 published with the release:
-
-```powershell
-(Get-FileHash .\Epistula_1.0.0_x64-setup.exe).Hash
-```
-
-If it matches, click "More info" and then "Run anyway". Newer versions install over the old one and keep your accounts and messages. [CHANGELOG.md](CHANGELOG.md) lists what each version brings.
+- Code signing for the installer (see [Install](#install)).
 
 ## Where this is going
 
