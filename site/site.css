@@ -5,7 +5,8 @@
 
 :root {
   --site-width: 88rem;
-  --site-gutter: var(--space-400);
+  /* Margem das laterais: cresce com a janela (24 px no celular, até 80 px em telas largas). */
+  --site-gutter: clamp(var(--space-300), 6vw, var(--space-1000));
   --site-gap: var(--space-400);
   --site-display: clamp(calc(var(--font-size-hero) * 1.3), 4.6vw, calc(var(--font-size-hero) * 2));
   --site-title: clamp(var(--font-size-hero), 4vw, calc(var(--font-size-hero) * 1.6));
@@ -133,7 +134,7 @@ a { color: var(--color-link); }
 .js .site-reveal.is-visible { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .js .site-reveal { opacity: 1; transform: none; transition: none; } }
 
-@media (max-width: 30rem) { :root { --site-gutter: var(--space-200); } .site-section { padding-block: var(--space-800); } }
+@media (max-width: 30rem) { :root { --site-gutter: var(--space-250); } .site-section { padding-block: var(--space-800); } }
 /* Em telas estreitas, o topo fica só com o tema e o download (o GitHub continua no rodapé). */
 @media (max-width: 30rem) { .site-header__end .btn:not(.btn--primary):not(.btn--icon) { display: none; } }
 
