@@ -31,6 +31,11 @@ a { color: var(--color-link); }
 .site-nav a { color: var(--color-text-subtle); text-decoration: none; font: var(--font-weight-medium) var(--font-size-body)/var(--line-height-body) var(--font-family-body); }
 .site-nav a:hover { color: var(--color-text); }
 .site-header__end { display: flex; align-items: center; gap: var(--space-100); margin-left: auto; }
+
+/* L81 · Download com menu do sistema: a ação principal e o chevron dentro do mesmo botão. */
+.site-download { position: relative; display: inline-flex; }
+.site-download__menu { position: absolute; inset-block-start: calc(100% + var(--space-075)); inset-inline-end: 0; z-index: 50; min-width: 16rem; }
+.site-download__menu[hidden] { display: none; }
 @media (max-width: 52rem) { .site-nav { display: none; } }
 
 /* ---------- Títulos ---------- */

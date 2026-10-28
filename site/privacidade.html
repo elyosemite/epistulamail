@@ -31,7 +31,7 @@
     <div class="site-header__end">
       <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
       <a class="btn" href="https://github.com/elyosemite/epistulamail">GitHub</a>
-      <a class="btn btn--primary" href="{{release.download}}" download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
+      <div class="site-download" data-download><div class="btn-split"><a class="btn btn--primary" href="{{release.windows}}" data-download-main download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a><button class="btn btn--primary" type="button" aria-label="Escolher o sistema" aria-haspopup="menu" aria-expanded="false" data-download-toggle><svg class="i"><use href="#i-chevron-down"/></svg></button></div><div class="menu site-download__menu" role="menu" aria-label="Escolher o sistema" hidden data-download-menu><a class="menu-item" role="menuitem" href="{{release.windows}}" data-download-windows download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Windows 10 e 11 (64 bits)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxAppImage}}" data-download-linux-appimage download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (AppImage)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxDeb}}" data-download-linux-deb download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (Debian/Ubuntu, .deb)</span></a></div></div>
     </div>
   </div>
 </header>
@@ -56,7 +56,7 @@
     <h2>Onde os dados ficam</h2>
     <ul>
       <li>As mensagens, os contatos, as pastas e as configurações ficam <b>só no seu computador</b>, num banco de dados cifrado com AES-256 (SQLCipher).</li>
-      <li>A chave desse banco e os tokens de acesso às contas ficam no Gerenciador de Credenciais do Windows, protegidos pela sua sessão.</li>
+      <li>A chave desse banco e os tokens de acesso às contas ficam no cofre do sistema: o Gerenciador de Credenciais no Windows e o Secret Service (GNOME Keyring ou KWallet) no Linux, protegidos pela sua sessão.</li>
       <li>A sua senha do Google nunca passa pelo EpistulaMail: o login acontece na página do Google, no seu navegador.</li>
       <li>Os registros de diagnóstico do app não contêm conteúdo de mensagens, endereços, assuntos, senhas ou tokens.</li>
     </ul>
@@ -76,7 +76,7 @@
     <h2>Como apagar os seus dados</h2>
     <ul>
       <li><b>Sair de uma conta</b> no EpistulaMail cancela o acesso junto ao Google e, se você escolher, apaga do computador as mensagens daquela conta.</li>
-      <li><b>Desinstalar</b> o EpistulaMail pelo Windows remove o programa; os dados ficam em <code>%APPDATA%\br.com.epistula.desktop</code> e as credenciais no Gerenciador de Credenciais do Windows (itens "epistula"), e podem ser apagados por lá.</li>
+      <li><b>Desinstalar</b> o EpistulaMail remove o programa; os dados ficam na pasta do app (no Windows, <code>%APPDATA%\br.com.epistula.desktop</code>; no Linux, <code>~/.local/share/br.com.epistula.desktop</code>) e as credenciais no cofre do sistema (itens "epistula"), e podem ser apagados por lá.</li>
       <li>Você também pode cancelar o acesso a qualquer momento em <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
     </ul>
 

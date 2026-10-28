@@ -1,5 +1,65 @@
-// Landing page: as linhas de recurso aparecem ao chegar à tela, e o botão do cabeçalho troca o tema.
+// Landing page: o botão de download escolhe o pacote do sistema, as linhas de recurso aparecem ao
+// chegar à tela, e o botão do cabeçalho troca o tema.
 (() => {
+  // Download (L81): a ação principal baixa o pacote do sistema; o chevron abre o menu com as opções.
+  const downloads = document.querySelectorAll("[data-download]");
+  const isLinux = () =>
+    !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) &&
+    /Linux/i.test(navigator.userAgentData?.platform || navigator.platform || navigator.userAgent);
+  for (const download of downloads) {
+    const main = download.querySelector("[data-download-main]");
+    const toggle = download.querySelector("[data-download-toggle]");
+    const menu = download.querySelector("[data-download-menu]");
+    const linux = download.querySelector("[data-download-linux-appimage]");
+    if (main && linux?.getAttribute("href") && isLinux()) main.setAttribute("href", linux.getAttribute("href"));
+    for (const link of menu.querySelectorAll('[role="menuitem"]')) if (!link.getAttribute("href")) link.hidden = true;
+    const links = () => [...menu.querySelectorAll('[role="menuitem"]')].filter((link) => !link.hidden && link.getAttribute("href"));
+    const close = (focus) => {
+      menu.hidden = true;
+      toggle.setAttribute("aria-expanded", "false");
+      if (focus) toggle.focus();
+    };
+    const open = () => {
+      menu.hidden = false;
+      toggle.setAttribute("aria-expanded", "true");
+      links()[0]?.focus();
+    };
+    toggle.addEventListener("click", () => (menu.hidden ? open() : close(false)));
+    toggle.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        open();
+      } else if (e.key === "Escape") {
+        close(false);
+      }
+    });
+    menu.addEventListener("keydown", (e) => {
+      const all = links();
+      const index = all.indexOf(document.activeElement);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        all[(index + 1) % all.length]?.focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        all[(index - 1 + all.length) % all.length]?.focus();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        all[0]?.focus();
+      } else if (e.key === "End") {
+        e.preventDefault();
+        all.at(-1)?.focus();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        close(true);
+      } else if (e.key === "Tab") {
+        close(false);
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (!download.contains(e.target)) close(false);
+    });
+  }
+
   const root = document.documentElement;
 
   // Entrada ao rolar. Sem IntersectionObserver (ou com menos movimento pedido), tudo já aparece.

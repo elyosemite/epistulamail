@@ -31,7 +31,7 @@
     <div class="site-header__end">
       <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
       <a class="btn" href="https://github.com/elyosemite/epistulamail">GitHub</a>
-      <a class="btn btn--primary" href="{{release.download}}" download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
+      <div class="site-download" data-download><div class="btn-split"><a class="btn btn--primary" href="{{release.windows}}" data-download-main download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a><button class="btn btn--primary" type="button" aria-label="Escolher o sistema" aria-haspopup="menu" aria-expanded="false" data-download-toggle><svg class="i"><use href="#i-chevron-down"/></svg></button></div><div class="menu site-download__menu" role="menu" aria-label="Escolher o sistema" hidden data-download-menu><a class="menu-item" role="menuitem" href="{{release.windows}}" data-download-windows download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Windows 10 e 11 (64 bits)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxAppImage}}" data-download-linux-appimage download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (AppImage)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxDeb}}" data-download-linux-deb download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (Debian/Ubuntu, .deb)</span></a></div></div>
     </div>
   </div>
 </header>
@@ -43,7 +43,7 @@
     <p class="site-doc__lede">Ao baixar ou usar o EpistulaMail, você concorda com estes termos. Eles são curtos porque o EpistulaMail é um programa gratuito que roda no seu computador, sem conta e sem serviço online nosso.</p>
 
     <h2>O que é o EpistulaMail</h2>
-    <p>Um programa de e-mail para Windows, de código aberto, distribuído gratuitamente em <a href="https://github.com/elyosemite/epistulamail/releases">github.com/elyosemite/epistulamail/releases</a>. O uso dos dados está descrito na <a href="privacidade">política de privacidade</a>.</p>
+    <p>Um programa de e-mail para Windows e Linux, de código aberto, distribuído gratuitamente em <a href="https://github.com/elyosemite/epistulamail/releases">github.com/elyosemite/epistulamail/releases</a>. O uso dos dados está descrito na <a href="privacidade">política de privacidade</a>.</p>
 
     <h2>Suas contas e o uso do programa</h2>
     <ul>

@@ -38,15 +38,22 @@ const FONTS = [
 const REPO = "elyosemite/epistulamail";
 
 /**
- * A última release publicada (rascunhos não contam), para o botão de download e a versão do site. O botão aponta
- * sempre para o próprio .exe: sem rede ou sem release publicada, o da versão do package.json, com o nome que o
- * release.yml dá ao instalador.
+ * A última release publicada (rascunhos não contam), para o botão de download e a versão do site. O
+ * botão aponta para o pacote do sistema, com o menu para os dois. Sem rede ou sem release publicada,
+ * usa a versão do package.json e os nomes que o release.yml dá aos arquivos.
  */
 async function latestRelease() {
   const page = `https://github.com/${REPO}/releases`;
   const fallback = () => {
     const version = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
-    return { download: `${page}/download/v${version}/EpistulaMail_${version}_x64-setup.exe`, page: `${page}/tag/v${version}`, label: `Versão ${version}` };
+    const base = `${page}/download/v${version}`;
+    return {
+      windows: `${base}/EpistulaMail_${version}_x64-setup.exe`,
+      linuxAppImage: `${base}/EpistulaMail_${version}_amd64.AppImage`,
+      linuxDeb: `${base}/EpistulaMail_${version}_amd64.deb`,
+      page: `${page}/tag/v${version}`,
+      label: `Versão ${version}`,
+    };
   };
   try {
     const headers = { accept: "application/vnd.github+json", "user-agent": "epistula-site-build" };
@@ -58,8 +65,13 @@ async function latestRelease() {
     }
     const release = await res.json();
     const exe = release.assets?.find((a) => a.name.endsWith("-setup.exe"));
+    const appImage = release.assets?.find((a) => a.name.endsWith(".AppImage"));
+    const deb = release.assets?.find((a) => a.name.endsWith(".deb"));
     return {
-      download: exe?.browser_download_url ?? fallback().download,
+      windows: exe?.browser_download_url ?? fallback().windows,
+      // Uma release antiga pode não ter os pacotes Linux: o menu do site esconde o que não existe.
+      linuxAppImage: appImage?.browser_download_url ?? "",
+      linuxDeb: deb?.browser_download_url ?? "",
       page: release.html_url,
       label: `Versão ${String(release.tag_name).replace(/^v/, "")}`,
     };
@@ -71,7 +83,7 @@ async function latestRelease() {
 
 function withRelease(html, release) {
   const escape = (v) => v.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-  return html.replace(/\{\{release\.(download|page|label)\}\}/g, (_, key) => escape(release[key]));
+  return html.replace(/\{\{release\.(windows|linuxAppImage|linuxDeb|page|label)\}\}/g, (_, key) => escape(release[key]));
 }
 
 async function build() {
@@ -117,7 +129,7 @@ async function build() {
     if (html.includes("{{release.")) fail(`${file} com marcador de release desconhecido`);
     writeFileSync(join(dist, file), html);
   }
-  console.log(`build: dist/ pronto (${release.label}, ${release.download})`);
+  console.log(`build: dist/ pronto (${release.label}, ${release.windows})`);
 }
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".woff2": "font/woff2", ".png": "image/png", ".webp": "image/webp", ".ico": "image/x-icon" };

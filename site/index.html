@@ -31,7 +31,7 @@
     <div class="site-header__end">
       <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
       <a class="btn" href="https://github.com/elyosemite/epistulamail">GitHub</a>
-      <a class="btn btn--primary" href="{{release.download}}" download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
+      <div class="site-download" data-download><div class="btn-split"><a class="btn btn--primary" href="{{release.windows}}" data-download-main download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a><button class="btn btn--primary" type="button" aria-label="Escolher o sistema" aria-haspopup="menu" aria-expanded="false" data-download-toggle><svg class="i"><use href="#i-chevron-down"/></svg></button></div><div class="menu site-download__menu" role="menu" aria-label="Escolher o sistema" hidden data-download-menu><a class="menu-item" role="menuitem" href="{{release.windows}}" data-download-windows download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Windows 10 e 11 (64 bits)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxAppImage}}" data-download-linux-appimage download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (AppImage)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxDeb}}" data-download-linux-deb download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (Debian/Ubuntu, .deb)</span></a></div></div>
     </div>
   </div>
 </header>
@@ -42,12 +42,12 @@
     <div class="site-container site-hero__grid">
       <div>
         <h1 class="site-display">E-mail no seu computador. Cifrado.</h1>
-        <p class="site-hero__lede">O EpistulaMail é um cliente de e-mail gratuito e de código aberto para Windows. Ele conecta a sua conta Google para ler, buscar, escrever, enviar e organizar os seus e-mails, e guarda tudo só no seu computador, num banco cifrado. <a href="https://www.epistulamail.com/conta-google">Veja como o EpistulaMail usa a sua conta Google</a>.</p>
+        <p class="site-hero__lede">O EpistulaMail é um cliente de e-mail gratuito e de código aberto para Windows e Linux. Ele conecta a sua conta Google para ler, buscar, escrever, enviar e organizar os seus e-mails, e guarda tudo só no seu computador, num banco cifrado. <a href="https://www.epistulamail.com/conta-google">Veja como o EpistulaMail usa a sua conta Google</a>.</p>
         <div class="site-hero__actions">
-          <a class="btn btn--primary" href="{{release.download}}" download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
+          <div class="site-download" data-download><div class="btn-split"><a class="btn btn--primary" href="{{release.windows}}" data-download-main download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a><button class="btn btn--primary" type="button" aria-label="Escolher o sistema" aria-haspopup="menu" aria-expanded="false" data-download-toggle><svg class="i"><use href="#i-chevron-down"/></svg></button></div><div class="menu site-download__menu" role="menu" aria-label="Escolher o sistema" hidden data-download-menu><a class="menu-item" role="menuitem" href="{{release.windows}}" data-download-windows download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Windows 10 e 11 (64 bits)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxAppImage}}" data-download-linux-appimage download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (AppImage)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxDeb}}" data-download-linux-deb download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (Debian/Ubuntu, .deb)</span></a></div></div>
           <a class="btn" href="#recursos">Ver os recursos</a>
         </div>
-        <p class="site-version">{{release.label}} · Windows 10 e 11, 64 bits · grátis · <a href="{{release.page}}">notas da versão</a></p>
+        <p class="site-version">{{release.label}} · Windows 10 e 11 e Linux, 64 bits · grátis · <a href="{{release.page}}">notas da versão</a></p>
       </div>
       <figure class="site-hero__stack" style="margin:0" aria-label="Uma mensagem criptografada e com assinatura verificada, e o aviso de envio com Desfazer">
         <div class="site-panel" aria-hidden="true">
@@ -138,7 +138,7 @@
   <!-- ================================================================== privacidade -->
   <section class="site-section" id="seguranca" aria-labelledby="s-priv">
     <div class="site-container site-feature site-reveal">
-      <h2 class="site-h2" id="s-priv">Protegido até de quem usa o seu Windows</h2>
+      <h2 class="site-h2" id="s-priv">Protegido até de quem usa o seu computador</h2>
       <figure class="site-visual" style="margin:0" aria-label="O EpistulaMail bloqueado, pedindo a senha">
         <div class="site-visual__stage site-visual__stage--center" aria-hidden="true">
           <div class="unlock__card">
@@ -153,7 +153,7 @@
         </div>
       </figure>
       <div class="site-side">
-        <p class="site-statement">Com a senha do EpistulaMail, a chave do banco é protegida por Argon2id <span>e sai da memória quando o Windows bloqueia a tela.</span></p>
+        <p class="site-statement">Com a senha do EpistulaMail, a chave do banco é protegida por Argon2id <span>e sai da memória quando o Windows bloqueia a tela ou quando o EpistulaMail bloqueia por inatividade.</span></p>
         <div style="display:grid;gap:var(--space-150)">
           <p class="site-label">Recursos</p>
           <ul class="site-list">
@@ -317,10 +317,10 @@
   <section class="site-container site-cta" id="comecar" aria-labelledby="s-comecar">
     <h2 class="site-display" id="s-comecar">Seus e-mails, do seu lado.</h2>
     <div class="site-cta__actions">
-      <a class="btn btn--primary" href="{{release.download}}" download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
+      <div class="site-download" data-download><div class="btn-split"><a class="btn btn--primary" href="{{release.windows}}" data-download-main download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a><button class="btn btn--primary" type="button" aria-label="Escolher o sistema" aria-haspopup="menu" aria-expanded="false" data-download-toggle><svg class="i"><use href="#i-chevron-down"/></svg></button></div><div class="menu site-download__menu" role="menu" aria-label="Escolher o sistema" hidden data-download-menu><a class="menu-item" role="menuitem" href="{{release.windows}}" data-download-windows download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Windows 10 e 11 (64 bits)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxAppImage}}" data-download-linux-appimage download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (AppImage)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxDeb}}" data-download-linux-deb download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (Debian/Ubuntu, .deb)</span></a></div></div>
       <a class="btn" href="{{release.page}}">Notas da versão</a>
     </div>
-    <p class="site-version">{{release.label}} · Windows 10 e 11, 64 bits. O instalador ainda não tem assinatura de código: confira o SHA-256 publicado nas notas da versão antes de executar.</p>
+    <p class="site-version">{{release.label}} · Windows 10 e 11 e Linux, 64 bits. Os pacotes ainda não têm assinatura de código: confira o SHA-256 publicado nas notas da versão antes de executar.</p>
   </section>
 
   <!-- ================================================================== contribuir -->
@@ -334,7 +334,7 @@
           <a class="btn btn--subtle" href="https://github.com/elyosemite/epistulamail/issues">Issues</a>
         </div>
       </div>
-      <pre class="pem-box" aria-label="Comandos para rodar o EpistulaMail a partir do código, no Windows">git clone https://github.com/elyosemite/epistulamail.git
+      <pre class="pem-box" aria-label="Comandos para rodar o EpistulaMail a partir do código, no seu computador">git clone https://github.com/elyosemite/epistulamail.git
 cd epistulamail
 pnpm install
 ./scripts/setup-build-tools.ps1

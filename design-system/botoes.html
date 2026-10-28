@@ -44,6 +44,7 @@
           <div class="states">
             <figure class="state"><button class="btn btn--primary" type="button"><svg class="i"><use href="#i-pencil"/></svg>Escrever</button><figcaption><b>Com ícone</b>ícone de 16px à esquerda</figcaption></figure>
             <figure class="state"><div class="btn-split"><button class="btn btn--primary" type="button">Enviar</button><button class="btn btn--primary" type="button" aria-label="Agendar envio"><svg class="i"><use href="#i-chevron-down"/></svg></button></div><figcaption><b>Split</b>Enviar + agendar envio</figcaption></figure>
+            <figure class="state"><div class="btn-split"><a class="btn btn--primary" href="#"><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a><button class="btn btn--primary" type="button" aria-label="Escolher o sistema"><svg class="i"><use href="#i-chevron-down"/></svg></button></div><figcaption><b>Download por sistema (L81)</b>ação principal + menu com Windows e Linux</figcaption></figure>
             <figure class="state"><div class="row" style="gap:var(--space-050)"><button class="btn btn--subtle btn--icon" type="button" data-tip="Arquivar (E)" aria-label="Arquivar"><svg class="i"><use href="#i-archive"/></svg></button><button class="btn btn--subtle btn--icon" type="button" data-tip="Excluir (#)" aria-label="Excluir"><svg class="i"><use href="#i-trash"/></svg></button><button class="btn btn--subtle btn--icon" type="button" data-tip="Adiar" aria-label="Adiar"><svg class="i"><use href="#i-clock"/></svg></button></div><figcaption><b>Ícone</b>32 × 32, sempre com tooltip</figcaption></figure>
             <figure class="state"><button class="btn is-selected" type="button" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg>Com estrela</button><figcaption><b>Selecionado</b>filtro ativo, toggle</figcaption></figure>
             <figure class="state"><button class="btn btn--primary" type="button" disabled><span class="spinner" aria-hidden="true"></span>Enviando…</button><figcaption><b>Carregando</b>spinner substitui o ícone</figcaption></figure>
@@ -52,6 +53,7 @@
         </div>
         <dl class="guidance">
           <div><dt>Quando usar</dt><dd>Primário para a ação que conclui o fluxo. Padrão para ações secundárias com peso, como Responder e Encaminhar. Sutil para barras de ferramentas e ações em linha.</dd></div>
+          <div><dt>Download (L81)</dt><dd>No site, o botão dividido usa <code>.btn-split</code>: a ação principal baixa o pacote do sistema detectado e o chevron abre um <code>.menu</code> com Windows, Linux AppImage e Linux <code>.deb</code>.</dd></div>
           <div><dt>Rótulos</dt><dd>Verbo no infinitivo que diz o resultado: "Arquivar", "Enviar", "Excluir permanentemente". Evite "OK" e "Confirmar".</dd></div>
           <div><dt>Perigo</dt><dd>Só para o que não tem desfazer, como esvaziar a lixeira ou excluir uma conta. Excluir uma única conversa usa o estilo sutil e um toast com "Desfazer".</dd></div>
         </dl>
