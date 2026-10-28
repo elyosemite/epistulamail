@@ -2,7 +2,7 @@
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o [SemVer](https://semver.org/lang/pt-BR/). O pipeline de release (`.github/workflows/release.yml`) usa a seção da versão como notas da release.
 
-## [Não lançado]
+## [1.1.0] - 2026-10-28
 
 ### Novidades
 

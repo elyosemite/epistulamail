@@ -24,7 +24,7 @@ EpistulaMail è distribuito come programma di installazione per Windows e come A
 2. Confronta lo SHA-256 del file con quello pubblicato nelle note di rilascio:
 
    ```powershell
-   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   (Get-FileHash .\EpistulaMail_1.1.0_x64-setup.exe).Hash
    ```
 
 3. Apri il programma di installazione. Sull'avviso di SmartScreen, fai clic su **Ulteriori informazioni** e poi su **Esegui comunque**.
@@ -46,20 +46,20 @@ Il programma di installazione non ha ancora un certificato di firma del codice. 
 2. Confronta lo SHA-256 del file con quello pubblicato nelle note di rilascio:
 
    ```bash
-   sha256sum EpistulaMail_1.0.2_amd64.AppImage
+   sha256sum EpistulaMail_1.1.0_amd64.AppImage
    ```
 
 3. Per l'AppImage, rendilo eseguibile e aprilo:
 
    ```bash
-   chmod +x EpistulaMail_1.0.2_amd64.AppImage
-   ./EpistulaMail_1.0.2_amd64.AppImage
+   chmod +x EpistulaMail_1.1.0_amd64.AppImage
+   ./EpistulaMail_1.1.0_amd64.AppImage
    ```
 
    Per il `.deb`, installalo con il gestore di pacchetti:
 
    ```bash
-   sudo apt install ./EpistulaMail_1.0.2_amd64.deb
+   sudo apt install ./EpistulaMail_1.1.0_amd64.deb
    ```
 
 4. L'app ha bisogno del Secret Service (GNOME Keyring o KWallet) per aprirsi. Se non è disponibile, EpistulaMail mostra un avviso e non modifica i tuoi dati.

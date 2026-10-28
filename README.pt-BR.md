@@ -30,7 +30,7 @@ No Linux, baixe `EpistulaMail_<versão>_amd64.AppImage` ou `EpistulaMail_<versã
 O instalador ainda não tem assinatura de código, então na primeira execução o Windows SmartScreen mostra "O Windows protegeu o computador". Antes de seguir, confira o arquivo com o SHA-256 publicado na release:
 
 ```powershell
-(Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+(Get-FileHash .\EpistulaMail_1.1.0_x64-setup.exe).Hash
 ```
 
 Se bater, clique em "Mais informações" e depois em "Executar assim mesmo". As versões novas instalam por cima e mantêm as contas e as mensagens. No Linux, confira o AppImage ou o `.deb` com `sha256sum`, dê permissão de execução ao AppImage ou instale o `.deb` pelo gerenciador de pacotes. Para compilar a partir do código, veja [Compilando](#compilando).

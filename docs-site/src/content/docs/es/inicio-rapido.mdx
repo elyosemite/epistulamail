@@ -26,7 +26,7 @@ Instala EpistulaMail, conecta tu cuenta y lee tu primer correo en unos cinco min
 2. **Comprueba el archivo.** En PowerShell, en la carpeta de descarga:
 
    ```powershell
-   (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
+   (Get-FileHash .\EpistulaMail_1.1.0_x64-setup.exe).Hash
    ```
 
    El resultado debe coincidir con el SHA-256 publicado en las [notas de la versión](https://github.com/elyosemite/epistulamail/releases/latest).
@@ -49,7 +49,7 @@ Instala EpistulaMail, conecta tu cuenta y lee tu primer correo en unos cinco min
 2. **Comprueba el archivo.** En la terminal, en la carpeta de descarga:
 
    ```bash
-   sha256sum EpistulaMail_1.0.2_amd64.AppImage
+   sha256sum EpistulaMail_1.1.0_amd64.AppImage
    ```
 
    El resultado debe coincidir con el SHA-256 publicado en las [notas de la versión](https://github.com/elyosemite/epistulamail/releases/latest).
@@ -57,14 +57,14 @@ Instala EpistulaMail, conecta tu cuenta y lee tu primer correo en unos cinco min
 3. **Instala.** Para el AppImage:
 
    ```bash
-   chmod +x EpistulaMail_1.0.2_amd64.AppImage
-   ./EpistulaMail_1.0.2_amd64.AppImage
+   chmod +x EpistulaMail_1.1.0_amd64.AppImage
+   ./EpistulaMail_1.1.0_amd64.AppImage
    ```
 
    Para el `.deb`:
 
    ```bash
-   sudo apt install ./EpistulaMail_1.0.2_amd64.deb
+   sudo apt install ./EpistulaMail_1.1.0_amd64.deb
    ```
 
    La app necesita el Secret Service (GNOME Keyring o KWallet) para abrirse. Si no está disponible, EpistulaMail avisa y no toca tus datos.
