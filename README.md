@@ -167,7 +167,7 @@ Today the database is encrypted against anyone outside your user session. The ne
 
 - **EpistulaMail password (optional):** the database key gets wrapped by a key derived from your password with Argon2id. The password itself is never stored.
 - **Automatic lock:** after a period of inactivity, or when the system locks the screen (on Windows for now), the app closes the database and wipes the key from memory.
-- **Nothing leaks outside the database:** content-free notifications by default, no email in the embedded browser's cache, no crash dumps written to disk, and a heads-up when the disk has no BitLocker.
+- **Nothing leaks outside the database:** content-free notifications by default, no email in the embedded browser's cache, no crash dumps written to disk, and a heads-up when the disk has no BitLocker (Windows) or LUKS (Linux).
 - **Keep less:** erase from your computer the mail outside your chosen period and the mail of accounts you signed out of, rotating the database key afterwards.
 - **Honest links:** a warning when a link goes somewhere other than what it shows, and tracking parameters stripped.
 

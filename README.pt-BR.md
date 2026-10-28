@@ -167,7 +167,7 @@ Hoje o banco é cifrado contra quem está fora da sua sessão. O próximo passo 
 
 - **Senha do EpistulaMail (opcional):** a chave do banco passa a ser protegida por uma chave derivada da sua senha com Argon2id. A senha não fica gravada em lugar nenhum.
 - **Bloqueio automático:** depois de um tempo sem uso ou quando o sistema bloqueia a tela (no Windows, por enquanto), o app fecha o banco e apaga a chave da memória.
-- **Nada vaza para fora do banco:** notificações sem conteúdo por padrão, nenhum e-mail no cache do navegador interno, nenhum despejo de memória em disco após uma falha, e um aviso quando o disco não tem BitLocker.
+- **Nada vaza para fora do banco:** notificações sem conteúdo por padrão, nenhum e-mail no cache do navegador interno, nenhum despejo de memória em disco após uma falha, e um aviso quando o disco não tem BitLocker (Windows) ou LUKS (Linux).
 - **Guardar menos:** apagar do computador os e-mails fora do período escolhido e os de contas que você deixou, trocando a chave do banco em seguida.
 - **Links honestos:** aviso quando o link leva a um endereço diferente do que aparece, e remoção dos parâmetros de rastreamento.
 
