@@ -1,4 +1,4 @@
-# CI do Epistula: build e testes no Windows (alvo do app) e busca de segredos commitados.
+# CI do Epistula: build e testes no Windows (alvo original) e no Linux, e busca de segredos commitados.
 # Não usa segredos: o build sai sem as credenciais OAuth, só para provar que compila e passa nos testes.
 name: CI
 
@@ -23,6 +23,9 @@ jobs:
     name: Build e testes (Windows)
     runs-on: windows-latest
     timeout-minutes: 45
+    # O Perl portátil não fica mais no .cargo/config.toml: o Cargo não tem [env] por sistema.
+    env:
+      OPENSSL_SRC_PERL: ${{ github.workspace }}/.tools/strawberry/perl/bin/perl.exe
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +44,7 @@ jobs:
       - name: Build do frontend
         run: pnpm build
 
-      # Perl portátil para o OpenSSL embutido do SQLCipher (src-tauri/.cargo/config.toml aponta para ele).
+      # Perl portátil para o OpenSSL embutido do SQLCipher.
       - uses: actions/cache@v4
         with:
           path: .tools
@@ -63,6 +66,63 @@ jobs:
       - name: Testes do backend
         working-directory: src-tauri
         run: cargo test --locked
+
+  build-test-linux:
+    name: Build e testes (Linux)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # Tauri, GTK/WebKit, AppIndicator e os dois cofres: o Secret Service do keyring usa libdbus.
+      - name: Dependências do sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libdbus-1-dev \
+            libxdo-dev \
+            libssl-dev \
+            build-essential \
+            pkg-config \
+            perl \
+            curl \
+            wget \
+            file
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Testes do frontend
+        run: pnpm test
+      - name: Build do frontend
+        run: pnpm build
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets --locked -- -D warnings
+      - name: Testes do backend
+        working-directory: src-tauri
+        run: cargo test --locked
+
+      # O build completo sem pacote confirma a integração Rust + WebKit + frontend no Linux.
+      - name: Build do app (sem pacote)
+        run: pnpm tauri build --no-bundle --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   security:
     name: Segurança

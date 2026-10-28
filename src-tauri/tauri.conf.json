@@ -36,7 +36,7 @@
     "shortDescription": "Cliente de e-mail desktop",
     "longDescription": "Cliente de e-mail que guarda as mensagens no seu computador, num banco cifrado, sem passar por um servidor do EpistulaMail.",
     "homepage": "https://www.epistulamail.com",
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "icon": ["icons/32x32.png", "icons/64x64.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png", "icons/icon.icns", "icons/icon.ico"],
     "windows": {
       "nsis": {
         "installMode": "currentUser",
