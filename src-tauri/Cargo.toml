@@ -77,6 +77,10 @@ schannel = "0.1"
 # Tirar o app dos relatórios de erro do Windows (US10, CA5).
 windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_ErrorReporting", "Win32_System_StationsAndDesktops", "Win32_Storage_FileSystem"] }
 
+[target."cfg(unix)".dependencies]
+# Espaço livre no disco no Linux e no macOS (statvfs), sem API específica no nosso código.
+nix = { version = "0.30", default-features = false, features = ["fs"] }
+
 # Argon2id sem otimização levaria vários segundos por tentativa no build de desenvolvimento e nos testes.
 [profile.dev.package.argon2]
 opt-level = 3

@@ -326,9 +326,36 @@ pub fn system_roots() -> &'static [X509] {
         }
         #[cfg(not(windows))]
         {
-            Vec::new()
+            load_system_roots()
         }
     })
+}
+
+/// Raízes de confiança do sistema fora do Windows: o bundle de CAs da distribuição, que o OpenSSL
+/// também usa (`SSL_CERT_FILE` e os caminhos comuns de Debian, Fedora e macOS).
+#[cfg(not(windows))]
+fn load_system_roots() -> Vec<X509> {
+    let mut paths = Vec::new();
+    if let Ok(path) = std::env::var("SSL_CERT_FILE") {
+        paths.push(std::path::PathBuf::from(path));
+    }
+    for path in [
+        "/etc/ssl/certs/ca-certificates.crt",
+        "/etc/pki/tls/certs/ca-bundle.crt",
+        "/etc/ssl/cert.pem",
+        "/etc/ssl/certs/ca-bundle.crt",
+    ] {
+        paths.push(std::path::PathBuf::from(path));
+    }
+    for path in paths {
+        let Ok(bytes) = std::fs::read(&path) else { continue };
+        let Ok(certs) = X509::stack_from_pem(&bytes) else { continue };
+        if !certs.is_empty() {
+            return certs;
+        }
+    }
+    tracing::warn!("raízes de confiança do sistema indisponíveis");
+    Vec::new()
 }
 
 /// Confere a cadeia do certificado (com os intermediários dados) até uma das raízes, para e-mail.

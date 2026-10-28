@@ -75,6 +75,12 @@ pub fn app_ready(state: State<'_, AppState>) {
     state.mark_ui_ready();
 }
 
+/// Sistema em que o app está rodando, para a interface ajustar textos e opções (US17, D5).
+#[tauri::command]
+pub fn platform() -> &'static str {
+    std::env::consts::OS
+}
+
 #[tauri::command]
 pub fn list_providers() -> Vec<ProviderView> {
     providers::views()

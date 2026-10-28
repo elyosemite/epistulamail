@@ -77,7 +77,12 @@ pub fn free_space(dir: &Path) -> Option<u64> {
     (ok != 0).then_some(free)
 }
 
-#[cfg(not(windows))]
+#[cfg(unix)]
+pub fn free_space(dir: &Path) -> Option<u64> {
+    nix::sys::statvfs::statvfs(dir).ok().map(|s| s.blocks_available() as u64 * s.fragment_size() as u64)
+}
+
+#[cfg(not(any(windows, unix)))]
 pub fn free_space(_dir: &Path) -> Option<u64> {
     None
 }
@@ -541,6 +546,12 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn free_space_is_known_on_windows() {
+        assert!(free_space(&std::env::temp_dir()).is_some_and(|b| b > 0));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn free_space_is_known_on_unix() {
         assert!(free_space(&std::env::temp_dir()).is_some_and(|b| b > 0));
     }
 }

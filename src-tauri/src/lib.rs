@@ -46,6 +46,7 @@ use error::AppError;
 use session::AppState;
 use store::AccountStatus;
 use tauri::Manager;
+use tauri_plugin_dialog::DialogExt;
 
 /// Uma falha do app não grava um despejo de memória com e-mails e chaves para os relatórios de erro
 /// do Windows (US10, CA5). Só o código do erro vai para o log.
@@ -164,6 +165,17 @@ fn autostart_name() -> &'static str {
     if cfg!(debug_assertions) { "Epistula Dev" } else { "Epistula" }
 }
 
+/// O cofre do sistema não abriu: sem ele não há chave do banco. Avisa e encerra sem tocar nos dados
+/// (US17, CA2). No Linux, o cofre é o Secret Service do GNOME Keyring ou do KWallet.
+fn show_vault_error(app: &tauri::AppHandle) {
+    let message = if cfg!(target_os = "linux") {
+        "O EpistulaMail não conseguiu abrir o cofre de credenciais do sistema.\n\nNo Linux, ele precisa do Secret Service (GNOME Keyring ou KWallet). Instale ou inicie o cofre, destrave-o e abra o EpistulaMail de novo. Nenhuma mensagem foi apagada."
+    } else {
+        "O EpistulaMail não conseguiu abrir o cofre de credenciais do sistema. Verifique se ele está disponível e abra o EpistulaMail de novo. Nenhuma mensagem foi apagada."
+    };
+    app.dialog().message(message).title("EpistulaMail").kind(tauri_plugin_dialog::MessageDialogKind::Error).blocking_show();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 /// Início do processo, para medir quanto a primeira tela demora (`app_ready`).
 pub static STARTED_AT: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
@@ -214,6 +226,11 @@ pub fn run() {
             let opened = match keys::open_database(&dir, &keys::Keyring, None) {
                 Ok(opened) => Some(opened),
                 Err(AppError::Locked) => None,
+                Err(AppError::Keyring) => {
+                    tracing::error!("cofre do sistema indisponível; o app não pode abrir o banco");
+                    show_vault_error(app.handle());
+                    std::process::exit(1);
+                }
                 Err(e) => {
                     tracing::error!(kind = e.kind(), "não foi possível abrir o banco local");
                     return Err(Box::new(e));
@@ -245,7 +262,7 @@ pub fn run() {
             app.manage(offline::Downloader::default());
             app.manage(import::Importer::default());
             offline::start(app.handle());
-            privacy::watch_windows_lock(app.handle());
+            privacy::watch_system_lock(app.handle());
             rule_runner::start_cleanup(app.handle());
             notify::start(app.handle());
             updater::start(app.handle());
@@ -269,6 +286,7 @@ pub fn run() {
             import::remove_archive,
             import::list_archives,
             commands::app_ready,
+            commands::platform,
             commands::list_providers,
             commands::connect_account,
             commands::reconnect_account,

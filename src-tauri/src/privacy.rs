@@ -15,7 +15,8 @@ use crate::secrets::{self, SecretString};
 use crate::session::AppState;
 use crate::store;
 
-/// De quanto em quanto tempo conferir se o Windows bloqueou a tela.
+/// De quanto em quanto tempo conferir se o sistema bloqueou a tela.
+#[cfg(windows)]
 const WINDOWS_LOCK_TICK: Duration = Duration::from_secs(3);
 
 /// Chave e proteção do banco aberto, e as tentativas de senha (US10, CA2 e CA3).
@@ -287,7 +288,9 @@ pub async fn compact_and_rotate(state: &AppState) {
 }
 
 /// Bloqueia junto com o Windows (CA3, D2), conferindo de tempos em tempos se a tela foi bloqueada.
-pub fn watch_windows_lock(app: &AppHandle) {
+/// No Linux, o bloqueio junto com a tela ainda não existe (US18); o bloqueio por inatividade continua.
+#[cfg(windows)]
+pub fn watch_system_lock(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
         let mut was_locked = false;
@@ -308,6 +311,9 @@ pub fn watch_windows_lock(app: &AppHandle) {
     });
 }
 
+#[cfg(not(windows))]
+pub fn watch_system_lock(_app: &AppHandle) {}
+
 /// A tela do Windows está bloqueada? Bloqueada, a área de trabalho de entrada é a do Winlogon e não
 /// pode ser aberta pelo app.
 #[cfg(windows)]
@@ -323,11 +329,6 @@ fn windows_session_locked() -> bool {
         CloseDesktop(desk);
         !switched
     }
-}
-
-#[cfg(not(windows))]
-fn windows_session_locked() -> bool {
-    false
 }
 
 /// O volume onde fica o banco está cifrado pelo BitLocker (CA6)? `None` quando não dá para saber
@@ -356,11 +357,43 @@ pub async fn disk_encrypted(dir: PathBuf) -> Option<bool> {
         .ok()?;
         bitlocker_state(String::from_utf8_lossy(&output.stdout).trim())
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
+    {
+        let dir = dir.clone();
+        return tokio::task::spawn_blocking(move || linux_disk_encrypted(&dir)).await.ok()?;
+    }
+    #[cfg(not(any(windows, target_os = "linux")))]
     {
         let _ = dir;
         None
     }
+}
+
+/// O volume onde fica o banco está cifrado com LUKS? `None` quando não dá para saber (sem `findmnt`
+/// ou `lsblk`, ou saída inesperada).
+#[cfg(target_os = "linux")]
+fn linux_disk_encrypted(dir: &std::path::Path) -> Option<bool> {
+    let source = std::process::Command::new("findmnt").args(["-T", &dir.to_string_lossy(), "-o", "SOURCE", "-n"]).output().ok()?;
+    if !source.status.success() {
+        return None;
+    }
+    let source = String::from_utf8_lossy(&source.stdout).trim().to_string();
+    // Em btrfs, o findmnt devolve `/dev/sda2[/@home]`; o lsblk quer só o dispositivo.
+    let source = source.split_once('[').map_or(source.as_str(), |(head, _)| head).to_string();
+    if source.is_empty() {
+        return None;
+    }
+    let stack = std::process::Command::new("lsblk").args(["-s", "-n", "-o", "TYPE", &source]).output().ok()?;
+    if !stack.status.success() {
+        return None;
+    }
+    Some(stack_has_crypt(&String::from_utf8_lossy(&stack.stdout)))
+}
+
+/// A pilha de dispositivos do `lsblk -s` tem um `crypt` (dm-crypt/LUKS)?
+#[cfg(target_os = "linux")]
+pub fn stack_has_crypt(output: &str) -> bool {
+    output.lines().any(|line| line.trim() == "crypt")
 }
 
 /// Valores de `System.Volume.BitLockerProtection`: 1 ligado, 2 desligado, 3 cifrando, 4 decifrando,
@@ -384,5 +417,13 @@ mod tests {
         assert_eq!(bitlocker_state("5"), Some(false), "suspenso não protege");
         assert_eq!(bitlocker_state(""), None, "sem BitLocker no volume: sem aviso");
         assert_eq!(bitlocker_state("lixo"), None);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn luks_stack_is_recognized() {
+        assert!(stack_has_crypt("crypt\npart\ndisk\n"), "dm-crypt na pilha do lsblk");
+        assert!(!stack_has_crypt("lvm\npart\ndisk\n"), "LVM sem LUKS não conta");
+        assert!(!stack_has_crypt(""));
     }
 }
