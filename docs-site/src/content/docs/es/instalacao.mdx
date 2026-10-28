@@ -1,20 +1,21 @@
 ---
 title: "Instalación"
-description: "Descargar, comprobar e instalar EpistulaMail en Windows, y cómo llegan las versiones nuevas."
+description: "Descargar, comprobar e instalar EpistulaMail en Windows y Linux, y cómo llegan las versiones nuevas."
 ---
 import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import AppPreview from '~/components/AppPreview.astro';
 import Timeline from '~/components/Timeline.astro';
 
-EpistulaMail se distribuye como un instalador para Windows, publicado en cada versión en [GitHub](https://github.com/elyosemite/epistulamail/releases/latest) y en el botón de descarga del [sitio](https://www.epistulamail.com).
+EpistulaMail se distribuye como instalador para Windows y como AppImage y `.deb` para Linux, publicado en cada versión en [GitHub](https://github.com/elyosemite/epistulamail/releases/latest) y en el botón de descarga del [sitio](https://www.epistulamail.com).
 
 ## Requisitos
 
-- Windows 10 u 11, 64 bits.
-- WebView2, que ya viene con Windows 11. En Windows 10, el instalador lo descarga si falta.
+- Windows 10 u 11, 64 bits, o Linux, 64 bits.
+- En Windows, WebView2, que ya viene con Windows 11. En Windows 10, el instalador lo descarga si falta.
+- En Linux, el Secret Service (GNOME Keyring o KWallet), que guarda la clave de la base de datos y los tokens de las cuentas.
 - Unos 100 MB libres para la app, más el espacio de los mensajes que guardes.
 
-## Instalar
+## Instalar en Windows
 
 <Steps>
 
@@ -36,6 +37,39 @@ EpistulaMail se distribuye como un instalador para Windows, publicado en cada ve
 El instalador todavía no tiene certificado de firma de código. SmartScreen avisa de los programas sin firma y sin historial de descargas. Comprobar el SHA-256 garantiza que el archivo es el mismo que se publicó.
 </Aside>
 
+## Instalar en Linux
+
+<Steps>
+
+1. Descarga `EpistulaMail_<versión>_amd64.AppImage` o `EpistulaMail_<versión>_amd64.deb` en el [sitio](https://www.epistulamail.com) o en la [última versión](https://github.com/elyosemite/epistulamail/releases/latest).
+
+2. Compara el SHA-256 del archivo con el publicado en las notas de la versión:
+
+   ```bash
+   sha256sum EpistulaMail_1.0.2_amd64.AppImage
+   ```
+
+3. Para el AppImage, dale permiso de ejecución y ábrelo:
+
+   ```bash
+   chmod +x EpistulaMail_1.0.2_amd64.AppImage
+   ./EpistulaMail_1.0.2_amd64.AppImage
+   ```
+
+   Para el `.deb`, instálalo con el gestor de paquetes:
+
+   ```bash
+   sudo apt install ./EpistulaMail_1.0.2_amd64.deb
+   ```
+
+4. La app necesita el Secret Service (GNOME Keyring o KWallet) para abrirse. Si no está disponible, EpistulaMail muestra un aviso y no cambia tus datos.
+
+</Steps>
+
+<Aside type="note" title="¿Por qué el Secret Service?">
+En Linux, el cofre del sistema es el Secret Service. Allí quedan la clave de la base de datos y los refresh tokens de las cuentas, protegidos por tu sesión. EpistulaMail no guarda esos secretos en un archivo ni en la base de datos.
+</Aside>
+
 ## Versiones nuevas
 
-Desde la 1.0.2, cuando sale una versión nueva aparece un aviso en la campana de notificaciones. Un clic muestra qué cambió y, si confirmas, EpistulaMail la descarga, comprueba la firma de la actualización, la instala y se abre de nuevo. Consulta [Actualizaciones](/es/guia/instalacao/atualizacoes/).
+Desde la 1.0.2, cuando sale una versión nueva aparece un aviso en la campana de notificaciones. Un clic muestra qué cambió y, si confirmas, EpistulaMail la descarga, comprueba la firma de la actualización, la instala y se abre de nuevo. En Linux, el AppImage se actualiza así; el `.deb` lo actualiza el gestor de paquetes de tu distribución. Consulta [Actualizaciones](/es/guia/instalacao/atualizacoes/).

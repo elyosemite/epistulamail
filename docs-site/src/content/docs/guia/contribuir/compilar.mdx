@@ -4,11 +4,16 @@ description: "Rodar o EpistulaMail a partir do código."
 sidebar:
   order: 1
 ---
-import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Steps, Aside, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
 import AppPreview from '~/components/AppPreview.astro';
 import Timeline from '~/components/Timeline.astro';
 
-Requisitos: Node.js 24, pnpm 10 e Rust.
+Requisitos: Node.js 24, pnpm 10 e Rust 1.88 ou mais novo. O SQLCipher compila o próprio OpenSSL, então o build precisa de Perl, compilador C e `make` nas duas plataformas.
+
+<Tabs>
+<TabItem label="Windows">
+
+O Perl portátil do Windows é baixado uma vez pelo script. Ele fica em `.tools/` e o script define `OPENSSL_SRC_PERL` para a sessão e para o ambiente do usuário.
 
 ```powershell
 git clone https://github.com/elyosemite/epistulamail.git
@@ -19,4 +24,27 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
-`pnpm tauri dev` roda em desenvolvimento; `pnpm tauri build` gera o instalador. O build de desenvolvimento usa uma pasta de dados e itens no cofre só dele, então não mexe no EpistulaMail instalado. Para conectar contas no desenvolvimento, crie os seus clientes OAuth e ponha no `.env` (veja o README).
+</TabItem>
+<TabItem label="Linux">
+
+No Debian e no Ubuntu, instale as bibliotecas do Tauri, o libdbus do Secret Service e o Perl:
+
+```bash
+sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+  libdbus-1-dev libxdo-dev build-essential pkg-config perl
+```
+
+Depois:
+
+```bash
+git clone https://github.com/elyosemite/epistulamail.git
+cd epistulamail
+pnpm install
+pnpm tauri dev
+pnpm tauri build
+```
+
+</TabItem>
+</Tabs>
+
+`pnpm tauri dev` roda em desenvolvimento; `pnpm tauri build` gera o instalador no Windows e o AppImage e o `.deb` no Linux. O build de desenvolvimento usa uma pasta de dados e itens no cofre só dele, então não mexe no EpistulaMail instalado. Para conectar contas no desenvolvimento, crie os seus clientes OAuth e ponha no `.env` (veja o README).

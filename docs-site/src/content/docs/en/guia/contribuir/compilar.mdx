@@ -4,11 +4,16 @@ description: "Run EpistulaMail from source."
 sidebar:
   order: 1
 ---
-import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Steps, Aside, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
 import AppPreview from '~/components/AppPreview.astro';
 import Timeline from '~/components/Timeline.astro';
 
-Requirements: Node.js 24, pnpm 10 and Rust.
+Requirements: Node.js 24, pnpm 10 and Rust 1.88 or newer. SQLCipher builds its own OpenSSL, so the build needs Perl, a C compiler and `make` on both platforms.
+
+<Tabs>
+<TabItem label="Windows">
+
+The Windows portable Perl is downloaded once by the script. It lives in `.tools/` and the script sets `OPENSSL_SRC_PERL` for the session and for the user environment.
 
 ```powershell
 git clone https://github.com/elyosemite/epistulamail.git
@@ -19,4 +24,27 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
-`pnpm tauri dev` runs in development; `pnpm tauri build` produces the installer. The development build uses its own data folder and credential entries, so it never touches an installed EpistulaMail. To connect accounts in development, create your own OAuth clients and put them in `.env` (see the README).
+</TabItem>
+<TabItem label="Linux">
+
+On Debian and Ubuntu, install the Tauri libraries, the libdbus used by the Secret Service and Perl:
+
+```bash
+sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+  libdbus-1-dev libxdo-dev build-essential pkg-config perl
+```
+
+Then:
+
+```bash
+git clone https://github.com/elyosemite/epistulamail.git
+cd epistulamail
+pnpm install
+pnpm tauri dev
+pnpm tauri build
+```
+
+</TabItem>
+</Tabs>
+
+`pnpm tauri dev` runs in development; `pnpm tauri build` produces the installer on Windows and the AppImage and `.deb` on Linux. The development build uses its own data folder and credential entries, so it never touches an installed EpistulaMail. To connect accounts in development, create your own OAuth clients and put them in `.env` (see the README).

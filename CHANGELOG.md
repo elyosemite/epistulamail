@@ -2,6 +2,26 @@
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o [SemVer](https://semver.org/lang/pt-BR/). O pipeline de release (`.github/workflows/release.yml`) usa a seção da versão como notas da release.
 
+## [Não lançado]
+
+### Novidades
+
+- Versão para Linux: AppImage e pacote `.deb`, com as mensagens no mesmo banco cifrado e as chaves no Secret Service (GNOME Keyring ou KWallet).
+- O site ganhou um botão de download com menu para Windows e Linux.
+- No Linux, o app usa o espaço livre do disco, as raízes de confiança do sistema e o aviso de disco sem cifra (LUKS).
+
+### Mudou
+
+- Os textos do app, do site e da documentação falam em "sistema" em vez de "Windows" onde o comportamento vale para os dois.
+- "Bloquear junto com o Windows" só aparece no Windows; no Linux, o bloqueio por inatividade continua.
+
+### Avisos
+
+- No Linux, o app precisa do Secret Service para abrir. Sem ele, avisa e não altera os dados.
+- As notificações nativas no Linux e o bloqueio junto com a tela chegam numa próxima versão (US18).
+- O AppImage se atualiza sozinho; o `.deb` é atualizado pelo gerenciador de pacotes.
+- Os pacotes Linux ainda não têm assinatura de código: confira o SHA-256 nas notas da versão.
+
 ## [1.0.2] - 2026-10-27
 
 ### Novidades

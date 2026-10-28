@@ -1,0 +1,16 @@
+---
+title: "Why EpistulaMail"
+description: "Real security, post-quantum encryption and an interface built around you. The reasons to use EpistulaMail."
+---
+
+Email is the oldest archive in almost everyone's digital life. Contracts, exam results, family threads and the recovery password for everything else live there. In most cases, that whole archive sits on a single machine, run by someone else, opened through a browser tab. EpistulaMail starts from a simple idea: that archive should be yours.
+
+Security here is not promised, it is shown. Everything you open lives in a database encrypted with AES-256, including subjects, senders and indexes, with the key kept in the system vault (Windows Credential Manager, Linux Secret Service). A copy of the file, a laptop left in a cab or a discarded drive reveals nothing without that key. Third-party HTML is cleaned before it reaches the screen, and remote images, the spy pixels that tell the sender you opened their email, stay blocked until you allow them, one message at a time. The threat model is public, with the risks we have not solved written down next to it.
+
+EpistulaMail already thinks about the quantum computer. Data encrypted today can be captured today and opened years from now, when quantum machines can break the key exchanges in use. For email that people keep for decades, that risk is not theoretical. That is why the disk encryption, AES-256, already holds up in that scenario, and everything built on public keys starts with hybrid schemes, such as ML-KEM-768 together with X25519, so protection never rests on a single bet. In OpenPGP you create a Curve25519, RSA 4096 or experimental post-quantum key, and encrypt and sign right in the editor.
+
+An interface is only secure if people can use it. EpistulaMail comes from its own design system, guided by four principles: density with breathing room, reading first, one gesture per action and state always visible. Conversations become cards, each reply in its place and quoted text tucked away. Search uses chips for people, dates and filters. Rules read like sentences, such as "if the sender contains @shop.com, move to Shopping", with a live preview before saving and undo afterwards. And what has been downloaded opens and can be searched even without internet.
+
+Data governance is the most important part and the simplest to explain. There is no EpistulaMail account, no EpistulaMail cloud and no telemetry. No message, subject or address goes through a server of ours. Google sign-in happens on Google's page, and your password never goes through the app. The app's logs store no content, and a test walks through the whole app with unique markers and fails if any of them shows up in the logs. Your data stays where it should always have been: with you.
+
+And all of this is open source. EpistulaMail is on GitHub, and the main contributor truly believes in this project and in the power the open source community has over the programs people use. Security is proven, not promised, and code anyone can read is the only honest way to prove that an email client does what it says.

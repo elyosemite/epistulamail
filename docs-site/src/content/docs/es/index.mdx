@@ -18,7 +18,7 @@ Tu correo en tu computadora, cifrado. Aquí está todo para instalar, usar y con
 
 <CardGrid>
   <LinkCard title="Inicio rápido" description="De la descarga a la bandeja de entrada en unos cinco minutos." href="/es/inicio-rapido/" />
-  <LinkCard title="Instalación" description="Requisitos, el aviso de SmartScreen y cómo comprobar el SHA-256." href="/es/instalacao/" />
+  <LinkCard title="Instalación" description="Requisitos, el aviso de SmartScreen en Windows y cómo comprobar el SHA-256 en Windows y Linux." href="/es/instalacao/" />
   <LinkCard title="Búsqueda" description="Chips de persona, período y filtros, en todas las cuentas." href="/es/guia/busca/operadores/" />
   <LinkCard title="Cifrado" description="OpenPGP y S/MIME en el mismo editor." href="/es/guia/criptografia/como-funciona/" />
 </CardGrid>
@@ -27,11 +27,11 @@ Tu correo en tu computadora, cifrado. Aquí está todo para instalar, usar y con
 
 Si es la primera vez, sigue el **Inicio rápido**: instala EpistulaMail, conecta tu cuenta y muestra la búsqueda. Si ya lo usas, la **Documentación** explica cada función en detalle, con lo que pasa por detrás y dónde quedan tus datos.
 
-Todo lo que hay aquí vale para Windows 10 y 11 (64 bits). Por ahora solo se conectan cuentas de Gmail; los demás proveedores llegarán pronto. Abrir archivos de correo antiguos funciona sin ninguna cuenta.
+Todo lo que hay aquí vale para Windows 10 y 11 y para Linux (64 bits). En Linux, el cofre del sistema es el Secret Service (GNOME Keyring o KWallet). Por ahora solo se conectan cuentas de Gmail; los demás proveedores llegarán pronto. Abrir archivos de correo antiguos funciona sin ninguna cuenta.
 
 ## Qué es EpistulaMail
 
 - **Tuyo, sin trampa.** No hay cuenta de EpistulaMail, ni nube de EpistulaMail, ni telemetría. Ningún correo pasa por un servidor nuestro.
-- **Cifrado en el disco.** Los mensajes quedan en una base de datos cifrada con AES-256, con la clave en el Administrador de credenciales de Windows.
+- **Cifrado en el disco.** Los mensajes quedan en una base de datos cifrada con AES-256, con la clave en el cofre del sistema (Administrador de credenciales en Windows, Secret Service en Linux).
 - **Funciona sin internet.** Lo que ya se descargó se abre y se busca sin conexión.
 - **Código abierto.** Todo está en [GitHub](https://github.com/elyosemite/epistulamail).

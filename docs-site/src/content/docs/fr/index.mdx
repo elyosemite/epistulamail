@@ -18,7 +18,7 @@ Vos e-mails sur votre ordinateur, chiffrés. Tout pour installer, utiliser et co
 
 <CardGrid>
   <LinkCard title="Démarrage rapide" description="Du téléchargement à la boîte de réception en cinq minutes environ." href="/fr/inicio-rapido/" />
-  <LinkCard title="Installation" description="Prérequis, l'avertissement SmartScreen et comment vérifier le SHA-256." href="/fr/instalacao/" />
+  <LinkCard title="Installation" description="Prérequis, l'avertissement SmartScreen sous Windows et comment vérifier le SHA-256 sous Windows et Linux." href="/fr/instalacao/" />
   <LinkCard title="Recherche" description="Des puces pour les personnes, les dates et les filtres, dans tous les comptes." href="/fr/guia/busca/operadores/" />
   <LinkCard title="Chiffrement" description="OpenPGP et S/MIME dans le même éditeur." href="/fr/guia/criptografia/como-funciona/" />
 </CardGrid>
@@ -27,11 +27,11 @@ Vos e-mails sur votre ordinateur, chiffrés. Tout pour installer, utiliser et co
 
 Si c'est la première fois, suivez le **Démarrage rapide** : il installe EpistulaMail, connecte votre compte et montre la recherche. Si vous l'utilisez déjà, la **Documentation** détaille chaque fonction, avec ce qui se passe en coulisses et où se trouvent vos données.
 
-Tout ce qui est ici concerne Windows 10 et 11 (64 bits). Pour l'instant, seuls les comptes Gmail peuvent se connecter ; les autres fournisseurs arrivent bientôt. Ouvrir d'anciennes archives d'e-mails fonctionne sans aucun compte.
+Tout ce qui est ici concerne Windows 10 et 11 et Linux (64 bits). Sous Linux, le coffre du système est le Secret Service (GNOME Keyring ou KWallet). Pour l'instant, seuls les comptes Gmail peuvent se connecter ; les autres fournisseurs arrivent bientôt. Ouvrir d'anciennes archives d'e-mails fonctionne sans aucun compte.
 
 ## Ce qu'est EpistulaMail
 
 - **À vous, sans piège.** Il n'y a ni compte EpistulaMail, ni cloud EpistulaMail, ni télémétrie. Aucun e-mail ne passe par un de nos serveurs.
-- **Chiffré sur le disque.** Les messages sont dans une base de données chiffrée en AES-256, avec la clé dans le Gestionnaire d'identification de Windows.
+- **Chiffré sur le disque.** Les messages sont dans une base de données chiffrée en AES-256, avec la clé dans le coffre du système (Gestionnaire d'identification sous Windows, Secret Service sous Linux).
 - **Fonctionne hors ligne.** Ce qui a été téléchargé s'ouvre et se recherche sans internet.
 - **Open source.** Tout est sur [GitHub](https://github.com/elyosemite/epistulamail).

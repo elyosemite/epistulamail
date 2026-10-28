@@ -8,12 +8,14 @@ import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components'
 import AppPreview from '~/components/AppPreview.astro';
 import Timeline from '~/components/Timeline.astro';
 
-Uninstall it from Windows, under **Settings → Apps → EpistulaMail**.
+On Windows, uninstall it under **Settings → Apps → EpistulaMail**.
+
+On Linux, delete the AppImage or remove the `.deb` package with your distribution's package manager (for example, `sudo apt remove epistulamail`).
 
 The uninstaller removes the program. To also erase the data:
 
-1. Delete the `%APPDATA%\br.com.epistula.desktop` folder.
-2. In **Credential Manager → Windows Credentials**, remove the entries of the `epistula` service.
+1. Delete the data folder: on Windows, `%APPDATA%\br.com.epistula.desktop`; on Linux, `~/.local/share/br.com.epistula.desktop`.
+2. In the system vault, remove the `epistula` service entries: on Windows, **Credential Manager → Windows Credentials**; on Linux, GNOME Keyring or KWallet.
 3. If you want, remove EpistulaMail's access at [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
 
 Your messages stay on your email server.

@@ -4,11 +4,16 @@ description: "Lancer EpistulaMail depuis le code."
 sidebar:
   order: 1
 ---
-import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Steps, Aside, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
 import AppPreview from '~/components/AppPreview.astro';
 import Timeline from '~/components/Timeline.astro';
 
-Prérequis : Node.js 24, pnpm 10 et Rust.
+Prérequis : Node.js 24, pnpm 10 et Rust 1.88 ou plus récent. SQLCipher compile son propre OpenSSL, donc la compilation a besoin de Perl, d'un compilateur C et de `make` sur les deux plateformes.
+
+<Tabs>
+<TabItem label="Windows">
+
+Le Perl portable de Windows est téléchargé une fois par le script. Il se trouve dans `.tools/` et le script définit `OPENSSL_SRC_PERL` pour la session et pour l'environnement de l'utilisateur.
 
 ```powershell
 git clone https://github.com/elyosemite/epistulamail.git
@@ -19,4 +24,27 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
-`pnpm tauri dev` le lance en développement ; `pnpm tauri build` produit l'installateur. La version de développement utilise son propre dossier de données et ses propres éléments dans le coffre : elle ne touche jamais un EpistulaMail installé. Pour connecter des comptes en développement, créez vos propres clients OAuth et mettez-les dans `.env` (voir le README).
+</TabItem>
+<TabItem label="Linux">
+
+Sous Debian et Ubuntu, installez les bibliothèques de Tauri, la libdbus du Secret Service et Perl :
+
+```bash
+sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+  libdbus-1-dev libxdo-dev build-essential pkg-config perl
+```
+
+Ensuite :
+
+```bash
+git clone https://github.com/elyosemite/epistulamail.git
+cd epistulamail
+pnpm install
+pnpm tauri dev
+pnpm tauri build
+```
+
+</TabItem>
+</Tabs>
+
+`pnpm tauri dev` le lance en développement ; `pnpm tauri build` produit l'installateur sous Windows et l'AppImage et le `.deb` sous Linux. La version de développement utilise son propre dossier de données et ses propres éléments dans le coffre : elle ne touche jamais un EpistulaMail installé. Pour connecter des comptes en développement, créez vos propres clients OAuth et mettez-les dans `.env` (voir le README).

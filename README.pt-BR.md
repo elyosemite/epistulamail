@@ -7,15 +7,15 @@
 <p align="center">
   <a href="https://github.com/elyosemite/epistulamail/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/elyosemite/epistulamail/ci.yml?branch=main&style=flat-square&label=ci" alt="Situação do CI"></a>
   <a href="https://github.com/elyosemite/epistulamail/releases/latest"><img src="https://img.shields.io/github/v/release/elyosemite/epistulamail?style=flat-square&label=release" alt="Última versão"></a>
-  <a href="https://github.com/elyosemite/epistulamail/releases/latest"><img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4?style=flat-square" alt="Windows 10 | 11"></a>
+  <a href="https://github.com/elyosemite/epistulamail/releases/latest"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-0078D4?style=flat-square" alt="Windows | Linux"></a>
   <a href="https://www.epistulamail.com"><img src="https://img.shields.io/badge/site-epistulamail.com-1D7AFC?style=flat-square" alt="Site"></a>
 </p>
 
 <p align="center"><a href="README.md">English</a> | <b>Português</b></p>
 
-O EpistulaMail é um cliente de e-mail para Windows, de código aberto, que guarda as suas mensagens no seu computador, num banco cifrado com AES-256, e nunca as faz passar por um servidor nosso. Ele conecta as suas contas Google por OAuth, lê e envia direto entre o seu computador e o seu provedor, e abre arquivos de e-mail antigos (Google Takeout, Outlook, Thunderbird, Apple Mail) sem conta e sem rede nenhuma.
+O EpistulaMail é um cliente de e-mail para Windows e Linux, de código aberto, que guarda as suas mensagens no seu computador, num banco cifrado com AES-256, e nunca as faz passar por um servidor nosso. Ele conecta as suas contas Google por OAuth, lê e envia direto entre o seu computador e o seu provedor, e abre arquivos de e-mail antigos (Google Takeout, Outlook, Thunderbird, Apple Mail) sem conta e sem rede nenhuma.
 
-**Seu, sem pegadinha.** Não existe conta EpistulaMail, nuvem EpistulaMail, telemetria nem plano pago. A chave do banco fica no Gerenciador de Credenciais do Windows, as imagens externas ficam bloqueadas até você liberar, e as únicas conexões são com o seu provedor (mais um servidor de chaves ou as imagens de quem enviou, e só quando você pede). O [modelo de ameaças](docs/arquitetura-e-ameacas.md) é público, inclusive com os riscos ainda não resolvidos.
+**Seu, sem pegadinha.** Não existe conta EpistulaMail, nuvem EpistulaMail, telemetria nem plano pago. A chave do banco fica no cofre do sistema (Gerenciador de Credenciais no Windows, Secret Service no Linux), as imagens externas ficam bloqueadas até você liberar, e as únicas conexões são com o seu provedor (mais um servidor de chaves ou as imagens de quem enviou, e só quando você pede). O [modelo de ameaças](docs/arquitetura-e-ameacas.md) é público, inclusive com os riscos ainda não resolvidos.
 
 [Site](https://www.epistulamail.com) · [Documentação](https://docs.epistulamail.com) · [Download](https://github.com/elyosemite/epistulamail/releases/latest) · [Mudanças](CHANGELOG.md) · [Política de privacidade](https://www.epistulamail.com/privacidade) · [Modelo de ameaças](docs/arquitetura-e-ameacas.md) · [Design System](design-system/) · [Histórico de decisões](userstory/)
 
@@ -25,13 +25,15 @@ O EpistulaMail é um cliente de e-mail para Windows, de código aberto, que guar
 
 Baixe o instalador na [última release](https://github.com/elyosemite/epistulamail/releases/latest) (`EpistulaMail_<versão>_x64-setup.exe`). Ele instala só para o seu usuário do Windows, sem pedir administrador, e precisa do Windows 10 ou 11 (64 bits) com o WebView2, que já vem no Windows 11 e é baixado pelo instalador no Windows 10 se faltar.
 
+No Linux, baixe `EpistulaMail_<versão>_amd64.AppImage` ou `EpistulaMail_<versão>_amd64.deb`. O AppImage é um arquivo só; o `.deb` é para Debian e Ubuntu. Você precisa do Secret Service (GNOME Keyring ou KWallet), que guarda a chave do banco e os tokens das contas.
+
 O instalador ainda não tem assinatura de código, então na primeira execução o Windows SmartScreen mostra "O Windows protegeu o computador". Antes de seguir, confira o arquivo com o SHA-256 publicado na release:
 
 ```powershell
 (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
 ```
 
-Se bater, clique em "Mais informações" e depois em "Executar assim mesmo". As versões novas instalam por cima e mantêm as contas e as mensagens. Para compilar a partir do código, veja [Compilando](#compilando).
+Se bater, clique em "Mais informações" e depois em "Executar assim mesmo". As versões novas instalam por cima e mantêm as contas e as mensagens. No Linux, confira o AppImage ou o `.deb` com `sha256sum`, dê permissão de execução ao AppImage ou instale o `.deb` pelo gerenciador de pacotes. Para compilar a partir do código, veja [Compilando](#compilando).
 
 ## Primeiros passos
 
@@ -55,7 +57,7 @@ Enquanto o Google verifica o app, o login com Google fica limitado aos usuários
 - **Contra rastreamento.** Imagens externas (os "pixels espiões" que avisam que você abriu) ficam bloqueadas até você liberar.
 - **Conversas fáceis de ler.** Cada resposta num card, com o texto citado escondido.
 - **Se organiza sozinho.** Regras movem, arquivam ou sinalizam os e-mails assim que chegam, com prévia antes de salvar e desfazer depois.
-- **Avisa só o que importa.** Notificações do Windows, bandeja do sistema, horário de silêncio e um histórico no sino.
+- **Avisa só o que importa.** Notificações do sistema, bandeja, horário de silêncio e um histórico no sino. No Linux, as notificações nativas chegam numa próxima versão; o sino e a bandeja já funcionam.
 - **Segurança que dá para conferir.** Modelo de ameaças público e testes que falham se algum conteúdo aparecer nos logs.
 
 ## Por que mais um cliente de e-mail
@@ -78,7 +80,7 @@ O que funciona hoje:
 
 - Conexão com contas Google por OAuth (PKCE), lendo por IMAP e enviando por SMTP, sempre sobre TLS. Nenhuma senha passa pelo app.
 - Várias contas ao mesmo tempo, cada uma com nome, cor e foto, e troca com um clique.
-- Banco local SQLCipher (AES-256, HMAC por página), com a chave no Cofre de Credenciais do Windows e exclusão segura das páginas apagadas.
+- Banco local SQLCipher (AES-256, HMAC por página), com a chave no cofre do sistema (Gerenciador de Credenciais no Windows, Secret Service no Linux) e exclusão segura das páginas apagadas.
 - Leitura segura: o HTML de terceiros é limpo por allowlist no processo Rust e exibido num iframe sem scripts. As imagens externas ficam bloqueadas até você liberar, mensagem por mensagem.
 - Notificações com privacidade: você escolhe se elas mostram remetente e assunto ou só a conta.
 
@@ -120,7 +122,7 @@ O que funciona hoje:
 - Quem não tem chave aparece antes do envio, com a escolha de buscar a chave na internet (só quando você manda), enviar sem criptografia ou tirar o destinatário.
 - A leitura mostra se a mensagem veio criptografada e se a assinatura confere, com a aceitação da chave no estilo do Thunderbird (ainda não, aceita, verificada, rejeitada).
 - Um gerenciador de chaves com busca, importação de arquivo, da área de transferência ou da internet, exportação e backup protegido por senha. Chaves que chegam por Autocrypt ou anexadas ficam como "ainda não aceita", inclusive a chave anexada dentro de uma mensagem cifrada. A primeira mensagem de alguém novo é conferida com a chave que a pessoa anexou, e o cabeçalho Autocrypt que o EpistulaMail envia é lido pelos outros programas.
-- S/MIME também, para quem usa Outlook, Apple Mail ou o certificado da empresa: peça um certificado (o par de chaves nasce no seu computador e só o pedido vai para a autoridade certificadora), importe o emitido ou um `.p12` e guarde os certificados de quem manda mensagens assinadas. A confiança segue as raízes do Windows. Um script de CA de teste deixa experimentar sem comprar nada.
+- S/MIME também, para quem usa Outlook, Apple Mail ou o certificado da empresa: peça um certificado (o par de chaves nasce no seu computador e só o pedido vai para a autoridade certificadora), importe o emitido ou um `.p12` e guarde os certificados de quem manda mensagens assinadas. A confiança segue as raízes do sistema. Um script de CA de teste deixa experimentar sem comprar nada.
 
 **Arquivos de e-mail, sem conta**
 
@@ -131,7 +133,7 @@ O que funciona hoje:
 
 **Avisos**
 
-- Notificações do Windows para e-mails novos, respostas aos seus e-mails, prazos e contas que precisam de atenção. Um clique abre a mensagem.
+- Notificações do sistema para e-mails novos, respostas aos seus e-mails, prazos e contas que precisam de atenção. Um clique abre a mensagem. No Linux, o sino e a bandeja já funcionam; as notificações nativas chegam numa próxima versão.
 - O app continua na bandeja do sistema com a janela fechada, com "novo e-mail" e silenciar por um tempo.
 - Horário de silêncio e um sino com o histórico dos últimos 7 dias.
 
@@ -161,10 +163,10 @@ O que exatamente passa por ele no login (só as configurações do app, ou tamb�
 
 ### Seus dados só seus, mesmo no seu computador
 
-Hoje o banco é cifrado contra quem está fora do seu Windows. O próximo passo é protegê-lo também de quem está dentro dele: outra pessoa na sua sessão, o administrador de um domínio corporativo ou alguém com uma cópia do disco e a sua senha do Windows.
+Hoje o banco é cifrado contra quem está fora da sua sessão. O próximo passo é protegê-lo também de quem está dentro dela: outra pessoa na sua sessão, o administrador de um domínio corporativo ou alguém com uma cópia do disco e a sua senha de login.
 
 - **Senha do EpistulaMail (opcional):** a chave do banco passa a ser protegida por uma chave derivada da sua senha com Argon2id. A senha não fica gravada em lugar nenhum.
-- **Bloqueio automático:** depois de um tempo sem uso ou quando o Windows bloqueia a tela, o app fecha o banco e apaga a chave da memória.
+- **Bloqueio automático:** depois de um tempo sem uso ou quando o sistema bloqueia a tela (no Windows, por enquanto), o app fecha o banco e apaga a chave da memória.
 - **Nada vaza para fora do banco:** notificações sem conteúdo por padrão, nenhum e-mail no cache do navegador interno, nenhum despejo de memória em disco após uma falha, e um aviso quando o disco não tem BitLocker.
 - **Guardar menos:** apagar do computador os e-mails fora do período escolhido e os de contas que você deixou, trocando a chave do banco em seguida.
 - **Links honestos:** aviso quando o link leva a um endereço diferente do que aparece, e remoção dos parâmetros de rastreamento.
@@ -217,17 +219,25 @@ Quatro princípios orientam as decisões: densidade com respiro, leitura em prim
 
 ## Compilando
 
-O alvo principal hoje é o Windows. O EpistulaMail é feito com [Tauri 2](https://tauri.app), Rust e React.
+O alvo principal hoje é Windows e Linux. O EpistulaMail é feito com [Tauri 2](https://tauri.app), Rust e React.
 
 Requisitos:
 
 - Node.js 24 e pnpm 10
 - Rust 1.88 ou mais recente
-- No Windows, o Perl portátil usado para compilar o OpenSSL embutido do SQLCipher. O script abaixo baixa e confere o SHA-256.
+- No Windows, o Perl portátil usado para compilar o OpenSSL embutido do SQLCipher. O script abaixo baixa e confere o SHA-256. No Linux, instale as bibliotecas do Tauri e o Perl da sua distribuição (veja abaixo).
 
 ```powershell
 pnpm install
 ./scripts/setup-build-tools.ps1
+```
+
+No Linux, instale as dependências de build e dispense o script:
+
+```bash
+sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+  libdbus-1-dev libxdo-dev build-essential pkg-config perl
+pnpm install
 ```
 
 Enquanto o servidor de login não existe, o build de desenvolvimento lê as configurações OAuth do `.env`. Crie os seus próprios clientes: um "Desktop app" no Google Cloud e um registro de aplicativo no Azure (Microsoft Entra ID) com a plataforma "Aplicativos móveis e da área de trabalho" e `http://127.0.0.1` como URI de redirecionamento (o app escuta numa porta aleatória desse endereço; se o portal recusar o IP, acrescente pelo Manifesto do app).
@@ -260,7 +270,7 @@ cd src-tauri; cargo test          # backend, com banco SQLCipher real
 cargo clippy --all-targets -- -D warnings
 ```
 
-O CI roda tudo isso no Windows a cada push, além de uma varredura de segredos no histórico do repositório.
+O CI roda tudo isso no Windows e no Linux a cada push, além de uma varredura de segredos no histórico do repositório.
 
 ## Estrutura
 

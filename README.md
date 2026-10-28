@@ -7,15 +7,15 @@
 <p align="center">
   <a href="https://github.com/elyosemite/epistulamail/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/elyosemite/epistulamail/ci.yml?branch=main&style=flat-square&label=ci" alt="CI status"></a>
   <a href="https://github.com/elyosemite/epistulamail/releases/latest"><img src="https://img.shields.io/github/v/release/elyosemite/epistulamail?style=flat-square&label=release" alt="Latest release"></a>
-  <a href="https://github.com/elyosemite/epistulamail/releases/latest"><img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4?style=flat-square" alt="Windows 10 | 11"></a>
+  <a href="https://github.com/elyosemite/epistulamail/releases/latest"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-0078D4?style=flat-square" alt="Windows | Linux"></a>
   <a href="https://www.epistulamail.com"><img src="https://img.shields.io/badge/site-epistulamail.com-1D7AFC?style=flat-square" alt="Site"></a>
 </p>
 
 <p align="center"><b>English</b> | <a href="README.pt-BR.md">Português</a></p>
 
-EpistulaMail is an open-source desktop email client for Windows that keeps your messages on your own computer, in an AES-256 encrypted database, and never routes them through a server of ours. It connects your Google accounts over OAuth, reads and sends straight between your computer and your provider, and opens old email archives (Gmail Takeout, Outlook, Thunderbird, Apple Mail) with no account and no network at all.
+EpistulaMail is an open-source desktop email client for Windows and Linux that keeps your messages on your own computer, in an AES-256 encrypted database, and never routes them through a server of ours. It connects your Google accounts over OAuth, reads and sends straight between your computer and your provider, and opens old email archives (Gmail Takeout, Outlook, Thunderbird, Apple Mail) with no account and no network at all.
 
-**Yours, with no catch.** There is no EpistulaMail account, no EpistulaMail cloud, no telemetry and no paid tier. The database key lives in the Windows Credential Manager, remote images stay blocked until you allow them, and the only network calls are the ones to your provider (plus a key server or a sender's images, and only when you ask). The [threat model](docs/arquitetura-e-ameacas.md) is public, and so are the risks not solved yet.
+**Yours, with no catch.** There is no EpistulaMail account, no EpistulaMail cloud, no telemetry and no paid tier. The database key lives in the system credential vault (the Windows Credential Manager or the Linux Secret Service), remote images stay blocked until you allow them, and the only network calls are the ones to your provider (plus a key server or a sender's images, and only when you ask). The [threat model](docs/arquitetura-e-ameacas.md) is public, and so are the risks not solved yet.
 
 [Website](https://www.epistulamail.com) · [Docs](https://docs.epistulamail.com) · [Download](https://github.com/elyosemite/epistulamail/releases/latest) · [Changelog](CHANGELOG.md) · [Privacy policy](https://www.epistulamail.com/privacidade) · [Threat model](docs/arquitetura-e-ameacas.md) · [Design system](design-system/) · [Decision history](userstory/)
 
@@ -25,13 +25,15 @@ EpistulaMail is an open-source desktop email client for Windows that keeps your 
 
 Download the installer from the [latest release](https://github.com/elyosemite/epistulamail/releases/latest) (`EpistulaMail_<version>_x64-setup.exe`). It installs for your Windows user only, with no administrator rights, and needs Windows 10 or 11 (64-bit) with WebView2, which ships with Windows 11 and is downloaded by the installer on Windows 10 if missing.
 
+On Linux, download `EpistulaMail_<version>_amd64.AppImage` or `EpistulaMail_<version>_amd64.deb`. The AppImage is a single file; the `.deb` is for Debian and Ubuntu. You need the Secret Service (GNOME Keyring or KWallet), which holds the database key and the account tokens.
+
 The installer is not code-signed yet, so on first run Windows SmartScreen says "Windows protected your PC". Before going ahead, check the file against the SHA-256 published with the release:
 
 ```powershell
 (Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash
 ```
 
-If it matches, click "More info" and then "Run anyway". Newer versions install over the old one and keep your accounts and messages. To build from source instead, see [Building](#building).
+If it matches, click "More info" and then "Run anyway". Newer versions install over the old one and keep your accounts and messages. On Linux, check the AppImage or `.deb` with `sha256sum`, then make the AppImage executable or install the `.deb` with your package manager. To build from source instead, see [Building](#building).
 
 ## Quick start
 
@@ -55,7 +57,7 @@ While Google's verification of the app is in progress, signing in with Google is
 - **Blocks tracking.** Remote images (the "spy pixels" that tell senders you opened their email) stay blocked until you allow them.
 - **Conversations that read well.** Each reply in its own card, with quoted text tucked away.
 - **Organizes itself.** Rules move, archive or flag mail as it arrives, with a live preview before you save and undo afterwards.
-- **Tells you only what matters.** Windows notifications, a tray icon, quiet hours and a history behind the bell.
+- **Tells you only what matters.** System notifications, a tray icon, quiet hours and a history behind the bell. On Linux, native notifications are coming in a future version; the bell and the tray already work.
 - **Security you can check.** A public threat model, and tests that fail if any content shows up in the logs.
 
 ## Why another email client
@@ -78,7 +80,7 @@ What works today:
 
 - Google accounts over OAuth (PKCE), reading through IMAP and sending through SMTP, always over TLS. Your password never passes through the app.
 - Several accounts at once, each with its own name, color and photo, one click apart.
-- Local SQLCipher database (AES-256, per-page HMAC), with the key in the Windows Credential Manager and secure deletion of freed pages.
+- Local SQLCipher database (AES-256, per-page HMAC), with the key in the system credential vault (Windows Credential Manager, Linux Secret Service) and secure deletion of freed pages.
 - Safe reading: third-party HTML is cleaned against an allowlist in the Rust process and shown in an iframe with scripts disabled. Remote images stay blocked until you allow them, one message at a time.
 - Private notifications: you choose whether they show sender and subject or just the account.
 
@@ -120,7 +122,7 @@ What works today:
 - Recipients without a key are flagged before sending, with the choice to look their key up online (only when you say so), send without encryption, or remove them.
 - Reading shows whether a message was encrypted and whether the signature checks out, with the key's acceptance in Thunderbird's style (not yet, accepted, verified, rejected).
 - A key manager with search, import from a file, the clipboard or the internet, export and a password-protected backup. Keys arriving by Autocrypt or as an attachment are stored as "not yet accepted", including a key attached inside an encrypted message. The first message from someone new is checked against the key they attached, and the Autocrypt header EpistulaMail sends can be read by other programs.
-- S/MIME too, for people on Outlook, Apple Mail or a company certificate: request a certificate (the key pair is created on your computer and only the request goes to the certificate authority), import the issued one or a `.p12`, and keep the certificates of whoever sends you signed mail. Trust follows the root certificates in Windows. A test CA script lets you try it without buying anything.
+- S/MIME too, for people on Outlook, Apple Mail or a company certificate: request a certificate (the key pair is created on your computer and only the request goes to the certificate authority), import the issued one or a `.p12`, and keep the certificates of whoever sends you signed mail. Trust follows the system root certificates. A test CA script lets you try it without buying anything.
 
 **Email archives, with no account**
 
@@ -131,7 +133,7 @@ What works today:
 
 **Staying informed**
 
-- Windows notifications for new mail, replies to your emails, due dates and accounts that need attention. One click opens the message.
+- Windows notifications for new mail, replies to your emails, due dates and accounts that need attention. One click opens the message. On Linux, the bell and the tray work now; native notifications are coming in a future version.
 - The app stays in the system tray with the window closed, with "new email" and snooze.
 - Quiet hours and a bell with the last 7 days of notices.
 
@@ -161,10 +163,10 @@ Exactly what passes through it during the login (only the app's settings, or als
 
 ### Your data, only yours, even on your own computer
 
-Today the database is encrypted against anyone outside your Windows session. The next step is to protect it from people inside it too: someone else using your session, the administrator of a corporate domain, or anyone holding a copy of the disk and your Windows password.
+Today the database is encrypted against anyone outside your user session. The next step is to protect it from people inside it too: someone else using your session, the administrator of a corporate domain, or anyone holding a copy of the disk and your account password.
 
 - **EpistulaMail password (optional):** the database key gets wrapped by a key derived from your password with Argon2id. The password itself is never stored.
-- **Automatic lock:** after a period of inactivity, or when Windows locks the screen, the app closes the database and wipes the key from memory.
+- **Automatic lock:** after a period of inactivity, or when the system locks the screen (on Windows for now), the app closes the database and wipes the key from memory.
 - **Nothing leaks outside the database:** content-free notifications by default, no email in the embedded browser's cache, no crash dumps written to disk, and a heads-up when the disk has no BitLocker.
 - **Keep less:** erase from your computer the mail outside your chosen period and the mail of accounts you signed out of, rotating the database key afterwards.
 - **Honest links:** a warning when a link goes somewhere other than what it shows, and tracking parameters stripped.
@@ -217,17 +219,25 @@ Four principles guide the decisions: density with breathing room, reading first,
 
 ## Building
 
-The main target today is Windows. EpistulaMail is built with [Tauri 2](https://tauri.app), Rust and React.
+The main targets today are Windows and Linux. EpistulaMail is built with [Tauri 2](https://tauri.app), Rust and React.
 
 Requirements:
 
 - Node.js 24 and pnpm 10
 - Rust 1.88 or later
-- On Windows, the portable Perl used to compile SQLCipher's bundled OpenSSL. The script below downloads it and checks its SHA-256.
+- On Windows, the portable Perl used to compile SQLCipher's bundled OpenSSL. The script below downloads it and checks its SHA-256. On Linux, install the Tauri libraries and Perl from your distribution (see below).
 
 ```powershell
 pnpm install
 ./scripts/setup-build-tools.ps1
+```
+
+On Linux, install the build dependencies and skip the script:
+
+```bash
+sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+  libdbus-1-dev libxdo-dev build-essential pkg-config perl
+pnpm install
 ```
 
 Until the sign-in server exists, a development build reads the OAuth settings from `.env`. Create your own clients: a "Desktop app" client in Google Cloud, and an app registration in Azure (Microsoft Entra ID) with the "Mobile and desktop applications" platform and `http://127.0.0.1` as the redirect URI (the app listens on a random port of that address; if the portal refuses the IP, add it in the app's Manifest).
@@ -260,7 +270,7 @@ cd src-tauri; cargo test          # backend, against a real SQLCipher database
 cargo clippy --all-targets -- -D warnings
 ```
 
-CI runs all of this on Windows on every push, plus a scan of the repository history for committed secrets.
+CI runs all of this on Windows and Linux on every push, plus a scan of the repository history for committed secrets.
 
 ## Layout
 

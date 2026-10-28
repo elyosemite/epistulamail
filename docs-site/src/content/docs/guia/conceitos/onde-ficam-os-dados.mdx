@@ -10,8 +10,8 @@ import Timeline from '~/components/Timeline.astro';
 
 | O quê | Onde |
 |---|---|
-| O programa | `%LOCALAPPDATA%\EpistulaMail` |
-| Banco de mensagens e configurações | `%APPDATA%\br.com.epistula.desktop` |
-| Chave do banco e acesso às contas | Gerenciador de Credenciais do Windows, itens `epistula` |
+| O programa | Windows: `%LOCALAPPDATA%\EpistulaMail`; Linux: o AppImage ou o pacote `.deb` |
+| Banco de mensagens e configurações | Windows: `%APPDATA%\br.com.epistula.desktop`; Linux: `~/.local/share/br.com.epistula.desktop` |
+| Chave do banco e acesso às contas | Cofre do sistema: Gerenciador de Credenciais no Windows, Secret Service no Linux (GNOME Keyring ou KWallet), itens `epistula` |
 
-O banco é cifrado: um arquivo copiado, um notebook perdido ou um disco descartado não revelam nada sem a chave. A chave fica no cofre do Windows, protegida pela sua sessão; com a senha do EpistulaMail ligada, ela também depende da senha.
+O banco é cifrado: um arquivo copiado, um notebook perdido ou um disco descartado não revelam nada sem a chave. A chave fica no cofre do sistema, protegida pela sua sessão; com a senha do EpistulaMail ligada, ela também depende da senha.

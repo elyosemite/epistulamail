@@ -18,7 +18,7 @@ La tua posta sul tuo computer, cifrata. Qui trovi tutto per installare, usare e 
 
 <CardGrid>
   <LinkCard title="Avvio rapido" description="Dal download alla posta in arrivo in circa cinque minuti." href="/it/inicio-rapido/" />
-  <LinkCard title="Installazione" description="Requisiti, l'avviso di SmartScreen e come verificare lo SHA-256." href="/it/instalacao/" />
+  <LinkCard title="Installazione" description="Requisiti, l'avviso di SmartScreen su Windows e come verificare lo SHA-256 su Windows e Linux." href="/it/instalacao/" />
   <LinkCard title="Ricerca" description="Chip per persone, date e filtri, in tutti gli account." href="/it/guia/busca/operadores/" />
   <LinkCard title="Crittografia" description="OpenPGP e S/MIME nello stesso editor." href="/it/guia/criptografia/como-funciona/" />
 </CardGrid>
@@ -27,11 +27,11 @@ La tua posta sul tuo computer, cifrata. Qui trovi tutto per installare, usare e 
 
 Se è la prima volta, segui l'**Avvio rapido**: installa EpistulaMail, collega il tuo account e mostra la ricerca. Se lo usi già, la **Documentazione** spiega ogni funzione nel dettaglio, con quello che succede dietro le quinte e dove restano i tuoi dati.
 
-Tutto ciò che trovi qui vale per Windows 10 e 11 (64 bit). Per ora si possono collegare solo account Gmail; gli altri provider arriveranno presto. Aprire vecchi archivi di posta funziona senza alcun account.
+Tutto ciò che trovi qui vale per Windows 10 e 11 e per Linux (64 bit). Su Linux, il vault del sistema è il Secret Service (GNOME Keyring o KWallet). Per ora si possono collegare solo account Gmail; gli altri provider arriveranno presto. Aprire vecchi archivi di posta funziona senza alcun account.
 
 ## Cos'è EpistulaMail
 
 - **Tuo, senza trucchi.** Non esiste un account EpistulaMail, un cloud EpistulaMail né telemetria. Nessuna email passa da un nostro server.
-- **Cifrato sul disco.** I messaggi stanno in un database cifrato con AES-256, con la chiave in Gestione credenziali di Windows.
+- **Cifrato sul disco.** I messaggi stanno in un database cifrato con AES-256, con la chiave nel vault del sistema (Gestione credenziali su Windows, Secret Service su Linux).
 - **Funziona offline.** Ciò che è stato scaricato si apre e si cerca anche senza internet.
 - **Open source.** È tutto su [GitHub](https://github.com/elyosemite/epistulamail).

@@ -1,6 +1,6 @@
 ---
 title: "Senha e bloqueio"
-description: "Proteger as mensagens até de quem usa o seu Windows."
+description: "Proteger as mensagens até de quem usa o seu computador."
 sidebar:
   order: 1
 ---
@@ -12,7 +12,11 @@ Em **Configurações → Privacidade**:
 
 - **Senha do EpistulaMail**: a chave do banco passa a depender dela (Argon2id). A senha não é guardada em lugar nenhum; esquecida, as mensagens deste computador não abrem, mas continuam no servidor.
 - **Bloquear depois de**: o app fecha o banco depois de um tempo sem uso.
-- **Bloquear junto com o Windows**.
+- **Bloquear junto com o Windows** (só no Windows; no Linux, o bloqueio por inatividade continua e o bloqueio junto com a tela chega numa próxima versão).
 - **Guardar menos**: apagar do computador o que está fora do período escolhido.
 
 <AppPreview name="unlock" width={26} />
+
+<Aside type="note" title="No Linux">
+O bloqueio por inatividade funciona como no Windows. O bloqueio junto com a tela ainda não existe no Linux.
+</Aside>

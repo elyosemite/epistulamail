@@ -10,6 +10,10 @@ import Timeline from '~/components/Timeline.astro';
 
 **Windows m'empêche d'ouvrir l'installateur.** C'est SmartScreen qui avertit au sujet d'un programme non signé. Vérifiez le SHA-256 et utilisez **Informations complémentaires → Exécuter quand même**.
 
+**L'AppImage ne s'ouvre pas sous Linux.** Donnez-lui le droit d'exécution avec `chmod +x EpistulaMail_<version>_amd64.AppImage` et ouvrez-le de nouveau.
+
+**EpistulaMail signale que le coffre n'est pas disponible sous Linux.** Installez ou démarrez le Secret Service (GNOME Keyring ou KWallet), déverrouillez-le et ouvrez l'app de nouveau. Aucun message n'a été supprimé.
+
 **Google indique que l'app n'est pas vérifiée.** La vérification de Google est encore en cours. Voir l'avertissement dans le [Démarrage rapide](/fr/inicio-rapido/).
 
 **L'ancienne icône reste dans la barre des tâches.** C'est le cache d'icônes de Windows. Désépinglez puis épinglez de nouveau, ou redémarrez l'Explorateur Windows.

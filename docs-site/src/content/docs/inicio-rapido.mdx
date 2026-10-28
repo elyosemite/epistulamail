@@ -2,7 +2,7 @@
 title: "Início rápido"
 description: "Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinco minutos."
 ---
-import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Steps, Aside, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
 import AppPreview from '~/components/AppPreview.astro';
 import Timeline from '~/components/Timeline.astro';
 
@@ -10,14 +10,18 @@ Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinc
 
 ## O que você precisa
 
-- **Windows 10 ou 11**, 64 bits.
+- **Windows 10 ou 11, ou Linux**, 64 bits.
 - **Uma conta Gmail.** Os outros provedores vêm em breve; enquanto isso, dá para [abrir arquivos de e-mail](/guia/arquivos/abrir-um-arquivo/) sem conta.
+- **No Linux, o Secret Service**: o GNOME Keyring ou o KWallet. É o cofre do sistema onde ficam a chave do banco e os tokens das contas.
 
 ## Passo a passo
 
+<Tabs>
+<TabItem label="Windows">
+
 <Steps>
 
-1. **Baixe o instalador.** Em [epistulamail.com](https://www.epistulamail.com), clique em "Download EpistulaMail". O arquivo tem uns 11 MB.
+1. **Baixe o instalador.** Em [epistulamail.com](https://www.epistulamail.com), clique em "Download EpistulaMail" e escolha Windows. O arquivo tem uns 11 MB.
 
 2. **Confira o arquivo.** No PowerShell, na pasta do download:
 
@@ -34,6 +38,45 @@ Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinc
 5. **Leia e busque.** Os e-mails mais recentes aparecem primeiro e o resto chega em segundo plano. Aperte <kbd>/</kbd> e digite `de: Ana tem:anexo` para ver a busca com chips.
 
 </Steps>
+
+</TabItem>
+<TabItem label="Linux">
+
+<Steps>
+
+1. **Baixe o pacote.** Em [epistulamail.com](https://www.epistulamail.com), clique em "Download EpistulaMail" e escolha Linux. O AppImage é um arquivo só; o `.deb` é para Debian e Ubuntu.
+
+2. **Confira o arquivo.** No terminal, na pasta do download:
+
+   ```bash
+   sha256sum EpistulaMail_1.0.2_amd64.AppImage
+   ```
+
+   O resultado tem que ser igual ao SHA-256 publicado nas [notas da versão](https://github.com/elyosemite/epistulamail/releases/latest).
+
+3. **Instale.** Para o AppImage:
+
+   ```bash
+   chmod +x EpistulaMail_1.0.2_amd64.AppImage
+   ./EpistulaMail_1.0.2_amd64.AppImage
+   ```
+
+   Para o `.deb`:
+
+   ```bash
+   sudo apt install ./EpistulaMail_1.0.2_amd64.deb
+   ```
+
+   O app precisa do Secret Service (GNOME Keyring ou KWallet) para abrir. Se ele não estiver disponível, o EpistulaMail avisa e não mexe nos seus dados.
+
+4. **Conecte a sua conta.** Abra o EpistulaMail e escolha o Gmail. O login acontece na página do Google, no seu navegador; a sua senha nunca passa pelo app.
+
+5. **Leia e busque.** Os e-mails mais recentes aparecem primeiro e o resto chega em segundo plano. Aperte <kbd>/</kbd> e digite `de: Ana tem:anexo` para ver a busca com chips.
+
+</Steps>
+
+</TabItem>
+</Tabs>
 
 <AppPreview name="search" />
 

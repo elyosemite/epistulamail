@@ -1,6 +1,6 @@
 ---
 title: "Mot de passe et verrouillage"
-description: "Protéger vos messages même des personnes qui utilisent votre session Windows."
+description: "Protéger vos messages même des personnes qui utilisent votre ordinateur."
 sidebar:
   order: 1
 ---
@@ -12,7 +12,11 @@ Dans **Configurações → Privacidade** (Paramètres → Confidentialité) :
 
 - **Mot de passe d'EpistulaMail** : la clé de la base dépend désormais de lui (Argon2id). Le mot de passe n'est stocké nulle part ; oublié, les messages de cet ordinateur ne s'ouvrent plus, mais ils restent sur le serveur.
 - **Verrouiller après** : l'app ferme la base après un certain temps d'inactivité.
-- **Verrouiller avec Windows**.
+- **Verrouiller avec Windows** (Windows uniquement ; sous Linux, le verrouillage par inactivité continue et le verrouillage avec l'écran arrivera dans une prochaine version).
 - **Garder moins** : effacer de l'ordinateur ce qui est hors de la période choisie.
 
 <AppPreview name="unlock" width={26} />
+
+<Aside type="note" title="Sous Linux">
+Le verrouillage par inactivité fonctionne comme sous Windows. Le verrouillage avec l'écran n'existe pas encore sous Linux.
+</Aside>
