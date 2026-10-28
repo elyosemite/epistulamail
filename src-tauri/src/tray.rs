@@ -4,6 +4,7 @@
 //! do Epistula ligada, o menu ganha "Bloquear o Epistula"; bloqueado, perde "Novo e-mail" e
 //! "Sincronizar agora" (US10, CA3).
 
+#[cfg(windows)]
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -119,6 +120,7 @@ pub fn sync_snooze(app: &AppHandle) {
 }
 
 /// Ponto azul de 16 px para o ícone sobreposto da barra de tarefas.
+#[cfg(windows)]
 fn dot() -> Image<'static> {
     const SIZE: u32 = 16;
     let mut rgba = Vec::with_capacity((SIZE * SIZE * 4) as usize);
@@ -149,8 +151,11 @@ pub fn refresh(app: &AppHandle) {
             };
             let _ = tray.set_tooltip(Some(tip));
         }
-        if let Some(window) = app.get_webview_window("main") {
-            let _ = window.set_overlay_icon((unread > 0).then(dot));
+        #[cfg(windows)]
+        {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_overlay_icon((unread > 0).then(dot));
+            }
         }
     });
 }

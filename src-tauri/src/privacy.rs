@@ -3,7 +3,9 @@
 //! `lock.rs` e `keys.rs`; aqui fica a ordem das etapas e o estado do app. Logs: só eventos.
 
 use std::path::PathBuf;
-use std::time::{Duration, Instant};
+use std::time::Instant;
+#[cfg(windows)]
+use std::time::Duration;
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
@@ -373,7 +375,8 @@ pub async fn disk_encrypted(dir: PathBuf) -> Option<bool> {
 /// ou `lsblk`, ou saída inesperada).
 #[cfg(target_os = "linux")]
 fn linux_disk_encrypted(dir: &std::path::Path) -> Option<bool> {
-    let source = std::process::Command::new("findmnt").args(["-T", &dir.to_string_lossy(), "-o", "SOURCE", "-n"]).output().ok()?;
+    let dir = dir.to_string_lossy().to_string();
+    let source = std::process::Command::new("findmnt").args(["-T", dir.as_str(), "-o", "SOURCE", "-n"]).output().ok()?;
     if !source.status.success() {
         return None;
     }
@@ -383,7 +386,7 @@ fn linux_disk_encrypted(dir: &std::path::Path) -> Option<bool> {
     if source.is_empty() {
         return None;
     }
-    let stack = std::process::Command::new("lsblk").args(["-s", "-n", "-o", "TYPE", &source]).output().ok()?;
+    let stack = std::process::Command::new("lsblk").args(["-s", "-n", "-o", "TYPE", source.as_str()]).output().ok()?;
     if !stack.status.success() {
         return None;
     }
