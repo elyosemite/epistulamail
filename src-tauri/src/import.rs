@@ -79,7 +79,7 @@ pub fn free_space(dir: &Path) -> Option<u64> {
 
 #[cfg(unix)]
 pub fn free_space(dir: &Path) -> Option<u64> {
-    nix::sys::statvfs::statvfs(dir).ok().map(|s| s.blocks_available() as u64 * s.fragment_size() as u64)
+    nix::sys::statvfs::statvfs(dir).ok().map(|s| s.blocks_available() * s.fragment_size())
 }
 
 #[cfg(not(any(windows, unix)))]

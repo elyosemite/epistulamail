@@ -362,7 +362,7 @@ pub async fn disk_encrypted(dir: PathBuf) -> Option<bool> {
     #[cfg(target_os = "linux")]
     {
         let dir = dir.clone();
-        return tokio::task::spawn_blocking(move || linux_disk_encrypted(&dir)).await.ok()?;
+        tokio::task::spawn_blocking(move || linux_disk_encrypted(&dir)).await.ok()?
     }
     #[cfg(not(any(windows, target_os = "linux")))]
     {
@@ -375,7 +375,7 @@ pub async fn disk_encrypted(dir: PathBuf) -> Option<bool> {
 /// ou `lsblk`, ou saída inesperada).
 #[cfg(target_os = "linux")]
 fn linux_disk_encrypted(dir: &std::path::Path) -> Option<bool> {
-    let dir = dir.to_string_lossy().to_string();
+    let dir = dir.to_string_lossy().into_owned();
     let source = std::process::Command::new("findmnt").args(["-T", dir.as_str(), "-o", "SOURCE", "-n"]).output().ok()?;
     if !source.status.success() {
         return None;
@@ -401,6 +401,7 @@ pub fn stack_has_crypt(output: &str) -> bool {
 
 /// Valores de `System.Volume.BitLockerProtection`: 1 ligado, 2 desligado, 3 cifrando, 4 decifrando,
 /// 5 suspenso, 6 ligado e travado. Vazio: o volume não aceita BitLocker.
+#[cfg(windows)]
 pub fn bitlocker_state(value: &str) -> Option<bool> {
     match value {
         "1" | "3" | "6" => Some(true),
@@ -413,6 +414,7 @@ pub fn bitlocker_state(value: &str) -> Option<bool> {
 mod tests {
     use super::*;
 
+    #[cfg(windows)]
     #[test]
     fn bitlocker_values_map_to_a_warning_only_when_off() {
         assert_eq!(bitlocker_state("1"), Some(true));
