@@ -1,18 +1,18 @@
-# Release do Epistula: na tag vX.Y.Z, compila o instalador .exe (NSIS) e cria a release no GitHub como rascunho,
-# com as notas da seção da versão no CHANGELOG.md e o SHA-256 do instalador. Quem publica é uma pessoa, depois de
-# revisar o rascunho.
+# Release do Epistula: na tag vX.Y.Z, compila o instalador .exe (NSIS) e os pacotes Linux (AppImage e
+# .deb) e cria a release no GitHub como rascunho, com as notas da seção da versão no CHANGELOG.md e o
+# SHA-256 de cada arquivo. Quem publica é uma pessoa, depois de revisar o rascunho.
 #
-# "Run workflow" (workflow_dispatch) faz um ensaio: compila o mesmo instalador e o deixa como artefato da execução,
-# sem criar tag nem release.
+# "Run workflow" (workflow_dispatch) faz um ensaio: compila os mesmos pacotes e os deixa como artefato
+# da execução, sem criar tag nem release.
 #
 # Segredos do repositório (Settings → Secrets and variables → Actions):
 #   EPISTULA_GOOGLE_CLIENT_ID e EPISTULA_GOOGLE_CLIENT_SECRET (obrigatórios): o cliente OAuth "Desktop app" do Google,
-#     embutido no .exe na compilação (provider.rs, option_env!) até existir o servidor de login.
+#     embutido no binário na compilação (provider.rs, option_env!) até existir o servidor de login.
 #   EPISTULA_MS_CLIENT_ID (opcional).
-#   TAURI_SIGNING_PRIVATE_KEY e TAURI_SIGNING_PRIVATE_KEY_PASSWORD (obrigatórios): a chave que assina o instalador para
+#   TAURI_SIGNING_PRIVATE_KEY e TAURI_SIGNING_PRIVATE_KEY_PASSWORD (obrigatórios): a chave que assina os pacotes para
 #     a atualização automática; o app só instala o que a chave pública do tauri.conf.json confere. Perder a chave
 #     impede atualizar quem já instalou: guarde uma cópia fora do computador.
-# O instalador sai sem assinatura de código (ver CHANGELOG.md, "Avisos").
+# Os pacotes saem sem assinatura de código (ver CHANGELOG.md, "Avisos").
 name: Release
 
 on:
@@ -28,12 +28,131 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  linux:
+    name: Pacotes Linux
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versão
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(grep -m1 '"version"' src-tauri/tauri.conf.json | sed 's/.*"version": "\([^"]*\)".*/\1/')
+          node_version=$(grep -m1 '"version"' package.json | sed 's/.*"version": "\([^"]*\)".*/\1/')
+          cargo_version=$(grep -m1 '^version = ' src-tauri/Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+          if [[ "$version" != "$node_version" || "$version" != "$cargo_version" ]]; then
+            echo "Versões diferentes: tauri.conf.json $version, package.json $node_version, Cargo.toml $cargo_version"
+            exit 1
+          fi
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" && "${GITHUB_REF_NAME:-}" != "v$version" ]]; then
+            echo "A tag ${GITHUB_REF_NAME:-} não bate com a versão $version"
+            exit 1
+          fi
+          grep -q "^## \[$version\]" CHANGELOG.md || { echo "CHANGELOG.md não tem a seção [$version]"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Credenciais OAuth
+        shell: bash
+        env:
+          GOOGLE_ID: ${{ secrets.EPISTULA_GOOGLE_CLIENT_ID }}
+          GOOGLE_SECRET: ${{ secrets.EPISTULA_GOOGLE_CLIENT_SECRET }}
+        run: |
+          if [[ -z "${GOOGLE_ID:-}" || -z "${GOOGLE_SECRET:-}" ]]; then
+            echo "Cadastre os segredos EPISTULA_GOOGLE_CLIENT_ID e EPISTULA_GOOGLE_CLIENT_SECRET no repositório."
+            exit 1
+          fi
+
+      - name: Dependências do sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libdbus-1-dev \
+            libxdo-dev \
+            libssl-dev \
+            build-essential \
+            pkg-config \
+            perl \
+            curl \
+            wget \
+            file
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Testes do frontend
+        run: pnpm test
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          shared-key: release-linux
+
+      - name: Testes do backend
+        working-directory: src-tauri
+        run: cargo test --locked
+
+      - name: Pacotes
+        env:
+          EPISTULA_GOOGLE_CLIENT_ID: ${{ secrets.EPISTULA_GOOGLE_CLIENT_ID }}
+          EPISTULA_GOOGLE_CLIENT_SECRET: ${{ secrets.EPISTULA_GOOGLE_CLIENT_SECRET }}
+          EPISTULA_MS_CLIENT_ID: ${{ secrets.EPISTULA_MS_CLIENT_ID }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: pnpm tauri build --ci --bundles appimage,deb
+
+      - name: Artefatos Linux
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p out-linux
+          appimage=$(find src-tauri/target/release/bundle/appimage -name '*.AppImage' -print -quit)
+          deb=$(find src-tauri/target/release/bundle/deb -name '*.deb' -print -quit)
+          if [[ -z "$appimage" || -z "$deb" ]]; then
+            echo "AppImage ou .deb não encontrados em src-tauri/target/release/bundle"
+            exit 1
+          fi
+          if [[ ! -f "$appimage.sig" ]]; then
+            echo "Assinatura do AppImage não encontrada: confira os segredos TAURI_SIGNING_*"
+            exit 1
+          fi
+          product=$(grep -m1 '"productName"' src-tauri/tauri.conf.json | sed 's/.*"productName": "\([^"]*\)".*/\1/')
+          apname="${product}_${VERSION}_amd64.AppImage"
+          debname="${product}_${VERSION}_amd64.deb"
+          cp "$appimage" "out-linux/$apname"
+          cp "$appimage.sig" "out-linux/$apname.sig"
+          cp "$deb" "out-linux/$debname"
+          (cd out-linux && sha256sum "$apname" > "$apname.sha256" && sha256sum "$debname" > "$debname.sha256")
+
+      - name: Artefato do ensaio e da release
+        uses: actions/upload-artifact@v4
+        with:
+          name: epistula-linux-${{ steps.version.outputs.version }}
+          path: out-linux/
+          retention-days: 7
+
   windows:
-    name: Instalador Windows
+    name: Instalador Windows e release
+    needs: linux
     runs-on: windows-latest
     timeout-minutes: 60
     env:
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' }}
+      # O Perl portátil não fica mais no .cargo/config.toml: o Cargo não tem [env] por sistema.
+      OPENSSL_SRC_PERL: ${{ github.workspace }}/.tools/strawberry/perl/bin/perl.exe
     steps:
       - uses: actions/checkout@v4
 
@@ -72,7 +191,7 @@ jobs:
       - name: Testes do frontend
         run: pnpm test
 
-      # Perl portátil para o OpenSSL embutido do SQLCipher (src-tauri/.cargo/config.toml aponta para ele).
+      # Perl portátil para o OpenSSL embutido do SQLCipher.
       - uses: actions/cache@v4
         with:
           path: .tools
@@ -102,7 +221,14 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm tauri build --ci --bundles nsis
 
-      - name: SHA-256 e notas
+      # O job Linux roda antes e deixa o AppImage, o .deb e a assinatura do AppImage.
+      - name: Pacotes Linux
+        uses: actions/download-artifact@v4
+        with:
+          name: epistula-linux-${{ steps.version.outputs.version }}
+          path: out/
+
+      - name: SHA-256, notas e latest.json
         id: files
         shell: pwsh
         env:
@@ -122,34 +248,53 @@ jobs:
           $hash = (Get-FileHash "out/$name" -Algorithm SHA256).Hash.ToLower()
           "$hash  $name" | Set-Content -NoNewline -Encoding ascii "out/$name.sha256"
 
-          # Notas: o link do instalador, a seção da versão no CHANGELOG.md (sem o título) e o SHA-256.
+          # Pacotes Linux que o job anterior deixou em out/.
+          $appImageName = "${product}_${env:VERSION}_amd64.AppImage"
+          $debName = "${product}_${env:VERSION}_amd64.deb"
+          if (-not (Test-Path "out/$appImageName") -or -not (Test-Path "out/$debName")) { throw 'Pacotes Linux não encontrados em out/' }
+          $appImageSig = Get-Content "out/$appImageName.sig" -Raw
+          $appImageHash = (Get-FileHash "out/$appImageName" -Algorithm SHA256).Hash.ToLower()
+          $debHash = (Get-FileHash "out/$debName" -Algorithm SHA256).Hash.ToLower()
+
+          # Notas: os links dos três pacotes, a seção da versão no CHANGELOG.md (sem o título) e os SHA-256.
           $text = Get-Content CHANGELOG.md -Raw
           $start = [regex]::Match($text, "(?m)^## \[$([regex]::Escape($env:VERSION))\].*$")
           $rest = $text.Substring($start.Index + $start.Length)
           $next = [regex]::Match($rest, '(?m)^## \[')
           $section = if ($next.Success) { $rest.Substring(0, $next.Index) } else { $rest }
-          $url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/v$env:VERSION/$name"
-          $download = "**[Baixar o instalador para Windows ($name)]($url)** (64 bits, sem assinatura de código: veja os avisos abaixo)`n`n"
-          $notes = $download + $section.Trim() + "`n`n### Verificar o download`n`nSHA-256 de ``$name``:`n`n``````text`n$hash`n```````n`nNo PowerShell: ``(Get-FileHash .\$name).Hash``"
+          $base = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/v$env:VERSION"
+          $url = "$base/$name"
+          $appImageUrl = "$base/$appImageName"
+          $debUrl = "$base/$debName"
+          $download = "**[Baixar para Windows ($name)]($url)** (64 bits, sem assinatura de código: veja os avisos abaixo)`n`n"
+          $download += "**[Baixar para Linux (AppImage)]($appImageUrl)** (atualiza sozinho)`n`n"
+          $download += "**[Baixar para Linux (Debian/Ubuntu, .deb)]($debUrl)** (atualiza pelo gerenciador de pacotes)`n`n"
+          $verify = "### Verificar o download`n`nSHA-256 dos arquivos:`n`n``````text`n$hash  $name`n$appImageHash  $appImageName`n$debHash  $debName`n```````n`nNo PowerShell: ``(Get-FileHash .\$name).Hash``"
+          $notes = $download + $section.Trim() + "`n`n" + $verify
           Set-Content -Encoding utf8 out/notes.md $notes
 
           # latest.json: o que o app instalado consulta em releases/latest/download/latest.json. Só vale depois
-          # de a release ser publicada (rascunho não é "latest").
+          # de a release ser publicada (rascunho não é "latest"). O Linux usa o AppImage; o .deb não se atualiza sozinho.
           $latest = [ordered]@{
             version  = $env:VERSION
             notes    = $section.Trim()
             pub_date = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-            platforms = [ordered]@{ "windows-x86_64" = [ordered]@{ signature = $sig.Trim(); url = $url } }
+            platforms = [ordered]@{
+              "windows-x86_64" = [ordered]@{ signature = $sig.Trim(); url = $url }
+              "linux-x86_64"   = [ordered]@{ signature = $appImageSig.Trim(); url = $appImageUrl }
+            }
           }
           $latest | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8NoBOM out/latest.json
           "name=$name" >> $env:GITHUB_OUTPUT
           Write-Host "$name  $hash"
+          Write-Host "$appImageName  $appImageHash"
+          Write-Host "$debName  $debHash"
 
       - name: Artefato do ensaio
         if: env.DRY_RUN == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: epistula-${{ steps.version.outputs.version }}-windows
+          name: epistula-${{ steps.version.outputs.version }}-windows-linux
           path: out/
           retention-days: 7
 
@@ -159,7 +304,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
-          NAME: ${{ steps.files.outputs.name }}
         run: |
-          gh release create "v$env:VERSION" "out/$env:NAME" "out/$env:NAME.sha256" "out/$env:NAME.sig" out/latest.json `
+          $assets = Get-ChildItem out -File | Where-Object { $_.Name -notin @("notes.md", "latest.json") } | ForEach-Object { $_.FullName }
+          gh release create "v$env:VERSION" @assets "out/latest.json" `
             --draft --verify-tag --title "EpistulaMail $env:VERSION" --notes-file out/notes.md
