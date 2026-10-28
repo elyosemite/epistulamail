@@ -229,7 +229,7 @@ html[data-solo] .docs-demo { border-radius: 0; border: 0; min-width: 0; }
               </div>
               <h2>Por onde começar</h2>
               <p>Se é a primeira vez, siga o <b>Início rápido</b>: ele instala o EpistulaMail, conecta a sua conta e mostra a busca. Se você já usa, a <b>Documentação</b> tem cada recurso em detalhe, com o que acontece por trás e onde os seus dados ficam.</p>
-              <p>Tudo o que está aqui vale para o Windows 10 e 11. Por enquanto, só contas Gmail conectam; os outros provedores vêm em breve.</p>
+              <p>Tudo o que está aqui vale para o Windows 10 e 11 e para o Linux. Por enquanto, só contas Gmail conectam; os outros provedores vêm em breve.</p>
             </div>
           </div>
         </div>
@@ -272,11 +272,11 @@ html[data-solo] .docs-demo { border-radius: 0; border: 0; min-width: 0; }
                 <p class="docs-lede">Instale o EpistulaMail, conecte a sua conta e leia o primeiro e-mail em uns cinco minutos. No fim você terá a caixa de entrada sincronizada, guardada no seu computador num banco cifrado.</p>
               </div>
               <h2 id="precisa">O que você precisa</h2>
-              <ul><li><b>Windows 10 ou 11</b>, 64 bits</li><li><b>Uma conta Gmail.</b> Os outros provedores vêm em breve; enquanto isso, dá para abrir arquivos de e-mail sem conta.</li></ul>
+              <ul><li><b>Windows 10 ou 11, ou Linux</b>, 64 bits</li><li><b>Uma conta Gmail.</b> Os outros provedores vêm em breve; enquanto isso, dá para abrir arquivos de e-mail sem conta.</li></ul>
               <h2 id="passos-lista">Passo a passo</h2>
               <ol class="docs-steps">
                 <li><h3>Baixe o instalador</h3><p>Em <b>epistulamail.com</b>, clique em "Download EpistulaMail". O arquivo tem uns 11 MB. Antes de abrir, confira se ele é o mesmo que foi publicado:</p><div class="docs-code"><div class="docs-code__head">PowerShell<svg class="i i--sm"><use href="#i-copy"/></svg></div><pre>(Get-FileHash .\EpistulaMail_1.0.2_x64-setup.exe).Hash</pre></div><p>O resultado tem que ser igual ao SHA-256 das notas da versão.</p></li>
-                <li><h3>Instale</h3><p>O instalador ainda não tem assinatura de código, então o Windows mostra "O Windows protegeu o computador". Clique em <b>Mais informações</b> e em <b>Executar assim mesmo</b>. Ele instala só para o seu usuário, sem pedir administrador.</p></li>
+                <li><h3>Instale</h3><p>No Windows, o instalador ainda não tem assinatura de código, então o sistema mostra "O Windows protegeu o computador". Clique em <b>Mais informações</b> e em <b>Executar assim mesmo</b>. Ele instala só para o seu usuário, sem pedir administrador. No Linux, use o AppImage ou o pacote <code>.deb</code>.</p></li>
                 <li><h3>Conecte a sua conta</h3><p>Abra o EpistulaMail e escolha <b>Gmail</b>. O login acontece na página do Google, no seu navegador; a sua senha nunca passa pelo app. Enquanto o Google analisa o app, pode aparecer um aviso de que ele ainda não foi verificado.</p></li>
                 <li><h3>Leia e busque</h3><p>Os e-mails mais recentes aparecem primeiro e o resto chega em segundo plano. Aperte <kbd>/</kbd> e digite <code>de: Ana tem:anexo</code> para ver a busca com chips.</p></li>
               </ol>

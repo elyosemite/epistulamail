@@ -9,7 +9,7 @@ import { MenuPanel, anchorBelow, type Anchor } from "./Menu";
 
 const TECH = { openpgp: "OpenPGP", smime: "S/MIME" } as const;
 
-const TRUST = { trusted: "Confiável (raiz no Windows)", expired: "Vencida", untrusted: "Não confiável: a raiz não está no Windows" } as const;
+const TRUST = { trusted: "Confiável (raiz do sistema)", expired: "Vencida", untrusted: "Não confiável: a raiz não está no sistema" } as const;
 
 /** Selos de segurança abaixo do remetente; clicar abre os detalhes. */
 export function SecurityStatus({ security, onManageKeys }: { security: MessageSecurity; onManageKeys?: () => void }) {

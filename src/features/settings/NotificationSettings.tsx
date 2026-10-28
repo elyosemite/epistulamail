@@ -6,7 +6,7 @@ import { api, type Account, type NotifySettings } from "../../lib/tauri";
 import { AccountAvatar } from "../../ui/AccountAvatar";
 import { Segmented } from "../../ui/Segmented";
 import { Select } from "../../ui/Select";
-import { Setting, SettingList, SettingsGroup, SettingToggleRow } from "../../ui/SettingsSheet";
+import { Setting, SettingList, SettingsGroup, SettingNote, SettingToggleRow } from "../../ui/SettingsSheet";
 import { Spinner } from "../../ui/Spinner";
 import { useToast } from "../../ui/Toast";
 
@@ -19,10 +19,12 @@ const PRIVACY = [
 /** Notificações (US8, CA4): o que avisa, por conta, privacidade, Não perturbe e a bandeja. */
 export function NotificationSettings({ accounts }: { accounts: Account[] }) {
   const [settings, setSettings] = useState<NotifySettings | null>(null);
+  const [platform, setPlatform] = useState<"windows" | "linux" | "macos">("windows");
   const toast = useToast();
 
   useEffect(() => {
     api.getNotifySettings().then(setSettings).catch(() => toast({ kind: "error", title: "Não foi possível carregar as notificações" }));
+    api.platform().then(setPlatform).catch(() => undefined);
   }, [toast]);
 
   const current = useRef(settings);
@@ -71,6 +73,9 @@ export function NotificationSettings({ accounts }: { accounts: Account[] }) {
         <Setting labelId="notify-offline" label="Ficar sem conexão por mais de 1 hora">
           {toggle("offline", "notify-offline")}
         </Setting>
+        {platform === "linux" && (
+          <SettingNote>No Linux, as notificações do sistema chegam numa próxima versão. O sino e o histórico continuam funcionando.</SettingNote>
+        )}
       </SettingsGroup>
       <SettingsGroup title="Contas">
         <SettingList>
@@ -94,7 +99,7 @@ export function NotificationSettings({ accounts }: { accounts: Account[] }) {
         </SettingList>
       </SettingsGroup>
       <SettingsGroup title="Privacidade">
-        <Setting labelId="notify-privacy" label="O que aparece na notificação" description={'As notificações aparecem na tela bloqueada, e o Windows guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do EpistulaMail.'}>
+        <Setting labelId="notify-privacy" label="O que aparece na notificação" description={'As notificações aparecem na tela bloqueada, e o sistema guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do EpistulaMail.'}>
           <Segmented label="O que aparece na notificação" labelledBy="notify-privacy" options={PRIVACY} value={settings.privacy} onChange={(privacy) => change({ privacy })} />
         </Setting>
       </SettingsGroup>
@@ -112,7 +117,7 @@ export function NotificationSettings({ accounts }: { accounts: Account[] }) {
         <Setting labelId="notify-tray" label="Continuar na bandeja do sistema" description="Para receber notificações com a janela fechada. Para sair, use Sair no ícone da bandeja.">
           {toggle("trayOnClose", "notify-tray")}
         </Setting>
-        <Setting labelId="notify-autostart" label="Abrir o EpistulaMail ao iniciar o Windows" description="Abre direto na bandeja, sem mostrar a janela.">
+        <Setting labelId="notify-autostart" label="Abrir o EpistulaMail ao iniciar o sistema" description="Abre direto na bandeja, sem mostrar a janela.">
           {toggle("autostart", "notify-autostart")}
         </Setting>
       </SettingsGroup>

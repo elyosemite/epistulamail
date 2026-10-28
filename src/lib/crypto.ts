@@ -210,9 +210,9 @@ export function certUsage(cert: SmimeCert): string {
 }
 
 export const TRUST_LABEL: Record<SmimeCert["trust"], string> = {
-  trusted: "Confiável (raiz no Windows)",
+  trusted: "Confiável (raiz do sistema)",
   expired: "Vencida",
-  untrusted: "Não confiável: a raiz não está no Windows",
+  untrusted: "Não confiável: a raiz não está no sistema",
 };
 
 export const CERT_ORIGIN: Record<SmimeCert["origin"], string> = {

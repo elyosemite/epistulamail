@@ -225,7 +225,7 @@
                 </div>
                 <div class="settings__group">
                   <h4 class="settings__group-title">Privacidade</h4>
-                  <div class="setting"><div><div class="setting__label" id="priv">O que aparece na notificação</div><p class="setting__desc">As notificações aparecem na tela bloqueada, e o Windows guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do Epistula.</p></div>
+                  <div class="setting"><div><div class="setting__label" id="priv">O que aparece na notificação</div><p class="setting__desc">As notificações aparecem na tela bloqueada, e o sistema guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do Epistula.</p></div>
                     <div class="segmented" role="radiogroup" aria-labelledby="priv"><button class="btn btn--compact" type="button" role="radio" aria-checked="true">Só a conta</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Remetente e assunto</button></div></div>
                 </div>
                 <div class="settings__group">
@@ -272,7 +272,7 @@
                 <div class="settings__group">
                   <h4 class="settings__group-title">Senha do Epistula</h4>
                   <div class="setting">
-                    <div><div class="setting__label">Pedir uma senha ao abrir o Epistula</div><p class="setting__desc">Protege as mensagens guardadas neste computador até de quem usa o seu Windows. Desligada, quem entra no seu Windows abre o Epistula.</p></div>
+                    <div><div class="setting__label">Pedir uma senha ao abrir o Epistula</div><p class="setting__desc">Protege as mensagens guardadas neste computador até de quem usa o seu computador. Desligada, quem entra no seu computador abre o Epistula.</p></div>
                     <input type="checkbox" class="toggle" checked aria-label="Pedir uma senha ao abrir o Epistula">
                   </div>
                   <div class="setting">
@@ -280,7 +280,7 @@
                     <span class="select"><select aria-labelledby="p-lock"><option>5 minutos</option><option selected>15 minutos</option><option>30 minutos</option><option>1 hora</option><option>Nunca</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
                   </div>
                   <div class="setting">
-                    <div><div class="setting__label">Bloquear junto com o Windows</div><p class="setting__desc">Quando a tela do Windows bloquear (<kbd>Win</kbd>+<kbd>L</kbd>).</p></div>
+                    <div><div class="setting__label">Bloquear junto com o Windows</div><p class="setting__desc">Quando a tela do Windows bloquear (<kbd>Win</kbd>+<kbd>L</kbd>). No Linux, o bloqueio por inatividade continua; o bloqueio junto com a tela chega numa próxima versão.</p></div>
                     <input type="checkbox" class="toggle" checked aria-label="Bloquear junto com o Windows">
                   </div>
                   <div class="setting">
@@ -299,7 +299,7 @@
                     <svg class="i"><use href="#i-warning"/></svg>
                     <div>
                       <p class="section-message__title">Este disco não está cifrado</p>
-                      <p>O Windows pode copiar partes da memória do Epistula para o disco ao hibernar ou com pouca memória. Ligue a criptografia do disco (BitLocker) nas Configurações do Windows, em Privacidade e segurança.</p>
+                      <p>O sistema pode copiar partes da memória do Epistula para o disco ao hibernar ou com pouca memória. Ligue a criptografia do disco (BitLocker no Windows, LUKS no Linux).</p>
                     </div>
                   </div>
                 </div>
@@ -319,8 +319,8 @@
         </div>
       </div>
       <dl class="guidance">
-        <div><dt>Senha desligada</dt><dd>Só aparece o primeiro ajuste; "Bloquear depois de", "Bloquear junto com o Windows" e "Senha" surgem quando ela é ligada.</dd></div>
-        <div><dt>BitLocker</dt><dd>O aviso só aparece quando o disco do Epistula não está cifrado. É só recomendação: não bloqueia nada.</dd></div>
+        <div><dt>Senha desligada</dt><dd>Só aparece o primeiro ajuste; "Bloquear depois de", "Bloquear junto com o Windows" (só no Windows) e "Senha" surgem quando ela é ligada.</dd></div>
+        <div><dt>Disco cifrado</dt><dd>O aviso só aparece quando o disco do Epistula não está cifrado. É só recomendação: não bloqueia nada.</dd></div>
         <div><dt>Apagar</dt><dd>Só nas contas de que você saiu: a linha fica <code>.is-disabled</code>, mas o "Apagar" continua ativo. Apagar o conteúdo de uma conta em uso não adiantaria, porque o download em segundo plano o traria de volta; para isso, sair com "Apagar também".</dd></div>
       </dl>
     </section>
@@ -416,7 +416,7 @@
           <div class="settings__group">
             <h4 class="settings__group-title">Notificações → Privacidade</h4>
             <div class="setting">
-              <div><div class="setting__label" id="t1">O que aparece na notificação</div><p class="setting__desc">As notificações aparecem na tela bloqueada, e o Windows guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do Epistula.</p></div>
+              <div><div class="setting__label" id="t1">O que aparece na notificação</div><p class="setting__desc">As notificações aparecem na tela bloqueada, e o sistema guarda o texto delas sem cifra. "Só a conta" não deixa assunto nem remetente fora do Epistula.</p></div>
               <div class="segmented" role="radiogroup" aria-labelledby="t1"><button class="btn btn--compact" type="button" role="radio" aria-checked="true">Só a conta</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Remetente e assunto</button></div>
             </div>
           </div>

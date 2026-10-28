@@ -18,12 +18,13 @@ import { ChangePasswordDialog, DeleteAccountDataDialog, RemovePasswordDialog, Ro
 
 type Dialog = { kind: "set" } | { kind: "change" } | { kind: "remove" } | { kind: "rotate" } | { kind: "delete"; account: Account; bytes: number } | null;
 
-/** Privacidade (US10): senha do Epistula, bloqueio, chave de proteção, BitLocker e o que está guardado por conta. */
+/** Privacidade (US10): senha do Epistula, bloqueio, chave de proteção, aviso de disco sem cifra e o que está guardado por conta. */
 export function PrivacySettings() {
   const [settings, setSettings] = useState<Settings | null>(null);
   // Todas as contas, inclusive as de que você saiu: é aqui que se apagam os dados delas.
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [diskEncrypted, setDiskEncrypted] = useState<boolean | null>(null);
+  const [platform, setPlatform] = useState<"windows" | "linux" | "macos">("windows");
   const [dialog, setDialog] = useState<Dialog>(null);
   const { setIdleMinutes } = useAppLock();
   const toast = useToast();
@@ -36,6 +37,7 @@ export function PrivacySettings() {
   useEffect(() => {
     load();
     api.diskEncryption().then(setDiskEncrypted).catch(() => undefined);
+    api.platform().then(setPlatform).catch(() => undefined);
   }, [load]);
 
   if (!settings) return <Spinner label="Carregando a privacidade" />;
@@ -63,7 +65,7 @@ export function PrivacySettings() {
         <Setting
           labelId="privacy-password"
           label="Pedir uma senha ao abrir o EpistulaMail"
-          description="Protege as mensagens guardadas neste computador até de quem usa o seu Windows. Desligada, quem entra no seu Windows abre o EpistulaMail."
+          description="Protege as mensagens guardadas neste computador até de quem usa o seu computador. Desligada, quem entra no seu computador abre o EpistulaMail."
         >
           <input
             type="checkbox"
@@ -78,9 +80,14 @@ export function PrivacySettings() {
             <Setting labelId="privacy-idle" label="Bloquear depois de" description="Sem mexer no EpistulaMail por esse tempo.">
               <Select labelledBy="privacy-idle" value={settings.lock.minutes} options={LOCK_CHOICES} onChange={(v) => saveLock({ minutes: v as LockMinutes })} />
             </Setting>
-            <Setting labelId="privacy-windows" label="Bloquear junto com o Windows" description="Quando a tela do Windows bloquear (Win+L).">
-              <input type="checkbox" className="toggle" aria-labelledby="privacy-windows" checked={settings.lock.withWindows} onChange={(e) => saveLock({ withWindows: e.target.checked })} />
-            </Setting>
+            {platform === "windows" && (
+              <Setting labelId="privacy-windows" label="Bloquear junto com o Windows" description="Quando a tela do Windows bloquear (Win+L).">
+                <input type="checkbox" className="toggle" aria-labelledby="privacy-windows" checked={settings.lock.withWindows} onChange={(e) => saveLock({ withWindows: e.target.checked })} />
+              </Setting>
+            )}
+            {platform === "linux" && (
+              <SettingNote>No Linux, o bloqueio junto com a tela chega numa próxima versão. O bloqueio por inatividade continua funcionando.</SettingNote>
+            )}
             <Setting labelId="privacy-change" label="Senha" description="Trocar a senha não baixa nada de novo.">
               <Button appearance="subtle" icon="key" aria-describedby="privacy-change" onClick={() => setDialog({ kind: "change" })}>Trocar senha</Button>
             </Setting>
@@ -98,8 +105,9 @@ export function PrivacySettings() {
         </Setting>
         {diskEncrypted === false && (
           <SectionMessage appearance="warning" title="Este disco não está cifrado">
-            O Windows pode copiar partes da memória do EpistulaMail para o disco ao hibernar ou com pouca memória. Ligue a criptografia do disco
-            (BitLocker) nas Configurações do Windows, em Privacidade e segurança.
+            {platform === "linux"
+              ? "O sistema pode copiar partes da memória do EpistulaMail para o disco ao hibernar ou com pouca memória. Ligue a criptografia do disco (LUKS) nas configurações da sua distribuição."
+              : "O Windows pode copiar partes da memória do EpistulaMail para o disco ao hibernar ou com pouca memória. Ligue a criptografia do disco (BitLocker) nas Configurações do Windows, em Privacidade e segurança."}
           </SectionMessage>
         )}
       </SettingsGroup>

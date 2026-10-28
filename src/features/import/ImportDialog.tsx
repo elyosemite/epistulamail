@@ -299,7 +299,7 @@ function ReviewStep({ scan, into, onBack, onClose, onStart }: ReviewProps) {
         </div>
         {fits === false && (
           <SectionMessage appearance="error" title="Não cabe neste disco">
-            <p>{`Faltam cerca de ${formatBytes(missingBytes(scan, selected))}, contando a margem que o Windows precisa. Desmarque pastas ou libere espaço.`}</p>
+            <p>{`Faltam cerca de ${formatBytes(missingBytes(scan, selected))}, contando a margem que o sistema precisa. Desmarque pastas ou libere espaço.`}</p>
           </SectionMessage>
         )}
         {error && <SectionMessage appearance="error" title="Não foi possível começar"><p>{error.message}</p></SectionMessage>}

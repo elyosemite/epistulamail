@@ -707,6 +707,8 @@ export const api = {
   listAccounts: () => call<Account[]>("list_accounts"),
   /** A primeira tela apareceu: o backend libera a sincronização automática. */
   appReady: () => call<void>("app_ready"),
+  /** Sistema em que o app está rodando; a interface ajusta textos e opções (US17). */
+  platform: () => call<"windows" | "linux" | "macos">("platform"),
   listProviders: () => call<ProviderInfo[]>("list_providers"),
   connectAccount: (provider: string) => call<Connected>("connect_account", { provider }),
   reconnectAccount: (accountId: string) => call<Connected>("reconnect_account", { accountId }),
@@ -797,7 +799,7 @@ export const api = {
   wipeLocalData: () => call<void>("wipe_local_data"),
   getPrivacySettings: () => call<PrivacySettings>("get_privacy_settings"),
   setLockSettings: (settings: LockSettings) => call<LockSettings>("set_lock_settings", { minutes: settings.minutes, withWindows: settings.withWindows }),
-  /** O disco do Epistula está cifrado (BitLocker)? `null` quando não dá para saber. */
+  /** O disco do Epistula está cifrado (BitLocker no Windows, LUKS no Linux)? `null` quando não dá para saber. */
   diskEncryption: () => call<boolean | null>("disk_encryption"),
   /** Apaga deste computador os dados de uma conta de que você saiu. */
   deleteAccountData: (accountId: string) => call<void>("delete_account_data", { accountId }),

@@ -15,7 +15,7 @@ export const CANVAS_CHOICES: ReadonlyArray<{ value: CanvasChoice; label: string 
 export const THEME_CHOICES: ReadonlyArray<{ value: ThemeChoice; label: string; description: string; icon: string }> = [
   { value: "light", label: "Claro", description: "Sempre claro", icon: "sun" },
   { value: "dark", label: "Escuro", description: "Sempre escuro", icon: "moon" },
-  { value: "system", label: "Sistema", description: "Segue o Windows", icon: "monitor" },
+  { value: "system", label: "Sistema", description: "Segue o sistema", icon: "monitor" },
 ];
 
 /** Densidade da lista (US7, CA7), do mais arejado ao mais denso. */
