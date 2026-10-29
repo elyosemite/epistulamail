@@ -1,4 +1,4 @@
-//! IMAP sobre TLS com SASL XOAUTH2. Cada conta tem até duas sessões autenticadas (interativa e de
+//! IMAP sobre TLS ou STARTTLS, com SASL XOAUTH2 ou senha. Cada conta tem até duas sessões autenticadas (interativa e
 //! sincronização), reaproveitadas entre comandos e reabertas uma vez em caso de queda.
 //! Nada de conteúdo vai para log.
 
@@ -13,10 +13,11 @@ use mail_parser::MessageParser;
 use tokio::net::TcpStream;
 
 use crate::error::AppError;
+use crate::mail_config::{AuthMethod, Endpoint, Security};
 use crate::mailbox::{self, RemoteFolder, Role};
 use crate::message::{self, HeaderFields, MessageFlags};
 use crate::preview::{self, Preview};
-use crate::session::{AccountHandle, AppState, Lane};
+use crate::session::{AccountHandle, AppState, Credential, CredentialTarget, Lane};
 use crate::store::RemoteHeader;
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
@@ -74,33 +75,129 @@ async fn with_timeout<T>(fut: impl std::future::Future<Output = Result<T, AppErr
     })?
 }
 
-async fn open_session(handle: &AccountHandle, access_token: &str) -> Result<ImapSession, AppError> {
-    let host = handle.imap_host.as_str();
-    let provider = handle.provider;
+pub enum ImapCredential<'a> {
+    XOAuth2 { user: &'a str, token: &'a str },
+    Password { user: &'a str, password: &'a str },
+}
+
+struct PlainAuth {
+    payload: Option<String>,
+}
+
+impl async_imap::Authenticator for PlainAuth {
+    type Response = String;
+
+    fn process(&mut self, _challenge: &[u8]) -> String {
+        self.payload.take().unwrap_or_default()
+    }
+}
+
+fn plain_payload(user: &str, password: &str) -> String {
+    format!("\0{user}\0{password}")
+}
+
+fn should_retry_login(error: &async_imap::error::Error) -> bool {
+    match error {
+        async_imap::error::Error::Bad(_) => true,
+        async_imap::error::Error::No(message) => {
+            let message = message.to_lowercase();
+            message.contains("mechanism")
+                || message.contains("unsupported")
+                || message.contains("not supported")
+                || message.contains("disabled")
+        }
+        _ => false,
+    }
+}
+
+fn auth_error(provider: Option<crate::provider::Provider>) -> impl Fn(async_imap::error::Error) -> AppError {
+    move |e| match e {
+        async_imap::error::Error::No(_) | async_imap::error::Error::Bad(_) => {
+            tracing::warn!(error = %e, ?provider, "servidor IMAP recusou o login");
+            AppError::ImapAuth
+        }
+        other => {
+            tracing::warn!(error = %other, ?provider, "falha durante o login IMAP");
+            AppError::ImapConnection
+        }
+    }
+}
+
+async fn tls_connect(host: &str, tcp: TcpStream) -> Result<TlsStream, AppError> {
+    async_native_tls::TlsConnector::new().connect(host, tcp).await.map_err(|e| {
+        tracing::warn!(error = %e, "falha no handshake TLS");
+        AppError::ImapConnection
+    })
+}
+
+async fn connect_client(endpoint: &Endpoint) -> Result<async_imap::Client<TlsStream>, AppError> {
+    let host = endpoint.host.as_str();
+    let tcp = TcpStream::connect((host, endpoint.port)).await.map_err(connection_error("tcp"))?;
+    match endpoint.security {
+        Security::Tls => {
+            let mut client = async_imap::Client::new(tls_connect(host, tcp).await?);
+            client.read_response().await.ok_or(AppError::ImapConnection)?.map_err(connection_error("greeting"))?;
+            Ok(client)
+        }
+        Security::StartTls => {
+            let mut client = async_imap::Client::new(tcp);
+            client.read_response().await.ok_or(AppError::ImapConnection)?.map_err(connection_error("greeting"))?;
+            client.run_command_and_check_ok("STARTTLS", None).await.map_err(imap_error("starttls"))?;
+            let client = async_imap::Client::new(tls_connect(host, client.into_inner()).await?);
+            Ok(client)
+        }
+    }
+}
+
+async fn open_session(endpoint: &Endpoint, credential: ImapCredential<'_>, provider: Option<crate::provider::Provider>) -> Result<ImapSession, AppError> {
+    let error = auth_error(provider);
     with_timeout(
         async {
-            let tcp = TcpStream::connect((host, handle.imap_port)).await.map_err(connection_error("tcp"))?;
-            let tls = async_native_tls::TlsConnector::new().connect(host, tcp).await.map_err(|e| {
-                tracing::warn!(error = %e, "falha no handshake TLS");
-                AppError::ImapConnection
-            })?;
-            let mut client = async_imap::Client::new(tls);
-            client.read_response().await.ok_or(AppError::ImapConnection)?.map_err(connection_error("greeting"))?;
-            let auth = XOAuth2 { payload: xoauth2_payload(&handle.email, access_token), sent: false };
-            client.authenticate("XOAUTH2", auth).await.map_err(|(e, _)| match e {
-                async_imap::error::Error::No(_) | async_imap::error::Error::Bad(_) => {
-                    tracing::warn!(error = %e, ?provider, "servidor IMAP recusou o XOAUTH2");
-                    AppError::ImapAuth
+            let client = connect_client(endpoint).await?;
+            match credential {
+                ImapCredential::XOAuth2 { user, token } => {
+                    let auth = XOAuth2 { payload: xoauth2_payload(user, token), sent: false };
+                    client.authenticate("XOAUTH2", auth).await.map_err(|(e, _)| error(e))
                 }
-                other => {
-                    tracing::warn!(error = %other, ?provider, "falha durante o login IMAP");
-                    AppError::ImapConnection
+                ImapCredential::Password { user, password } => {
+                    let auth = PlainAuth { payload: Some(plain_payload(user, password)) };
+                    match client.authenticate("PLAIN", auth).await {
+                        Ok(session) => Ok(session),
+                        Err((e, _)) if should_retry_login(&e) => {
+                            let client = connect_client(endpoint).await?;
+                            client.login(user, password).await.map_err(|(e, _)| error(e))
+                        }
+                        Err((e, _)) => Err(error(e)),
+                    }
                 }
-            })
+            }
         },
         CONNECT_TIMEOUT,
     )
     .await
+}
+
+fn imap_credential<'a>(handle: &'a AccountHandle, credential: &'a Credential) -> ImapCredential<'a> {
+    let user = handle.config.incoming.username.as_str();
+    match credential {
+        Credential::OAuth(token) => ImapCredential::XOAuth2 { user, token },
+        Credential::Password(password) => ImapCredential::Password { user, password },
+    }
+}
+
+pub async fn test_password(endpoint: &Endpoint, password: &str) -> Result<(), AppError> {
+    if endpoint.auth != AuthMethod::Password {
+        return Err(AppError::ProviderUnavailable);
+    }
+    let mut session = open_session(
+        endpoint,
+        ImapCredential::Password { user: &endpoint.username, password },
+        None,
+    )
+    .await?;
+    session.select("INBOX").await.map_err(imap_error("select"))?;
+    let _ = session.logout().await;
+    Ok(())
 }
 
 /// Executa `op` numa sessão da conta, abrindo-a se preciso. Em queda de conexão (ou timeout),
@@ -113,12 +210,24 @@ where
     let mut force_refresh = false;
     for attempt in 0..2 {
         if guard.is_none() {
-            let token = state.access(handle, force_refresh).await?;
-            match open_session(handle, &token).await {
+            let credential = match state.credentials(handle, CredentialTarget::Incoming, force_refresh).await {
+                Ok(credential) => credential,
+                Err(e @ AppError::MailAuth) => {
+                    state.lose_access(handle).await;
+                    return Err(e);
+                }
+                Err(e) => return Err(e),
+            };
+            let is_oauth = credential.is_oauth();
+            match open_session(&handle.config.incoming, imap_credential(handle, &credential), handle.provider).await {
                 Ok(session) => *guard = Some(session),
-                Err(AppError::ImapAuth) if attempt == 0 => {
+                Err(AppError::ImapAuth) if attempt == 0 && is_oauth => {
                     force_refresh = true;
                     continue;
+                }
+                Err(e @ AppError::ImapAuth) if !is_oauth => {
+                    state.lose_access(handle).await;
+                    return Err(e);
                 }
                 Err(e) => return Err(e),
             }
@@ -460,6 +569,20 @@ pub async fn create_mailbox(session: &mut ImapSession, encoded: &str) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn plain_payload_follows_sasl_format() {
+        assert_eq!(plain_payload("ana@exemplo.com", "segredo"), "\0ana@exemplo.com\0segredo");
+    }
+
+    #[test]
+    fn login_is_only_retried_when_the_mechanism_is_unavailable() {
+        use async_imap::error::Error;
+        assert!(should_retry_login(&Error::Bad("unknown command".into())));
+        assert!(should_retry_login(&Error::No("unsupported authentication mechanism".into())));
+        assert!(!should_retry_login(&Error::No("authentication failed".into())));
+        assert!(!should_retry_login(&Error::ConnectionLost));
+    }
 
     #[test]
     fn xoauth2_payload_follows_sasl_format() {

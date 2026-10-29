@@ -32,6 +32,7 @@ pub const MIGRATIONS: &[&str] = &[
     include_str!("../migrations/0011_arquivos.sql"),
     include_str!("../migrations/0012_busca.sql"),
     include_str!("../migrations/0013_graph.sql"),
+    include_str!("../migrations/0014_configuracao_manual.sql"),
 ];
 
 /// Versão do esquema de cifra gravada em `app_setting` (`cipher_scheme`). 1 = SQLCipher 4 com chave
@@ -337,6 +338,42 @@ mod tests {
         drop(db);
         let again = Db::open(&path, &key).unwrap();
         assert_eq!(version(&again), MIGRATIONS.len() as i64);
+    }
+
+    #[test]
+    fn migration_0014_preserves_and_expands_provider_config() {
+        let (_dir, path) = temp_path();
+        let key = new_key();
+        {
+            let db = Db::open_with(&path, &key, &MIGRATIONS[..MIGRATIONS.len() - 1]).unwrap();
+            db.with(|c| {
+                c.execute_batch(
+                    "INSERT INTO account (id, provider, email, display_name, color, position, status, created_at)
+                     VALUES ('a1', 'outlook', 'ana@exemplo.com', 'Ana', 'blue', 0, 'active', 0);
+                     INSERT INTO provider_config (account_id, auth_kind, imap_host, imap_port, imap_security, smtp_host, smtp_port, smtp_security)
+                     VALUES ('a1', 'oauth2', 'outlook.office365.com', 993, 'tls', 'smtp.office365.com', 587, 'starttls');",
+                )
+                .map_err(sql_error("teste"))?;
+                Ok(())
+            })
+            .unwrap();
+        }
+        let db = Db::open(&path, &key).unwrap();
+        db.with(|c| {
+            let (protocol, username, credentials, outgoing_auth): (String, String, String, String) = c
+                .query_row(
+                    "SELECT incoming_protocol, incoming_username, outgoing_credentials, outgoing_auth FROM provider_config WHERE account_id = 'a1'",
+                    [],
+                    |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
+                )
+                .unwrap();
+            assert_eq!(protocol, "graph");
+            assert_eq!(username, "ana@exemplo.com");
+            assert_eq!(credentials, "same");
+            assert_eq!(outgoing_auth, "oauth2");
+            Ok(())
+        })
+        .unwrap();
     }
 
     #[test]

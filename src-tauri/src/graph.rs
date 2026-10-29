@@ -26,7 +26,7 @@ const MESSAGE_SELECT: &str = "id,internetMessageId,conversationId,subject,from,t
 
 /// A conta usa o backend Graph?
 pub fn applies(handle: &AccountHandle) -> bool {
-    matches!(handle.provider, Provider::Microsoft)
+    matches!(handle.provider, Some(Provider::Microsoft))
 }
 
 #[derive(Deserialize)]

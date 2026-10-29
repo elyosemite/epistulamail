@@ -13,6 +13,7 @@ mod key_lookup;
 mod keys;
 mod links;
 mod lock;
+mod mail_config;
 mod mailbox;
 mod message;
 mod oauth;
@@ -68,6 +69,9 @@ fn exclude_from_error_reports() {
 /// padrão; ficam ativas se o refresh token ainda estiver no keyring.
 async fn restore_from_index(state: &AppState) -> Result<(), AppError> {
     for entry in secrets::load_index()? {
+        if entry.provider == "custom" {
+            continue;
+        }
         let Some(catalog) = providers::find(&entry.provider) else { continue };
         if !message::valid_account_id(&entry.id) {
             continue;
@@ -290,6 +294,8 @@ pub fn run() {
             commands::platform,
             commands::list_providers,
             commands::connect_account,
+            commands::test_manual_account,
+            commands::connect_manual_account,
             commands::reconnect_account,
             commands::cancel_connect,
             commands::update_account,

@@ -8,6 +8,7 @@ use serde::Serialize;
 
 use crate::db::sql_error;
 use crate::error::AppError;
+use crate::mail_config::{AuthMethod, Endpoint, MailConfig, Protocol, Security};
 use crate::mailbox::{RemoteFolder, Role};
 use crate::message::{AttachmentInfo, HeaderFields, MessageFlags};
 use crate::providers::CatalogEntry;
@@ -187,22 +188,185 @@ pub fn insert_account(conn: &mut Connection, id: &str, entry: &CatalogEntry, ema
     let (Some(imap), Some(smtp)) = (entry.imap, entry.smtp) else { return Err(AppError::ProviderUnavailable) };
     let display_name = validate_name(display_name)?;
     let color = validate_color(color)?;
+    let email = email.to_lowercase();
+    let protocol = if entry.id == "outlook" { Protocol::Graph } else { Protocol::Imap };
     let tx = conn.transaction().map_err(sql_error("nova conta"))?;
     tx.execute(
         "INSERT INTO account (id, provider, email, display_name, color, position, status, created_at)
          VALUES (?1, ?2, ?3, ?4, ?5, (SELECT coalesce(max(position) + 1, 0) FROM account), 'active', ?6)",
-        params![id, entry.id, email.to_lowercase(), display_name, color, now()],
+        params![id, entry.id, email, display_name, color, now()],
     )
     .map_err(sql_error("nova conta"))?;
     tx.execute(
-        "INSERT INTO provider_config (account_id, auth_kind, imap_host, imap_port, imap_security, smtp_host, smtp_port, smtp_security)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-        params![id, entry.auth.as_str(), imap.host, imap.port, imap.security.as_str(), smtp.host, smtp.port, smtp.security.as_str()],
+        "INSERT INTO provider_config (
+            account_id, incoming_protocol, incoming_host, incoming_port, incoming_security,
+            incoming_auth, incoming_username, outgoing_host, outgoing_port, outgoing_security,
+            outgoing_auth, outgoing_username, outgoing_credentials
+         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, 'same')",
+        params![
+            id,
+            protocol.as_str(),
+            imap.host,
+            imap.port,
+            imap.security.as_str(),
+            entry.auth.as_str(),
+            email,
+            smtp.host,
+            smtp.port,
+            smtp.security.as_str(),
+            entry.auth.as_str(),
+            email,
+        ],
     )
     .map_err(sql_error("nova conta"))?;
     tx.commit().map_err(sql_error("nova conta"))?;
     tracing::info!(provider = entry.id, "conta criada no banco");
     require_account(conn, id)
+}
+
+pub fn insert_manual_account(
+    conn: &mut Connection,
+    id: &str,
+    email: &str,
+    display_name: &str,
+    color: &str,
+    config: &MailConfig,
+) -> Result<Account, AppError> {
+    config.validate()?;
+    let display_name = validate_name(display_name)?;
+    let color = validate_color(color)?;
+    let email = email.to_lowercase();
+    if email != config.incoming.username.to_lowercase() {
+        return Err(AppError::InvalidInput);
+    }
+    let tx = conn.transaction().map_err(sql_error("nova conta"))?;
+    tx.execute(
+        "INSERT INTO account (id, provider, email, display_name, color, position, status, created_at)
+         VALUES (?1, 'custom', ?2, ?3, ?4, (SELECT coalesce(max(position) + 1, 0) FROM account), 'active', ?5)",
+        params![id, email, display_name, color, now()],
+    )
+    .map_err(sql_error("nova conta"))?;
+    write_provider_config(&tx, id, config)?;
+    tx.commit().map_err(sql_error("nova conta"))?;
+    tracing::info!("conta manual criada no banco");
+    require_account(conn, id)
+}
+
+pub fn update_manual_config(conn: &mut Connection, id: &str, config: &MailConfig) -> Result<Account, AppError> {
+    config.validate()?;
+    require_account(conn, id)?;
+    let email = config.incoming.username.to_lowercase();
+    let tx = conn.transaction().map_err(sql_error("configuração da conta"))?;
+    tx.execute("UPDATE account SET email = ?2 WHERE id = ?1", params![id, email]).map_err(sql_error("configuração da conta"))?;
+    write_provider_config(&tx, id, config)?;
+    tx.commit().map_err(sql_error("configuração da conta"))?;
+    require_account(conn, id)
+}
+
+fn write_provider_config(conn: &Connection, id: &str, config: &MailConfig) -> Result<(), AppError> {
+    conn.execute(
+        "INSERT INTO provider_config (
+            account_id, incoming_protocol, incoming_host, incoming_port, incoming_security,
+            incoming_auth, incoming_username, outgoing_host, outgoing_port, outgoing_security,
+            outgoing_auth, outgoing_username, outgoing_credentials
+         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
+         ON CONFLICT (account_id) DO UPDATE SET
+            incoming_protocol = excluded.incoming_protocol,
+            incoming_host = excluded.incoming_host,
+            incoming_port = excluded.incoming_port,
+            incoming_security = excluded.incoming_security,
+            incoming_auth = excluded.incoming_auth,
+            incoming_username = excluded.incoming_username,
+            outgoing_host = excluded.outgoing_host,
+            outgoing_port = excluded.outgoing_port,
+            outgoing_security = excluded.outgoing_security,
+            outgoing_auth = excluded.outgoing_auth,
+            outgoing_username = excluded.outgoing_username,
+            outgoing_credentials = excluded.outgoing_credentials",
+        params![
+            id,
+            config.protocol.as_str(),
+            config.incoming.host,
+            config.incoming.port,
+            config.incoming.security.as_str(),
+            config.incoming.auth.as_str(),
+            config.incoming.username,
+            config.outgoing.host,
+            config.outgoing.port,
+            config.outgoing.security.as_str(),
+            config.outgoing.auth.as_str(),
+            config.outgoing.username,
+            if config.outgoing_shared { "same" } else { "separate" },
+        ],
+    )
+    .map_err(sql_error("configuração da conta"))?;
+    Ok(())
+}
+
+struct RawConfig {
+    protocol: String,
+    incoming_host: String,
+    incoming_port: i64,
+    incoming_security: String,
+    incoming_auth: String,
+    incoming_username: String,
+    outgoing_host: String,
+    outgoing_port: i64,
+    outgoing_security: String,
+    outgoing_auth: String,
+    outgoing_username: String,
+    outgoing_credentials: String,
+}
+
+fn raw_config(row: &Row<'_>) -> rusqlite::Result<RawConfig> {
+    Ok(RawConfig {
+        protocol: row.get(0)?,
+        incoming_host: row.get(1)?,
+        incoming_port: row.get(2)?,
+        incoming_security: row.get(3)?,
+        incoming_auth: row.get(4)?,
+        incoming_username: row.get(5)?,
+        outgoing_host: row.get(6)?,
+        outgoing_port: row.get(7)?,
+        outgoing_security: row.get(8)?,
+        outgoing_auth: row.get(9)?,
+        outgoing_username: row.get(10)?,
+        outgoing_credentials: row.get(11)?,
+    })
+}
+
+pub fn mail_config(conn: &Connection, account_id: &str) -> Result<MailConfig, AppError> {
+    let raw = conn
+        .query_row(
+            "SELECT incoming_protocol, incoming_host, incoming_port, incoming_security,
+                    incoming_auth, incoming_username, outgoing_host, outgoing_port,
+                    outgoing_security, outgoing_auth, outgoing_username, outgoing_credentials
+             FROM provider_config WHERE account_id = ?1",
+            [account_id],
+            raw_config,
+        )
+        .optional()
+        .map_err(sql_error("configuração da conta"))?
+        .ok_or(AppError::AccountNotFound)?;
+    let port = |value: i64| u16::try_from(value).map_err(|_| AppError::Storage);
+    Ok(MailConfig {
+        protocol: Protocol::parse(&raw.protocol).ok_or(AppError::Storage)?,
+        incoming: Endpoint {
+            host: raw.incoming_host,
+            port: port(raw.incoming_port)?,
+            security: Security::parse(&raw.incoming_security).ok_or(AppError::Storage)?,
+            auth: AuthMethod::parse(&raw.incoming_auth).ok_or(AppError::Storage)?,
+            username: raw.incoming_username,
+        },
+        outgoing: Endpoint {
+            host: raw.outgoing_host,
+            port: port(raw.outgoing_port)?,
+            security: Security::parse(&raw.outgoing_security).ok_or(AppError::Storage)?,
+            auth: AuthMethod::parse(&raw.outgoing_auth).ok_or(AppError::Storage)?,
+            username: raw.outgoing_username,
+        },
+        outgoing_shared: raw.outgoing_credentials == "same",
+    })
 }
 
 pub fn update_account(conn: &Connection, id: &str, display_name: Option<&str>, color: Option<&str>) -> Result<Account, AppError> {
@@ -399,13 +563,6 @@ pub fn set_account_interval(conn: &mut Connection, account_ids: &[String], minut
     tx.commit().map_err(sql_error("sincronização"))?;
     tracing::info!(accounts = account_ids.len(), use_default, "intervalo de sincronização alterado");
     Ok(())
-}
-
-pub fn imap_server(conn: &Connection, account_id: &str) -> Result<(String, u16), AppError> {
-    conn.query_row("SELECT imap_host, imap_port FROM provider_config WHERE account_id = ?1", [account_id], |r| Ok((r.get(0)?, r.get(1)?)))
-        .optional()
-        .map_err(sql_error("servidor da conta"))?
-        .ok_or(AppError::AccountNotFound)
 }
 
 // ---------------------------------------------------------------- pastas
@@ -2133,14 +2290,6 @@ pub fn sender_name(conn: &Connection, account_id: &str) -> Result<Option<String>
         .map_err(sql_error("conta"))
 }
 
-/// Servidor de envio da conta.
-pub fn smtp_server(conn: &Connection, account_id: &str) -> Result<(String, u16, String), AppError> {
-    conn.query_row("SELECT smtp_host, smtp_port, smtp_security FROM provider_config WHERE account_id = ?1", [account_id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
-        .optional()
-        .map_err(sql_error("servidor da conta"))?
-        .ok_or(AppError::AccountNotFound)
-}
-
 // ---------------------------------------------------------------- mover, excluir, arquivar (CA4, CA5)
 
 /// Tira as mensagens da pasta no banco depois que o servidor confirmou a operação. Com `in_transit`,
@@ -2730,6 +2879,33 @@ pub(crate) mod tests {
             let dup = insert_account(c, &new_account_id(), gmail(), "joao@gmail.com", "Outra", "teal");
             assert_eq!(dup.err(), Some(AppError::Storage));
             assert_eq!(find_account(c, "gmail", "JOAO@gmail.com").unwrap().unwrap().id, a.id);
+            Ok(())
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn manual_account_roundtrips_its_config() {
+        let t = test_db();
+        t.db.with(|c| {
+            let id = new_account_id();
+            let endpoint = || Endpoint {
+                host: "mail.exemplo.com".into(),
+                port: 993,
+                security: Security::Tls,
+                auth: AuthMethod::Password,
+                username: "ana@exemplo.com".into(),
+            };
+            let mut config = MailConfig { protocol: Protocol::Imap, incoming: endpoint(), outgoing: endpoint(), outgoing_shared: true };
+            config.outgoing.port = 465;
+            let account = insert_manual_account(c, &id, "ana@exemplo.com", "Ana", "blue", &config).unwrap();
+            assert_eq!((account.provider.as_str(), account.email.as_str()), ("custom", "ana@exemplo.com"));
+            assert_eq!(mail_config(c, &id).unwrap(), config);
+            config.incoming.username = "bia@exemplo.com".into();
+            config.outgoing.username = "bia@exemplo.com".into();
+            let updated = update_manual_config(c, &id, &config).unwrap();
+            assert_eq!(updated.email, "bia@exemplo.com");
+            assert_eq!(mail_config(c, &id).unwrap(), config);
             Ok(())
         })
         .unwrap();

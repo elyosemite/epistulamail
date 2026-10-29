@@ -78,7 +78,7 @@ O que funciona hoje:
 
 **Contas e segurança**
 
-- Google por IMAP e SMTP, Microsoft pelo Microsoft Graph, sempre sobre TLS. Nenhuma senha passa pelo app.
+- Google por IMAP e SMTP, Microsoft pelo Microsoft Graph e contas IMAP/SMTP manuais com senha normal, sempre sobre TLS. Nenhuma senha passa pelo app.
 - Várias contas ao mesmo tempo, cada uma com nome, cor e foto, e troca com um clique.
 - Banco local SQLCipher (AES-256, HMAC por página), com a chave no cofre do sistema (Gerenciador de Credenciais no Windows, Secret Service no Linux) e exclusão segura das páginas apagadas.
 - Leitura segura: o HTML de terceiros é limpo por allowlist no processo Rust e exibido num iframe sem scripts. As imagens externas ficam bloqueadas até você liberar, mensagem por mensagem.
@@ -143,7 +143,7 @@ O que funciona hoje:
 
 O que ainda não existe:
 
-- Outros provedores além do Google e da Microsoft. O modelo de dados já prevê Yahoo, iCloud, Zoho, GMX, AOL e IMAP genérico.
+- Yahoo, iCloud, Zoho, GMX, AOL e POP3. Contas IMAP/SMTP manuais já estão disponíveis.
 - O servidor de login (veja abaixo) e os arquivos `.olm` do Outlook para Mac.
 - Assinatura de código do instalador (veja [Instalar](#instalar)).
 

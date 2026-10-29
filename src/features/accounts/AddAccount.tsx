@@ -8,6 +8,7 @@ import { EmptyState } from "../../ui/EmptyState";
 import { ProviderGrid } from "../../ui/ProviderGrid";
 import { SectionMessage } from "../../ui/SectionMessage";
 import { Spinner } from "../../ui/Spinner";
+import { ManualAccount } from "./ManualAccount";
 
 const UNKNOWN_ERROR: AppError = { kind: "AuthFailed", message: "Algo deu errado. Tente de novo." };
 
@@ -28,6 +29,10 @@ export function AddAccount({ first, onConnected, onCancel, onOpenFile }: AddAcco
     api.listProviders().then(setProviders).catch(() => setProviders([]));
   }, []);
 
+  if (picked?.id === "custom") {
+    return <ManualAccount onConnected={onConnected} onBack={() => setPicked(null)} />;
+  }
+
   if (picked) {
     return (
       <ConnectFlow
@@ -42,7 +47,7 @@ export function AddAccount({ first, onConnected, onCancel, onOpenFile }: AddAcco
     <div style={{ display: "grid", gap: "var(--space-300)" }}>
       <EmptyState
         title={first ? "Conecte seu e-mail ou abra um arquivo" : "Adicionar conta"}
-        description="Escolha o serviço do seu e-mail. O login acontece no navegador, na página do provedor; o EpistulaMail nunca vê sua senha."
+        description="Escolha o serviço do seu e-mail. No Gmail e no Outlook, o login acontece no navegador; em Outro, você informa os servidores."
         actions={first ? undefined : <Button appearance="subtle" onClick={onCancel}>Cancelar</Button>}
       />
       {providers === null ? <Spinner size="lg" label="Carregando provedores" /> : <ProviderGrid providers={providers} onPick={setPicked} />}

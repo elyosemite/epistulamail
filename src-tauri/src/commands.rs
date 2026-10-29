@@ -8,6 +8,7 @@ use tauri_plugin_opener::OpenerExt;
 
 use crate::error::AppError;
 use crate::imap_client;
+use crate::mail_config::{AuthMethod, Endpoint, MailConfig, Protocol, Security};
 use crate::mailbox::Folder;
 use crate::message::{self, Cursor, FolderKey, MessageFlags, MessageHeader, MessageKey, MessageView};
 use crate::oauth;
@@ -20,6 +21,7 @@ use crate::links;
 use crate::{openpgp, pgp_store};
 use crate::{rule_runner, rules};
 use crate::privacy::{self, LockStatus};
+use crate::secrets;
 use crate::{moves, send, sync};
 use zeroize::Zeroizing;
 
@@ -86,6 +88,157 @@ pub fn list_providers() -> Vec<ProviderView> {
     providers::views()
 }
 
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ManualEndpointInput {
+    host: String,
+    port: u16,
+    security: String,
+    auth: String,
+    username: String,
+    password: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ManualAccountInput {
+    incoming: ManualEndpointInput,
+    outgoing: ManualEndpointInput,
+    use_incoming_credentials: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EndpointTest {
+    pub ok: bool,
+    pub message: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ManualTest {
+    pub incoming: EndpointTest,
+    pub outgoing: EndpointTest,
+}
+
+fn manual_endpoint(input: &ManualEndpointInput) -> Result<Endpoint, AppError> {
+    let security = match input.security.as_str() {
+        "tls" => Security::Tls,
+        "starttls" => Security::StartTls,
+        _ => return Err(AppError::InvalidInput),
+    };
+    let auth = match input.auth.as_str() {
+        "password" => AuthMethod::Password,
+        _ => return Err(AppError::ProviderUnavailable),
+    };
+    Ok(Endpoint {
+        host: input.host.clone(),
+        port: input.port,
+        security,
+        auth,
+        username: input.username.clone(),
+    })
+}
+
+fn manual_config(input: ManualAccountInput) -> Result<(MailConfig, Zeroizing<String>, Zeroizing<String>), AppError> {
+    if input.incoming.password.as_deref().unwrap_or_default().is_empty() {
+        return Err(AppError::MailAuth);
+    }
+    let incoming_password = Zeroizing::new(input.incoming.password.clone().unwrap_or_default());
+    let incoming = manual_endpoint(&input.incoming)?;
+    let mut outgoing = manual_endpoint(&input.outgoing)?;
+    let outgoing_password = if input.use_incoming_credentials {
+        outgoing.username = incoming.username.clone();
+        incoming_password.clone()
+    } else {
+        let password = input.outgoing.password.unwrap_or_default();
+        if password.is_empty() {
+            return Err(AppError::MailAuth);
+        }
+        Zeroizing::new(password)
+    };
+    let config = MailConfig {
+        protocol: Protocol::Imap,
+        incoming,
+        outgoing,
+        outgoing_shared: input.use_incoming_credentials,
+    };
+    config.validate()?;
+    Ok((config, incoming_password, outgoing_password))
+}
+
+fn endpoint_test(result: Result<(), AppError>) -> EndpointTest {
+    match result {
+        Ok(()) => EndpointTest { ok: true, message: "Conectado.".into() },
+        Err(e) => EndpointTest { ok: false, message: e.to_string() },
+    }
+}
+
+#[tauri::command]
+pub async fn test_manual_account(input: ManualAccountInput) -> Result<ManualTest, AppError> {
+    let (config, incoming_password, outgoing_password) = manual_config(input)?;
+    let incoming = endpoint_test(imap_client::test_password(&config.incoming, incoming_password.as_str()).await);
+    let outgoing = endpoint_test(send::test_password(&config.outgoing, outgoing_password.as_str()).await);
+    Ok(ManualTest { incoming, outgoing })
+}
+
+#[tauri::command]
+pub async fn connect_manual_account(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    input: ManualAccountInput,
+) -> Result<Connected, AppError> {
+    let (config, incoming_password, outgoing_password) = manual_config(input)?;
+    imap_client::test_password(&config.incoming, incoming_password.as_str()).await?;
+    send::test_password(&config.outgoing, outgoing_password.as_str()).await?;
+
+    let email = config.account_email().to_lowercase();
+    let lookup = email.clone();
+    let existing = state.db.call(move |c| store::find_account(c, "custom", &lookup)).await?;
+    let (account, is_new, was_active) = match existing {
+        Some(account) => {
+            secrets::save_password(&account.id, secrets::PasswordSlot::Incoming, incoming_password.as_str())?;
+            secrets::save_password(&account.id, secrets::PasswordSlot::Outgoing, outgoing_password.as_str())?;
+            let id = account.id.clone();
+            let account_after = state
+                .db
+                .call(move |c| {
+                    store::update_manual_config(c, &id, &config)?;
+                    store::set_status(c, &id, AccountStatus::Active)?;
+                    store::require_account(c, &id)
+                })
+                .await?;
+            (account_after, false, account.status == AccountStatus::Active)
+        }
+        None => {
+            let id = store::new_account_id();
+            secrets::save_password(&id, secrets::PasswordSlot::Incoming, incoming_password.as_str())?;
+            secrets::save_password(&id, secrets::PasswordSlot::Outgoing, outgoing_password.as_str())?;
+            let account_id = id.clone();
+            let created = state
+                .db
+                .call(move |c| {
+                    let color = store::next_color(c)?;
+                    store::insert_manual_account(c, &account_id, &email, &store::default_display_name(&email), color, &config)
+                })
+                .await;
+            match created {
+                Ok(account) => (account, true, false),
+                Err(e) => {
+                    let _ = secrets::delete_passwords(&id);
+                    return Err(e);
+                }
+            }
+        }
+    };
+    state.drop_handle(&account.id).await;
+    state.save_index().await;
+    state.emit_accounts_changed();
+    sync::spawn_account_sync(&app, account.id.clone());
+    tracing::info!(is_new, "conta manual conectada");
+    Ok(Connected { account, is_new, was_active })
+}
+
 async fn connect(app: &AppHandle, state: &AppState, provider: &str) -> Result<Connected, AppError> {
     let entry = providers::connectable(provider)?;
     let AuthKind::OAuth2(oauth_provider) = entry.auth else { return Err(AppError::ProviderUnavailable) };
@@ -115,6 +268,9 @@ pub async fn connect_account(app: AppHandle, state: State<'_, AppState>, provide
 pub async fn reconnect_account(app: AppHandle, state: State<'_, AppState>, account_id: String) -> Result<Connected, AppError> {
     let id = self::account_id(&account_id)?;
     let account = state.db.call(move |c| store::require_account(c, &id)).await?;
+    if account.provider == "custom" {
+        return Err(AppError::ManualReconnect);
+    }
     connect(&app, &state, &account.provider).await
 }
 

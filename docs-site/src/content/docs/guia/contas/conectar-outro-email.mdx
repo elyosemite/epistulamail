@@ -1,0 +1,29 @@
+---
+title: "Conectar outro e-mail (IMAP)"
+description: "Servidores de entrada e saída, senha normal e teste de conexão."
+sidebar:
+  order: 3
+---
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+Use esta opção quando o seu e-mail não estiver no Gmail nem no Outlook, ou quando você quiser informar os servidores manualmente. O EpistulaMail fala IMAP para receber e SMTP para enviar.
+
+<Steps>
+
+1. Em **Adicionar conta**, escolha **Outro**.
+2. Preencha a **Entrada**: servidor, porta, segurança da conexão, autenticação, usuário e senha. Os valores mais comuns são `993` com SSL/TLS ou `143` com STARTTLS.
+3. Preencha a **Saída** com o servidor SMTP. Os valores mais comuns são `465` com SSL/TLS ou `587` com STARTTLS. Se forem as mesmas credenciais da entrada, deixe **Usar as mesmas credenciais da entrada** ligado.
+4. Clique em **Testar conexão**. O app autentica na entrada, confere a Caixa de entrada e autentica na saída, sem enviar mensagem.
+5. Depois que os dois testes passarem, clique em **Conectar**.
+
+</Steps>
+
+A conta só é salva depois que a entrada e a saída passam no teste. Se o servidor recusar o usuário ou a senha, a mensagem diz qual lado falhou e a configuração não é gravada.
+
+<Aside type="note" title="Senha de app">
+Alguns provedores exigem uma senha de app em vez da senha normal da conta, principalmente quando a verificação em duas etapas está ligada. Gere a senha de app no site do provedor e use-a aqui. O Gmail e o Outlook devem ser conectados pelos cartões próprios, com OAuth.
+</Aside>
+
+O EpistulaMail só aceita **SSL/TLS** ou **STARTTLS**; não existe a opção “sem segurança”. O certificado é sempre validado. A senha fica no cofre do sistema (Gerenciador de Credenciais no Windows, Secret Service no Linux), nunca no banco em texto, em arquivo ou no log. Com a senha do Epistula ligada, ela também é cifrada por ela.
+
+Nesta versão, a conta manual recebe e envia com **senha normal**. Senha criptografada (CRAM-MD5), Kerberos/GSSAPI, NTLM, OAuth2 para conta manual e POP3 chegam nas próximas atualizações.

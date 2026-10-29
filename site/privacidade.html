@@ -38,7 +38,7 @@
 
 <main id="conteudo">
   <article class="site-container site-doc">
-    <p class="site-label">Em vigor desde 28 de outubro de 2026</p>
+    <p class="site-label">Em vigor desde 29 de outubro de 2026</p>
     <h1 class="site-h2">Política de privacidade</h1>
     <p class="site-doc__lede">O EpistulaMail é um programa de e-mail que roda no seu computador. Não existe conta do EpistulaMail, servidor do EpistulaMail que receba as suas mensagens nem coleta de dados de uso. Esta página diz o que o programa acessa, onde guarda e com quem ele se conecta.</p>
 
@@ -59,12 +59,14 @@
       <li>As mensagens, os contatos, as pastas e as configurações ficam <b>só no seu computador</b>, num banco de dados cifrado com AES-256 (SQLCipher).</li>
       <li>A chave desse banco e os tokens de acesso às contas ficam no cofre do sistema: o Gerenciador de Credenciais no Windows e o Secret Service (GNOME Keyring ou KWallet) no Linux, protegidos pela sua sessão.</li>
       <li>A sua senha do Google ou da Microsoft nunca passa pelo EpistulaMail: o login acontece na página do provedor, no seu navegador.</li>
+      <li>Nas contas manuais, a senha fica no cofre do sistema e só é enviada ao servidor que você escolher, depois do TLS.</li>
       <li>Os registros de diagnóstico do app não contêm conteúdo de mensagens, endereços, assuntos, senhas ou tokens.</li>
     </ul>
 
     <h2>Com quem o EpistulaMail se conecta</h2>
     <ul>
       <li><b>Google e Microsoft</b>: para o login (OAuth); IMAP e SMTP no Google; Microsoft Graph na Microsoft; e para cancelar o acesso quando você sai da conta.</li>
+      <li><b>Servidor informado por você</b>: nas contas manuais, o EpistulaMail acessa o servidor IMAP e o servidor SMTP que você configurar.</li>
       <li><b>Servidores de chaves OpenPGP</b> (como <code>keys.openpgp.org</code>): só quando você pede para procurar a chave de alguém.</li>
       <li><b>Imagens externas de um e-mail</b>: ficam bloqueadas e só são baixadas, direto do servidor de quem enviou, quando você permite naquela mensagem.</li>
     </ul>

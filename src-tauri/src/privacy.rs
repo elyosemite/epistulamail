@@ -160,19 +160,32 @@ pub fn clear_browsing_data(app: &AppHandle) {
     }
 }
 
-/// Os refresh tokens de todas as contas, lidos com a chave atual e gravados com a nova.
+/// Os refresh tokens e as senhas de todas as contas, lidos com a chave atual e gravados com a nova.
 fn reseal_tokens(from: Option<Kek>, to: Option<Kek>) -> Result<(), AppError> {
     let index = secrets::load_index()?;
     secrets::set_seal(from);
-    let tokens: Vec<(String, SecretString)> = index
-        .iter()
-        .filter_map(|e| secrets::load_refresh_token(&e.id).ok().flatten().map(|t| (e.id.clone(), t)))
-        .collect();
+    let mut tokens: Vec<(String, SecretString)> = Vec::new();
+    let mut passwords: Vec<(String, secrets::PasswordSlot, SecretString)> = Vec::new();
+    for entry in &index {
+        if let Some(token) = secrets::load_refresh_token(&entry.id)? {
+            tokens.push((entry.id.clone(), token));
+        }
+        for slot in secrets::PasswordSlot::all() {
+            if let Some(password) = secrets::load_password(&entry.id, slot)? {
+                passwords.push((entry.id.clone(), slot, password));
+            }
+        }
+    }
     secrets::set_seal(to);
     for (id, token) in &tokens {
         // Uma falha deixa só esta conta pedindo para reconectar; a chave do banco já está protegida.
         if let Err(e) = secrets::save_refresh_token(id, token) {
             tracing::warn!(kind = e.kind(), "refresh token não foi regravado com a proteção nova");
+        }
+    }
+    for (id, slot, password) in &passwords {
+        if let Err(e) = secrets::save_password(id, *slot, password) {
+            tracing::warn!(kind = e.kind(), slot = slot.as_str(), "senha não foi regravada com a proteção nova");
         }
     }
     Ok(())
@@ -255,6 +268,7 @@ pub async fn wipe(state: &AppState) -> Result<(), AppError> {
     let opened = blocking(move || {
         for entry in secrets::load_index()? {
             secrets::delete_refresh_token(&entry.id)?;
+            secrets::delete_passwords(&entry.id)?;
         }
         keys::wipe(&dir, &Keyring)
     })
@@ -271,6 +285,7 @@ pub async fn delete_account_data(state: &AppState, account_id: String) -> Result
     state.db.call(move |c| store::delete_signed_out_account(c, &id)).await?;
     state.drop_handle(&account_id).await;
     let _ = secrets::delete_refresh_token(&account_id);
+    let _ = secrets::delete_passwords(&account_id);
     state.save_index().await;
     compact_and_rotate(state).await;
     state.emit_accounts_changed();

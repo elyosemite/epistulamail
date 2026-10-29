@@ -6,15 +6,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Novidades
 
+- Contas IMAP e SMTP manuais com senha normal, servidores e portas próprios e teste de conexão.
 - Contas Outlook.com, Hotmail e Microsoft 365: login da Microsoft por OAuth, leitura e envio pelo Microsoft Graph, no Windows e no Linux.
 
 ### Mudou
 
-- O catálogo de provedores agora mostra Google e Microsoft como disponíveis; os demais continuam "em breve".
+- O catálogo de provedores agora mostra Google, Microsoft e "Outro" como disponíveis; Yahoo, iCloud, Zoho, GMX e AOL continuam "em breve".
+- O cartão "Outro" fica disponível para configurar servidores IMAP e SMTP manualmente.
 - O modelo de ameaças, a política de privacidade, o site e a documentação passam a falar das contas Google e Microsoft, com os escopos e os limites de cada uma.
 
 ### Avisos
 
+- Nas contas manuais, só a senha normal funciona por enquanto; senha criptografada, NTLM, Kerberos/GSSAPI, OAuth2 manual e POP3 chegam nas próximas atualizações.
 - Em Microsoft 365, o administrador do tenant pode precisar conceder consentimento para as permissões do Microsoft Graph.
 - O app pede ao Microsoft Graph `Mail.ReadWrite` e `Mail.Send`; contas pessoais Outlook.com usam o diretório pessoal, sem tenant de trabalho/escola.
 - Sair de uma conta Microsoft apaga o token local; para revogar o acesso, use account.live.com/consent/Manage ou o administrador do Microsoft 365.

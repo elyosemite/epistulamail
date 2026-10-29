@@ -4,6 +4,8 @@
 
 **Tipo:** AFK
 
+**Status:** implementada em 29 out 2026 (normal password; testes de rede com servidores falsos ainda pendentes).
+
 ### O que construir
 
 O primeiro caminho completo de leitura: uma conta "Outro" configurada à mão, com servidor IMAP, usuário, senha e segurança da conexão, lendo a Caixa de entrada. O envio fica para a fatia 02; os campos de saída podem ser preenchidos e salvos, mas o app avisa que o envio ainda não está ligado para contas manuais.

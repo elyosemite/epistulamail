@@ -106,6 +106,34 @@ export interface Connected {
   wasActive: boolean;
 }
 
+export type ManualSecurity = "tls" | "starttls";
+export type ManualAuth = "password";
+
+export interface ManualEndpointInput {
+  host: string;
+  port: number;
+  security: ManualSecurity;
+  auth: ManualAuth;
+  username: string;
+  password?: string;
+}
+
+export interface ManualAccountInput {
+  incoming: ManualEndpointInput;
+  outgoing: ManualEndpointInput;
+  useIncomingCredentials: boolean;
+}
+
+export interface EndpointTest {
+  ok: boolean;
+  message: string;
+}
+
+export interface ManualTest {
+  incoming: EndpointTest;
+  outgoing: EndpointTest;
+}
+
 export type FolderRole = "inbox" | "starred" | "sent" | "drafts" | "all" | "spam" | "trash" | "custom";
 
 export interface Folder {
@@ -590,6 +618,8 @@ export type AppErrorKind =
   | "TokenExpired"
   | "ImapConnection"
   | "ImapAuth"
+  | "MailAuth"
+  | "ManualReconnect"
   | "Keyring"
   | "CursorExpired"
   | "MessageNotFound"
@@ -711,6 +741,8 @@ export const api = {
   platform: () => call<"windows" | "linux" | "macos">("platform"),
   listProviders: () => call<ProviderInfo[]>("list_providers"),
   connectAccount: (provider: string) => call<Connected>("connect_account", { provider }),
+  testManualAccount: (input: ManualAccountInput) => call<ManualTest>("test_manual_account", { input }),
+  connectManualAccount: (input: ManualAccountInput) => call<Connected>("connect_manual_account", { input }),
   reconnectAccount: (accountId: string) => call<Connected>("reconnect_account", { accountId }),
   cancelConnect: () => call<void>("cancel_connect"),
   updateAccount: (accountId: string, change: { displayName?: string; color?: AccountColor }) =>

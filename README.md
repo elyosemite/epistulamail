@@ -78,7 +78,7 @@ What works today:
 
 **Accounts and security**
 
-- Google over IMAP and SMTP, Microsoft over Microsoft Graph, always over TLS. Your password never passes through the app.
+- Google over IMAP and SMTP, Microsoft over Microsoft Graph, and manual IMAP/SMTP accounts with a normal password, all over TLS. Your password never passes through the app.
 - Several accounts at once, each with its own name, color and photo, one click apart.
 - Local SQLCipher database (AES-256, per-page HMAC), with the key in the system credential vault (Windows Credential Manager, Linux Secret Service) and secure deletion of freed pages.
 - Safe reading: third-party HTML is cleaned against an allowlist in the Rust process and shown in an iframe with scripts disabled. Remote images stay blocked until you allow them, one message at a time.
@@ -143,7 +143,7 @@ What works today:
 
 What does not exist yet:
 
-- Providers other than Google and Microsoft. The data model already covers Yahoo, iCloud, Zoho, GMX, AOL and generic IMAP.
+- Yahoo, iCloud, Zoho, GMX, AOL and POP3. Manual IMAP/SMTP accounts are available now.
 - The sign-in server (see below), and `.olm` files from Outlook for Mac.
 - Code signing for the installer (see [Install](#install)).
 

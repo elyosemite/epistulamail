@@ -15,13 +15,13 @@ Fechar o desenho antes de qualquer código de produção:
 
 ### Critérios de aceite
 
-- [ ] O rascunho mostra formulário vazio, preenchido, testando, sucesso, erro de autenticação, erro de conexão, aviso de envio avançado indisponível e edição, nos dois temas.
-- [ ] O rascunho usa só tokens e peças existentes; peças novas propostas têm número L e ficha.
-- [ ] O rascunho passa `pnpm ds:check`.
-- [ ] O modelo de ameaças cita os riscos novos e as mitigações; a tabela de ameaças e o inventário de criptografia são atualizados.
-- [ ] As decisões D1 a D10 estão na US22; D8 e D9 explicam o que falta decidir e quem decide.
-- [ ] A matriz de autenticação deixa explícito o que funciona na entrada, na saída e o que fica "Em breve".
-- [ ] Nenhum código de produção é alterado nesta fatia.
+- [x] O rascunho mostra formulário vazio, preenchido, testando, sucesso, erro de autenticação, erro de conexão, aviso de envio avançado indisponível e edição, nos dois temas.
+- [x] O rascunho usa só tokens e peças existentes; peças novas propostas têm número L e ficha.
+- [x] O rascunho passa `pnpm ds:check`.
+- [x] O modelo de ameaças cita os riscos novos e as mitigações; a tabela de ameaças e o inventário de criptografia são atualizados.
+- [x] As decisões D1 a D10 estão na US22; D8 e D9 explicam o que falta decidir e quem decide.
+- [x] A matriz de autenticação deixa explícito o que funciona na entrada, na saída e o que fica "Em breve".
+- [x] Nenhum código de produção é alterado nesta fatia.
 
 ### Bloqueada por
 

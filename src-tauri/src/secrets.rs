@@ -91,68 +91,132 @@ fn part_name(account_id: &str, i: usize) -> String {
     format!("secret-{account_id}-{i}")
 }
 
+fn password_meta_name(account_id: &str, slot: PasswordSlot) -> String {
+    format!("password-{account_id}-{}", slot.as_str())
+}
+
+fn password_part_name(account_id: &str, slot: PasswordSlot, i: usize) -> String {
+    format!("password-{account_id}-{}-{i}", slot.as_str())
+}
+
+fn password_aad(account_id: &str, slot: PasswordSlot) -> String {
+    format!("{account_id}:{}", slot.as_str())
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PasswordSlot {
+    Incoming,
+    Outgoing,
+}
+
+impl PasswordSlot {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            PasswordSlot::Incoming => "incoming",
+            PasswordSlot::Outgoing => "outgoing",
+        }
+    }
+
+    pub fn all() -> [PasswordSlot; 2] {
+        [PasswordSlot::Incoming, PasswordSlot::Outgoing]
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 struct SecretMeta {
     parts: usize,
 }
 
-// ---------------------------------------------------------------- refresh token por conta
-
-pub fn load_refresh_token(account_id: &str) -> Result<Option<SecretString>, AppError> {
-    let Some(meta) = get(&meta_name(account_id))? else { return Ok(None) };
+fn load_secret(meta: &str, part: &dyn Fn(usize) -> String, aad: &str) -> Result<Option<SecretString>, AppError> {
+    let Some(meta) = get(meta)? else { return Ok(None) };
     let Ok(meta) = serde_json::from_str::<SecretMeta>(&meta) else { return Ok(None) };
-    // Capacidade reservada antes, para o texto não ser realocado (e copiado) ao crescer.
-    let mut token = Zeroizing::new(String::with_capacity(meta.parts * CHUNK_CHARS * 4));
+    let mut secret = Zeroizing::new(String::with_capacity(meta.parts * CHUNK_CHARS * 4));
     for i in 0..meta.parts {
-        match get(&part_name(account_id, i))? {
-            Some(part) => token.push_str(&part),
+        match get(&part(i))? {
+            Some(value) => secret.push_str(&value),
             None => return Ok(None),
         }
     }
-    let Some(sealed) = token.strip_prefix(SEALED_PREFIX) else {
-        return Ok(Some(token).filter(|t| !t.is_empty()));
+    let Some(sealed) = secret.strip_prefix(SEALED_PREFIX) else {
+        return Ok(Some(secret).filter(|value| !value.is_empty()));
     };
     let Some(kek) = seal() else { return Err(AppError::Locked) };
-    match lock::open_token(&kek, account_id, sealed) {
-        Ok(plain) => Ok(Some(plain).filter(|t| !t.is_empty())),
-        // Cifrado por outra senha (troca interrompida): a conta pede para reconectar.
+    match lock::open_token(&kek, aad, sealed) {
+        Ok(plain) => Ok(Some(plain).filter(|value| !value.is_empty())),
         Err(_) => {
-            tracing::warn!("refresh token cifrado não abre com a senha atual");
+            tracing::warn!("segredo cifrado não abre com a senha atual");
             Ok(None)
         }
     }
 }
 
-/// Grava o refresh token e confere lendo de volta.
-pub fn save_refresh_token(account_id: &str, token: &str) -> Result<(), AppError> {
-    delete_refresh_token(account_id)?;
+fn save_secret(meta: &str, part: &dyn Fn(usize) -> String, aad: &str, secret: &str) -> Result<(), AppError> {
+    delete_secret(meta, part)?;
     let stored: SecretString = match seal() {
-        Some(kek) => Zeroizing::new(format!("{SEALED_PREFIX}{}", lock::seal_token(&kek, account_id, token)?)),
-        None => Zeroizing::new(token.to_owned()),
+        Some(kek) => Zeroizing::new(format!("{SEALED_PREFIX}{}", lock::seal_token(&kek, aad, secret)?)),
+        None => Zeroizing::new(secret.to_owned()),
     };
     let mut parts = split_secret(&stored);
-    let written: Result<(), AppError> = parts.iter().enumerate().try_for_each(|(i, part)| set(&part_name(account_id, i), part));
+    let written: Result<(), AppError> = parts.iter().enumerate().try_for_each(|(i, value)| set(&part(i), value));
     let count = parts.len();
     parts.zeroize();
     written?;
-    let meta = serde_json::to_string(&SecretMeta { parts: count }).map_err(|_| AppError::Keyring)?;
-    set(&meta_name(account_id), &meta)?;
-    if load_refresh_token(account_id)?.as_deref().map(String::as_str) != Some(token) {
-        tracing::error!("o refresh token gravado não confere na releitura");
+    let meta_json = serde_json::to_string(&SecretMeta { parts: count }).map_err(|_| AppError::Keyring)?;
+    set(meta, &meta_json)?;
+    if load_secret(meta, part, aad)?.as_deref().map(String::as_str) != Some(secret) {
+        tracing::error!("o segredo gravado não confere na releitura");
         return Err(AppError::Keyring);
     }
     Ok(())
 }
 
-pub fn delete_refresh_token(account_id: &str) -> Result<(), AppError> {
-    let parts = get(&meta_name(account_id))?
+fn delete_secret(meta: &str, part: &dyn Fn(usize) -> String) -> Result<(), AppError> {
+    let parts = get(meta)?
         .and_then(|m| serde_json::from_str::<SecretMeta>(&m).ok())
         .map(|m| m.parts)
         .unwrap_or(0);
     for i in 0..parts {
-        remove(&part_name(account_id, i))?;
+        remove(&part(i))?;
     }
-    remove(&meta_name(account_id))
+    remove(meta)
+}
+
+// ---------------------------------------------------------------- refresh token por conta
+
+pub fn load_refresh_token(account_id: &str) -> Result<Option<SecretString>, AppError> {
+    load_secret(&meta_name(account_id), &|i| part_name(account_id, i), account_id)
+}
+
+/// Grava o refresh token e confere lendo de volta.
+pub fn save_refresh_token(account_id: &str, token: &str) -> Result<(), AppError> {
+    save_secret(&meta_name(account_id), &|i| part_name(account_id, i), account_id, token)
+}
+
+pub fn delete_refresh_token(account_id: &str) -> Result<(), AppError> {
+    delete_secret(&meta_name(account_id), &|i| part_name(account_id, i))
+}
+
+// ---------------------------------------------------------------- senhas de conta manual
+
+pub fn load_password(account_id: &str, slot: PasswordSlot) -> Result<Option<SecretString>, AppError> {
+    let aad = password_aad(account_id, slot);
+    load_secret(&password_meta_name(account_id, slot), &|i| password_part_name(account_id, slot, i), &aad)
+}
+
+pub fn save_password(account_id: &str, slot: PasswordSlot, password: &str) -> Result<(), AppError> {
+    let aad = password_aad(account_id, slot);
+    save_secret(&password_meta_name(account_id, slot), &|i| password_part_name(account_id, slot, i), &aad, password)
+}
+
+pub fn delete_password(account_id: &str, slot: PasswordSlot) -> Result<(), AppError> {
+    delete_secret(&password_meta_name(account_id, slot), &|i| password_part_name(account_id, slot, i))
+}
+
+pub fn delete_passwords(account_id: &str) -> Result<(), AppError> {
+    for slot in PasswordSlot::all() {
+        delete_password(account_id, slot)?;
+    }
+    Ok(())
 }
 
 // ---------------------------------------------------------------- índice de contas
@@ -329,6 +393,9 @@ mod tests {
         assert_eq!(meta_name("a1"), "account-a1");
         assert_eq!(part_name("a1", 2), "secret-a1-2");
         assert_ne!(part_name("a1", 0), legacy_part(0));
+        assert_eq!(password_meta_name("a1", PasswordSlot::Incoming), "password-a1-incoming");
+        assert_eq!(password_part_name("a1", PasswordSlot::Outgoing, 2), "password-a1-outgoing-2");
+        assert_ne!(password_aad("a1", PasswordSlot::Incoming), password_aad("a1", PasswordSlot::Outgoing));
     }
 
     #[test]

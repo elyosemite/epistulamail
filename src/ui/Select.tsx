@@ -4,6 +4,7 @@ import { Icon } from "./Icon";
 export interface SelectOption {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 interface SelectProps {
@@ -20,7 +21,7 @@ export function Select({ value, options, label, labelledBy, disabled, onChange }
     <span className="select">
       <select value={value} aria-label={label} aria-labelledby={labelledBy} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
         {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
+          <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>
         ))}
       </select>
       <Icon name="chevron-down" />

@@ -107,7 +107,7 @@ A base de dados continua cifrada com SQLCipher. As senhas vão para o cofre do s
 
 ### 3. Interface
 
-Rascunho obrigatório em `design-system/rascunho-us22.html`, nos dois temas, mostrando: formulário vazio, preenchido, testando, sucesso, erro de autenticação, erro de conexão, aviso de que o envio avançado ainda não está disponível e o formulário de edição. Peças existentes: `.field`, `.input`, `.input--password`, `.select`, `.section-message`, `.btn`, `.modal` e o padrão de validação (`padrao-validacao.html`). Se o formulário virar um padrão novo, ele entra com número L e ficha próprios antes de ir para o app. Nenhuma tela vai para `src/` antes da aprovação do rascunho.
+Rascunho aprovado em 29 out 2026 e apagado. O formulário é composição das peças existentes, sem peça nova no design system: `.field`, `.input`, `.input--password`, `.select`, `.section-message`, `.btn`, `.modal` e o padrão de validação (`padrao-validacao.html`). O rascunho mostrava formulário vazio, preenchido, testando, sucesso, erro de autenticação, erro de conexão e o aviso de envio avançado indisponível.
 
 Telas: "Adicionar conta → Outro" e "Configurações → Conta → Servidores". O estado "Em breve" dos métodos de saída avançados segue o padrão de lozenge já usado no catálogo.
 

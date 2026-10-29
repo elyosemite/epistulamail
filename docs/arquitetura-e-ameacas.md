@@ -1,6 +1,6 @@
 # Epistula: arquitetura e modelo de ameaças
 
-Situação em 25 out 2026, após a US7. Produto: cliente desktop que conecta várias contas de e-mail (Gmail por OAuth nesta versão), lê as caixas por IMAP e envia por SMTP, com um banco local cifrado (decisão D1, opção A, provisória). Ainda não há servidor do Epistula. Planejado (26 out 2026): um servidor de login, só para o OAuth com o Google e a Microsoft, por onde nenhuma mensagem passa (seção "Planejado: servidor de login"). A importação de arquivos de e-mail, sem conta e sem rede, existe desde a US15 (seção própria no fim).
+Situação em 29 out 2026, após a US21, com a US22 em andamento. Produto: cliente desktop que conecta várias contas de e-mail (Gmail por IMAP/SMTP e Outlook pelo Microsoft Graph nesta versão), com um banco local cifrado (decisão D1, opção A, provisória). Ainda não há servidor do Epistula. Planejado (26 out 2026): um servidor de login, só para o OAuth com o Google e a Microsoft, por onde nenhuma mensagem passa (seção "Planejado: servidor de login"). A US22 implementa contas manuais por IMAP/SMTP com senha normal (seção "Contas manuais"). A importação de arquivos de e-mail, sem conta e sem rede, existe desde a US15 (seção própria no fim).
 
 ## Componentes e limites de confiança
 
@@ -48,6 +48,7 @@ Limites de confiança, do mais confiável ao menos:
 | Dado | Onde fica | Por quanto tempo | Quem acessa |
 |---|---|---|---|
 | Refresh token OAuth (por conta, Google ou Microsoft) | Keyring do SO (`epistula/account-<id>` + `secret-<id>-N`); com a senha do Epistula ligada, cifrado por ela (AES-256-GCM, prefixo `sealed1:`) | Até sair da conta, `invalid_grant` ou 7 dias (app em modo Testing no Google) | Processo Rust; usuário do SO |
+| Senha de entrada e de saída de conta manual (US22) | Keyring do SO, em entrada por conta e por ponta, separada do refresh token; mesmo esquema de partes e `sealed1:` quando a senha do Epistula está ligada | Até sair da conta, trocar a senha ou apagar os dados | Processo Rust; usuário do SO |
 | Chave do banco (32 bytes do gerador do SO) | Keyring do SO (`epistula/db-key`, em hexadecimal: formato v1; o v2, envolvido pela senha do Epistula, vem com a US10) | Até a próxima troca de chave | Processo Rust; usuário do SO |
 | Chave derivada da senha do Epistula (Argon2id) | Memória do processo Rust, só com o app desbloqueado | Até bloquear ou fechar o app | Processo Rust |
 | Chave nova durante uma troca | Keyring do SO (`epistula/db-key-next`) | Do início da troca até o banco abrir com ela (segundos); uma troca interrompida é concluída ou desfeita na próxima abertura | Processo Rust; usuário do SO |
@@ -152,9 +153,27 @@ Inventário de cada uso de criptografia (US10, CA1). "Quântico" diz se o uso re
 | 16 | Conteúdo fora do banco cifrado | Parcialmente mitigada (US10, CA6) | As notificações mostram só a conta por padrão (D5); com "Remetente e assunto", o sistema guarda esse texto sem cifra no próprio banco de notificações. No Linux, as notificações nativas ainda não existem; o sino fica no banco cifrado. O cache de disco do WebView2 fica com 1 byte (`--disk-cache-size=1`) e os dados de navegação são limpos ao bloquear (D6); falta conferir no app real que nada do e-mail fica na pasta do WebView2. O arquivo de paginação e o de hibernação podem receber memória do app; só o BitLocker no Windows ou o LUKS no Linux os protegem, e Privacidade avisa quando o disco não está cifrado. |
 | 17 | Computador quântico no futuro | Parcialmente mitigada | Dados guardados: resistem (AES-256). Tráfego gravado hoje: a troca de chaves do TLS não resiste (US11). Backup RSA do DPAPI em domínio: não resiste (ver 15). |
 | 18 | Arquivo de e-mail malicioso ou malformado importado (US15) | Mitigada | Leitores em Rust sem `unsafe`, limite de 50 MB por mensagem, falha por mensagem (nunca derruba o app nem deixa o banco pela metade: cada lote é uma transação), nada extraído para o disco, HTML limpo e imagens bloqueadas como em qualquer mensagem. Risco residual: um defeito no `outlook-pst` ou no `cfb` com um arquivo feito para isso; os dois só leem, no processo do app, e qualquer erro vira "ilegível". O original continua sem cifra no disco (a tela avisa). |
-| 12 | Infraestrutura ou ordem legal | Fora do escopo do Epistula | Não há infraestrutura do Epistula. Pedidos legais alcançam os dados no Google. |
+| 19 | Credencial manual exposta ou usada por engano (US22) | Mitigada | A senha de entrada e de saída fica no cofre do sistema, em `Zeroizing`, cifrada pela senha do Epistula quando ligada; nunca vai ao banco, ao log ou à WebView. O app só envia a senha depois de TLS/STARTTLS validado; "sem segurança" não existe (D2). Sair da conta apaga as senhas. Risco residual: malware na sessão do usuário lê o cofre (ameaça 7); o servidor informado pelo usuário vê a senha depois do TLS, a menos que CRAM-MD5, NTLM ou GSSAPI seja usado. |
+| 20 | Servidor informado pelo usuário e downgrade de STARTTLS (US22) | Mitigada para TLS/STARTTLS explícitos | O host é validado (sem esquema, caminho ou caractere de controle) e só TLS/STARTTLS são aceitos. A opção de detecção automática, quando entrar, testará sem credenciais e falhará se não houver TLS nem STARTTLS; não cai para texto puro. Um MITM que remove STARTTLS faz a conexão falhar, não vazar a senha. Risco residual: o usuário pode apontar para um servidor malicioso; o app não valida a identidade do servidor além do certificado. |
+| 21 | Autenticação legada: CRAM-MD5 e NTLM (US22) | Aceita com aviso (planejada) | Só sobre TLS; a senha não é enviada em claro. CRAM-MD5 usa MD5 e NTLM é legado; a interface explica que o servidor precisa anunciar o método. GSSAPI delega ao sistema operacional. Risco residual: um servidor comprometido ou um MITM dentro do TLS não é detectável pelo app. |
+| 12 | Infraestrutura ou ordem legal | Fora do escopo do Epistula | Não há infraestrutura do Epistula. Pedidos legais alcançam os dados no Google ou na Microsoft. |
 
 **Risco aceito pela D4.** Depois de sair de uma conta, as mensagens salvas dela continuam no disco (cifradas). Sem a senha do Epistula, qualquer pessoa com acesso à sessão do usuário no Windows consegue lê-las pelo Epistula. Desde a US10, o diálogo de sair e Configurações → Privacidade apagam os dados da conta e trocam a chave do banco.
+
+## Contas manuais (US22)
+
+A US22 (`userstory/0022-configuracao-manual-de-servidores.md`) abriu uma conta IMAP com servidor de entrada e de saída informados pelo usuário, no modelo do Thunderbird. Nesta etapa funcionam a **senha normal**, o teste de conexão e o envio por SMTP; os demais métodos de autenticação e o POP3 ficam para as próximas fatias. O rascunho foi aprovado e apagado; a tela usa as peças existentes do design system.
+
+O que já está decidido e vale para o desenho:
+
+- **TLS sempre.** Só SSL/TLS, STARTTLS ou detecção entre os dois. "Sem segurança" não é oferecido (D2), mesmo que o Thunderbird ofereça.
+- **Detecção sem credenciais.** "Detectar automaticamente" testa TLS implícito e depois STARTTLS no host/porta informados, sem enviar usuário ou senha; se nenhum funcionar, a conta não é salva. Não há autoconfiguração por DNS/ISPDB (D6).
+- **Senhas no cofre.** Entrada e saída têm senhas próprias, guardadas no keyring com partes e `Zeroizing`; com a senha do Epistula ligada, cifradas por ela. Nunca vão ao banco, ao log ou à WebView.
+- **Teste obrigatório.** A conta só é salva depois de o teste de entrada e o de saída passarem; o teste de saída autentica e encerra a sessão, sem enviar mensagem.
+- **Envio limitado nesta entrega.** O `lettre` só oferece PLAIN, LOGIN e XOAUTH2; CRAM-MD5, NTLM e GSSAPI no envio ficam "Em breve" (D4) até um transporte SMTP próprio ser decidido.
+- **Fora do escopo.** POP3 fica na US23; OAuth2 genérico para domínios próprios fica fora (D3).
+
+As ameaças 19 e 20 estão em vigor para as contas manuais com senha normal; a 21 entra em vigor quando CRAM-MD5, NTLM e GSSAPI forem ligados.
 
 ## Planejado: servidor de login
 
@@ -206,6 +225,8 @@ Implementada em 26 out 2026 (story `userstory/0015-importacao-de-arquivos.md`): 
 - O escopo OAuth do Google é `https://mail.google.com/ openid email profile`. Ele já cobre o SMTP do envio. `profile` (não sensível) só serve para a foto e o nome do `From`; sem ele, a conta funciona com a inicial e envia só com o endereço.
 - O escopo OAuth da Microsoft é `https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send offline_access openid email`. O app usa o Microsoft Graph, não IMAP/SMTP, para contas Microsoft. `offline_access` só serve para receber o refresh token; não há acesso a contatos, calendário, arquivos ou OneDrive. Sair da conta apaga o token local; a revogação do acesso é feita na página de consentimentos da Microsoft ou pelo administrador do Microsoft 365, porque não há endpoint público de revogação para apps nativos.
 - O servidor de envio grava a cópia em Enviados (comportamento do Gmail); o app não faz `APPEND` e só sincroniza Enviados depois.
+- Contas manuais (US22) só usam SSL/TLS ou STARTTLS; a opção "sem segurança" do Thunderbird não é oferecida. A senha só segue depois do TLS validado, e a detecção de segurança nunca envia credenciais.
+- CRAM-MD5 e NTLM são mecanismos legados, aceitos só sobre TLS; GSSAPI usa a implementação do sistema operacional. A interface avisa quando o servidor não anuncia o método escolhido e nunca faz downgrade silencioso.
 - Testes contra o Gmail real são manuais: não há servidor IMAP com XOAUTH2 em CI. O banco tem testes de integração reais (SQLCipher em diretório temporário).
 
 ## Riscos residuais priorizados

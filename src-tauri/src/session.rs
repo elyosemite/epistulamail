@@ -12,11 +12,12 @@ use tokio::sync::{oneshot, Mutex};
 use crate::db::Db;
 use crate::error::AppError;
 use crate::imap_client::ImapSession;
+use crate::mail_config::{AuthMethod, MailConfig};
 use crate::oauth::{self, Tokens};
 use crate::photo;
 use crate::provider::Provider;
 use crate::providers::{self, AuthKind};
-use crate::secrets::{self, SecretString};
+use crate::secrets::{self, PasswordSlot, SecretString};
 use crate::store::{self, Account, AccountStatus};
 
 const REFRESH_MARGIN: Duration = Duration::from_secs(60);
@@ -49,15 +50,30 @@ pub enum Lane {
 
 pub struct AccountHandle {
     pub id: String,
-    pub provider: Provider,
-    pub email: String,
-    pub imap_host: String,
-    pub imap_port: u16,
+    pub provider: Option<Provider>,
+    pub config: MailConfig,
     auth: Mutex<Auth>,
     interactive: Mutex<Option<ImapSession>>,
     sync: Mutex<Option<ImapSession>>,
     /// Pastas com sincronização em andamento (uma por pasta por vez).
     pub syncing: std::sync::Mutex<HashSet<i64>>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CredentialTarget {
+    Incoming,
+    Outgoing,
+}
+
+pub enum Credential {
+    OAuth(SecretString),
+    Password(SecretString),
+}
+
+impl Credential {
+    pub fn is_oauth(&self) -> bool {
+        matches!(self, Credential::OAuth(_))
+    }
 }
 
 impl AccountHandle {
@@ -183,20 +199,18 @@ impl AppState {
             return Ok(h.clone());
         }
         let id = account_id.to_owned();
-        let (account, (host, port)) = self
+        let (account, config) = self
             .db
-            .call(move |c| Ok((store::require_account(c, &id)?, store::imap_server(c, &id)?)))
+            .call(move |c| Ok((store::require_account(c, &id)?, store::mail_config(c, &id)?)))
             .await?;
         let provider = match providers::find(&account.provider).map(|p| p.auth) {
-            Some(AuthKind::OAuth2(p)) => p,
-            _ => return Err(AppError::ProviderUnavailable),
+            Some(AuthKind::OAuth2(p)) => Some(p),
+            _ => None,
         };
         let handle = Arc::new(AccountHandle {
             id: account.id.clone(),
             provider,
-            email: account.email,
-            imap_host: host,
-            imap_port: port,
+            config,
             auth: Mutex::new(Auth::default()),
             interactive: Mutex::new(None),
             sync: Mutex::new(None),
@@ -228,7 +242,7 @@ impl AppState {
 
     /// Conta perdeu o acesso (refresh revogado, expirado ou ausente): fica `needs_reauth`, sem
     /// segredo no keyring, e o frontend é avisado.
-    async fn lose_access(&self, handle: &AccountHandle) {
+    pub async fn lose_access(&self, handle: &AccountHandle) {
         let _ = secrets::delete_refresh_token(&handle.id);
         let id = handle.id.clone();
         let _ = self.db.call(move |c| store::set_status(c, &id, AccountStatus::NeedsReauth)).await;
@@ -240,15 +254,51 @@ impl AppState {
         }
     }
 
-    /// Access token válido da conta, renovando pelo refresh token quando necessário.
-    /// Chamado por `imap_client::with_session` com o lock de uma conexão tomado: não usa conexões.
-    pub async fn access(&self, handle: &AccountHandle, force_refresh: bool) -> Result<SecretString, AppError> {
+    /// Credencial da conta para a entrada ou a saída: token OAuth ou senha do cofre.
+    pub async fn credentials(
+        &self,
+        handle: &AccountHandle,
+        target: CredentialTarget,
+        force_refresh: bool,
+    ) -> Result<Credential, AppError> {
         match self.status_of(&handle.id).await? {
             AccountStatus::Active => {}
             AccountStatus::SignedOut => return Err(AppError::SignedOut),
             AccountStatus::NeedsReauth => return Err(AppError::TokenExpired),
             AccountStatus::Local => return Err(AppError::LocalArchive),
         }
+        let endpoint = match target {
+            CredentialTarget::Incoming => &handle.config.incoming,
+            CredentialTarget::Outgoing => &handle.config.outgoing,
+        };
+        match endpoint.auth {
+            AuthMethod::OAuth2 => {
+                let provider = handle.provider.ok_or(AppError::Config)?;
+                let token = self.oauth_access(handle, provider, force_refresh).await?;
+                Ok(Credential::OAuth(token))
+            }
+            AuthMethod::Password => {
+                let slot = match target {
+                    CredentialTarget::Incoming => PasswordSlot::Incoming,
+                    CredentialTarget::Outgoing => PasswordSlot::Outgoing,
+                };
+                let password = secrets::load_password(&handle.id, slot)?.ok_or(AppError::MailAuth)?;
+                Ok(Credential::Password(password))
+            }
+            AuthMethod::Encrypted | AuthMethod::Gssapi | AuthMethod::Ntlm => Err(AppError::ProviderUnavailable),
+        }
+    }
+
+    /// Access token OAuth, renovando pelo refresh token quando necessário.
+    /// Chamado por `imap_client::with_session` com o lock de uma conexão tomado: não usa conexões.
+    pub async fn access(&self, handle: &AccountHandle, force_refresh: bool) -> Result<SecretString, AppError> {
+        match self.credentials(handle, CredentialTarget::Incoming, force_refresh).await? {
+            Credential::OAuth(token) => Ok(token),
+            Credential::Password(_) => Err(AppError::Config),
+        }
+    }
+
+    async fn oauth_access(&self, handle: &AccountHandle, provider: Provider, force_refresh: bool) -> Result<SecretString, AppError> {
         let mut auth = handle.auth.lock().await;
         if !force_refresh {
             if let Some(a) = auth.access.as_ref().filter(|a| a.expires_at > Instant::now() + REFRESH_MARGIN) {
@@ -264,14 +314,14 @@ impl AppState {
             self.lose_access(handle).await;
             return Err(AppError::TokenExpired);
         };
-        match oauth::refresh(&self.http, handle.provider, &refresh_token).await {
+        match oauth::refresh(&self.http, provider, &refresh_token).await {
             Ok(tokens) => {
                 auth.access = Some(access_from(&tokens));
                 if let Some(rotated) = tokens.refresh_token.filter(|t| *t != refresh_token) {
                     secrets::save_refresh_token(&handle.id, &rotated)?;
                     auth.refresh_token = Some(rotated);
                 }
-                tracing::info!(provider = ?handle.provider, "access token renovado");
+                tracing::info!(?provider, "access token renovado");
                 self.update_photo(&handle.id, tokens.id_token.as_deref(), false);
                 Ok(tokens.access_token)
             }
@@ -416,8 +466,8 @@ impl AppState {
             Some(t) => Some(t),
             None => secrets::load_refresh_token(account_id).unwrap_or(None),
         };
-        if let Some(token) = refresh {
-            if let Err(e) = oauth::revoke(&self.http, handle.provider, &token).await {
+        if let (Some(provider), Some(token)) = (handle.provider, refresh) {
+            if let Err(e) = oauth::revoke(&self.http, provider, &token).await {
                 tracing::warn!(kind = e.kind(), "revogação não confirmada; seguindo com a saída");
             }
         }
@@ -432,6 +482,9 @@ impl AppState {
         if let Err(e) = secrets::delete_refresh_token(account_id) {
             // A conta já está `signed_out`; a remoção é tentada de novo na próxima abertura.
             tracing::warn!(kind = e.kind(), "segredo não removido agora; nova tentativa ao abrir o app");
+        }
+        if let Err(e) = secrets::delete_passwords(account_id) {
+            tracing::warn!(kind = e.kind(), "senhas não removidas agora; nova tentativa ao abrir o app");
         }
         self.drop_handle(account_id).await;
         self.emit_accounts_changed();

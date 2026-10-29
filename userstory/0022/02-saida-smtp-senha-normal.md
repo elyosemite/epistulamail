@@ -4,6 +4,8 @@
 
 **Tipo:** AFK
 
+**Status:** implementada em 29 out 2026 (normal password; teste de envio com servidor falso ainda pendente).
+
 ### O que construir
 
 O envio de uma conta manual com servidor SMTP próprio, usuário e senha, usando TLS ou STARTTLS. A conta passa a ler **e** enviar; o teste de saída autentica sem mandar mensagem.

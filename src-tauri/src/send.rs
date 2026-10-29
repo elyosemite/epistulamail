@@ -22,8 +22,9 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::error::AppError;
 use crate::imap_client;
+use crate::mail_config::{AuthMethod, Endpoint, Security};
 use crate::mailbox::Role;
-use crate::session::{AccountHandle, AppState, Lane};
+use crate::session::{AccountHandle, AppState, Credential, CredentialTarget, Lane};
 use crate::store::{self, DraftKind};
 use crate::sync;
 
@@ -358,9 +359,9 @@ async fn load_crypto(state: &AppState, outgoing: &Outgoing) -> Result<Crypto, Ap
 
 async fn deliver(state: &AppState, outgoing: &Outgoing) -> Result<(), AppError> {
     let id = outgoing.account_id.clone();
-    let (account, sender, (host, port, security)) = state
+    let (account, sender) = state
         .db
-        .call(move |c| Ok((store::require_account(c, &id)?, store::sender_name(c, &id)?, store::smtp_server(c, &id)?)))
+        .call(move |c| Ok((store::require_account(c, &id)?, store::sender_name(c, &id)?)))
         .await?;
     let handle = state.handle(&account.id).await?;
     let original = match outgoing.original {
@@ -379,26 +380,49 @@ async fn deliver(state: &AppState, outgoing: &Outgoing) -> Result<(), AppError> 
         return Ok(());
     }
 
+    let endpoint = &handle.config.outgoing;
     let mut force_refresh = false;
     for attempt in 0..2 {
-        let token = state.access(&handle, force_refresh).await?;
-        let builder = if security == "starttls" { AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&host) } else { AsyncSmtpTransport::<Tokio1Executor>::relay(&host) };
+        let credential = match state.credentials(&handle, CredentialTarget::Outgoing, force_refresh).await {
+            Ok(credential) => credential,
+            Err(e @ AppError::MailAuth) => {
+                state.lose_access(&handle).await;
+                return Err(e);
+            }
+            Err(e) => return Err(e),
+        };
+        let is_oauth = credential.is_oauth();
+        let (secret, mechanisms) = match &credential {
+            Credential::OAuth(token) => (token.to_string(), vec![Mechanism::Xoauth2]),
+            Credential::Password(password) => (password.to_string(), vec![Mechanism::Plain, Mechanism::Login]),
+        };
+        let builder = if endpoint.security == Security::StartTls {
+            AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&endpoint.host)
+        } else {
+            AsyncSmtpTransport::<Tokio1Executor>::relay(&endpoint.host)
+        };
         let transport = builder
             .map_err(|e| {
                 tracing::warn!(error = %e, "servidor de envio inválido");
                 AppError::SmtpConnection
             })?
-            .port(port)
-            // A lettre guarda a própria cópia do token; a nossa é zerada no fim da volta.
-            .credentials(Credentials::new(account.email.clone(), token.to_string()))
-            .authentication(vec![Mechanism::Xoauth2])
+            .port(endpoint.port)
+            // A lettre guarda a própria cópia do segredo; a nossa é zerada no fim da volta.
+            .credentials(Credentials::new(endpoint.username.clone(), secret))
+            .authentication(mechanisms)
             .timeout(Some(SMTP_TIMEOUT))
             .build();
         match transport.send(message.clone()).await {
             Ok(_) => return Ok(()),
-            Err(e) if attempt == 0 && e.status().is_some_and(|c| c.to_string() == "535") => {
-                tracing::info!("servidor de envio recusou o token; renovando");
-                force_refresh = true;
+            Err(e) if e.status().is_some_and(|c| c.to_string() == "535") => {
+                if is_oauth && attempt == 0 {
+                    tracing::info!("servidor de envio recusou o token; renovando");
+                    force_refresh = true;
+                } else {
+                    tracing::warn!("servidor de envio recusou o usuário ou a senha");
+                    state.lose_access(&handle).await;
+                    return Err(AppError::MailAuth);
+                }
             }
             Err(e) if e.is_permanent() => {
                 tracing::warn!(status = ?e.status().map(|c| c.to_string()), "servidor de envio recusou a mensagem");
@@ -411,6 +435,33 @@ async fn deliver(state: &AppState, outgoing: &Outgoing) -> Result<(), AppError> 
         }
     }
     Err(AppError::SendRejected)
+}
+
+pub async fn test_password(endpoint: &Endpoint, password: &str) -> Result<(), AppError> {
+    if endpoint.auth != AuthMethod::Password {
+        return Err(AppError::ProviderUnavailable);
+    }
+    let builder = if endpoint.security == Security::StartTls {
+        AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&endpoint.host)
+    } else {
+        AsyncSmtpTransport::<Tokio1Executor>::relay(&endpoint.host)
+    };
+    let transport: AsyncSmtpTransport<Tokio1Executor> = builder
+        .map_err(|_| AppError::SmtpConnection)?
+        .port(endpoint.port)
+        .credentials(Credentials::new(endpoint.username.clone(), password.to_owned()))
+        .authentication(vec![Mechanism::Plain, Mechanism::Login])
+        .timeout(Some(SMTP_TIMEOUT))
+        .build();
+    match transport.test_connection().await {
+        Ok(true) => Ok(()),
+        Ok(false) => Err(AppError::SmtpConnection),
+        Err(e) if e.status().is_some_and(|c| c.to_string() == "535") => Err(AppError::MailAuth),
+        Err(e) => {
+            tracing::warn!(status = ?e.status().map(|c| c.to_string()), timeout = e.is_timeout(), "falha no teste do servidor de envio");
+            Err(AppError::SmtpConnection)
+        }
+    }
 }
 
 #[cfg(test)]

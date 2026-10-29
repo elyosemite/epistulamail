@@ -132,7 +132,7 @@ pub const CATALOG: &[CatalogEntry] = &[
         id: "custom",
         name: "Outro",
         description: "Domínio próprio (IMAP e SMTP)",
-        available: false,
+        available: true,
         auth: AuthKind::Password,
         imap: None,
         smtp: None,
@@ -183,10 +183,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn gmail_and_outlook_are_connectable_for_now() {
+    fn catalog_marks_oauth_and_manual_entries_available() {
         assert!(connectable("gmail").is_ok());
         assert!(connectable("outlook").is_ok());
-        for id in ["yahoo", "icloud", "zoho", "gmx", "aol", "custom", "inexistente"] {
+        assert!(connectable("custom").is_ok());
+        for id in ["yahoo", "icloud", "zoho", "gmx", "aol", "inexistente"] {
             assert_eq!(connectable(id).err(), Some(AppError::ProviderUnavailable), "{id}");
         }
     }

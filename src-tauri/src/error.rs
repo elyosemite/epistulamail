@@ -17,6 +17,10 @@ pub enum AppError {
     ImapConnection,
     #[error("O servidor de e-mail recusou o acesso desta conta. Conecte de novo.")]
     ImapAuth,
+    #[error("O servidor recusou o usuário ou a senha. Confira os dados da conta.")]
+    MailAuth,
+    #[error("Para reconectar esta conta, use Adicionar conta → Outro e informe os servidores de novo.")]
+    ManualReconnect,
     #[error("Não foi possível acessar o cofre de credenciais do sistema.")]
     Keyring,
     #[error("A pasta mudou desde a última leitura. Recarregando a lista.")]
@@ -100,6 +104,8 @@ impl AppError {
             AppError::TokenExpired => "TokenExpired",
             AppError::ImapConnection => "ImapConnection",
             AppError::ImapAuth => "ImapAuth",
+            AppError::MailAuth => "MailAuth",
+            AppError::ManualReconnect => "ManualReconnect",
             AppError::Keyring => "Keyring",
             AppError::CursorExpired => "CursorExpired",
             AppError::MessageNotFound => "MessageNotFound",
