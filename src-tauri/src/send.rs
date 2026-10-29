@@ -372,6 +372,13 @@ async fn deliver(state: &AppState, outgoing: &Outgoing) -> Result<(), AppError> 
     let crypto = load_crypto(state, outgoing).await?;
     let message = build_with(from, outgoing, original.as_deref(), Some(&crypto))?;
 
+    if crate::graph::applies(&handle) {
+        let raw = message.clone().formatted();
+        let bcc: Vec<String> = outgoing.bcc.iter().map(|m| m.email.to_string()).collect();
+        crate::graph::send(state, &handle, raw, &bcc).await?;
+        return Ok(());
+    }
+
     let mut force_refresh = false;
     for attempt in 0..2 {
         let token = state.access(&handle, force_refresh).await?;

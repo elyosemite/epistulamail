@@ -2,6 +2,24 @@
 
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o [SemVer](https://semver.org/lang/pt-BR/). O pipeline de release (`.github/workflows/release.yml`) usa a seção da versão como notas da release.
 
+## [Não lançado]
+
+### Novidades
+
+- Contas Outlook.com, Hotmail e Microsoft 365: login da Microsoft por OAuth, leitura e envio pelo Microsoft Graph, no Windows e no Linux.
+
+### Mudou
+
+- O catálogo de provedores agora mostra Google e Microsoft como disponíveis; os demais continuam "em breve".
+- O modelo de ameaças, a política de privacidade, o site e a documentação passam a falar das contas Google e Microsoft, com os escopos e os limites de cada uma.
+
+### Avisos
+
+- Em Microsoft 365, o administrador do tenant pode precisar conceder consentimento para as permissões do Microsoft Graph.
+- O app pede ao Microsoft Graph `Mail.ReadWrite` e `Mail.Send`; contas pessoais Outlook.com usam o diretório pessoal, sem tenant de trabalho/escola.
+- Sair de uma conta Microsoft apaga o token local; para revogar o acesso, use account.live.com/consent/Manage ou o administrador do Microsoft 365.
+- As notificações nativas no Linux e o bloqueio junto com a tela continuam na US18.
+
 ## [1.1.0] - 2026-10-28
 
 ### Novidades

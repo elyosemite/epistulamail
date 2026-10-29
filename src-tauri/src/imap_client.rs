@@ -157,6 +157,7 @@ fn to_remote_header(parser: &MessageParser, fetch: &Fetch) -> Option<RemoteHeade
     let fields: HeaderFields = fetch.header().and_then(|raw| message::parse_header_fields(parser, raw)).unwrap_or_default();
     Some(RemoteHeader {
         uid,
+        remote_id: None,
         fields,
         internal_date: fetch.internal_date().map(|d| d.to_rfc3339()),
         size: fetch.size.unwrap_or(0),

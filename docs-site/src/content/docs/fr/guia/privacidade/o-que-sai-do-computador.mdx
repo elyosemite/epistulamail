@@ -8,10 +8,12 @@ import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components'
 import AppPreview from '~/components/AppPreview.astro';
 import Timeline from '~/components/Timeline.astro';
 
-- **Votre fournisseur de messagerie** : connexion, IMAP, SMTP et révocation de l'accès à la déconnexion.
+- **Votre fournisseur de messagerie (Google ou Microsoft)** : connexion ; IMAP et SMTP chez Google ; Microsoft Graph chez Microsoft ; et révocation de l'accès à la déconnexion.
 - **Serveurs de clés OpenPGP** : seulement quand vous demandez à chercher une clé.
 - **Images externes d'un e-mail** : seulement quand vous les autorisez pour ce message.
 - **GitHub** : la vérification de nouvelle version (le fichier `latest.json` de la dernière version).
+
+Sur Google, EpistulaMail demande `https://mail.google.com/`, `openid`, `email` et `profile`. Sur Microsoft, il demande `https://graph.microsoft.com/Mail.ReadWrite`, `https://graph.microsoft.com/Mail.Send`, `openid`, `email` et `offline_access`. Il ne demande ni contacts, ni calendrier, ni fichiers, ni OneDrive.
 
 Sous Linux, l'app parle aussi au Secret Service par le bus de session local (D-Bus) pour garder et lire la clé de la base et les jetons des comptes. Cela reste sur votre ordinateur et n'est pas une connexion réseau.
 

@@ -379,6 +379,14 @@ pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_r
         return Ok(view);
     }
     let handle = state.handle(&key.account).await?;
+    if crate::graph::applies(&handle) {
+        return get_message_graph(
+            &state,
+            &handle,
+            GraphOpen { id: key.encode(), folder, uid, stored, cached, allow_remote_images },
+        )
+        .await;
+    }
 
     // Corpo já salvo: abre sem rede. A mensagem aparece na hora como lida e o servidor recebe o "lida" em
     // seguida, sem segurar a tela; se ele não receber, a próxima sincronização traz o estado do servidor.
@@ -461,6 +469,62 @@ pub async fn get_message(state: State<'_, AppState>, message_id: String, allow_r
     Ok(view)
 }
 
+/// Dados da mensagem já resolvidos para o caminho Graph.
+struct GraphOpen {
+    id: String,
+    folder: FolderRow,
+    uid: u32,
+    stored: store::StoredMessage,
+    cached: Option<Vec<u8>>,
+    allow_remote_images: bool,
+}
+
+/// Abre a mensagem no caminho Microsoft Graph: corpo MIME, marcação de lida e cache local.
+async fn get_message_graph(
+    state: &AppState,
+    handle: &crate::session::AccountHandle,
+    open: GraphOpen,
+) -> Result<MessageView, AppError> {
+    let GraphOpen { id, folder, uid, stored, cached, allow_remote_images } = open;
+    if let Some(raw) = cached {
+        let mut view = view_of(state, &raw, id, stored.flags, None, allow_remote_images).await;
+        if !stored.flags.seen {
+            let local = MessageFlags { seen: true, ..stored.flags };
+            let message_id = stored.id;
+            state.db.call(move |c| store::set_local_flags(c, message_id, local)).await?;
+            view.flags = local;
+            state.emit_accounts_changed();
+            if let Err(e) = crate::graph::mark_seen(state, handle, folder.id, uid).await {
+                tracing::info!(kind = e.kind(), "o \"lida\" fica para a próxima sincronização");
+            }
+        }
+        return Ok(view);
+    }
+    let raw = crate::graph::body(state, handle, folder.id, uid).await?;
+    let flags = match crate::graph::set_flags(state, handle, folder.id, uid, stored.flags, Some(true), None).await {
+        Ok(flags) => flags,
+        Err(e) => {
+            tracing::info!(kind = e.kind(), "o \"lida\" fica para a próxima sincronização");
+            stored.flags
+        }
+    };
+    let view = view_of(state, &raw, id, flags, None, allow_remote_images).await;
+    let attachments = crate::message::attachments_of(&raw);
+    let preview = crate::preview::from_raw(&raw);
+    let message_id = stored.id;
+    state
+        .db
+        .call(move |c| {
+            store::save_body_with(c, message_id, &raw, &attachments, &preview)?;
+            store::set_local_flags(c, message_id, flags)
+        })
+        .await?;
+    if flags.seen != stored.flags.seen {
+        state.emit_accounts_changed();
+    }
+    Ok(view)
+}
+
 /// Monta a mensagem exibida, decifrando e verificando o OpenPGP quando houver (US13, CA7).
 async fn view_of(state: &AppState, raw: &[u8], id: String, flags: MessageFlags, internal_date: Option<String>, allow_remote_images: bool) -> MessageView {
     let opened = crate::e2ee::open(state, raw.to_vec()).await;
@@ -523,6 +587,22 @@ pub async fn set_flags(state: State<'_, AppState>, message_ids: Vec<String>, see
     }
     require_active(&account)?;
     let handle = state.handle(&account_id).await?;
+
+    if crate::graph::applies(&handle) {
+        let mut results = Vec::new();
+        for (folder_id, uids) in groups {
+            for uid in uids {
+                let stored = state.db.call(move |c| store::message_by_uid(c, folder_id, uid)).await?;
+                let Some(stored) = stored else { continue };
+                let flags = crate::graph::set_flags(&state, &handle, folder_id, uid, stored.flags, seen, flagged).await?;
+                let message_id = stored.id;
+                state.db.call(move |c| store::set_local_flags(c, message_id, flags)).await?;
+                results.push(FlagResult { id: MessageKey { account: account_id.clone(), folder: folder_id, uid }.encode(), flags });
+            }
+        }
+        state.emit_accounts_changed();
+        return Ok(results);
+    }
 
     let mut results = Vec::with_capacity(keys.len());
     for folder in folders {
@@ -1459,6 +1539,42 @@ async fn expunge_from_folders(state: &AppState, account: &Account, groups: Vec<(
         return Ok(result);
     }
     let handle = state.handle(&account.id).await?;
+    if crate::graph::applies(&handle) {
+        let mut first_error = None;
+        for (folder, uids) in groups {
+            let folder_id = folder.id;
+            let ids = |uids: &[u32]| {
+                uids.iter()
+                    .map(|&uid| MessageKey { account: account.id.clone(), folder: folder_id, uid }.encode())
+                    .collect::<Vec<_>>()
+            };
+            match crate::graph::delete_uids(state, &handle, &folder, &uids).await {
+                Ok(()) => {
+                    let removed = uids.clone();
+                    match state.db.call(move |c| store::unlink(c, folder_id, &removed, false).map(drop)).await {
+                        Ok(()) => {
+                            tracing::info!(role = folder.role.as_str(), count = uids.len(), "mensagens apagadas de vez");
+                            result.ids.extend(ids(&uids));
+                        }
+                        Err(e) => {
+                            result.failed.extend(ids(&uids));
+                            first_error.get_or_insert(e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::warn!(role = folder.role.as_str(), count = uids.len(), error = ?e, "falha ao apagar mensagens");
+                    result.failed.extend(ids(&uids));
+                    first_error.get_or_insert(e);
+                }
+            }
+        }
+        state.emit_accounts_changed();
+        return match first_error {
+            Some(e) if result.ids.is_empty() => Err(e),
+            _ => Ok(result),
+        };
+    }
     let mut first_error = None;
     for (folder, uids) in groups {
         let folder_id = folder.id;

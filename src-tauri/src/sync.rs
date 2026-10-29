@@ -157,6 +157,9 @@ async fn remote_snapshot(session: &mut ImapSession, mailbox: &str, saved: &Saved
 }
 
 pub async fn sync_folder(state: &AppState, handle: &AccountHandle, folder_id: i64) -> Result<ApplyReport, AppError> {
+    if crate::graph::applies(handle) {
+        return crate::graph::sync_folder(state, handle, folder_id).await;
+    }
     let folder = state.db.call(move |c| store::get_folder(c, folder_id)).await?.ok_or(AppError::InvalidId)?;
     let saved = SavedState::from(&folder);
     let mailbox = folder.imap_name.clone();
@@ -195,6 +198,9 @@ const THREAD_BATCH: u32 = 500;
 
 /// Lê os cabeçalhos de resposta das mensagens que ainda não têm conversa. Falhar aqui não falha a sincronização.
 async fn fill_threads(state: &AppState, handle: &AccountHandle, folder_id: i64) {
+    if crate::graph::applies(handle) {
+        return;
+    }
     let wanted = state
         .db
         .call(move |c| Ok((store::get_folder(c, folder_id)?, store::uids_without_thread(c, folder_id, THREAD_BATCH)?)))
@@ -227,6 +233,9 @@ const PREVIEW_BATCH: u32 = 200;
 
 /// Completa a prévia das mensagens da pasta que ainda não têm. Falhar aqui não falha a sincronização.
 async fn fill_previews(state: &AppState, handle: &AccountHandle, folder_id: i64) {
+    if crate::graph::applies(handle) {
+        return;
+    }
     let wanted = state
         .db
         .call(move |c| Ok((store::get_folder(c, folder_id)?, store::uids_without_preview(c, folder_id, PREVIEW_BATCH)?)))
@@ -256,6 +265,9 @@ async fn fill_previews(state: &AppState, handle: &AccountHandle, folder_id: i64)
 
 /// Traz do servidor o próximo bloco de `batch` mensagens mais antigas que as salvas. Devolve quantas vieram.
 pub async fn fetch_older(state: &AppState, handle: &AccountHandle, folder: &FolderRow, batch: u32, lane: Lane) -> Result<usize, AppError> {
+    if crate::graph::applies(handle) {
+        return crate::graph::fetch_older(state, handle, folder, batch).await;
+    }
     let (Some(oldest), Some(uidvalidity)) = (folder.oldest_uid, folder.uidvalidity) else { return Ok(0) };
     if folder.complete {
         return Ok(0);
@@ -302,6 +314,13 @@ pub async fn fetch_older(state: &AppState, handle: &AccountHandle, folder: &Fold
 }
 
 pub async fn sync_folder_list(state: &AppState, handle: &AccountHandle) -> Result<(), AppError> {
+    if crate::graph::applies(handle) {
+        let remote = crate::graph::folders(state, handle).await?;
+        let id = handle.id.clone();
+        state.db.call(move |c| store::replace_folders(c, &id, &remote)).await?;
+        let _ = state.app.emit("folders-updated", AccountRef { account_id: handle.id.clone() });
+        return Ok(());
+    }
     let remote = imap_client::with_session(state, handle, Lane::Sync, |s| imap_client::remote_folders(s).boxed()).await?;
     let id = handle.id.clone();
     state.db.call(move |c| store::replace_folders(c, &id, &remote)).await?;

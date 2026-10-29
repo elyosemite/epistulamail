@@ -38,7 +38,7 @@
 
 <main id="conteudo">
   <article class="site-container site-doc">
-    <p class="site-label">Em vigor desde 27 de outubro de 2026</p>
+    <p class="site-label">Em vigor desde 28 de outubro de 2026</p>
     <h1 class="site-h2">Política de privacidade</h1>
     <p class="site-doc__lede">O EpistulaMail é um programa de e-mail que roda no seu computador. Não existe conta do EpistulaMail, servidor do EpistulaMail que receba as suas mensagens nem coleta de dados de uso. Esta página diz o que o programa acessa, onde guarda e com quem ele se conecta.</p>
 
@@ -46,24 +46,25 @@
     <p>O EpistulaMail é um projeto de código aberto mantido por Yuri Melo. O código está em <a href="https://github.com/elyosemite/epistulamail">github.com/elyosemite/epistulamail</a>, e qualquer pessoa pode conferir o que está escrito aqui.</p>
 
     <h2>Dados que o EpistulaMail acessa</h2>
-    <p>Quando você conecta uma conta Google, o EpistulaMail pede ao Google permissão para:</p>
+    <p>Quando você conecta uma conta Google ou Microsoft, o EpistulaMail pede permissão para:</p>
     <ul>
-      <li><b>Ler, enviar e organizar e-mails</b> (escopo <code>https://mail.google.com/</code>), pelo IMAP e pelo SMTP. É o único escopo do Google que dá acesso a esses protocolos.</li>
-      <li><b>Saber quem é você</b> (escopos <code>openid</code>, <code>email</code> e <code>profile</code>): o seu endereço de e-mail, o nome e a foto do perfil, para mostrar a conta no app.</li>
+      <li><b>Ler, enviar e organizar e-mails do Google</b> (escopo <code>https://mail.google.com/</code>), pelo IMAP e pelo SMTP. É o único escopo do Google que dá acesso a esses protocolos.</li>
+      <li><b>Ler, enviar e organizar e-mails da Microsoft</b> (escopos <code>https://graph.microsoft.com/Mail.ReadWrite</code> e <code>https://graph.microsoft.com/Mail.Send</code>), pelo Microsoft Graph.</li>
+      <li><b>Saber quem é você</b> (escopos <code>openid</code>, <code>email</code> e <code>profile</code> no Google; <code>openid</code>, <code>email</code> e <code>offline_access</code> na Microsoft): o seu endereço de e-mail, o nome e a foto do perfil, quando existir, para mostrar a conta no app e manter a conexão.</li>
     </ul>
-    <p>Esses dados são usados só para mostrar, buscar, escrever, enviar e organizar os seus e-mails dentro do app, a seu pedido. Eles não são usados para publicidade, não são vendidos, não são compartilhados com ninguém e não são usados para treinar modelos de inteligência artificial.</p>
+    <p>Esses dados são usados só para mostrar, buscar, escrever, enviar e organizar os seus e-mails dentro do app, a seu pedido. Eles não são usados para publicidade, não são vendidos, não são compartilhados com ninguém e não são usados para treinar modelos de inteligência artificial. O EpistulaMail não pede à Microsoft acesso a contatos, calendário, arquivos ou OneDrive.</p>
 
     <h2>Onde os dados ficam</h2>
     <ul>
       <li>As mensagens, os contatos, as pastas e as configurações ficam <b>só no seu computador</b>, num banco de dados cifrado com AES-256 (SQLCipher).</li>
       <li>A chave desse banco e os tokens de acesso às contas ficam no cofre do sistema: o Gerenciador de Credenciais no Windows e o Secret Service (GNOME Keyring ou KWallet) no Linux, protegidos pela sua sessão.</li>
-      <li>A sua senha do Google nunca passa pelo EpistulaMail: o login acontece na página do Google, no seu navegador.</li>
+      <li>A sua senha do Google ou da Microsoft nunca passa pelo EpistulaMail: o login acontece na página do provedor, no seu navegador.</li>
       <li>Os registros de diagnóstico do app não contêm conteúdo de mensagens, endereços, assuntos, senhas ou tokens.</li>
     </ul>
 
     <h2>Com quem o EpistulaMail se conecta</h2>
     <ul>
-      <li><b>Google</b>: para o login (OAuth), para receber e enviar e-mails (IMAP e SMTP) e para cancelar o acesso quando você sai da conta.</li>
+      <li><b>Google e Microsoft</b>: para o login (OAuth); IMAP e SMTP no Google; Microsoft Graph na Microsoft; e para cancelar o acesso quando você sai da conta.</li>
       <li><b>Servidores de chaves OpenPGP</b> (como <code>keys.openpgp.org</code>): só quando você pede para procurar a chave de alguém.</li>
       <li><b>Imagens externas de um e-mail</b>: ficam bloqueadas e só são baixadas, direto do servidor de quem enviou, quando você permite naquela mensagem.</li>
     </ul>
@@ -73,11 +74,14 @@
     <p>O uso e a transferência, para qualquer outro aplicativo, das informações recebidas das APIs do Google seguem a <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de Dados do Usuário dos Serviços de API do Google</a>, incluindo os requisitos de Uso Limitado.</p>
     <p lang="en">EpistulaMail's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
 
+    <h2>Dados da Microsoft</h2>
+    <p>Para as contas Microsoft, o EpistulaMail pede só os escopos do Microsoft Graph <code>Mail.ReadWrite</code>, <code>Mail.Send</code>, <code>openid</code>, <code>email</code> e <code>offline_access</code>. Os dados são usados apenas para ler, buscar, escrever, enviar e organizar os e-mails a pedido do usuário; não são usados para publicidade, não são vendidos, não são compartilhados e não são usados para treinar modelos. O acesso pode ser revogado em <a href="https://account.live.com/consent/Manage">account.live.com/consent/Manage</a> ou pelo administrador do Microsoft 365.</p>
+
     <h2>Como apagar os seus dados</h2>
     <ul>
-      <li><b>Sair de uma conta</b> no EpistulaMail cancela o acesso junto ao Google e, se você escolher, apaga do computador as mensagens daquela conta.</li>
+      <li><b>Sair de uma conta</b> no EpistulaMail apaga o token local e cancela o acesso junto ao Google, quando o provedor oferece revogação; na Microsoft, o token local é apagado e o acesso pode ser revogado em <a href="https://account.live.com/consent/Manage">account.live.com/consent/Manage</a> (ou pelo administrador do Microsoft 365). Se você escolher, as mensagens daquela conta também são apagadas do computador.</li>
       <li><b>Desinstalar</b> o EpistulaMail remove o programa; os dados ficam na pasta do app (no Windows, <code>%APPDATA%\br.com.epistula.desktop</code>; no Linux, <code>~/.local/share/br.com.epistula.desktop</code>) e as credenciais no cofre do sistema (itens "epistula"), e podem ser apagados por lá.</li>
-      <li>Você também pode cancelar o acesso a qualquer momento em <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
+      <li>Você também pode cancelar o acesso a qualquer momento em <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a> para o Google e em <a href="https://account.live.com/consent/Manage">account.live.com/consent/Manage</a> para a Microsoft.</li>
     </ul>
 
     <h2>Crianças</h2>

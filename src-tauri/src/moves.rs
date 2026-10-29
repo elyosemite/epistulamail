@@ -114,6 +114,9 @@ async fn execute(state: &AppState, account_id: &str, from: i64, to: i64, uids: &
         .await?;
     let uidvalidity = source.uidvalidity.ok_or(AppError::MessageNotFound)?;
     let handle = state.handle(account_id).await?;
+    if crate::graph::applies(&handle) {
+        return crate::graph::move_uids(state, &handle, &source, &target, uids).await;
+    }
     let (mailbox, target_mailbox) = (source.imap_name.clone(), target.imap_name.clone());
     imap_client::with_session(state, &handle, Lane::Interactive, |s| {
         let (mailbox, target_mailbox, wanted) = (mailbox.clone(), target_mailbox.clone(), uids.to_vec());

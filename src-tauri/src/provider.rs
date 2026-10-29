@@ -40,7 +40,7 @@ impl Provider {
         match self {
             Provider::Google => "https://mail.google.com/ openid email profile",
             Provider::Microsoft => {
-                "https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send offline_access openid email"
+                "https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send offline_access openid email"
             }
         }
     }

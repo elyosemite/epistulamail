@@ -13,7 +13,7 @@
 
 <p align="center"><a href="README.md">English</a> | <b>Português</b></p>
 
-O EpistulaMail é um cliente de e-mail para Windows e Linux, de código aberto, que guarda as suas mensagens no seu computador, num banco cifrado com AES-256, e nunca as faz passar por um servidor nosso. Ele conecta as suas contas Google por OAuth, lê e envia direto entre o seu computador e o seu provedor, e abre arquivos de e-mail antigos (Google Takeout, Outlook, Thunderbird, Apple Mail) sem conta e sem rede nenhuma.
+O EpistulaMail é um cliente de e-mail para Windows e Linux, de código aberto, que guarda as suas mensagens no seu computador, num banco cifrado com AES-256, e nunca as faz passar por um servidor nosso. Ele conecta as suas contas Google e Microsoft por OAuth, lê e envia direto entre o seu computador e o seu provedor, e abre arquivos de e-mail antigos (Google Takeout, Outlook, Thunderbird, Apple Mail) sem conta e sem rede nenhuma.
 
 **Seu, sem pegadinha.** Não existe conta EpistulaMail, nuvem EpistulaMail, telemetria nem plano pago. A chave do banco fica no cofre do sistema (Gerenciador de Credenciais no Windows, Secret Service no Linux), as imagens externas ficam bloqueadas até você liberar, e as únicas conexões são com o seu provedor (mais um servidor de chaves ou as imagens de quem enviou, e só quando você pede). O [modelo de ameaças](docs/arquitetura-e-ameacas.md) é público, inclusive com os riscos ainda não resolvidos.
 
@@ -38,7 +38,7 @@ Se bater, clique em "Mais informações" e depois em "Executar assim mesmo". As 
 ## Primeiros passos
 
 1. Abra o EpistulaMail e escolha como começar:
-   - **Conectar uma conta Google**: o login acontece na página do Google, no seu navegador. A sua senha nunca passa pelo app.
+   - **Conectar uma conta Google ou Microsoft**: o login acontece na página do Google ou da Microsoft, no seu navegador. A sua senha nunca passa pelo app.
    - **Abrir um arquivo de e-mail**: escolha um `.mbox`, `.pst`, `.eml` ou uma pasta de e-mails, ou solte sobre a janela. Sem conta e sem rede.
 2. Os e-mails mais recentes aparecem primeiro; o resto chega em segundo plano e fica disponível sem conexão.
 3. Aperte `/` para buscar: `de: Ana tem:anexo depois:2026-01-01` vira chips que você edita.
@@ -78,7 +78,7 @@ O que funciona hoje:
 
 **Contas e segurança**
 
-- Conexão com contas Google por OAuth (PKCE), lendo por IMAP e enviando por SMTP, sempre sobre TLS. Nenhuma senha passa pelo app.
+- Google por IMAP e SMTP, Microsoft pelo Microsoft Graph, sempre sobre TLS. Nenhuma senha passa pelo app.
 - Várias contas ao mesmo tempo, cada uma com nome, cor e foto, e troca com um clique.
 - Banco local SQLCipher (AES-256, HMAC por página), com a chave no cofre do sistema (Gerenciador de Credenciais no Windows, Secret Service no Linux) e exclusão segura das páginas apagadas.
 - Leitura segura: o HTML de terceiros é limpo por allowlist no processo Rust e exibido num iframe sem scripts. As imagens externas ficam bloqueadas até você liberar, mensagem por mensagem.
@@ -143,7 +143,7 @@ O que funciona hoje:
 
 O que ainda não existe:
 
-- Outros provedores além do Google. O modelo de dados já prevê Outlook, Yahoo, iCloud, Zoho, GMX, AOL e IMAP genérico.
+- Outros provedores além do Google e da Microsoft. O modelo de dados já prevê Yahoo, iCloud, Zoho, GMX, AOL e IMAP genérico.
 - O servidor de login (veja abaixo) e os arquivos `.olm` do Outlook para Mac.
 - Assinatura de código do instalador (veja [Instalar](#instalar)).
 
@@ -155,7 +155,7 @@ Entrar por OAuth faz com que você nunca digite a senha do seu e-mail no Epistul
 
 Para que esse servidor serve, e para que não serve:
 
-- Ele participa só do login. IMAP e SMTP continuam indo direto do seu computador para o seu provedor, e nenhuma mensagem, assunto ou contato passa por ele.
+- Ele participa só do login. IMAP, SMTP e Microsoft Graph continuam indo direto do seu computador para o seu provedor, e nenhuma mensagem, assunto ou contato passa por ele.
 - Ele não tem conta EpistulaMail e não guarda nada sobre os seus e-mails.
 - Sem ele, você continua lendo tudo que já está no computador e abrindo arquivos; só conectar uma conta nova, e em alguns casos renovar o acesso, depende dele.
 
@@ -183,7 +183,7 @@ Exportar uma conta inteira para um arquivo cifrado, guardar onde quiser (um disc
 
 ### Gestão de e-mail de verdade
 
-Busca local no conteúdo completo, mesmo offline. Regras que também rodam no servidor, com o app fechado. Adiar mensagens. Visão unificada de todas as contas. Assinaturas, modelos e agendamento de envio. Outros provedores (Outlook pelo OAuth da Microsoft, Yahoo, iCloud e IMAP genérico). Indicadores de autenticidade do remetente (SPF, DKIM, DMARC) visíveis na leitura, para ajudar a reconhecer phishing.
+Busca local no conteúdo completo, mesmo offline. Regras que também rodam no servidor, com o app fechado. Adiar mensagens. Visão unificada de todas as contas. Assinaturas, modelos e agendamento de envio. Outros provedores (Yahoo, iCloud e IMAP genérico). Indicadores de autenticidade do remetente (SPF, DKIM, DMARC) visíveis na leitura, para ajudar a reconhecer phishing.
 
 ## Como a sua informação é tratada
 
@@ -240,7 +240,7 @@ sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
 pnpm install
 ```
 
-Enquanto o servidor de login não existe, o build de desenvolvimento lê as configurações OAuth do `.env`. Crie os seus próprios clientes: um "Desktop app" no Google Cloud e um registro de aplicativo no Azure (Microsoft Entra ID) com a plataforma "Aplicativos móveis e da área de trabalho" e `http://127.0.0.1` como URI de redirecionamento (o app escuta numa porta aleatória desse endereço; se o portal recusar o IP, acrescente pelo Manifesto do app).
+Enquanto o servidor de login não existe, o build de desenvolvimento lê as configurações OAuth do `.env`. Crie os seus próprios clientes: um "Desktop app" no Google Cloud. Para a Microsoft, siga a configuração abaixo.
 
 ```powershell
 Copy-Item .env.example .env
@@ -248,6 +248,20 @@ Copy-Item .env.example .env
 # EPISTULA_GOOGLE_CLIENT_SECRET=...
 # EPISTULA_MS_CLIENT_ID=...
 ```
+
+### Configurar o Outlook na Microsoft
+
+A integração com a Microsoft usa o Microsoft Graph, então o diretório da própria conta pessoal funciona. Você não precisa de um tenant de trabalho/escola nem de uma licença do Exchange Online.
+
+1. No centro de administração do Microsoft Entra, abra **Registros de aplicativo → Novo registro** com a sua conta pessoal.
+2. Nome `EpistulaMail`. Tipos de conta: **Contas pessoais da Microsoft** (ou qualquer diretório organizacional e contas pessoais).
+3. URI de redirecionamento: plataforma **Aplicativos móveis e da área de trabalho**, valor `http://127.0.0.1`. O app escuta numa porta aleatória desse endereço. Se o portal recusar o IP, acrescente no Manifesto: `"publicClient": { "redirectUris": ["http://127.0.0.1"] }`.
+4. Autenticação: ligue **Permitir fluxos de cliente público**. Não crie client secret.
+5. Permissões de API: **Microsoft Graph → Permissões delegadas**: `Mail.ReadWrite`, `Mail.Send`, `email`, `openid` e `offline_access`. Conceda consentimento de administrador se você for administrador.
+6. Copie o **Application (client) ID** para `EPISTULA_MS_CLIENT_ID` no `.env` ou no segredo do repositório.
+7. Reinicie o app. O app usa o endpoint `/common`, então o mesmo client ID serve contas pessoais Outlook.com e Microsoft 365.
+
+O primeiro login mostra a tela de consentimento da Microsoft. O app pede só acesso ao e-mail, o endereço/nome básico e o refresh token offline; não pede contatos, calendário, arquivos nem OneDrive. O refresh token fica no cofre do sistema e o access token é renovado pelo app. Contas pessoais não precisam de tenant de trabalho/escola.
 
 O `.env` fica fora do git; nunca faça commit dele.
 

@@ -1,0 +1,25 @@
+---
+title: "Connecter Outlook"
+description: "La connexion dans le navigateur et les autorisations qu'EpistulaMail demande à Microsoft."
+sidebar:
+  order: 2
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+Quand vous choisissez Outlook, EpistulaMail ouvre la page de connexion de Microsoft dans votre navigateur. Vous vous connectez, vous autorisez et vous revenez à l'app. Cela vaut pour Outlook.com, Hotmail et Microsoft 365.
+
+EpistulaMail demande seulement :
+
+- **`https://graph.microsoft.com/Mail.ReadWrite`** : lire et organiser vos e-mails par Microsoft Graph.
+- **`https://graph.microsoft.com/Mail.Send`** : envoyer des e-mails par Microsoft Graph.
+- **`openid`, `email` et `offline_access`** : votre adresse et votre nom, pour afficher le compte, et l'autorisation de garder la connexion sans redemander de connexion à chaque synchronisation.
+
+Il ne demande ni contacts, ni calendrier, ni fichiers, ni OneDrive, ni profil au-delà de l'adresse et du nom. Votre mot de passe Microsoft ne passe jamais par EpistulaMail.
+
+<Aside type="note" title="Comptes professionnels ou scolaires">
+Dans Microsoft 365, l'administrateur du tenant peut devoir donner son consentement aux autorisations Microsoft Graph. Si la connexion est refusée, contactez votre administrateur.
+</Aside>
+
+Le refresh token se trouve dans le coffre du système (Gestionnaire d'identification sous Windows, Secret Service sous Linux), avec le même soin que les comptes Google : jamais dans la base en clair, jamais dans un fichier, jamais dans un journal. Pour révoquer l'accès, utilisez [account.live.com/consent/Manage](https://account.live.com/consent/Manage) ou la page de consentements de Microsoft 365.

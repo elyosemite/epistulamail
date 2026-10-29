@@ -1,5 +1,5 @@
-//! Catálogo de provedores de e-mail (US3, CA4). Só o Gmail é conectável nesta versão; os demais
-//! já têm servidores e tipo de autenticação definidos para as próximas stories.
+//! Catálogo de provedores de e-mail (US3, CA4). Gmail e Outlook são conectáveis; os demais já
+//! têm servidores e tipo de autenticação definidos para as próximas stories.
 
 use serde::Serialize;
 
@@ -78,7 +78,7 @@ pub const CATALOG: &[CatalogEntry] = &[
         id: "outlook",
         name: "Outlook",
         description: "Outlook.com, Hotmail e Microsoft 365",
-        available: false,
+        available: true,
         auth: AuthKind::OAuth2(Provider::Microsoft),
         imap: tls("outlook.office365.com", 993),
         smtp: starttls("smtp.office365.com", 587),
@@ -183,9 +183,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn only_gmail_is_connectable_for_now() {
+    fn gmail_and_outlook_are_connectable_for_now() {
         assert!(connectable("gmail").is_ok());
-        for id in ["outlook", "yahoo", "icloud", "zoho", "gmx", "aol", "custom", "inexistente"] {
+        assert!(connectable("outlook").is_ok());
+        for id in ["yahoo", "icloud", "zoho", "gmx", "aol", "custom", "inexistente"] {
             assert_eq!(connectable(id).err(), Some(AppError::ProviderUnavailable), "{id}");
         }
     }

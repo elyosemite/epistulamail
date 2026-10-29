@@ -93,6 +93,9 @@ async fn round(app: &AppHandle) {
 
 /// Baixa e salva os corpos de um lote (todas da mesma pasta). Devolve quantos foram salvos.
 pub async fn download(state: &AppState, handle: &AccountHandle, targets: Vec<BodyTarget>) -> Result<usize, AppError> {
+    if crate::graph::applies(handle) {
+        return crate::graph::download(state, handle, &targets).await;
+    }
     let Some(folder_id) = targets.first().map(|t| t.folder_id) else { return Ok(0) };
     let folder = state.db.call(move |c| store::get_folder(c, folder_id)).await?.ok_or(AppError::InvalidId)?;
     let Some(uidvalidity) = folder.uidvalidity else { return Ok(0) };

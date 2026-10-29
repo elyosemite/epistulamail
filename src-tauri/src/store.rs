@@ -518,10 +518,51 @@ pub fn replace_folders(conn: &mut Connection, account_id: &str, remote: &[Remote
 
 // ---------------------------------------------------------------- mensagens
 
+/// Id da mensagem no Microsoft Graph ligado a esta pasta e UID. `None` no IMAP.
+pub fn remote_id_for(conn: &Connection, folder_id: i64, uid: u32) -> Result<Option<String>, AppError> {
+    conn.query_row(
+        "SELECT remote_id FROM message_folder WHERE folder_id = ?1 AND uid = ?2",
+        params![folder_id, uid],
+        |r| r.get(0),
+    )
+    .optional()
+    .map_err(sql_error("mensagem remota"))
+    .map(Option::flatten)
+}
+
+/// Ids remotos do Graph já ligados a UIDs sintéticos nesta pasta.
+pub fn graph_uids(conn: &Connection, folder_id: i64) -> Result<HashMap<String, u32>, AppError> {
+    let mut st = conn
+        .prepare_cached("SELECT remote_id, uid FROM message_folder WHERE folder_id = ?1 AND remote_id IS NOT NULL")
+        .map_err(sql_error("mensagens remotas"))?;
+    let rows = st.query_map([folder_id], |r| Ok((r.get::<_, String>(0)?, r.get::<_, u32>(1)?))).map_err(sql_error("mensagens remotas"))?;
+    let mut map = HashMap::new();
+    for row in rows {
+        let (id, uid) = row.map_err(sql_error("mensagens remotas"))?;
+        map.insert(id, uid);
+    }
+    Ok(map)
+}
+
+/// Próxima página de mensagens mais antigas no Graph.
+pub fn graph_next_link(conn: &Connection, folder_id: i64) -> Result<Option<String>, AppError> {
+    conn.query_row("SELECT graph_next_link FROM folder WHERE id = ?1", [folder_id], |r| r.get(0))
+        .optional()
+        .map_err(sql_error("pasta"))
+        .map(Option::flatten)
+}
+
+pub fn set_graph_next_link(conn: &Connection, folder_id: i64, next_link: Option<&str>) -> Result<(), AppError> {
+    conn.execute("UPDATE folder SET graph_next_link = ?1 WHERE id = ?2", params![next_link, folder_id]).map_err(sql_error("pasta"))?;
+    Ok(())
+}
+
 /// Cabeçalho vindo do servidor para gravar no banco.
 #[derive(Debug, Clone)]
 pub struct RemoteHeader {
     pub uid: u32,
+    /// Id da mensagem no Microsoft Graph; `None` no IMAP.
+    pub remote_id: Option<String>,
     pub fields: HeaderFields,
     pub internal_date: Option<String>,
     pub size: u32,
@@ -618,8 +659,9 @@ pub fn apply_snapshot(conn: &mut Connection, folder_id: i64, snap: &Snapshot) ->
             .map_err(sql_error("sincronização"))?;
         let mut link = tx
             .prepare_cached(
-                "INSERT INTO message_folder (message_id, folder_id, uid) VALUES (?1, ?2, ?3)
-                 ON CONFLICT (folder_id, uid) DO UPDATE SET message_id = excluded.message_id",
+                "INSERT INTO message_folder (message_id, folder_id, uid, remote_id) VALUES (?1, ?2, ?3, ?4)
+                 ON CONFLICT (folder_id, uid) DO UPDATE SET message_id = excluded.message_id,
+                    remote_id = coalesce(excluded.remote_id, message_folder.remote_id)",
             )
             .map_err(sql_error("sincronização"))?;
         // Duas cópias iguais na mesma pasta são mensagens distintas no servidor (cada UID tem suas
@@ -667,7 +709,7 @@ pub fn apply_snapshot(conn: &mut Connection, folder_id: i64, snap: &Snapshot) ->
                     |r| r.get(0),
                 )
                 .map_err(sql_error("sincronização"))?;
-            link.execute(params![id, folder_id, h.uid]).map_err(sql_error("sincronização"))?;
+            link.execute(params![id, folder_id, h.uid, h.remote_id]).map_err(sql_error("sincronização"))?;
             report.upserted += 1;
             if is_new && !snap.reset {
                 report.new_ids.push(id);
@@ -2638,6 +2680,7 @@ pub(crate) mod tests {
     pub fn header(uid: u32, message_id: &str, subject: &str, seen: bool) -> RemoteHeader {
         RemoteHeader {
             uid,
+            remote_id: None,
             fields: HeaderFields {
                 from_name: "Remetente".into(),
                 from_address: "remetente@exemplo.com".into(),

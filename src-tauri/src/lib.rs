@@ -4,6 +4,7 @@ mod compose;
 mod db;
 mod e2ee;
 mod error;
+mod graph;
 mod imap_client;
 mod import;
 mod mail_import;

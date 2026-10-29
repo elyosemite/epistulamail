@@ -13,7 +13,7 @@
 
 <p align="center"><b>English</b> | <a href="README.pt-BR.md">Português</a></p>
 
-EpistulaMail is an open-source desktop email client for Windows and Linux that keeps your messages on your own computer, in an AES-256 encrypted database, and never routes them through a server of ours. It connects your Google accounts over OAuth, reads and sends straight between your computer and your provider, and opens old email archives (Gmail Takeout, Outlook, Thunderbird, Apple Mail) with no account and no network at all.
+EpistulaMail is an open-source desktop email client for Windows and Linux that keeps your messages on your own computer, in an AES-256 encrypted database, and never routes them through a server of ours. It connects your Google and Microsoft accounts over OAuth, reads and sends straight between your computer and your provider, and opens old email archives (Gmail Takeout, Outlook, Thunderbird, Apple Mail) with no account and no network at all.
 
 **Yours, with no catch.** There is no EpistulaMail account, no EpistulaMail cloud, no telemetry and no paid tier. The database key lives in the system credential vault (the Windows Credential Manager or the Linux Secret Service), remote images stay blocked until you allow them, and the only network calls are the ones to your provider (plus a key server or a sender's images, and only when you ask). The [threat model](docs/arquitetura-e-ameacas.md) is public, and so are the risks not solved yet.
 
@@ -38,7 +38,7 @@ If it matches, click "More info" and then "Run anyway". Newer versions install o
 ## Quick start
 
 1. Open EpistulaMail and choose how to start:
-   - **Connect a Google account**: the sign-in happens on Google's page, in your browser. Your password never passes through the app.
+   - **Connect a Google or Microsoft account**: the sign-in happens on Google's or Microsoft's page, in your browser. Your password never passes through the app.
    - **Open an email archive**: pick a `.mbox`, `.pst`, `.eml` or a mail folder, or drop it on the window. No account and no network.
 2. Recent mail shows up first; the rest arrives in the background and stays readable offline.
 3. Press `/` to search: `de: Ana tem:anexo depois:2026-01-01` turns into chips you can edit.
@@ -78,7 +78,7 @@ What works today:
 
 **Accounts and security**
 
-- Google accounts over OAuth (PKCE), reading through IMAP and sending through SMTP, always over TLS. Your password never passes through the app.
+- Google over IMAP and SMTP, Microsoft over Microsoft Graph, always over TLS. Your password never passes through the app.
 - Several accounts at once, each with its own name, color and photo, one click apart.
 - Local SQLCipher database (AES-256, per-page HMAC), with the key in the system credential vault (Windows Credential Manager, Linux Secret Service) and secure deletion of freed pages.
 - Safe reading: third-party HTML is cleaned against an allowlist in the Rust process and shown in an iframe with scripts disabled. Remote images stay blocked until you allow them, one message at a time.
@@ -143,7 +143,7 @@ What works today:
 
 What does not exist yet:
 
-- Providers other than Google. The data model already covers Outlook, Yahoo, iCloud, Zoho, GMX, AOL and generic IMAP.
+- Providers other than Google and Microsoft. The data model already covers Yahoo, iCloud, Zoho, GMX, AOL and generic IMAP.
 - The sign-in server (see below), and `.olm` files from Outlook for Mac.
 - Code signing for the installer (see [Install](#install)).
 
@@ -155,7 +155,7 @@ Signing in with OAuth means you never type your email password into EpistulaMail
 
 What that server is for, and what it is not:
 
-- It takes part in the login only. IMAP and SMTP keep going straight from your computer to your provider, and no message, subject or address book passes through it.
+- It takes part in the login only. IMAP, SMTP and Microsoft Graph keep going straight from your computer to your provider, and no message, subject or address book passes through it.
 - It has no EpistulaMail account and stores nothing about your mail.
 - Without it you can still read everything already on your computer and open archives; only connecting a new account, and renewing access in some cases, depends on it.
 
@@ -183,7 +183,7 @@ Export a whole account to an encrypted file, keep it wherever you like (an exter
 
 ### Real email management
 
-Full-text local search over the whole message body, offline included. Rules that also run on the server, with the app closed. Snoozing messages. A unified view across accounts. Signatures, templates and scheduled send. Other providers (Outlook over Microsoft OAuth, Yahoo, iCloud and generic IMAP). Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
+Full-text local search over the whole message body, offline included. Rules that also run on the server, with the app closed. Snoozing messages. A unified view across accounts. Signatures, templates and scheduled send. Other providers (Yahoo, iCloud and generic IMAP). Sender authenticity indicators (SPF, DKIM, DMARC) shown while reading, to help spot phishing.
 
 ## How your information is handled
 
@@ -240,7 +240,7 @@ sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
 pnpm install
 ```
 
-Until the sign-in server exists, a development build reads the OAuth settings from `.env`. Create your own clients: a "Desktop app" client in Google Cloud, and an app registration in Azure (Microsoft Entra ID) with the "Mobile and desktop applications" platform and `http://127.0.0.1` as the redirect URI (the app listens on a random port of that address; if the portal refuses the IP, add it in the app's Manifest).
+Until the sign-in server exists, a development build reads the OAuth settings from `.env`. Create your own clients: a "Desktop app" client in Google Cloud. For Microsoft, see the setup below.
 
 ```powershell
 Copy-Item .env.example .env
@@ -248,6 +248,20 @@ Copy-Item .env.example .env
 # EPISTULA_GOOGLE_CLIENT_SECRET=...
 # EPISTULA_MS_CLIENT_ID=...
 ```
+
+### Microsoft (Outlook) setup
+
+The Microsoft integration uses Microsoft Graph, so a personal Microsoft account's own directory works. You do not need a work or school tenant or an Exchange Online license.
+
+1. In the Microsoft Entra admin center, open **App registrations → New registration** with your personal account.
+2. Name it `EpistulaMail`. Supported account types: **Personal Microsoft accounts** (or any organizational directory and personal accounts).
+3. Redirect URI: platform **Mobile and desktop applications**, value `http://127.0.0.1`. The app listens on a random port of that address. If the portal refuses the IP, add `"publicClient": { "redirectUris": ["http://127.0.0.1"] }` to the app manifest.
+4. Authentication: enable **Allow public client flows**. Do not create a client secret.
+5. API permissions: **Microsoft Graph → Delegated permissions**: `Mail.ReadWrite`, `Mail.Send`, `email`, `openid` and `offline_access`. Grant admin consent if you are an administrator.
+6. Copy the **Application (client) ID** to `EPISTULA_MS_CLIENT_ID` in `.env` or to the repository secret.
+7. Restart the app. The app uses the `/common` endpoint, so the same client ID serves personal Outlook.com accounts and Microsoft 365 accounts.
+
+The first sign-in shows the Microsoft consent screen. The app requests only mail access plus the basic address/name and the offline refresh token; it does not ask for contacts, calendar, files or OneDrive. The refresh token stays in the system vault, and the access token is refreshed by the app. Personal accounts do not need a work or school tenant.
 
 `.env` is ignored by git; never commit it.
 
