@@ -1,4 +1,4 @@
-// DS: identidade.html · .lozenge e variantes --success, --removed, --inprogress, --new, --moved, --bold;
+// DS: lozenge.html · .lozenge e variantes --success, --removed, --inprogress, --new, --moved, --bold;
 // menus.html · --overdue (prazo vencido da sinalização)
 type Appearance = "default" | "success" | "removed" | "inprogress" | "new" | "moved" | "overdue";
 

@@ -19,7 +19,7 @@
   <main>
     <section class="ds-section" id="campos">
         <div class="ds-head">
-          <p class="eyebrow">ADS · Textfield, Textarea <code>.input</code></p>
+          <p class="eyebrow">ADS · Textfield, Textarea</p>
           <h1>Campos de texto</h1>
           <p class="lede">Três formas: a caixa padrão para formulários e configurações, a busca preenchida para o header e a linha usada nos campos Para, Cc e Assunto da composição.</p>
         </div>
@@ -39,15 +39,16 @@ Engenharia · Epistula</textarea></div></div>
         </div>
         <dl class="guidance">
           <div><dt>Estados</dt><dd>Padrão, hover (fundo sutil), foco (borda azul de 2px), inválido (borda vermelha e mensagem com ícone), desabilitado (sem borda e texto esmaecido).</dd></div>
-          <div><dt>Lista de opções</dt><dd><code>.select</code> envolve um <code>&lt;select&gt;</code> nativo e o ícone <code>chevron-down</code>. Use para escolhas fechadas com até ~10 opções; o rótulo vem de <code>&lt;label&gt;</code> ou <code>aria-label</code>.</dd></div>
+          <div><dt>Lista de opções</dt><dd>A lista envolve um <code>&lt;select&gt;</code> nativo e o ícone <code>chevron-down</code>. Use para escolhas fechadas com até ~10 opções; o rótulo vem de <code>&lt;label&gt;</code> ou <code>aria-label</code>.</dd></div>
           <div><dt>Erros</dt><dd>A mensagem diz o que corrigir, não só o que deu errado. Valide ao sair do campo, nunca a cada tecla.</dd></div>
         </dl>
-      </section>
+      <p class="classes"><span>Classes</span> <code>.input</code> <code>.select</code></p>
+    </section>
     <section class="ds-section" id="senha">
       <div class="ds-head">
         <p class="eyebrow">L54 · US10</p>
-        <h2>Senha <code>.input--password</code></h2>
-        <p class="lede">Um <code>.input</code> com o botão de mostrar no fim (<code>.btn--icon.btn--compact</code>). O ícone mostra o que o clique faz: <code>eye</code> para mostrar, <code>eye-off</code> para esconder.</p>
+        <h2>Senha</h2>
+        <p class="lede">Um campo com o botão de mostrar no fim. O ícone mostra o que o clique faz: <code>eye</code> para mostrar, <code>eye-off</code> para esconder.</p>
       </div>
       <div class="stage" style="display:grid;gap:var(--space-200);max-width:24rem">
         <div class="field"><label class="field__label" for="pw1">Senha do Epistula</label><div class="input input--password"><input id="pw1" type="password" value="frase-secreta" autocomplete="current-password"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Mostrar a senha" data-tip="Mostrar a senha"><svg class="i"><use href="#i-eye"/></svg></button></div></div>
@@ -56,6 +57,7 @@ Engenharia · Epistula</textarea></div></div>
       <dl class="guidance">
         <div><dt>Gerenciadores de senha</dt><dd>Use <code>autocomplete="current-password"</code> no desbloqueio e <code>new-password</code> ao criar ou trocar.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.input--password</code> <code>.input</code> <code>.btn--icon.btn--compact</code></p>
     </section>
   </main>
 </div>

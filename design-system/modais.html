@@ -19,7 +19,7 @@
   <main>
     <section class="ds-section" id="modais">
         <div class="ds-head">
-          <p class="eyebrow">ADS · Modal Dialog <code>.modal</code></p>
+          <p class="eyebrow">ADS · Modal Dialog</p>
           <h1>Modais</h1>
           <p class="lede">Reservados para decisões que não têm desfazer. O título é uma pergunta ou uma ação. O botão de confirmação repete o verbo, e o foco abre em "Cancelar". <kbd>Esc</kbd> fecha.</p>
         </div>
@@ -33,7 +33,7 @@
             <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--danger" type="button">Esvaziar lixeira</button></div>
           </div>
         </div>
-        <h3 class="sub">Ação reversível <code>.modal--warning</code></h3>
+        <h3 class="sub">Ação reversível</h3>
         <div class="stage stage--sunken">
           <div class="modal modal--warning" role="dialog" aria-labelledby="signout-title" style="margin-inline:auto">
             <div class="modal__head"><svg class="i"><use href="#i-log-out"/></svg><h3 class="modal__title" id="signout-title">Sair de Trabalho?</h3></div>
@@ -42,10 +42,10 @@
           </div>
         </div>
         <dl class="guidance">
-          <div><dt>Perigo ou aviso</dt><dd>Use <code>.btn--danger</code> só quando algo se perde de vez (esvaziar a lixeira). Sair da conta mantém os dados no computador, então usa <code>.modal--warning</code> e <code>.btn--warning</code>.</dd></div>
+          <div><dt>Perigo ou aviso</dt><dd>Use o botão de perigo só quando algo se perde de vez (esvaziar a lixeira). Sair da conta mantém os dados no computador, então usa o modal e o botão de aviso.</dd></div>
           <div><dt>Foco</dt><dd>O foco começa em "Cancelar" e fica preso no modal; <kbd>Esc</kbd> fecha.</dd></div>
         </dl>
-      <h3 class="sub">Seletor de pastas <code>.folder-picker</code></h3>
+      <h3 class="sub">Seletor de pastas</h3>
       <div class="stage stage--sunken">
         <div class="modal" role="dialog" aria-labelledby="picker-title" style="margin-inline:auto">
           <div class="modal__head"><h3 class="modal__title" id="picker-title">Mover para</h3></div>
@@ -72,10 +72,10 @@
       </div>
 
         <dl class="guidance">
-          <div><dt>Seletor</dt><dd><code>.folder-picker</code> é um <code>role="listbox"</code> com <code>.nav-item</code> como <code>role="option"</code>; setas movem a seleção e Enter confirma. <code>.modal__foot--split</code> separa "Nova pasta" à esquerda de Cancelar e Mover.</dd></div>
+          <div><dt>Seletor</dt><dd>O seletor de pastas é um <code>role="listbox"</code> com itens de navegação <code>role="option"</code>; setas movem a seleção e Enter confirma. O rodapé separa "Nova pasta" à esquerda de Cancelar e Mover.</dd></div>
         </dl>
-        <h3 class="sub">Configurações <code>.settings-sheet</code></h3>
-        <p class="demo-hint">Não é um <code>.modal</code> centralizado: cobre a área dos blocos (pastas, lista e leitura) e deixa visíveis a coluna de contas e o header.</p>
+        <h3 class="sub">Configurações</h3>
+        <p class="demo-hint">Não é um modal centralizado: cobre a área dos blocos (pastas, lista e leitura) e deixa visíveis a coluna de contas e o header.</p>
         <div class="stage stage--flush scroll-x">
           <div style="display:flex;height:38rem;min-width:56rem;padding:var(--space-100);background:var(--color-canvas)">
             <div class="settings-sheet" role="dialog" aria-modal="true" aria-labelledby="settings-title">
@@ -111,25 +111,25 @@
                     </div>
                     <div class="setting-list__row is-checked">
                       <input type="checkbox" class="checkbox" aria-label="Selecionar Trabalho" checked>
-                      <span class="avatar avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%235E4DB2%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23DFD8FD%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23DFD8FD%22/%3E%3C/svg%3E"></span>
+                      <span class="avatar avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span>
                       <div class="setting-list__name"><span class="setting-list__title">Trabalho</span><span class="setting-list__sub">joao.silva.empresa@gmail.com</span></div>
                       <span class="select"><select aria-label="Intervalo de Trabalho"><option selected>Usar o padrão (5 min)</option><option>Manualmente</option><option>1 minuto</option><option>2 minutos</option><option>5 minutos</option><option>10 minutos</option><option>15 minutos</option><option>30 minutos</option><option>1 hora</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
                     </div>
                     <div class="setting-list__row is-checked">
                       <input type="checkbox" class="checkbox" aria-label="Selecionar Pessoal" checked>
-                      <span class="avatar" aria-hidden="true">P<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23206A83%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23C6EDFB%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23C6EDFB%22/%3E%3C/svg%3E"></span>
+                      <span class="avatar" aria-hidden="true">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span>
                       <div class="setting-list__name"><span class="setting-list__title">Pessoal</span><span class="setting-list__sub">joao.silva@gmail.com</span></div>
                       <span class="select"><select aria-label="Intervalo de Pessoal"><option>Usar o padrão (5 min)</option><option>Manualmente</option><option selected>1 minuto</option><option>2 minutos</option><option>5 minutos</option><option>10 minutos</option><option>15 minutos</option><option>30 minutos</option><option>1 hora</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
                     </div>
                     <div class="setting-list__row">
                       <input type="checkbox" class="checkbox" aria-label="Selecionar Família">
-                      <span class="avatar avatar--orange" aria-hidden="true">F</span>
+                      <span class="avatar avatar--orange" aria-hidden="true">F<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span>
                       <div class="setting-list__name"><span class="setting-list__title">Família</span><span class="setting-list__sub">familia.silva@gmail.com</span></div>
                       <span class="select"><select aria-label="Intervalo de Família"><option>Usar o padrão (5 min)</option><option selected>Manualmente</option><option>1 minuto</option><option>2 minutos</option><option>5 minutos</option><option>10 minutos</option><option>15 minutos</option><option>30 minutos</option><option>1 hora</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
                     </div>
                     <div class="setting-list__row is-disabled">
                       <input type="checkbox" class="checkbox" aria-label="Selecionar Antiga" disabled>
-                      <span class="avatar avatar--teal" aria-hidden="true">A</span>
+                      <span class="avatar avatar--teal" aria-hidden="true">A<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span>
                       <div class="setting-list__name"><span class="setting-list__title">Antiga</span><span class="setting-list__sub">Você saiu desta conta</span></div>
                       <span class="select"><select aria-label="Intervalo de Antiga" disabled><option>Usar o padrão (5 min)</option></select><svg class="i"><use href="#i-chevron-down"/></svg></span>
                     </div>
@@ -156,10 +156,10 @@
           </div>
         
         <dl class="guidance">
-          <div><dt>Posição</dt><dd>No app, <code>.app-shell__sheet</code> põe a <code>.settings-sheet</code> sobre as áreas de navegação e leitura do <code>.app-shell--blocks</code>. A coluna de contas e o header continuam visíveis; os comandos e a busca ficam inertes enquanto ela está aberta.</dd></div>
-          <div><dt>Seções</dt><dd><code>.settings__nav</code> é uma <code>tablist</code> vertical de <code>.nav-item</code> (<kbd>↑</kbd>/<kbd>↓</kbd> trocam de seção); cada <code>.settings__panel</code> é um <code>tabpanel</code> com <code>.settings__title</code>, grupos (<code>.settings__group</code>) e ajustes (<code>.setting</code>: rótulo, descrição e controle). As mudanças valem na hora.</dd></div>
-          <div><dt>Aparência</dt><dd>A seção Aparência tem o grupo Tema (<code>.theme-picker</code>) e o grupo Cor do fundo (<code>.color-picker</code> com <code>.color-swatch__fill</code>). Ver selecao.html.</dd></div>
-          <div><dt>Várias contas</dt><dd><code>.setting-list</code> tem uma linha por conta com o controle próprio. Marcar linhas troca o cabeçalho por <code>.is-selecting</code> com "Aplicar a N contas". Conta de que o usuário saiu fica em <code>.is-disabled</code>.</dd></div>
+          <div><dt>Posição</dt><dd>No app, a folha de configurações fica sobre as áreas de navegação e leitura da casca em blocos. A coluna de contas e o header continuam visíveis; os comandos e a busca ficam inertes enquanto ela está aberta.</dd></div>
+          <div><dt>Seções</dt><dd>A navegação é uma <code>tablist</code> vertical (<kbd>↑</kbd>/<kbd>↓</kbd> trocam de seção); cada painel é um <code>tabpanel</code> com título, grupos e ajustes (rótulo, descrição e controle). As mudanças valem na hora.</dd></div>
+          <div><dt>Aparência</dt><dd>A seção Aparência tem o grupo Tema e o grupo Cor do fundo. Ver selecao.html.</dd></div>
+          <div><dt>Várias contas</dt><dd>A lista tem uma linha por conta com o controle próprio. Marcar linhas troca o cabeçalho por "Aplicar a N contas". Conta de que o usuário saiu fica desabilitada.</dd></div>
         </dl>
           <h3 class="sub">Configurações → Geral</h3>
         <div class="stage">
@@ -184,7 +184,7 @@
         </div>
         </div>
         <dl class="guidance">
-          <div><dt>Seção inicial</dt><dd>As Configurações abrem sempre em <b>Geral</b>, que reúne as opções da lista: densidade (<code>.segmented</code>) e as colunas visíveis (<code>.toggle</code>), as mesmas do menu da conta e dos botões do header.</dd></div>
+          <div><dt>Seção inicial</dt><dd>As Configurações abrem sempre em <b>Geral</b>, que reúne as opções da lista: densidade e as colunas visíveis, as mesmas do menu da conta e dos botões do header.</dd></div>
         </dl>
         <h3 class="sub">Configurações → Notificações (US8)</h3>
         <div class="stage stage--flush scroll-x">
@@ -218,9 +218,9 @@
                 <div class="settings__group">
                   <h4 class="settings__group-title">Contas</h4>
                   <div class="setting-list">
-                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--purple" aria-hidden="true">T</span><div class="setting-list__name"><span class="setting-list__title">Trabalho</span><span class="setting-list__sub">joao.silva.empresa@gmail.com</span></div><input type="checkbox" class="toggle" checked aria-label="Notificações de Trabalho"></div>
-                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar" aria-hidden="true">P</span><div class="setting-list__name"><span class="setting-list__title">Pessoal</span><span class="setting-list__sub">joao.silva@gmail.com</span></div><input type="checkbox" class="toggle" checked aria-label="Notificações de Pessoal"></div>
-                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--orange" aria-hidden="true">F</span><div class="setting-list__name"><span class="setting-list__title">Família</span><span class="setting-list__sub">familia.silva@gmail.com</span></div><input type="checkbox" class="toggle" aria-label="Notificações de Família"></div>
+                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><div class="setting-list__name"><span class="setting-list__title">Trabalho</span><span class="setting-list__sub">joao.silva.empresa@gmail.com</span></div><input type="checkbox" class="toggle" checked aria-label="Notificações de Trabalho"></div>
+                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar" aria-hidden="true">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><div class="setting-list__name"><span class="setting-list__title">Pessoal</span><span class="setting-list__sub">joao.silva@gmail.com</span></div><input type="checkbox" class="toggle" checked aria-label="Notificações de Pessoal"></div>
+                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--orange" aria-hidden="true">F<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><div class="setting-list__name"><span class="setting-list__title">Família</span><span class="setting-list__sub">familia.silva@gmail.com</span></div><input type="checkbox" class="toggle" aria-label="Notificações de Família"></div>
                   </div>
                 </div>
                 <div class="settings__group">
@@ -242,6 +242,7 @@
           </div>
         </div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.modal</code> <code>.modal--warning</code> <code>.btn--danger</code> <code>.btn--warning</code> <code>.folder-picker</code> <code>.nav-item</code> <code>.modal__foot--split</code> <code>.settings-sheet</code> <code>.app-shell__sheet</code> <code>.app-shell--blocks</code> <code>.settings__nav</code> <code>.settings__panel</code> <code>.settings__title</code> <code>.settings__group</code> <code>.setting</code> <code>.theme-picker</code> <code>.color-picker</code> <code>.color-swatch__fill</code> <code>.setting-list</code> <code>.is-selecting</code> <code>.is-disabled</code> <code>.segmented</code> <code>.toggle</code></p>
     </section>
     <section class="ds-section" id="privacidade">
       <div class="ds-head">
@@ -307,9 +308,9 @@
                 <div class="settings__group">
                   <h4 class="settings__group-title">Guardado neste computador</h4>
                   <div class="setting-list">
-                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--purple" aria-hidden="true">T</span><div class="setting-list__name"><span class="setting-list__title">Trabalho</span><span class="setting-list__sub">joao.silva.empresa@exemplo.com</span></div><span class="setting-list__end"><span class="setting-list__size">310 MB</span></span></div>
-                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar" aria-hidden="true">P</span><div class="setting-list__name"><span class="setting-list__title">Pessoal</span><span class="setting-list__sub">joao.silva@exemplo.com</span></div><span class="setting-list__end"><span class="setting-list__size">1,2 GB</span></span></div>
-                    <div class="setting-list__row setting-list__row--toggle is-disabled"><span class="avatar avatar--green" aria-hidden="true">A</span><div class="setting-list__name"><span class="setting-list__title">Antiga</span><span class="setting-list__sub">Você saiu desta conta</span></div><span class="setting-list__end"><span class="setting-list__size">95 MB</span><button class="btn btn--subtle btn--compact" type="button">Apagar</button></span></div>
+                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><div class="setting-list__name"><span class="setting-list__title">Trabalho</span><span class="setting-list__sub">joao.silva.empresa@exemplo.com</span></div><span class="setting-list__end"><span class="setting-list__size">310 MB</span></span></div>
+                    <div class="setting-list__row setting-list__row--toggle"><span class="avatar" aria-hidden="true">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><div class="setting-list__name"><span class="setting-list__title">Pessoal</span><span class="setting-list__sub">joao.silva@exemplo.com</span></div><span class="setting-list__end"><span class="setting-list__size">1,2 GB</span></span></div>
+                    <div class="setting-list__row setting-list__row--toggle is-disabled"><span class="avatar avatar--green" aria-hidden="true">A<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><div class="setting-list__name"><span class="setting-list__title">Antiga</span><span class="setting-list__sub">Você saiu desta conta</span></div><span class="setting-list__end"><span class="setting-list__size">95 MB</span><button class="btn btn--subtle btn--compact" type="button">Apagar</button></span></div>
                   </div>
                   <p class="setting__desc" style="margin:0">Para apagar os dados de uma conta que você usa, saia dela e marque "Apagar também os e-mails desta conta". Apagar troca a chave de proteção. Nada muda no servidor.</p>
                 </div>
@@ -321,8 +322,9 @@
       <dl class="guidance">
         <div><dt>Senha desligada</dt><dd>Só aparece o primeiro ajuste; "Bloquear depois de", "Bloquear junto com o Windows" (só no Windows) e "Senha" surgem quando ela é ligada.</dd></div>
         <div><dt>Disco cifrado</dt><dd>O aviso só aparece quando o disco do Epistula não está cifrado. É só recomendação: não bloqueia nada.</dd></div>
-        <div><dt>Apagar</dt><dd>Só nas contas de que você saiu: a linha fica <code>.is-disabled</code>, mas o "Apagar" continua ativo. Apagar o conteúdo de uma conta em uso não adiantaria, porque o download em segundo plano o traria de volta; para isso, sair com "Apagar também".</dd></div>
+        <div><dt>Apagar</dt><dd>Só nas contas de que você saiu: a linha fica desabilitada, mas o "Apagar" continua ativo. Apagar o conteúdo de uma conta em uso não adiantaria, porque o download em segundo plano o traria de volta; para isso, sair com "Apagar também".</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.is-disabled</code></p>
     </section>
     <section class="ds-section" id="privacidade-modais">
       <div class="ds-head">
@@ -361,7 +363,7 @@
             </div>
             <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--warning" type="button">Sair</button></div>
           </div>
-          <p class="demo-hint" style="margin-top:var(--space-150)">Marcado, o botão vira <code>.btn--danger</code> "Sair e apagar".</p>
+          <p class="demo-hint" style="margin-top:var(--space-150)">Marcado, o botão vira o de perigo, "Sair e apagar".</p>
         </div>
 
         <div class="stage stage--sunken">
@@ -380,6 +382,7 @@
           </div>
         </div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.btn--danger</code></p>
     </section>
     <section class="ds-section" id="link">
       <div class="ds-head">

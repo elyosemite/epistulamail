@@ -42,7 +42,7 @@
             <figure class="state"><label class="choice" for="tg-4" style="color:var(--color-text-disabled)"><input type="checkbox" class="toggle" id="tg-4" disabled>Criptografia S/MIME</label><figcaption><b>Desabilitado</b>requer certificado</figcaption></figure>
           </div>
         </div>
-        <h3 class="sub" id="provedores">Grade de provedores <code>.provider-grid</code></h3>
+        <h3 class="sub" id="provedores">Grade de provedores</h3>
         <p class="demo-hint">Primeiro passo de "Adicionar conta". Sem logotipos de marca: todos usam o envelope, e "Outro" usa o globo. Provedores ainda não suportados ficam desabilitados com "Em breve".</p>
         <div class="stage">
           <ul class="provider-grid" role="list">
@@ -64,7 +64,7 @@
           </div>
         </div>
 
-        <h3 class="sub" id="cor-da-conta">Cor da conta <code>.color-picker</code></h3>
+        <h3 class="sub" id="cor-da-conta">Cor da conta</h3>
         <p class="demo-hint">Rádios com amostras de avatar nas seis cores, usadas na coluna de contas e no header. A amostra mostra a inicial da conta, para o usuário ver exatamente como vai ficar.</p>
         <div class="stage stage--sunken">
           <div class="modal" role="dialog" aria-labelledby="setup-title" style="margin-inline:auto" data-account-setup>
@@ -93,10 +93,10 @@
         </div>
         <dl class="guidance">
           <div><dt>Quando aparece</dt><dd>Logo depois do login no provedor. O nome sugerido é a parte do e-mail antes do "@"; a cor sugerida é a próxima ainda não usada.</dd></div>
-          <div><dt>Acessibilidade</dt><dd><code>fieldset</code> com <code>legend</code> "Cor"; cada opção é um rádio nativo com o nome da cor em <code>.visually-hidden</code>. A seleção tem anel azul e marca de verificação, não só cor.</dd></div>
+          <div><dt>Acessibilidade</dt><dd><code>fieldset</code> com <code>legend</code> "Cor"; cada opção é um rádio nativo com o nome da cor em texto oculto só visualmente. A seleção tem anel azul e marca de verificação, não só cor.</dd></div>
           <div><dt>Mais de seis contas</dt><dd>As cores se repetem; a inicial e o nome continuam distinguindo as contas.</dd></div>
         </dl>
-        <h3 class="sub">Tema <code>.theme-picker</code></h3>
+        <h3 class="sub">Tema</h3>
         <div class="stage">
           <div style="max-width:36rem">
             <fieldset class="theme-picker">
@@ -107,7 +107,7 @@
                   </fieldset>
           </div>
         </div>
-        <h3 class="sub">Cor do fundo <code>.color-swatch__fill</code></h3>
+        <h3 class="sub">Cor do fundo</h3>
         <div class="stage">
           <fieldset class="color-picker">
                     <legend class="visually-hidden">Cor do fundo</legend>
@@ -122,10 +122,11 @@
                   </fieldset>
         </div>
         <dl class="guidance">
-          <div><dt>Tema</dt><dd><code>.theme-picker</code> é um <code>fieldset</code> de rádios em cartões <code>.theme-option</code> (ícone, nome, descrição). Sistema remove o <code>data-theme</code> do <code>&lt;html&gt;</code> e segue <code>prefers-color-scheme</code>; Claro e Escuro o fixam. Fica em Configurações → Aparência.</dd></div>
-          <div><dt>Fundo</dt><dd>O mesmo <code>.color-swatch</code> do seletor de cor da conta, com <code>.color-swatch__fill</code> (quadrado da cor em <code>--swatch</code>) no lugar do avatar. Oito cores: Padrão (<code>--color-canvas</code>) e <code>--color-canvas-blue</code>, <code>-teal</code>, <code>-green</code>, <code>-purple</code>, <code>-magenta</code>, <code>-orange</code>, <code>-sand</code>, com valores para claro e escuro. A escolha grava <code>--app-background</code> na casca.</dd></div>
+          <div><dt>Tema</dt><dd>O seletor de tema é um <code>fieldset</code> de rádios em cartões (ícone, nome, descrição). Sistema remove o <code>data-theme</code> do <code>&lt;html&gt;</code> e segue <code>prefers-color-scheme</code>; Claro e Escuro o fixam. Fica em Configurações → Aparência.</dd></div>
+          <div><dt>Fundo</dt><dd>O mesmo seletor de cor da conta, com um quadrado da cor (<code>--swatch</code>) no lugar do avatar. Oito cores: Padrão (<code>--color-canvas</code>) e <code>--color-canvas-blue</code>, <code>-teal</code>, <code>-green</code>, <code>-purple</code>, <code>-magenta</code>, <code>-orange</code>, <code>-sand</code>, com valores para claro e escuro. A escolha grava <code>--app-background</code> na casca.</dd></div>
         </dl>
-      </section>
+      <p class="classes"><span>Classes</span> <code>.provider-grid</code> <code>.color-picker</code> <code>.visually-hidden</code> <code>.theme-picker</code> <code>.color-swatch__fill</code> <code>.theme-option</code> <code>.color-swatch</code></p>
+    </section>
   </main>
 </div>
 <script src="docs.js"></script>

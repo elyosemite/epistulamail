@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="Marcar itens, contador, ações em lote e limpar a seleção.">
+<title>Seleção em lote · Epistula Design System</title>
+<meta name="description" content="Pessoas e contas, com inicial, cor e foto.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="padrao-selecao-em-lote">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="padrao-selecao-em-lote">
+      <div class="ds-head">
+        <p class="eyebrow">Padrão · v3 §2.5</p>
+        <h1>Seleção em lote</h1>
+        <p class="lede">Marcar vários itens e agir de uma vez, sempre mostrando quantos estão marcados e deixando desistir.</p>
+      </div>
+      <div class="stage stage--flush">
+        <div style="max-width:46rem">
+          <div class="toolbar is-selecting">
+            <input type="checkbox" class="checkbox" checked aria-label="Desmarcar todas">
+            <span class="toolbar__count">2 selecionados · <button class="btn btn--link" type="button">Selecionar todos os 128</button></span>
+            <button class="btn btn--subtle btn--icon" type="button" aria-label="Arquivar"><svg class="i"><use href="#i-archive"/></svg></button>
+            <button class="btn btn--subtle btn--icon" type="button" aria-label="Mover"><svg class="i"><use href="#i-folder-move"/></svg></button>
+            <button class="btn btn--subtle btn--icon" type="button" aria-label="Excluir"><svg class="i"><use href="#i-trash"/></svg></button>
+            <span class="toolbar__sep" aria-hidden="true"></span>
+            <button class="btn btn--link" type="button">Limpar seleção</button>
+          </div>
+          <div class="thread-list thread-list--standard" role="list" aria-label="Lista com seleção"><div class="thread is-checked" role="listitem" tabindex="0" aria-label="Marina Couto, Revisão do contrato: Fornecedor Lumen, 10:42"><input type="checkbox" class="checkbox thread__check" checked aria-label="Selecionar conversa de Marina Couto" tabindex="-1"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Marina Couto</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span><span class="thread__icons" aria-hidden="true"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">Segue a versão 3 do contrato com os ajustes da cláusula 7.2.</div></div><div class="thread is-checked" role="listitem" tabindex="0" aria-label="Rafael Dias, Reunião de planejamento, 09:15"><input type="checkbox" class="checkbox thread__check" checked aria-label="Selecionar conversa de Rafael Dias" tabindex="-1"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Rafael Dias</span></div><div class="thread__meta"><span class="thread__date">09:15</span></div><div class="thread__subject"><span class="thread__subject-text">Reunião de planejamento</span><span class="thread__icons" aria-hidden="true"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">Confirmando a sala e o horário de quinta-feira.</div></div><div class="thread" role="listitem" tabindex="0" aria-label="Ana Ribeiro, Orçamento do trimestre, ontem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar conversa de Ana Ribeiro" tabindex="-1"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Ana Ribeiro</span></div><div class="thread__meta"><span class="thread__date">ontem</span></div><div class="thread__subject"><span class="thread__subject-text">Orçamento do trimestre</span><span class="thread__icons" aria-hidden="true"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div><div class="thread__snippet">As planilhas estão na pasta compartilhada.</div></div></div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Problema</dt><dd>Organizar muitas mensagens uma a uma é lento. Ações em lote dão velocidade, mas só se a pessoa sabe o que está marcado e consegue desistir.</dd></div>
+        <div><dt>Contexto</dt><dd>Listas de mensagens, resultados de busca, lista de regras e de contas. Vale para qualquer lista em que a mesma ação se repete.</dd></div>
+        <div><dt>Composição</dt><dd><a href="selecao.html">Checkbox</a> em cada linha, <a href="threads.html">linha da lista</a>, barra de comandos que vira barra de seleção e <a href="botoes.html">botões</a> só com ícone.</dd></div>
+        <div><dt>Não usar quando</dt><dd>A lista tem uma ação principal por item e quase nunca se age em vários. Aí as ações rápidas na linha bastam.</dd></div>
+      </dl>
+      <dl class="guidance">
+        <div><dt>Fluxo</dt><dd>1) A pessoa marca uma linha: a barra de comandos troca por uma barra de seleção com o contador. 2) <kbd>Shift</kbd>+clique marca um intervalo e <kbd>Ctrl</kbd>+<kbd>A</kbd> marca a página. 3) "Selecionar todos os N" estende a seleção além da página. 4) A ação vale para todas as marcadas, com Desfazer. 5) "Limpar seleção" ou desmarcar a última volta à barra de comandos.</dd></div>
+        <div><dt>Variações</dt><dd>Seleção da página; seleção de todos os resultados; seleção com arrastar para uma pasta (leva todas as marcadas).</dd></div>
+        <div><dt>Estados</dt><dd>Nenhuma, algumas (o checkbox mestre fica indeterminado), todas. Linha marcada e linha aberta usam o mesmo fundo; a aberta tem também uma barra azul, para distinguir "estou lendo" de "vou agir".</dd></div>
+        <div><dt>Acessibilidade</dt><dd>Marcar o checkbox não abre a conversa. O contador é anunciado ("2 selecionados"). Todas as ações da barra funcionam por teclado, e <kbd>X</kbd> marca a linha em foco.</dd></div>
+      </dl>
+      <dl class="guidance">
+        <div><dt>Conteúdo</dt><dd>O contador diz quantas estão marcadas e oferece "Selecionar todos os N" quando há mais que a página. Os botões só com ícone têm nome e dica. Em ações grandes, a confirmação diz o número ("Excluir 128 conversas?").</dd></div>
+        <div><dt>Anti-patterns</dt><dd>Selecionar sem mostrar quantas. Agir em itens que a pessoa não vê marcados. Ação em lote sem Desfazer. Perder a seleção ao rolar.</dd></div>
+      </dl>
+      <p class="classes"><span>Composição</span> <code>selecao</code> · <code>threads</code> · <code>botoes</code></p>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

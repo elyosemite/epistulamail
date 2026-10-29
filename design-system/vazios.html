@@ -19,7 +19,7 @@
   <main>
     <section class="ds-section" id="vazios">
         <div class="ds-head">
-          <p class="eyebrow">ADS · Empty State <code>.empty</code></p>
+          <p class="eyebrow">ADS · Empty State</p>
           <h1>Empty states</h1>
           <p class="lede">Cada vazio diz por que está vazio e o que fazer a seguir. Uma caixa de entrada zerada é uma conquista, e um erro precisa de saída.</p>
         </div>
@@ -58,9 +58,22 @@
           </div></div>
         </div>
         <dl class="guidance">
-          <div><dt>Aguardando</dt><dd>Quando o próximo passo acontece fora do Epistula (login no navegador, confirmação por e-mail), o spinner de 48px substitui a ilustração com <code>.empty__spinner</code>. O título diz onde continuar, e a única ação é "Cancelar", no estilo sutil, que volta ao estado anterior sem mensagem de erro.</dd></div>
+          <div><dt>Aguardando</dt><dd>Quando o próximo passo acontece fora do Epistula (login no navegador, confirmação por e-mail), o spinner de 48px substitui a ilustração. O título diz onde continuar, e a única ação é "Cancelar", no estilo sutil, que volta ao estado anterior sem mensagem de erro.</dd></div>
         </dl>
-      </section>
+      <p class="classes"><span>Classes</span> <code>.empty</code> <code>.empty__spinner</code></p>
+
+      <h2 id="padrao">Como usar: modelo de padrão</h2>
+      <dl class="guidance">
+        <div><dt>Problema</dt><dd>Uma tela sem conteúdo parece quebrada. A pessoa precisa saber se está tudo certo, se algo falhou ou o que fazer.</dd></div>
+        <div><dt>Contexto</dt><dd>Caixa zerada, busca sem resultado, pasta que não carregou, esperando uma ação fora do app. Vale para qualquer lista ou painel que pode ficar vazio.</dd></div>
+        <div><dt>Composição</dt><dd>Ilustração e título, uma frase de apoio e, se houver saída, até duas ações (<a href="botoes.html">botões</a>). Em espera, o <a href="carregamento.html">spinner</a> no lugar da ilustração.</dd></div>
+        <div><dt>Fluxo</dt><dd>Mostre o vazio certo: conquista (nada a fazer), sem resultado (amplie a busca), erro (tente de novo) ou espera (continue em outro lugar). Cada um tem uma saída, ou diz que não precisa de nenhuma.</dd></div>
+        <div><dt>Estados</dt><dd>Conquista, sem resultado, erro e aguardando. O aguardando só tem "Cancelar", no estilo sutil, e volta ao estado anterior sem mensagem de erro.</dd></div>
+        <div><dt>Acessibilidade</dt><dd>O título é um título de verdade. A ilustração é decorativa (<code>aria-hidden</code>). Texto e ações são alcançáveis por teclado.</dd></div>
+        <div><dt>Conteúdo</dt><dd>Diga por que está vazio e o que fazer. Sem culpar a pessoa. A caixa de entrada zerada comemora.</dd></div>
+        <div><dt>Anti-patterns</dt><dd>Uma tela em branco sem texto. O mesmo estado para "sem resultado" e para erro. Uma ação que não leva a nada.</dd></div>
+      </dl>
+    </section>
   </main>
 </div>
 <script src="docs.js"></script>

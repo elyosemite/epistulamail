@@ -40,6 +40,9 @@ jobs:
 
       - name: Testes do frontend
         run: pnpm test
+      # Tokens, temas, registro das páginas e métricas do design system (design-system/CONTRIBUTING.md).
+      - name: Design system
+        run: pnpm ds:check
       # tsc + vite build; o dist/ também é exigido pelo build do Tauri abaixo.
       - name: Build do frontend
         run: pnpm build

@@ -1,4 +1,4 @@
-// DS: sidebar.html "Sinalizadas" · .nav-item com o ícone flag e a quantidade; .is-overdue em "Atrasadas" (US6)
+// DS: pastas.html "Sinalizadas" · .nav-item com o ícone flag e a quantidade; .is-overdue em "Atrasadas" (US6)
 import type { FlagBucket } from "../lib/tauri";
 import { NavItem } from "../ui/Sidebar";
 

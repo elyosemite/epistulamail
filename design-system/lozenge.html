@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lozenge · Epistula Design System</title>
+<meta name="description" content="Status de uma mensagem, em uma palavra.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="lozenge">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="lozenge">
+      <div class="ds-head">
+        <p class="eyebrow">ADS · Lozenge</p>
+        <h1>Lozenge</h1>
+        <p class="lede">O lozenge mostra o status de uma mensagem ou de uma peça. É sempre uma palavra, nunca um número: para contar use o <a href="badge.html">badge</a>.</p>
+      </div>
+      <div class="stage">
+        <div class="states">
+          <figure class="state"><div class="row"><span class="lozenge">Arquivada</span><span class="lozenge lozenge--success">Entregue</span><span class="lozenge lozenge--removed">Falhou</span><span class="lozenge lozenge--inprogress">Enviando</span><span class="lozenge lozenge--new">Novo</span><span class="lozenge lozenge--moved">Agendada</span></div><figcaption><b>Lozenge sutil</b>uso padrão, em linha com o texto</figcaption></figure>
+          <figure class="state"><div class="row"><span class="lozenge lozenge--bold">Arquivada</span><span class="lozenge lozenge--bold lozenge--success">Entregue</span><span class="lozenge lozenge--bold lozenge--removed">Falhou</span><span class="lozenge lozenge--bold lozenge--inprogress">Enviando</span><span class="lozenge lozenge--bold lozenge--new">Novo</span><span class="lozenge lozenge--bold lozenge--moved">Agendada</span></div><figcaption><b>Lozenge forte</b>só quando o status é o principal da tela</figcaption></figure>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Sutil e forte</dt><dd>Use o sutil, em linha com o texto. O forte só quando o status é o principal da tela.</dd></div>
+        <div><dt>Não só cor</dt><dd>O sentido está na palavra, e a cor só reforça. Não troque o texto por um ponto colorido.</dd></div>
+        <div><dt>Maturidade</dt><dd>O DS usa o lozenge para mostrar a maturidade de cada página (<a href="governanca.html">Governança</a>).</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

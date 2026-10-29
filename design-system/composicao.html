@@ -19,7 +19,7 @@
   <main>
     <section class="ds-section" id="composicao">
         <div class="ds-head">
-          <p class="eyebrow">Específico do Epistula · composto de Textfield, Tag, Button <code>.compose</code></p>
+          <p class="eyebrow">Específico do Epistula · composto de Textfield, Tag, Button</p>
           <h1>Composição</h1>
           <p class="lede">Janela flutuante de 560px com elevação overlay. Os campos usam o estilo de linha, e o corpo usa Body large. "Enviar" segura a mensagem por 5 segundos, com opção de desfazer. Clique para ver o toast.</p>
         </div>
@@ -32,7 +32,7 @@
               <button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar e salvar rascunho"><svg class="i"><use href="#i-x"/></svg></button>
             </div>
             <div class="compose__fields">
-              <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--purple">MC</span><span class="chip__name">Marina Couto</span></span><span class="chip is-external"><span class="avatar avatar--orange">J</span><span class="chip__name">joao@lumen.com.br</span></span><input id="compose-to" aria-label="Adicionar destinatário"><button class="btn btn--link btn--compact" type="button">Cc Cco</button></div>
+              <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--purple">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="chip__name">Marina Couto</span></span><span class="chip is-external"><span class="avatar avatar--orange">J<img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span><span class="chip__name">joao@lumen.com.br</span></span><input id="compose-to" aria-label="Adicionar destinatário"><button class="btn btn--link btn--compact" type="button">Cc Cco</button></div>
               <label class="input input--line" for="compose-subject"><span class="input__prefix">Assunto</span><input id="compose-subject" value="Re: Revisão do contrato: Fornecedor Lumen"></label>
             </div>
             <div class="compose__body" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Corpo da mensagem" id="compose-body">Marina, aprovado da minha parte. Pode enviar à Lumen.<br><br>Yuri</div>
@@ -50,13 +50,13 @@
             </div>
           </form>
         </div>
-      <h3 class="sub">Resposta e encaminhamento no painel de leitura <code>.compose--inline</code></h3>
+      <h3 class="sub">Resposta e encaminhamento no painel de leitura</h3>
       <div class="stage">
         <article class="reader" style="padding:0">
           <form class="compose compose--inline" aria-label="Encaminhar">
             <div class="compose__bar"><span class="compose__title">Encaminhar</span><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover encaminhamento" data-tip="Remover"><svg class="i"><use href="#i-trash"/></svg></button></div>
             <div class="compose__fields">
-              <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR</span><span class="chip__name">Ana Ribeiro</span></span><input aria-label="Adicionar destinatário"><button class="btn btn--subtle btn--compact compose__toggle" type="button" aria-expanded="false">Cc/Cco</button></div>
+              <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="chip__name">Ana Ribeiro</span></span><input aria-label="Adicionar destinatário"><button class="btn btn--subtle btn--compact compose__toggle" type="button" aria-expanded="false">Cc/Cco</button></div>
               <label class="input input--line"><span class="input__prefix">Assunto</span><input value="Fw: Revisão do contrato: Fornecedor Lumen"></label>
             </div>
             <div class="compose__body"><textarea aria-label="Texto do encaminhamento">Ana, para seu conhecimento antes da reunião de sexta.</textarea></div>
@@ -76,23 +76,23 @@
             </div>
           </form>
           <div class="message" style="opacity:.6">
-            <div class="message__head"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">MC</span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
+            <div class="message__head"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
             <div class="message__body"><p>Segue a versão 3 do contrato…</p></div>
           </div>
         </article>
       </div>
 
         <dl class="guidance">
-          <div><dt>Onde abre</dt><dd><code>.compose--inline</code> abre dentro de <code>.reader</code>: abaixo da mensagem ao responder, acima ao encaminhar. Campos: Para (chips), Cc/Cco (<code>.compose__toggle</code>), Assunto ("Re:"/"Fw:" editável) e o corpo.</dd></div>
-          <div><dt>Encaminhar</dt><dd><code>.message__quote</code> mostra De, Enviado, Para, Assunto e o texto da mensagem original abaixo do corpo.</dd></div>
+          <div><dt>Onde abre</dt><dd>A janela abre dentro do painel de leitura: abaixo da mensagem ao responder, acima ao encaminhar. Campos: Para (chips), Cc/Cco, Assunto ("Re:"/"Fw:" editável) e o corpo.</dd></div>
+          <div><dt>Encaminhar</dt><dd>A mensagem original mostra De, Enviado, Para, Assunto e o texto da mensagem original abaixo do corpo.</dd></div>
         </dl>
-        <h3 class="sub">Envio <code>.compose__quote-toggle</code> <code>.compose__attachments</code> <code>.compose__hint</code></h3>
+        <h3 class="sub">Envio</h3>
       <h3 class="sub">Responder: citação recolhida</h3>
       <div class="stage">
         <form class="compose compose--inline" aria-label="Responder">
           <div class="compose__bar"><span class="compose__title">Responder</span><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Descartar"><svg class="i"><use href="#i-trash"/></svg></button></div>
           <div class="compose__fields">
-            <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--magenta">MC</span><span class="chip__name">Marina Couto</span><button class="chip__remove" type="button" aria-label="Remover Marina Couto"><svg class="i i--sm"><use href="#i-x"/></svg></button></span><input aria-label="Adicionar destinatário"><button class="btn btn--subtle btn--compact compose__toggle" type="button" aria-expanded="false">Cc/Cco</button></div>
+            <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--magenta">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="chip__name">Marina Couto</span><button class="chip__remove" type="button" aria-label="Remover Marina Couto"><svg class="i i--sm"><use href="#i-x"/></svg></button></span><input aria-label="Adicionar destinatário"><button class="btn btn--subtle btn--compact compose__toggle" type="button" aria-expanded="false">Cc/Cco</button></div>
             <label class="input input--line"><span class="input__prefix">Assunto</span><input value="Re: Revisão do contrato: Fornecedor Lumen"></label>
           </div>
           <div class="compose__body"><textarea aria-label="Texto da resposta">Marina, li a versão 3 e está ok do meu lado. Envio o retorno do jurídico até quinta.</textarea></div>
@@ -114,7 +114,7 @@
         <form class="compose compose--inline" aria-label="Encaminhar">
           <div class="compose__bar"><span class="compose__title">Encaminhar</span><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Remover"><svg class="i"><use href="#i-trash"/></svg></button></div>
           <div class="compose__fields">
-            <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR</span><span class="chip__name">Ana Ribeiro</span><button class="chip__remove" type="button" aria-label="Remover Ana Ribeiro"><svg class="i i--sm"><use href="#i-x"/></svg></button></span><input aria-label="Adicionar destinatário"></div>
+            <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="chip__name">Ana Ribeiro</span><button class="chip__remove" type="button" aria-label="Remover Ana Ribeiro"><svg class="i i--sm"><use href="#i-x"/></svg></button></span><input aria-label="Adicionar destinatário"></div>
             <label class="input input--line"><span class="input__prefix">Assunto</span><input value="Fw: Revisão do contrato: Fornecedor Lumen"></label>
           </div>
           <div class="compose__body"><textarea aria-label="Texto do encaminhamento">Ana, para seu conhecimento antes da reunião de sexta.</textarea></div>
@@ -172,11 +172,12 @@
         </figure>
       </div>
       <dl class="guidance">
-        <div><dt>Enviar</dt><dd>Ativo com pelo menos um destinatário válido. Um chip inválido bloqueia, e o motivo aparece em <code>.compose__hint</code>, ligado ao botão por <code>aria-describedby</code>. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> envia.</dd></div>
-        <div><dt>Citação</dt><dd>Na resposta, a mensagem original vai abaixo do texto ("Em …, … escreveu:" e linhas com <code>&gt;</code>). No card ela fica recolhida no botão "…" (<code>.compose__quote-toggle</code>), que pode ser expandido.</dd></div>
-        <div><dt>Anexos</dt><dd>O encaminhamento leva os anexos da original em <code>.compose__attachments</code>, cada um com "Remover". Acima de 25 MB no total o envio é bloqueado.</dd></div>
+        <div><dt>Enviar</dt><dd>Ativo com pelo menos um destinatário válido. Um chip inválido bloqueia, e o motivo aparece numa dica, ligada ao botão por <code>aria-describedby</code>. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> envia.</dd></div>
+        <div><dt>Citação</dt><dd>Na resposta, a mensagem original vai abaixo do texto ("Em …, … escreveu:" e linhas com <code>&gt;</code>). No card ela fica recolhida no botão "…", que pode ser expandido.</dd></div>
+        <div><dt>Anexos</dt><dd>O encaminhamento leva os anexos da original, cada um com "Remover". Acima de 25 MB no total o envio é bloqueado.</dd></div>
         <div><dt>Depois de enviar</dt><dd>O card fecha e o toast "Enviando em 5 s" oferece Desfazer. Em seguida, "Mensagem enviada". Se falhar, o texto continua no rascunho e o toast explica o motivo, sem citar o provedor.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.compose</code> <code>.compose--inline</code> <code>.reader</code> <code>.compose__toggle</code> <code>.message__quote</code> <code>.compose__quote-toggle</code> <code>.compose__attachments</code> <code>.compose__hint</code></p>
     </section>
   </main>
 </div>

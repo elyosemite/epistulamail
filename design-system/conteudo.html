@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="Tom de voz, microtexto, tradução e leitura da direita para a esquerda.">
+<title>Conteúdo e tradução · Epistula Design System</title>
+<meta name="description" content="Pessoas e contas, com inicial, cor e foto.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="conteudo">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="conteudo">
+      <div class="ds-head">
+        <p class="eyebrow">v3 · §6.2 e §6.3</p>
+        <h1>Conteúdo e tradução</h1>
+        <p class="lede">Como o EpistulaMail fala, como o texto fica pronto para ser traduzido e como a interface se comporta quando a leitura vai da direita para a esquerda.</p>
+      </div>
+      <h2 id="tom">Tom de voz</h2>
+      <dl class="guidance">
+        <div><dt>Claro, preciso e calmo</dt><dd>Diga o que aconteceu, o efeito provável e o que dá para fazer. Sem alarme, sem promessa absoluta de segurança, sem frase vaga.</dd></div>
+        <div><dt>Em erros</dt><dd>O que houve, o que isso muda e a ação disponível. Não culpe a pessoa e não mostre código de erro.</dd></div>
+        <div><dt>Em operações sensíveis</dt><dd>Diga a consequência antes da confirmação, e dê ao botão o mesmo verbo do título.</dd></div>
+      </dl>
+      <table class="tier-table"><thead><tr><th scope="col">Em vez de…</th><th scope="col">Escreva…</th><th scope="col">Por quê</th></tr></thead><tbody><tr><th scope="row">"Erro 550 5.1.1"</th><td>"O endereço ana.lima@lumen.com não existe. A mensagem não foi entregue."</td><td>Diz o que houve, não o código.</td></tr><tr><th scope="row">"E-mail inválido"</th><td>"Inclua o domínio completo, por exemplo yuri@epistula.com.br."</td><td>Diz o que corrigir.</td></tr><tr><th scope="row">"Tem certeza?" / "OK"</th><td>"Esvaziar a lixeira?" / "Esvaziar lixeira"</td><td>Pergunta e botão dizem a ação.</td></tr><tr><th scope="row">"Seguro"</th><td>"Assinatura válida" ou "Protegida em trânsito"</td><td>Só afirma o que o app consegue comprovar.</td></tr><tr><th scope="row">"Sua conta foi desconectada"</th><td>"Você saiu desta conta. Estas são as mensagens salvas neste computador."</td><td>Diz o que continua valendo.</td></tr></tbody></table>
+      <h2 id="microtexto">Microtexto</h2>
+      <dl class="guidance">
+        <div><dt>Botões</dt><dd>Verbo no infinitivo que diz o resultado ("Arquivar", "Enviar", "Excluir permanentemente"). Nunca "OK" ou "Confirmar".</dd></div>
+        <div><dt>Vazios</dt><dd>Dizem por que está vazio e o que fazer a seguir. A caixa de entrada zerada é uma conquista.</dd></div>
+        <div><dt>Palavras do produto</dt><dd>Fale "arquivos anexados", não "payload de anexos"; "criptografar", "assinar", "chave" e "certificado", sem sigla onde a pessoa não precisa dela. O produto se chama EpistulaMail.</dd></div>
+        <div><dt>Provedor</dt><dd>Nenhum texto cita o provedor da conta (Google, Microsoft). Fala-se do nome que a pessoa deu à conta.</dd></div>
+      </dl>
+      <h2 id="traducao">Tradução</h2>
+      <p class="demo-hint">Hoje o app tem só o português do Brasil. As docs estão em cinco idiomas. As regras abaixo valem para que o app possa ser traduzido sem refazer telas.</p>
+      <dl class="guidance">
+        <div><dt>Texto externalizável</dt><dd>Todo texto de interface é uma frase inteira. Não monte frase juntando pedaços, porque a ordem das palavras muda de um idioma para outro.</dd></div>
+        <div><dt>Plural</dt><dd>Não suponha duas formas. "Mover 1 conversa" e "Mover 3 conversas" são frases separadas por idioma.</dd></div>
+        <div><dt>Datas, horas e números</dt><dd>Seguem o formato do idioma. Não ponha um formato fixo no texto.</dd></div>
+        <div><dt>Endereços de e-mail</dt><dd>Podem ter caracteres de qualquer alfabeto. Nunca trunque no meio nem presuma só letras do alfabeto latino.</dd></div>
+        <div><dt>Texto que cresce</dt><dd>Outras línguas ocupam mais espaço. Botões, chips e itens acompanham o texto: nunca fixe a largura e deixe o rótulo cortar sem reticências.</dd></div>
+        <div><dt>O que não se traduz</dt><dd>O texto do e-mail, os nomes que a pessoa deu a contas, pastas e etiquetas, e as impressões digitais.</dd></div>
+      </dl>
+      <h2 id="rtl">Da direita para a esquerda (RTL)</h2>
+      <p class="demo-hint">O RTL é um requisito de arquitetura. <code>components.css</code> usa propriedades lógicas (início e fim) no lugar de esquerda e direita, então os mesmos componentes espelham sozinhos. A validação completa com um idioma real fica para quando houver tradução.</p>
+      <div class="stage"><div class="states">
+        <figure class="state" style="justify-items:stretch" dir="ltr"><div class="stack">
+          <div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input aria-label="Buscar (esquerda para a direita)" placeholder="Buscar e-mails"><kbd>/</kbd></div>
+          <nav class="sidebar" aria-label="Exemplo LTR" style="border:1px solid var(--color-border);border-radius:var(--radius-large)"><div class="nav-group"><a class="nav-item has-unread" href="#rtl" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">24</span></a><a class="nav-item" href="#rtl"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></a></div></nav>
+          <div class="toast" role="status"><svg class="i"><use href="#i-success"/></svg><div><p class="toast__title">Conversa arquivada</p><div class="toast__actions"><button type="button">Desfazer</button></div></div></div>
+        </div><figcaption><b>Esquerda para a direita</b>português, inglês e a maioria das línguas</figcaption></figure>
+        <figure class="state" style="justify-items:stretch" dir="rtl"><div class="stack">
+          <div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input aria-label="بحث (من اليمين إلى اليسار)" placeholder="البحث في البريد"><kbd>/</kbd></div>
+          <nav class="sidebar" aria-label="مثال RTL" style="border:1px solid var(--color-border);border-radius:var(--radius-large)"><div class="nav-group"><a class="nav-item has-unread" href="#rtl" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">صندوق الوارد</span><span class="nav-item__count">24</span></a><a class="nav-item" href="#rtl"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">المرسلة</span></a></div></nav>
+          <div class="toast" role="status"><svg class="i"><use href="#i-success"/></svg><div><p class="toast__title">تمت أرشفة المحادثة</p><div class="toast__actions"><button type="button">تراجع</button></div></div></div>
+        </div><figcaption><b>Direita para a esquerda</b>os mesmos componentes, espelhados pelas propriedades lógicas</figcaption></figure>
+      </div></div>
+      <dl class="guidance">
+        <div><dt>O que espelha</dt><dd>Margens, espaçamentos, bordas, posições e alinhamento de texto: tudo que usa <code>inline-start</code> e <code>inline-end</code>.</dd></div>
+        <div><dt>O que não espelha</dt><dd>O "ok" do checkbox e o giro do spinner não espelham. O que é desenhado por coordenadas do ponteiro (arrastar e dicas) também não. Cada exceção está marcada com "físico" em <code>components.css</code> e o <code>pnpm ds:check</code> só deixa passar as marcadas.</dd></div>
+        <div><dt>Ainda por validar</dt><dd>O ícone de seta e as animações de entrada, que dependem do sentido, e a ordem das colunas da casca do app.</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

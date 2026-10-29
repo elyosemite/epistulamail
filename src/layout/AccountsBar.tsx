@@ -1,4 +1,4 @@
-// Composição de DS: sidebar.html "Coluna de contas" (.account-rail, __list, __sep, __add) em .app-shell__rail, que na
+// Composição de DS: contas.html "Coluna de contas" (.account-rail, __list, __sep, __add) em .app-shell__rail, que na
 // casca em blocos vai do topo ao rodapé sobre o fundo (espacamento.html) + menus.html (.menu de contexto)
 import { useEffect, useRef, useState } from "react";
 import { accountInitial, accountShortcut, avatarColorClass, railLabel, railTip, unreadBadge } from "../lib/accounts";

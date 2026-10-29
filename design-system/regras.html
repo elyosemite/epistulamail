@@ -21,12 +21,13 @@
       <div class="ds-head">
         <p class="eyebrow">US12 · L58–L63</p>
         <h1>Regras</h1>
-        <p class="lede">Regras que organizam os e-mails assim que eles chegam. Composição de <code>.settings</code>, <code>.toggle</code>, <code>.select</code>, <code>.input</code>, <code>.chip</code>, <code>.modal</code>, <code>.toast</code>, <code>.menu</code>, <code>.section-message</code> e <code>.empty</code>, mais as peças L58 a L63. Ícones: <code>filter</code>, <code>grip</code>, <code>play</code>, <code>arrow-right</code>, <code>history</code>, <code>receipt</code>.</p>
+        <p class="lede">Regras que organizam os e-mails assim que eles chegam. Reúne componentes que já existem, mais as peças L58 a L63. Ícones: <code>filter</code>, <code>grip</code>, <code>play</code>, <code>arrow-right</code>, <code>history</code>, <code>receipt</code>.</p>
       </div>
       <dl class="guidance">
         <div><dt>Ideia central</dt><dd>Cada regra se lê como uma frase: "De contém @loja.com → Mover para Compras". A mesma frase aparece na lista, no editor (ao vivo) e no histórico.</dd></div>
         <div><dt>Confiança</dt><dd>Antes de salvar, a prévia mostra quais e-mails a regra pegaria. Depois, tudo que ela faz vai para o histórico com "Desfazer". Excluir sempre vai para a Lixeira.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.settings</code> <code>.toggle</code> <code>.select</code> <code>.input</code> <code>.chip</code> <code>.modal</code> <code>.toast</code> <code>.menu</code> <code>.section-message</code> <code>.empty</code></p>
     </section>
 
     <section class="ds-section" id="lista">
@@ -129,14 +130,15 @@
         </figure>
         <figure class="state" style="justify-items:stretch">
           <div class="rule-list"><div class="rule-row is-dragging"><span class="rule-row__grip" aria-hidden="true"><svg class="i"><use href="#i-grip"/></svg></span><input type="checkbox" class="toggle" checked aria-label="Ligar"><div class="rule-row__body"><span class="rule-row__name">Faturas</span><span class="rule-sentence">Se <span class="rule-term">Assunto contém fatura</span><svg class="i i--sm"><use href="#i-arrow-right"/></svg><span class="rule-term rule-term--action">Marcador Investments</span></span></div><span class="rule-row__stats">6</span><span></span></div></div>
-          <figcaption><b>Arrastando</b><code>.rule-row.is-dragging</code> com a sombra de sobreposição</figcaption>
+          <figcaption><b>Arrastando</b>a linha com a sombra de sobreposição</figcaption>
         </figure>
       </div>
       <dl class="guidance">
-        <div><dt>Frase (L58)</dt><dd>Condições em <code>.rule-term</code> neutro, ações em <code>.rule-term--action</code>; excluir usa <code>.rule-term--danger</code>. "e parar" aparece quando a regra impede as seguintes.</dd></div>
+        <div><dt>Frase (L58)</dt><dd>Condições em tom neutro, ações em destaque; excluir usa o tom de perigo. "e parar" aparece quando a regra impede as seguintes.</dd></div>
         <div><dt>Números</dt><dd>Quantos e-mails a regra afetou em 30 dias: uma regra que nunca age provavelmente está errada.</dd></div>
         <div><dt>Problemas</dt><dd>Regra desligada por erro (pasta apagada) mostra o motivo na própria linha e no sino.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.rule-row.is-dragging</code> <code>.rule-term</code> <code>.rule-term--action</code> <code>.rule-term--danger</code></p>
     </section>
 
     <section class="ds-section" id="modelos">
@@ -342,9 +344,10 @@
         </div>
       </div>
       <dl class="guidance">
-        <div><dt>Desfazer</dt><dd>Volta cada e-mail do lote para onde estava, se ele ainda existir; lida e estrela também voltam. Depois de desfeito, a linha fica apagada (<code>.is-undone</code>).</dd></div>
+        <div><dt>Desfazer</dt><dd>Volta cada e-mail do lote para onde estava, se ele ainda existir; lida e estrela também voltam. Depois de desfeito, a linha fica apagada.</dd></div>
         <div><dt>Sino</dt><dd>Lotes de mais de 20 e-mails e erros de regra também aparecem no sino (US8).</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.is-undone</code></p>
     </section>
   </main>
 </div>

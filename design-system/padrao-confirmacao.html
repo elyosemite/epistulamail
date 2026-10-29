@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="Ação sem volta, ação com Desfazer e quando não confirmar.">
+<title>Confirmação · Epistula Design System</title>
+<meta name="description" content="Pessoas e contas, com inicial, cor e foto.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="padrao-confirmacao">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="padrao-confirmacao">
+      <div class="ds-head">
+        <p class="eyebrow">Padrão · v3 §2.5</p>
+        <h1>Confirmação</h1>
+        <p class="lede">Quando perguntar e quando só fazer: o que tem volta oferece Desfazer, o que não tem pede confirmação com a consequência dita.</p>
+      </div>
+      <div class="stage stage--sunken">
+        <div class="stack" style="max-width:26rem;margin-inline:auto">
+          <h3 class="sub">Com Desfazer: sem pergunta</h3>
+          <div class="toast" role="status"><svg class="i"><use href="#i-success"/></svg><div><p class="toast__title">Conversa arquivada</p><div class="toast__actions"><button type="button">Desfazer</button></div></div><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></div>
+          <h3 class="sub">Sem volta: pergunta antes</h3>
+          <div class="modal" role="dialog" aria-labelledby="pc-title" style="max-width:100%">
+            <div class="modal__head"><svg class="i"><use href="#i-warning"/></svg><h3 class="modal__title" id="pc-title">Esvaziar a lixeira?</h3></div>
+            <div class="modal__body"><p>As 128 conversas da lixeira serão excluídas permanentemente. Essa ação não pode ser desfeita.</p></div>
+            <div class="modal__foot"><button class="btn btn--subtle" type="button">Cancelar</button><button class="btn btn--danger" type="button">Esvaziar lixeira</button></div>
+          </div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Problema</dt><dd>Perguntar "Tem certeza?" a cada ação cansa e ninguém lê. Não perguntar quando algo se perde de vez causa dano.</dd></div>
+        <div><dt>Regra</dt><dd>Se a ação tem volta, faça e ofereça "Desfazer". Se não tem, pergunte antes, diga a consequência e dê um verbo claro ao botão. É o princípio "uma ação a um gesto, toda ação destrutiva oferece Desfazer".</dd></div>
+        <div><dt>Composição</dt><dd><a href="toasts.html">Toast</a> com Desfazer para o que tem volta; <a href="modais.html">modal</a> com botão de perigo para o que não tem; <a href="botoes.html">botões</a> com o mesmo verbo do título.</dd></div>
+        <div><dt>Não usar quando</dt><dd>A ação é de configuração e vale na hora (use um <a href="selecao.html">toggle</a>) ou o erro é de preenchimento (veja <a href="padrao-validacao.html">Validação</a>).</dd></div>
+      </dl>
+      <dl class="guidance">
+        <div><dt>Fluxo</dt><dd>Com volta: a pessoa age, o resultado aparece, o toast fica 6 segundos com "Desfazer". Com atraso: "Enviar" segura 5 segundos. Sem volta: o modal abre com o foco em "Cancelar", explica o que se perde, e o botão repete o verbo.</dd></div>
+        <div><dt>Variações</dt><dd>Reversível (toast). Reversível com atraso (envio). Sem volta (modal de perigo). Consequência parcial (sair da conta: modal de aviso com a opção "Apagar também", porque os dados ficam no computador).</dd></div>
+        <div><dt>Estados</dt><dd>Enquanto o Desfazer está disponível, o resultado já vale. Depois dos 6 segundos, o toast some e a ação passa a ser definitiva. Cancelar volta ao ponto de partida sem mensagem.</dd></div>
+        <div><dt>Acessibilidade</dt><dd>O toast anuncia em <code>aria-live="polite"</code>; o botão "Desfazer" é alcançável por teclado. O modal prende o foco, abre em "Cancelar" e fecha com <kbd>Esc</kbd>.</dd></div>
+      </dl>
+      <dl class="guidance">
+        <div><dt>Conteúdo</dt><dd>Título em forma de pergunta ou ação ("Esvaziar a lixeira?"). Botão com o mesmo verbo ("Esvaziar lixeira"). Nunca "OK" nem "Confirmar". Diga o que se perde e que não dá para desfazer.</dd></div>
+        <div><dt>Anti-patterns</dt><dd>Modal para tudo. Botão vermelho onde nada se perde. "Desfazer" só no hover. Esconder a consequência. Empilhar um modal sobre outro.</dd></div>
+      </dl>
+      <p class="classes"><span>Composição</span> <code>toasts</code> · <code>modais</code> · <code>botoes</code></p>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

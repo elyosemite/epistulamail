@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Avatar · Epistula Design System</title>
+<meta name="description" content="Pessoas e contas, com inicial, cor e foto.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="avatar">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="avatar">
+      <div class="ds-head">
+        <p class="eyebrow">ADS · Avatar</p>
+        <h1>Avatar</h1>
+        <p class="lede">O avatar identifica pessoas e contas. Mostra a inicial na cor da conta e, quando existe, a foto por cima. Não serve para contar nem para dar status: para isso use o <a href="badge.html">badge</a> e o <a href="lozenge.html">lozenge</a>.</p>
+      </div>
+      <div class="stage">
+        <div class="states">
+          <figure class="state"><div class="row"><span class="avatar avatar--xs">YM<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="avatar avatar--sm avatar--teal">PH<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="avatar avatar--purple">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="avatar avatar--lg avatar--green">BA<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span></div><figcaption><b>Avatar</b>20 · 24 · 32 · 40px</figcaption></figure>
+          <figure class="state"><div class="row"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="avatar" aria-hidden="true">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span></div><figcaption><b>Com foto</b>a foto cobre a inicial</figcaption></figure>
+          <figure class="state"><div class="avatar-group"><span class="avatar avatar--sm avatar--purple">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="avatar avatar--sm avatar--teal">PH<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="avatar avatar--sm avatar--orange">RD<img class="avatar__img" alt="" src="images/people/pessoa-3.webp"></span><span class="avatar avatar--sm">+4</span></div><figcaption><b>Grupo</b>participantes da conversa</figcaption></figure>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Foto</dt><dd>A foto da conta entra como uma imagem dentro do avatar, depois da inicial. A inicial na cor da conta fica por baixo: se a foto não existir ou falhar, nada muda no layout. No app a foto chega como <code>data:</code> URL, baixada pelo backend.</dd></div>
+        <div><dt>Fotos nesta documentação</dt><dd>Os avatares de exemplo usam as fotos de <code>images/people/</code>: pessoas anônimas em domínio público (CC0), com os créditos em <code>CREDITS.md</code>, as mesmas do site. Ficam no repositório, sem requisição externa. Sem a imagem, a inicial aparece no lugar.</dd></div>
+        <div><dt>Tamanhos</dt><dd>20px em chips, 24px em listas densas, 32px por padrão e 40px na coluna de contas e no painel de leitura.</dd></div>
+        <div><dt>Acessibilidade</dt><dd>O avatar é decorativo: o nome da pessoa ou da conta está no texto ao lado. Quando ele é o único rótulo, o botão que o contém leva <code>aria-label</code>.</dd></div>
+      </dl>
+      <p class="classes"><span>Classes</span> <code>.avatar__img</code> <code>.avatar</code></p>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

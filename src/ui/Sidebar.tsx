@@ -1,6 +1,6 @@
-// DS: sidebar.html · .sidebar, .nav-group, .nav-heading, .nav-item (.is-selected via aria-current, .has-unread), .nav-item__text, .nav-item__count
+// DS: navegacao.html · .sidebar, .nav-group, .nav-heading, .nav-item (.is-selected via aria-current, .has-unread), .nav-item__text, .nav-item__count
 // DS: espacamento.html · .app-shell__sidebar (recolhe abaixo de 1280px; cada item leva data-tip)
-// DS: sidebar.html "Arrastar para uma pasta" · .nav-item.is-drop-target, .is-drop-blocked (US5); "Sinalizadas" ·
+// DS: pastas.html "Arrastar para uma pasta" · .nav-item.is-drop-target, .is-drop-blocked (US5); "Sinalizadas" ·
 //     .nav-item.is-overdue (US6)
 import type { ReactNode } from "react";
 import { Icon } from "./Icon";

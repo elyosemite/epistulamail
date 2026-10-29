@@ -1,5 +1,5 @@
 // Composição de DS: modais.html "Configurações" (.settings__group, .setting, .setting-list com ação em lote),
-// campos.html (.select), identidade.html (.avatar com foto), mensagens.html (.section-message de erro)
+// campos.html (.select), avatar.html (.avatar com foto), mensagens.html (.section-message de erro)
 import { useEffect, useId, useState } from "react";
 import { accountInitial, avatarColorClass } from "../../lib/accounts";
 import { emptySelection, masterState, toggle, toggleAll, type Selection } from "../../lib/selection";

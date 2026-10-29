@@ -1,5 +1,5 @@
 // Composição de DS: selecao.html (.provider-grid), arquivos.html (cartão "Abrir arquivo de e-mail" sob "Sem conta",
-// US15; .nav-heading de sidebar.html), vazios.html (.empty, "Aguardando ação fora do app" com
+// US15; .nav-heading de navegacao.html), vazios.html (.empty, "Aguardando ação fora do app" com
 // .empty__spinner), mensagens.html (.section-message), botoes.html (.btn)
 import { useEffect, useRef, useState } from "react";
 import { api, isAppError, type AppError, type Connected, type ProviderInfo } from "../../lib/tauri";

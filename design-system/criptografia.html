@@ -124,9 +124,10 @@
         </div>
       </div>
       <dl class="guidance">
-        <div><dt>Escolha da chave (L64)</dt><dd>Lista de <code>.choice-card</code> com rádio: nome, tipo, os primeiros e os últimos grupos da impressão digital (L65) e a validade.</dd></div>
+        <div><dt>Escolha da chave (L64)</dt><dd>Lista de cartões com rádio: nome, tipo, os primeiros e os últimos grupos da impressão digital (L65) e a validade.</dd></div>
         <div><dt>Fora do Thunderbird</dt><dd>"Criptografar sozinho quando todos tiverem chave", a resposta sempre criptografada e "Buscar chaves na internet" são do Epistula. "Guardar rascunhos criptografados" ficou de fora.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.choice-card</code></p>
     </section>
 
     <!-- ===================================================== adicionar chave -->
@@ -134,7 +135,7 @@
       <div class="ds-head">
         <p class="eyebrow">L64 · L65 · CA2</p>
         <h2>Adicionar chave OpenPGP</h2>
-        <p class="lede">Assistente em três passos, num <code>.modal</code>: escolher o caminho, preencher, guardar a impressão digital e fazer o backup.</p>
+        <p class="lede">Assistente em três passos, num modal: escolher o caminho, preencher, guardar a impressão digital e fazer o backup.</p>
       </div>
       <div style="display:grid;gap:var(--space-300);grid-template-columns:repeat(auto-fit,minmax(26rem,1fr));align-items:start">
         <div class="stage stage--sunken">
@@ -185,6 +186,7 @@
           </div>
         </div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.modal</code></p>
     </section>
 
     <!-- ===================================================== gerenciador openpgp -->
@@ -192,7 +194,7 @@
       <div class="ds-head">
         <p class="eyebrow">L65 · L66 · CA3</p>
         <h2>Gerenciador de chaves OpenPGP</h2>
-        <p class="lede">Abre sobre as Configurações (mesma <code>.settings-sheet</code>, sem a navegação). Lista com busca e filtro, e os detalhes da chave escolhida ao lado, com a aceitação no estilo do Thunderbird.</p>
+        <p class="lede">Abre sobre as Configurações (a mesma folha, sem a navegação). Lista com busca e filtro, e os detalhes da chave escolhida ao lado, com a aceitação no estilo do Thunderbird.</p>
       </div>
       <div class="stage stage--flush scroll-x">
         <div style="display:flex;height:40rem;min-width:62rem;padding:var(--space-100);background:var(--color-canvas)">
@@ -274,9 +276,10 @@
         </figure>
       </div>
       <dl class="guidance">
-        <div><dt>Situação</dt><dd><code>.lozenge</code>: Minha e Verificada em verde, Aceita em azul, Ainda não aceita neutro, Vencida e Revogada em vermelho, Pós-quântica em roxo (descoberta).</dd></div>
+        <div><dt>Situação</dt><dd>O selo: Minha e Verificada em verde, Aceita em azul, Ainda não aceita neutro, Vencida e Revogada em vermelho, Pós-quântica em roxo (descoberta).</dd></div>
         <div><dt>Tabela (L66)</dt><dd>Linha escolhida com <code>aria-selected</code>; setas mudam a linha e Enter abre os detalhes em telas estreitas.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.settings-sheet</code> <code>.lozenge</code></p>
     </section>
 
     <!-- ===================================================== s/mime -->
@@ -363,8 +366,9 @@ BQADggEPADCCAQoCggEBAL3n0Z1mXk…
       </div>
       <dl class="guidance">
         <div><dt>Pedidos pendentes</dt><dd>Cada pedido mostra quando foi feito, o algoritmo, "Copiar pedido" e "Importar certificado emitido". Um pedido sem certificado depois de 90 dias pode ser excluído.</dd></div>
-        <div><dt>Bloco de texto (L69)</dt><dd><code>.pem-box</code> com copiar no canto; fonte mono, rolagem vertical e horizontal.</dd></div>
+        <div><dt>Bloco de texto (L69)</dt><dd>O bloco de texto com copiar no canto; fonte mono, rolagem vertical e horizontal.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.pem-box</code></p>
     </section>
 
     <!-- ===================================================== composer -->
@@ -379,7 +383,7 @@ BQADggEPADCCAQoCggEBAL3n0Z1mXk…
           <form class="compose compose--inline" aria-label="Responder" onsubmit="return false">
             <div class="compose__bar"><span class="compose__title">Responder</span></div>
             <div class="compose__fields">
-              <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR</span><span class="chip__name">Ana Ribeiro</span><span class="chip__key" aria-label="Tem chave aceita" data-tip="Tem chave aceita"><svg class="i"><use href="#i-lock"/></svg></span></span><span class="chip"><span class="avatar avatar--magenta">MC</span><span class="chip__name">Marina Couto</span><span class="chip__key" aria-label="Tem chave aceita" data-tip="Tem chave aceita"><svg class="i"><use href="#i-lock"/></svg></span></span><input aria-label="Adicionar destinatário"></div>
+              <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="chip__name">Ana Ribeiro</span><span class="chip__key" aria-label="Tem chave aceita" data-tip="Tem chave aceita"><svg class="i"><use href="#i-lock"/></svg></span></span><span class="chip"><span class="avatar avatar--magenta">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="chip__name">Marina Couto</span><span class="chip__key" aria-label="Tem chave aceita" data-tip="Tem chave aceita"><svg class="i"><use href="#i-lock"/></svg></span></span><input aria-label="Adicionar destinatário"></div>
               <label class="input input--line"><span class="input__prefix">Assunto</span><input value="Re: Revisão do contrato"></label>
             </div>
             <div class="compose__body"><textarea aria-label="Texto">Ana, segue minha revisão.</textarea></div>
@@ -398,7 +402,7 @@ BQADggEPADCCAQoCggEBAL3n0Z1mXk…
           <form class="compose compose--inline" aria-label="Nova mensagem" onsubmit="return false">
             <div class="compose__bar"><span class="compose__title">Nova mensagem</span></div>
             <div class="compose__fields">
-              <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR</span><span class="chip__name">Ana Ribeiro</span><span class="chip__key" aria-label="Tem chave aceita"><svg class="i"><use href="#i-lock"/></svg></span></span><span class="chip"><span class="avatar avatar--teal">RD</span><span class="chip__name">rafael@antigo.com</span><span class="chip__key chip__key--missing" aria-label="Sem chave" data-tip="Sem chave"><svg class="i"><use href="#i-lock-open"/></svg></span></span><input aria-label="Adicionar destinatário"></div>
+              <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--green">AR<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="chip__name">Ana Ribeiro</span><span class="chip__key" aria-label="Tem chave aceita"><svg class="i"><use href="#i-lock"/></svg></span></span><span class="chip"><span class="avatar avatar--teal">RD<img class="avatar__img" alt="" src="images/people/pessoa-3.webp"></span><span class="chip__name">rafael@antigo.com</span><span class="chip__key chip__key--missing" aria-label="Sem chave" data-tip="Sem chave"><svg class="i"><use href="#i-lock-open"/></svg></span></span><input aria-label="Adicionar destinatário"></div>
             </div>
             <div class="compose__body"><textarea aria-label="Texto">Pessoal, segue a proposta.</textarea></div>
             <div class="section-message section-message--warning" style="margin:0 var(--space-200) var(--space-150)"><svg class="i"><use href="#i-warning"/></svg><div><p class="section-message__title">rafael@antigo.com não tem chave</p><p>Sem a chave dele, a mensagem não pode ser criptografada para ninguém.</p><div class="section-message__actions"><button type="button">Buscar a chave dele</button><button type="button">Enviar sem criptografia</button><button type="button">Tirar este destinatário</button></div></div></div>
@@ -416,8 +420,9 @@ BQADggEPADCCAQoCggEBAL3n0Z1mXk…
       </div>
       <dl class="guidance">
         <div><dt>Botão Enviar</dt><dd>Repete o que vai acontecer: "Enviar", "Enviar assinado" ou "Enviar criptografado". Com o cadeado ligado e algum destinatário sem chave, fica desabilitado até a escolha.</dd></div>
-        <div><dt>Chip (L68)</dt><dd><code>.chip__key</code> verde com cadeado fechado: chave ou certificado aceito; amarelo com cadeado aberto: sem chave. Só aparece com o cadeado ligado.</dd></div>
+        <div><dt>Chip (L68)</dt><dd>O chip verde com cadeado fechado: chave ou certificado aceito; amarelo com cadeado aberto: sem chave. Só aparece com o cadeado ligado.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.chip__key</code></p>
     </section>
 
     <!-- ===================================================== leitura -->
@@ -429,23 +434,23 @@ BQADggEPADCCAQoCggEBAL3n0Z1mXk…
       </div>
       <div style="display:grid;gap:var(--space-300);grid-template-columns:repeat(auto-fit,minmax(26rem,1fr));align-items:start">
         <figure class="state" style="justify-items:stretch">
-          <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg avatar--green" aria-hidden="true">AR</span><div style="min-width:0"><div class="message__from">Ana Ribeiro <span class="message__addr">&lt;ana@lumen.com.br&gt;</span></div>
+          <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg avatar--green" aria-hidden="true">AR<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><div style="min-width:0"><div class="message__from">Ana Ribeiro <span class="message__addr">&lt;ana@lumen.com.br&gt;</span></div>
             <div class="sec-status"><button class="sec-badge" type="button"><svg class="i"><use href="#i-lock"/></svg>Criptografada</button><button class="sec-badge" type="button"><svg class="i"><use href="#i-badge-check"/></svg>Assinatura verificada</button></div></div><span class="message__time">10:42</span></div></div>
           <figcaption><b>Tudo certo</b>chave aceita e conferida</figcaption>
         </figure>
         <figure class="state" style="justify-items:stretch">
-          <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg avatar--teal" aria-hidden="true">PH</span><div style="min-width:0"><div class="message__from">Paulo Henrique <span class="message__addr">&lt;paulo@exemplo.org&gt;</span></div>
+          <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg avatar--teal" aria-hidden="true">PH<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><div style="min-width:0"><div class="message__from">Paulo Henrique <span class="message__addr">&lt;paulo@exemplo.org&gt;</span></div>
             <div class="sec-status"><button class="sec-badge sec-badge--info" type="button"><svg class="i"><use href="#i-lock"/></svg>Criptografada · pós-quântica</button><button class="sec-badge sec-badge--info" type="button"><svg class="i"><use href="#i-signature"/></svg>Assinada · chave ainda não aceita</button></div></div><span class="message__time">ontem</span></div></div>
           <figcaption><b>Assinada, sem confirmar quem</b>azul: a assinatura confere, mas a chave ainda não foi aceita</figcaption>
         </figure>
         <figure class="state" style="justify-items:stretch">
-          <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg" aria-hidden="true">BC</span><div style="min-width:0"><div class="message__from">Banco Central <span class="message__addr">&lt;avisos@banco.com&gt;</span></div>
+          <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg" aria-hidden="true">BC<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><div style="min-width:0"><div class="message__from">Banco Central <span class="message__addr">&lt;avisos@banco.com&gt;</span></div>
             <div class="sec-status"><button class="sec-badge sec-badge--danger" type="button"><svg class="i"><use href="#i-error"/></svg>Assinatura inválida</button></div></div><span class="message__time">12 out</span></div>
             <div class="section-message section-message--error" style="margin-top:var(--space-150)"><svg class="i"><use href="#i-error"/></svg><div><p class="section-message__title">Esta mensagem pode ter sido alterada</p><p>A assinatura não confere com o conteúdo. Desconfie de links e anexos.</p></div></div></div>
           <figcaption><b>Assinatura inválida</b>vermelho, com o aviso no corpo</figcaption>
         </figure>
         <figure class="state" style="justify-items:stretch">
-          <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">MC</span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div>
+          <div class="message message--card"><div class="message__head"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div>
             <div class="sec-status"><button class="sec-badge sec-badge--warning" type="button"><svg class="i"><use href="#i-lock"/></svg>Não foi possível abrir</button></div></div><span class="message__time">3 out</span></div>
             <div class="section-message section-message--warning" style="margin-top:var(--space-150)"><svg class="i"><use href="#i-warning"/></svg><div><p class="section-message__title">Nenhuma das suas chaves abre esta mensagem</p><p>Ela foi criptografada para uma chave que não está neste computador. Se você tem um backup, restaure-o.</p><div class="section-message__actions"><button type="button">Adicionar chave…</button></div></div></div></div>
           <figcaption><b>Sem a chave</b>o que fazer em seguida, sem jargão</figcaption>
@@ -464,9 +469,50 @@ BQADggEPADCCAQoCggEBAL3n0Z1mXk…
         </div>
       </div>
       <dl class="guidance">
-        <div><dt>Cores (L67)</dt><dd><code>.sec-badge</code> verde só para assinatura verificada com chave aceita e conferida; <code>--info</code> para criptografada e para assinada com chave ainda não aceita; <code>--warning</code> para não conseguir abrir ou certificado vencido; <code>--danger</code> para assinatura inválida.</dd></div>
+        <div><dt>Cores (L67)</dt><dd>O selo de segurança verde só para assinatura verificada com chave aceita e conferida; azul para criptografada e para assinada com chave ainda não aceita; amarelo para não conseguir abrir ou certificado vencido; vermelho para assinatura inválida.</dd></div>
         <div><dt>Na lista</dt><dd>Mensagem criptografada mostra um cadeado pequeno ao lado do assunto e "Mensagem criptografada" no lugar do trecho (D7).</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.sec-badge</code></p>
+    </section>
+    <section class="ds-section" id="estados-de-seguranca">
+      <div class="ds-head">
+        <p class="eyebrow">v3 §2.6 · L85–L87</p>
+        <h2>Estados de segurança</h2>
+        <p class="lede">Segurança não é uma coisa só. "Criptografada em trânsito", "guardada no computador", "ponta a ponta", "assinatura válida" e "identidade não verificada" dizem coisas diferentes, e nenhuma pode passar pelo mesmo indicador verde. Cada estado tem texto, ícone e forma próprios; a cor só reforça.</p>
+      </div>
+      <div class="stage">
+        <div class="states">
+          <figure class="state" style="justify-items:stretch"><div class="row"><span class="sec-badge sec-badge--neutral"><svg class="i"><use href="#i-shield"/></svg>Protegida em trânsito</span></div><figcaption><b>Em trânsito</b>A conexão com o servidor usa TLS com certificado validado. Não diz quem mais pode ler a mensagem no servidor.</figcaption></figure>
+          <figure class="state" style="justify-items:stretch"><div class="row"><span class="sec-badge sec-badge--neutral"><svg class="i"><use href="#i-hard-drive"/></svg>Guardada com proteção neste computador</span></div><figcaption><b>Neste computador</b>A mensagem está no banco cifrado deste computador. Não diz nada sobre a mensagem enquanto ela viaja.</figcaption></figure>
+          <figure class="state" style="justify-items:stretch"><div class="row"><span class="sec-badge sec-badge--info"><svg class="i"><use href="#i-lock"/></svg>Criptografia ponta a ponta</span></div><figcaption><b>Ponta a ponta</b>Só quem tem a chave abre a mensagem, do envio à leitura. É um fato sobre o conteúdo, não sobre quem enviou.</figcaption></figure>
+          <figure class="state" style="justify-items:stretch"><div class="row"><span class="sec-badge "><svg class="i"><use href="#i-badge-check"/></svg>Assinatura válida</span></div><figcaption><b>Assinatura</b>O conteúdo não mudou e a assinatura confere com uma chave que a pessoa aceitou e conferiu. É o único selo verde.</figcaption></figure>
+          <figure class="state" style="justify-items:stretch"><div class="row"><span class="sec-badge sec-badge--unverified"><svg class="i"><use href="#i-signature"/></svg>Identidade não verificada</span></div><figcaption><b>Identidade</b>A assinatura confere, mas a chave ainda não foi aceita. Falta confirmar que ela é mesmo de quem diz ser.</figcaption></figure>
+          <figure class="state" style="justify-items:stretch"><div class="row"><span class="sec-badge sec-badge--unknown"><svg class="i"><use href="#i-help"/></svg>Não foi possível saber</span></div><figcaption><b>Desconhecido</b>O app não conseguiu verificar. Não é um problema encontrado nem uma garantia: é falta de informação.</figcaption></figure>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Verde, só um</dt><dd>Verde é reservado à assinatura verificada com uma chave aceita e conferida. Criptografar não é provar quem enviou.</dd></div>
+        <div><dt>Forma, não só cor</dt><dd>O que ainda não foi confirmado tem borda tracejada; o que é desconhecido, pontilhada. O estado continua legível em escala de cinza e em alto contraste.</dd></div>
+        <div><dt>Sem exagero</dt><dd>Os selos neutros (em trânsito, neste computador) não prometem nada sobre o conteúdo. Nunca escreva "seguro" sozinho, e não sugira garantia que o app não consegue comprovar.</dd></div>
+      </dl>
+      <h3 class="sub">Resumo de segurança de uma mensagem</h3>
+      <p class="demo-hint">Cada conceito fica na sua linha. Os nomes de componente do v3 são Estado de criptografia, Verificação de assinatura, Indicador de confiança na identidade e Aviso de segurança da sessão; todos estão em Beta e ainda não estão no app.</p>
+      <div class="stage">
+        <div class="stack">
+          <dl class="sec-summary">
+            <div><dt>Criptografia</dt><dd><span class="sec-badge sec-badge--info"><svg class="i"><use href="#i-lock"/></svg>Criptografada</span></dd><dd>Só as suas chaves abrem esta mensagem.</dd></div>
+            <div><dt>Assinatura</dt><dd><span class="sec-badge "><svg class="i"><use href="#i-badge-check"/></svg>Assinatura válida</span></dd><dd>Confere com a chave de Marina Couto.</dd></div>
+            <div><dt>Identidade</dt><dd><span class="sec-badge sec-badge--unverified"><svg class="i"><use href="#i-signature"/></svg>Identidade não verificada</span></dd><dd>Você ainda não conferiu a impressão digital desta chave.</dd></div>
+            <div><dt>Neste computador</dt><dd><span class="sec-badge sec-badge--neutral"><svg class="i"><use href="#i-hard-drive"/></svg>Guardada com proteção</span></dd><dd>No banco cifrado, dentro do computador.</dd></div>
+          </dl>
+          <div class="section-message section-message--warning" role="note"><svg class="i"><use href="#i-warning"/></svg><div><p class="section-message__title">O Epistula foi bloqueado por inatividade</p><p>As mensagens continuam cifradas neste computador. Digite a senha para voltar a lê-las.</p><div class="section-message__actions"><button type="button">Desbloquear</button></div></div></div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Teclado e leitor de tela</dt><dd>Cada selo é um botão que abre os detalhes. O nome acessível é o texto do selo, sem depender de ícone nem de cor.</dd></div>
+        <div><dt>Onde cada um aparece</dt><dd>Criptografia, assinatura e identidade ficam abaixo do remetente. O resumo completo abre ao clicar num selo. O aviso da sessão usa o aviso em contexto, no topo da tela.</dd></div>
+      </dl>
+      <p class="classes"><span>Classes</span> <code>.sec-badge</code> <code>.sec-badge--neutral</code> <code>.sec-badge--info</code> <code>.sec-badge--unverified</code> <code>.sec-badge--unknown</code> <code>.sec-status</code> <code>.sec-summary</code></p>
     </section>
   </main>
 </div>

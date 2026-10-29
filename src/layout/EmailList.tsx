@@ -1,5 +1,5 @@
 // DS: threads.html · .thread-list (linha padrão com checkbox); teclado: J/K ou setas, Enter, X, S, Shift+U, Ctrl+A, Esc
-// DS: sidebar.html · arrastar para uma pasta com html.is-grabbing e .drag-ghost--follow (US6, CA5)
+// DS: pastas.html · arrastar para uma pasta com html.is-grabbing e .drag-ghost--follow (US6, CA5)
 // US9: parar o mouse numa linha por meio segundo já baixa a mensagem em segundo plano.
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { conversations } from "../lib/selection";

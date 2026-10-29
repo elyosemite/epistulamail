@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="Campo, sugestões, filtros, resultados e nenhum resultado.">
+<title>Busca · Epistula Design System</title>
+<meta name="description" content="Pessoas e contas, com inicial, cor e foto.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="padrao-busca">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="padrao-busca">
+      <div class="ds-head">
+        <p class="eyebrow">Padrão · v3 §2.5</p>
+        <h1>Busca</h1>
+        <p class="lede">Um campo que transforma o que a pessoa digita em chips visíveis, com sugestões, contagem de resultados e saída quando nada é achado.</p>
+      </div>
+      <div class="stage">
+        <div class="stack" style="max-width:46rem">
+          None
+          None
+          <div class="search-bar" style="border:var(--border-width) solid var(--color-border);border-radius:var(--radius-medium)"><span class="search-bar__count">128 resultados</span><span class="search-bar__end"><button class="btn btn--subtle btn--compact" type="button">Salvar busca</button></span></div>
+        </div>
+      </div>
+      <div class="stage stage--flush">
+        <div class="empty">
+          <h3 class="empty__title">Nenhum resultado para "contrato lumen 2025"</h3>
+          <p class="empty__desc">Confira a grafia ou busque em todas as pastas, incluindo Spam e Lixeira.</p>
+          <div class="empty__actions"><button class="btn" type="button">Buscar em todas as pastas</button><button class="btn btn--subtle" type="button">Limpar filtros</button></div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Problema</dt><dd>Achar uma mensagem pede combinar texto, pessoa, período e pasta. Se a pessoa precisa saber a sintaxe, só quem programa consegue.</dd></div>
+        <div><dt>Contexto</dt><dd>Qualquer lista grande que se filtra: mensagens, regras, chaves. No e-mail, a versão completa é a página <a href="busca.html">Busca</a>.</dd></div>
+        <div><dt>Composição</dt><dd><a href="campos.html">Campo de busca</a> com chips, <a href="menus.html">menu</a> de sugestões, barra de resultados e <a href="vazios.html">estado vazio</a>.</dd></div>
+        <div><dt>Não usar quando</dt><dd>A lista tem poucos itens e cabe na tela: um filtro simples basta.</dd></div>
+      </dl>
+      <dl class="guidance">
+        <div><dt>Fluxo</dt><dd>1) A pessoa foca o campo e vê sugestões. 2) Escolhe uma sugestão ou digita um operador; os dois viram o mesmo chip. 3) Os resultados mudam a cada chip. 4) A barra mostra quantos achou e onde buscou. 5) Sem resultado, o estado vazio oferece ampliar a busca.</dd></div>
+        <div><dt>Variações</dt><dd>Texto livre. Com chips de pessoa, período e filtro. Em todas as contas. Busca salva.</dd></div>
+        <div><dt>Estados</dt><dd>Padrão, foco com sugestões, com chips, carregando (skeleton nos resultados), com resultados e sem resultados.</dd></div>
+        <div><dt>Acessibilidade</dt><dd>O campo tem rótulo e abre com <kbd>/</kbd>. As sugestões são <code>role="listbox"</code>: setas escolhem, <kbd>Enter</kbd> confirma, <kbd>Esc</kbd> fecha. Cada chip tem um botão com nome ("Tirar o filtro De Yuri Melo"). A contagem é anunciada.</dd></div>
+      </dl>
+      <dl class="guidance">
+        <div><dt>Conteúdo</dt><dd>O que a pessoa digita vira algo que ela vê. Diga quantos resultados e onde buscou. Sem resultado, diga o termo e o que fazer. A busca é local e funciona sem internet; isso fica claro no texto.</dd></div>
+        <div><dt>Anti-patterns</dt><dd>Exigir sintaxe. Esconder os filtros ativos. Mandar o texto da busca para a rede. Mostrar "0 resultados" sem saída.</dd></div>
+      </dl>
+      <p class="classes"><span>Composição</span> <code>campos</code> · <code>menus</code> · <code>vazios</code></p>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Navegação lateral · Epistula Design System</title>
+<meta name="description" content="Painel e item de navegação, sem nada de e-mail.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+</head>
+<body data-page="navegacao">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="navegacao">
+      <div class="ds-head">
+        <p class="eyebrow">ADS · Side Navigation</p>
+        <h1>Navegação lateral</h1>
+        <p class="lede">A estrutura genérica de uma lista de destinos: o painel (sidebar) e o item de navegação. Não sabe nada de e-mail: as pastas, as contas e as etiquetas são composições feitas em cima dela, nas páginas <a href="pastas.html">Pastas</a> e <a href="contas.html">Contas</a>.</p>
+      </div>
+      <div class="sidebar-demo">
+        <div class="stage stage--flush">
+          <nav class="sidebar" aria-label="Seções (exemplo)">
+            <div class="nav-group">
+              <div class="nav-heading">Preferências</div>
+              <a class="nav-item" href="#navegacao" aria-current="page"><svg class="i"><use href="#i-sliders"/></svg><span class="nav-item__text">Geral</span></a>
+              <a class="nav-item" href="#navegacao"><svg class="i"><use href="#i-palette"/></svg><span class="nav-item__text">Aparência</span></a>
+              <a class="nav-item" href="#navegacao"><svg class="i"><use href="#i-bell"/></svg><span class="nav-item__text">Notificações</span><span class="nav-item__count">2</span></a>
+            </div>
+            <div class="nav-group">
+              <div class="nav-heading">Segurança</div>
+              <a class="nav-item" href="#navegacao"><svg class="i"><use href="#i-key"/></svg><span class="nav-item__text">Chaves</span></a>
+              <a class="nav-item is-disabled" aria-disabled="true"><svg class="i"><use href="#i-lock"/></svg><span class="nav-item__text">Bloqueio (em breve)</span></a>
+            </div>
+          </nav>
+        </div>
+        <div class="stage">
+          <div class="nav-states">
+              <figure class="state" style="justify-items:stretch"><span class="nav-item"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span><figcaption><b>Padrão</b></figcaption></figure>
+              <figure class="state" style="justify-items:stretch"><span class="nav-item is-hover"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span><figcaption><b>Hover</b></figcaption></figure>
+              <figure class="state" style="justify-items:stretch"><span class="nav-item is-selected"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">24</span></span><figcaption><b>Selecionado</b>pasta atual</figcaption></figure>
+              <figure class="state" style="justify-items:stretch"><span class="nav-item has-unread"><svg class="i"><use href="#i-file"/></svg><span class="nav-item__text">Rascunhos</span><span class="nav-item__count">3</span></span><figcaption><b>Com não lidas</b>peso 600</figcaption></figure>
+              <figure class="state" style="justify-items:stretch"><span class="nav-item is-focus" tabindex="-1"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></span><figcaption><b>Foco</b></figcaption></figure>
+              <figure class="state" style="justify-items:stretch"><span class="nav-item is-disabled"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Arquivo 2019 (sincronizando)</span></span><figcaption><b>Desabilitado</b></figcaption></figure>
+          </div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Quando usar</dt><dd>Para uma lista curta de destinos que a pessoa troca com frequência e que ficam sempre à vista: seções de configurações, pastas, contas. Para ações (que fazem algo, e não levam a algum lugar), use um menu.</dd></div>
+        <div><dt>Item</dt><dd>Ícone, texto e, se fizer sentido, uma contagem. O item atual usa o fundo de seleção e <code>aria-current="page"</code>. Um item com novidades vai em negrito e mostra o número; o número nunca é a única pista.</dd></div>
+        <div><dt>Recolhida</dt><dd>Na barra recolhida, todo item precisa de uma dica (<code>data-tip</code>) com o nome, porque o texto some.</dd></div>
+        <div><dt>Teclado</dt><dd>As setas percorrem os itens, <kbd>Enter</kbd> abre e o foco aparece sempre com o anel padrão.</dd></div>
+      </dl>
+      <p class="classes"><span>Classes</span> <code>.sidebar</code> <code>.nav-group</code> <code>.nav-heading</code> <code>.nav-item</code> <code>.nav-item__text</code> <code>.nav-item__count</code> <code>.has-unread</code> <code>.is-selected</code> <code>.is-disabled</code></p>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "ds:check": "node scripts/check-design-system.mjs",
     "tauri": "tauri"
   },
   "dependencies": {

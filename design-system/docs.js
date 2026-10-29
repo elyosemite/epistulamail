@@ -2,6 +2,16 @@
    Casca compartilhada da documentação: ícones, índice, paginação, tema, toasts, tooltips
    e as demonstrações interativas (cada uma só roda na página que tem o elemento dela).
    Para adicionar uma página: crie <id>.html com <body data-page="<id>"> e registre em EPISTULA_PAGES. */
+/* Maturidade (v3 §9): draft, experimental, beta, stable, deprecated, removed. Quarto item de cada página. */
+const EPISTULA_STATUS = {
+  draft: ['Rascunho', ''],
+  experimental: ['Experimental', ' lozenge--moved'],
+  beta: ['Beta', ' lozenge--inprogress'],
+  stable: ['Estável', ' lozenge--success'],
+  deprecated: ['Descontinuado', ' lozenge--overdue'],
+  removed: ['Removido', ' lozenge--removed']
+};
+const maturityBadge = (st, extra = '') => { const [label, cls] = EPISTULA_STATUS[st] || EPISTULA_STATUS.stable; return `<span class="lozenge${cls}${extra}">${label}</span>`; };
 const EPISTULA_PAGES = [
   {
     "group": "Fundamentos",
@@ -9,162 +19,280 @@ const EPISTULA_PAGES = [
       [
         "principios",
         "Princípios",
-        "As quatro regras que orientam cada decisão."
+        "As quatro regras que orientam cada decisão.",
+        "stable"
       ],
       [
         "cores",
         "Cores",
-        "Tokens semânticos de texto, superfície, borda e ícone."
+        "Tokens semânticos de texto, superfície, borda e ícone.",
+        "stable"
       ],
       [
         "tipografia",
         "Tipografia",
-        "Escala de Hero a Label, pesos e famílias."
+        "Escala de Hero a Label, pesos e famílias.",
+        "stable"
       ],
       [
         "espacamento",
         "Espaçamento e layout",
-        "Escala de 2 a 80px e o layout de três painéis."
+        "Escala de 2 a 80px e o layout de três painéis.",
+        "stable"
       ],
       [
         "forma",
         "Forma e elevação",
-        "Raios e os quatro níveis de superfície."
+        "Raios e os quatro níveis de superfície.",
+        "stable"
       ],
       [
         "acessibilidade",
         "Acessibilidade",
-        "Contraste medido ao vivo e atalhos de teclado."
+        "Contraste medido ao vivo e atalhos de teclado.",
+        "stable"
+      ],
+      [
+        "variaveis",
+        "Variáveis CSS",
+        "Todas as custom properties de tokens.css, por nível.",
+        "stable"
+      ],
+      [
+        "temas",
+        "Temas e densidade",
+        "Claro, escuro, alto contraste, densidade e a cor de destaque da conta.",
+        "stable"
+      ],
+      [
+        "conteudo",
+        "Conteúdo e tradução",
+        "Tom de voz, microtexto, tradução e leitura da direita para a esquerda.",
+        "stable"
+      ],
+      [
+        "arquitetura",
+        "Arquitetura",
+        "Camadas, regra de classificação, primitives, utilities e a ordem de adoção.",
+        "stable"
+      ],
+      [
+        "governanca",
+        "Governança",
+        "Camadas, maturidade, gates de revisão e definição de pronto.",
+        "stable"
       ]
     ]
   },
   {
-    "group": "Componentes",
+    "group": "Core",
     "items": [
       [
         "botoes",
         "Botões",
-        "Primário, padrão, sutil, perigo, aviso e link."
+        "Primário, padrão, sutil, perigo, aviso e link.",
+        "stable"
       ],
       [
         "campos",
         "Campos de texto",
-        "Caixa padrão, busca e linha de composição."
-      ],
-      [
-        "destinatarios",
-        "Chips de destinatário",
-        "Destinatários internos, externos e inválidos."
+        "Caixa padrão, busca e linha de composição.",
+        "stable"
       ],
       [
         "selecao",
         "Seleção",
-        "Checkbox, toggle, provedores e cor da conta."
+        "Checkbox, toggle, provedores e cor da conta.",
+        "stable"
       ],
       [
-        "identidade",
-        "Avatar, badge e lozenge",
-        "Pessoas, contagens e status."
+        "avatar",
+        "Avatar",
+        "Pessoas e contas, com inicial, cor e foto.",
+        "stable"
       ],
       [
-        "etiquetas",
-        "Etiquetas",
-        "As seis cores de etiqueta do usuário."
+        "badge",
+        "Badge",
+        "Contagens, como não lidas na pasta.",
+        "stable"
       ],
       [
-        "sidebar",
-        "Sidebar",
-        "Pastas, etiquetas, armazenamento e coluna de contas."
-      ],
-      [
-        "header",
-        "Header e busca",
-        "Barra global e busca com operadores."
-      ],
-      [
-        "threads",
-        "Lista de threads",
-        "Linhas, estados e ações em massa."
-      ],
-      [
-        "leitura",
-        "Painel de leitura",
-        "Assunto, mensagem e conversa recolhida."
-      ],
-      [
-        "anexos",
-        "Anexos",
-        "Cartões de arquivo, envio e erro."
-      ],
-      [
-        "composicao",
-        "Composição",
-        "Janela de nova mensagem com desfazer envio."
-      ],
-      [
-        "mensagens",
-        "Banners e avisos",
-        "Alertas do sistema e avisos em contexto."
-      ],
-      [
-        "toasts",
-        "Toasts",
-        "Confirmações com Desfazer."
-      ],
-      [
-        "modais",
-        "Modais",
-        "Decisões que não têm desfazer."
-      ],
-      [
-        "regras",
-        "Regras",
-        "Organizar os e-mails assim que chegam."
-      ],
-      [
-        "busca",
-        "Busca",
-        "Pessoas, período e filtros como chips; buscas salvas."
-      ],
-      [
-        "documentacao",
-        "Documentação",
-        "Gradientes, ícones de marca, idioma, timeline e o layout de docs.epistulamail.com."
-      ],
-      [
-        "arquivos",
-        "Arquivos de e-mail",
-        "Abrir backups de outros programas, sem conta."
-      ],
-      [
-        "criptografia",
-        "Criptografia",
-        "Chaves, certificados e mensagens criptografadas."
+        "lozenge",
+        "Lozenge",
+        "Status de uma mensagem, em uma palavra.",
+        "stable"
       ],
       [
         "menus",
         "Menus e tooltips",
-        "Listas de ações e rótulos de ícones."
+        "Listas de ações e rótulos de ícones.",
+        "stable"
       ],
       [
-        "vazios",
-        "Empty states",
-        "Caixa zerada, busca sem resultado e erro."
+        "mensagens",
+        "Banners e avisos",
+        "Alertas do sistema e avisos em contexto.",
+        "stable"
       ],
       [
-        "carregamento",
-        "Carregamento",
-        "Skeleton, spinner e progresso."
+        "toasts",
+        "Toasts",
+        "Confirmações com Desfazer.",
+        "stable"
+      ],
+      [
+        "modais",
+        "Modais",
+        "Decisões que não têm desfazer.",
+        "stable"
+      ],
+      [
+        "navegacao",
+        "Navegação lateral",
+        "Painel e item de navegação, sem nada de e-mail.",
+        "stable"
       ]
     ]
   },
   {
-    "group": "Referência",
+    "group": "Padrões",
     "items": [
       [
-        "variaveis",
-        "Variáveis CSS",
-        "Todas as custom properties de tokens.css."
+        "padrao-validacao",
+        "Validação de formulário",
+        "Campos, mensagens de erro e resumo de erros.",
+        "beta"
+      ],
+      [
+        "padrao-confirmacao",
+        "Confirmação",
+        "Ação sem volta, ação com Desfazer e quando não confirmar.",
+        "beta"
+      ],
+      [
+        "padrao-busca",
+        "Busca",
+        "Campo, sugestões, filtros, resultados e nenhum resultado.",
+        "beta"
+      ],
+      [
+        "padrao-selecao-em-lote",
+        "Seleção em lote",
+        "Marcar itens, contador, ações em lote e limpar a seleção.",
+        "beta"
+      ],
+      [
+        "vazios",
+        "Empty states",
+        "Caixa zerada, busca sem resultado e erro.",
+        "stable"
+      ],
+      [
+        "carregamento",
+        "Carregamento",
+        "Skeleton, spinner e progresso.",
+        "stable"
+      ]
+    ]
+  },
+  {
+    "group": "Produto",
+    "items": [
+      [
+        "contas",
+        "Contas",
+        "Coluna de contas e troca de conta.",
+        "stable"
+      ],
+      [
+        "pastas",
+        "Pastas",
+        "Pastas, etiquetas, armazenamento, arrastar e sinalizadas.",
+        "stable"
+      ],
+      [
+        "header",
+        "Header e busca",
+        "Barra global e busca com operadores.",
+        "stable"
+      ],
+      [
+        "threads",
+        "Lista de threads",
+        "Linhas, estados e ações em massa.",
+        "stable"
+      ],
+      [
+        "leitura",
+        "Painel de leitura",
+        "Assunto, mensagem e conversa recolhida.",
+        "stable"
+      ],
+      [
+        "composicao",
+        "Composição",
+        "Janela de nova mensagem com desfazer envio.",
+        "stable"
+      ],
+      [
+        "destinatarios",
+        "Chips de destinatário",
+        "Destinatários internos, externos e inválidos.",
+        "stable"
+      ],
+      [
+        "anexos",
+        "Anexos",
+        "Cartões de arquivo, envio e erro.",
+        "stable"
+      ],
+      [
+        "etiquetas",
+        "Etiquetas",
+        "As seis cores de etiqueta do usuário.",
+        "stable"
+      ],
+      [
+        "busca",
+        "Busca",
+        "Pessoas, período e filtros como chips; buscas salvas.",
+        "stable"
+      ],
+      [
+        "regras",
+        "Regras",
+        "Organizar os e-mails assim que chegam.",
+        "stable"
+      ],
+      [
+        "arquivos",
+        "Arquivos de e-mail",
+        "Abrir backups de outros programas, sem conta.",
+        "beta"
+      ],
+      [
+        "criptografia",
+        "Criptografia",
+        "Chaves, certificados e mensagens criptografadas.",
+        "beta"
+      ]
+    ]
+  },
+  {
+    "group": "Layouts e páginas",
+    "items": [
+      [
+        "layouts",
+        "Layouts",
+        "As regiões da casca, da caixa de entrada, da busca, das configurações e da conta.",
+        "stable"
+      ],
+      [
+        "documentacao",
+        "Documentação",
+        "Gradientes, ícones de marca, idioma, timeline e o layout de docs.epistulamail.com.",
+        "stable"
       ]
     ]
   }
@@ -174,7 +302,7 @@ const EPISTULA_PAGES = [
   document.body.insertAdjacentHTML('afterbegin', "<svg width=\"0\" height=\"0\" style=\"position:absolute\" aria-hidden=\"true\">\n  <symbol id=\"i-inbox\" viewBox=\"0 0 24 24\"><path d=\"M22 12h-6l-2 3h-4l-2-3H2\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/></symbol>\n  <symbol id=\"i-star\" viewBox=\"0 0 24 24\"><path d=\"M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z\"/></symbol>\n  <symbol id=\"i-send\" viewBox=\"0 0 24 24\"><path d=\"m22 2-7 20-4-9-9-4Z\"/><path d=\"M22 2 11 13\"/></symbol>\n  <symbol id=\"i-file\" viewBox=\"0 0 24 24\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><path d=\"M14 2v6h6\"/></symbol>\n  <symbol id=\"i-archive\" viewBox=\"0 0 24 24\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"5\" rx=\"1\"/><path d=\"M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8\"/><path d=\"M10 12h4\"/></symbol>\n  <symbol id=\"i-trash\" viewBox=\"0 0 24 24\"><path d=\"M3 6h18\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6\"/><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/></symbol>\n  <symbol id=\"i-tag\" viewBox=\"0 0 24 24\"><path d=\"M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l8.59-8.59a1 1 0 0 0 0-1.41z\"/><circle cx=\"7\" cy=\"7\" r=\"1.5\"/></symbol>\n  <symbol id=\"i-search\" viewBox=\"0 0 24 24\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m21 21-4.3-4.3\"/></symbol>\n  <symbol id=\"i-clip\" viewBox=\"0 0 24 24\"><path d=\"m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48\"/></symbol>\n  <symbol id=\"i-reply\" viewBox=\"0 0 24 24\"><path d=\"M9 17 4 12l5-5\"/><path d=\"M20 18v-2a4 4 0 0 0-4-4H4\"/></symbol>\n  <symbol id=\"i-forward\" viewBox=\"0 0 24 24\"><path d=\"m15 17 5-5-5-5\"/><path d=\"M4 18v-2a4 4 0 0 1 4-4h12\"/></symbol>\n  <symbol id=\"i-more\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"5\" r=\"1\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/><circle cx=\"12\" cy=\"19\" r=\"1\"/></symbol>\n  <symbol id=\"i-check\" viewBox=\"0 0 24 24\"><path d=\"M20 6 9 17l-5-5\"/></symbol>\n  <symbol id=\"i-x\" viewBox=\"0 0 24 24\"><path d=\"M18 6 6 18M6 6l12 12\"/></symbol>\n  <symbol id=\"i-warning\" viewBox=\"0 0 24 24\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4M12 17h.01\"/></symbol>\n  <symbol id=\"i-info\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4M12 8h.01\"/></symbol>\n  <symbol id=\"i-success\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m9 12 2 2 4-4\"/></symbol>\n  <symbol id=\"i-error\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m15 9-6 6M9 9l6 6\"/></symbol>\n  <symbol id=\"i-sparkle\" viewBox=\"0 0 24 24\"><path d=\"M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z\"/><path d=\"M19 3v4M17 5h4\"/></symbol>\n  <symbol id=\"i-spam\" viewBox=\"0 0 24 24\"><path d=\"M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86z\"/><path d=\"M12 8v4M12 16h.01\"/></symbol>\n  <symbol id=\"i-sliders\" viewBox=\"0 0 24 24\"><path d=\"M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6\"/></symbol>\n  <symbol id=\"i-pencil\" viewBox=\"0 0 24 24\"><path d=\"M12 20h9\"/><path d=\"M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z\"/></symbol>\n  <symbol id=\"i-chevron-down\" viewBox=\"0 0 24 24\"><path d=\"m6 9 6 6 6-6\"/></symbol>\n  <symbol id=\"i-chevron-left\" viewBox=\"0 0 24 24\"><path d=\"m15 18-6-6 6-6\"/></symbol>\n  <symbol id=\"i-chevron-right\" viewBox=\"0 0 24 24\"><path d=\"m9 18 6-6-6-6\"/></symbol>\n  <symbol id=\"i-clock\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 6v6l4 2\"/></symbol>\n  <symbol id=\"i-mail-open\" viewBox=\"0 0 24 24\"><path d=\"M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z\"/><path d=\"m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10\"/></symbol>\n  <symbol id=\"i-mail\" viewBox=\"0 0 24 24\"><rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"2\"/><path d=\"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7\"/></symbol>\n  <symbol id=\"i-folder\" viewBox=\"0 0 24 24\"><path d=\"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z\"/></symbol>\n  <symbol id=\"i-image\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><circle cx=\"9\" cy=\"9\" r=\"2\"/><path d=\"m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21\"/></symbol>\n  <symbol id=\"i-download\" viewBox=\"0 0 24 24\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m7 10 5 5 5-5\"/><path d=\"M12 15V3\"/></symbol>\n  <symbol id=\"i-refresh\" viewBox=\"0 0 24 24\"><path d=\"M21 12a9 9 0 1 1-3-6.7L21 8\"/><path d=\"M21 3v5h-5\"/></symbol>\n  <symbol id=\"i-plus\" viewBox=\"0 0 24 24\"><path d=\"M12 5v14M5 12h14\"/></symbol>\n  <symbol id=\"i-minus\" viewBox=\"0 0 24 24\"><path d=\"M5 12h14\"/></symbol>\n  <symbol id=\"i-expand\" viewBox=\"0 0 24 24\"><path d=\"M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7\"/></symbol>\n  <symbol id=\"i-bold\" viewBox=\"0 0 24 24\"><path d=\"M6 12h9a4 4 0 0 1 0 8H6V4h8a4 4 0 0 1 0 8\"/></symbol>\n  <symbol id=\"i-italic\" viewBox=\"0 0 24 24\"><path d=\"M19 4h-9M14 20H5M15 4 9 20\"/></symbol>\n  <symbol id=\"i-list\" viewBox=\"0 0 24 24\"><path d=\"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01\"/></symbol>\n  <symbol id=\"i-link\" viewBox=\"0 0 24 24\"><path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"/><path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"/></symbol>\n  <symbol id=\"i-help\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01\"/></symbol>\n  <symbol id=\"i-grid\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"5\" height=\"5\" rx=\"1\"/><rect x=\"10\" y=\"3\" width=\"5\" height=\"5\" rx=\"1\"/><rect x=\"17\" y=\"3\" width=\"4\" height=\"5\" rx=\"1\"/><rect x=\"3\" y=\"10\" width=\"5\" height=\"5\" rx=\"1\"/><rect x=\"10\" y=\"10\" width=\"5\" height=\"5\" rx=\"1\"/><rect x=\"17\" y=\"10\" width=\"4\" height=\"5\" rx=\"1\"/><rect x=\"3\" y=\"17\" width=\"5\" height=\"4\" rx=\"1\"/><rect x=\"10\" y=\"17\" width=\"5\" height=\"4\" rx=\"1\"/><rect x=\"17\" y=\"17\" width=\"4\" height=\"4\" rx=\"1\"/></symbol>\n  <symbol id=\"i-moon\" viewBox=\"0 0 24 24\"><path d=\"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z\"/></symbol>\n  <symbol id=\"i-sun\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41\"/></symbol>\n  <symbol id=\"i-copy\" viewBox=\"0 0 24 24\"><rect x=\"9\" y=\"9\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\"/></symbol>\n  <symbol id=\"i-rows\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M3 15h18\"/></symbol>\n  <symbol id=\"i-eye\" viewBox=\"0 0 24 24\"><path d=\"M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></symbol>\n  <symbol id=\"i-log-out\" viewBox=\"0 0 24 24\"><path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4\"/><path d=\"m16 17 5-5-5-5\"/><path d=\"M21 12H9\"/></symbol>\n  <symbol id=\"i-log-in\" viewBox=\"0 0 24 24\"><path d=\"M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4\"/><path d=\"m10 17 5-5-5-5\"/><path d=\"M15 12H3\"/></symbol>\n  <symbol id=\"i-arrow-up\" viewBox=\"0 0 24 24\"><path d=\"m5 12 7-7 7 7\"/><path d=\"M12 19V5\"/></symbol>\n  <symbol id=\"i-arrow-down\" viewBox=\"0 0 24 24\"><path d=\"M12 5v14\"/><path d=\"m19 12-7 7-7-7\"/></symbol>\n  <symbol id=\"i-droplet\" viewBox=\"0 0 24 24\"><path d=\"M12 2.7 6.3 8.4a8 8 0 1 0 11.4 0z\"/></symbol>\n  <symbol id=\"i-globe\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M2 12h20\"/><path d=\"M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20\"/></symbol>\n  <symbol id=\"i-flag\" viewBox=\"0 0 24 24\"><path d=\"M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z\"/><path d=\"M4 22v-7\"/></symbol>\n  <symbol id=\"i-reply-all\" viewBox=\"0 0 24 24\"><path d=\"m7 17-5-5 5-5\"/><path d=\"m12 17-5-5 5-5\"/><path d=\"M22 18v-2a4 4 0 0 0-4-4H7\"/></symbol>\n  <symbol id=\"i-folder-plus\" viewBox=\"0 0 24 24\"><path d=\"M12 10v6M9 13h6\"/><path d=\"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z\"/></symbol>\n  <symbol id=\"i-monitor\" viewBox=\"0 0 24 24\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\"/><path d=\"M8 21h8M12 17v4\"/></symbol>\n  <symbol id=\"i-settings\" viewBox=\"0 0 24 24\"><path d=\"M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></symbol>\n  <symbol id=\"i-user\" viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"8\" r=\"4\"/><path d=\"M4 21a8 8 0 0 1 16 0\"/></symbol>\n  <symbol id=\"i-palette\" viewBox=\"0 0 24 24\"><path d=\"M12 22a10 10 0 1 1 10-10c0 2.2-1.8 3.5-4 3.5h-1.6a1.9 1.9 0 0 0-1.4 3.2c.6.7.2 3.3-3 3.3z\"/><circle cx=\"7.5\" cy=\"11\" r=\"1\"/><circle cx=\"10.5\" cy=\"7\" r=\"1\"/><circle cx=\"15.5\" cy=\"7.5\" r=\"1\"/></symbol>\n  <symbol id=\"i-folder-move\" viewBox=\"0 0 24 24\"><path d=\"M2 9V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1\"/><path d=\"M2 13h10\"/><path d=\"m9 16 3-3-3-3\"/></symbol>\n  <symbol id=\"i-sidebar-left\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M9 3v18\"/></symbol>\n  <symbol id=\"i-sidebar-right\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M15 3v18\"/></symbol>\n  <symbol id=\"i-bell\" viewBox=\"0 0 24 24\"><path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\"/><path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/></symbol>\n  <symbol id=\"i-bell-off\" viewBox=\"0 0 24 24\"><path d=\"M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5\"/><path d=\"M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7\"/><path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/><path d=\"m2 2 20 20\"/></symbol>\n  <symbol id=\"i-hard-drive\" viewBox=\"0 0 24 24\"><path d=\"M22 12H2\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/><path d=\"M6 16h.01\"/><path d=\"M10 16h.01\"/></symbol>\n  <symbol id=\"i-lock\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/></symbol>\n  <symbol id=\"i-shield\" viewBox=\"0 0 24 24\"><path d=\"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z\"/></symbol>\n  <symbol id=\"i-key\" viewBox=\"0 0 24 24\"><path d=\"m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4\"/><path d=\"m21 2-9.6 9.6\"/><circle cx=\"7.5\" cy=\"15.5\" r=\"5.5\"/></symbol>\n  <symbol id=\"i-eye-off\" viewBox=\"0 0 24 24\"><path d=\"M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68\"/><path d=\"M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61\"/><path d=\"m2 2 20 20\"/><path d=\"M14.12 14.12a3 3 0 1 1-4.24-4.24\"/></symbol>\n  <symbol id=\"i-filter\" viewBox=\"0 0 24 24\"><path d=\"M3 4h18l-7 8.5V19l-4 2v-8.5z\"/></symbol>\n  <symbol id=\"i-grip\" viewBox=\"0 0 24 24\"><circle cx=\"9\" cy=\"6\" r=\"1\"/><circle cx=\"15\" cy=\"6\" r=\"1\"/><circle cx=\"9\" cy=\"12\" r=\"1\"/><circle cx=\"15\" cy=\"12\" r=\"1\"/><circle cx=\"9\" cy=\"18\" r=\"1\"/><circle cx=\"15\" cy=\"18\" r=\"1\"/></symbol>\n  <symbol id=\"i-play\" viewBox=\"0 0 24 24\"><path d=\"M6 4l14 8-14 8z\"/></symbol>\n  <symbol id=\"i-arrow-right\" viewBox=\"0 0 24 24\"><path d=\"M5 12h14\"/><path d=\"m13 6 6 6-6 6\"/></symbol>\n  <symbol id=\"i-history\" viewBox=\"0 0 24 24\"><path d=\"M3 12a9 9 0 1 0 3-6.7L3 8\"/><path d=\"M3 3v5h5\"/><path d=\"M12 7v5l3 2\"/></symbol>\n  <symbol id=\"i-receipt\" viewBox=\"0 0 24 24\"><path d=\"M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z\"/><path d=\"M9 8h6M9 12h6\"/></symbol>\n  <symbol id=\"i-lock-open\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 9.9-1\"/></symbol>\n  <symbol id=\"i-badge-check\" viewBox=\"0 0 24 24\"><path d=\"M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z\"/><path d=\"m9 12 2 2 4-4\"/></symbol>\n  <symbol id=\"i-signature\" viewBox=\"0 0 24 24\"><path d=\"m21 17-2.16-1.87a.5.5 0 0 0-.84.37v.5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1c0-2.55-4-3.97-8.5-4a1 1 0 0 0 0 5c4.15 0 4.75-11.3 5.71-13.5a2.5 2.5 0 1 1 3.31 3.28\"/><path d=\"M3 21h18\"/></symbol>\n  <symbol id=\"i-upload\" viewBox=\"0 0 24 24\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><path d=\"m17 8-5-5-5 5\"/><path d=\"M12 3v12\"/></symbol>\n  <symbol id=\"i-github\" viewBox=\"0 0 24 24\"><path d=\"M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z\"/></symbol>\n  <symbol id=\"i-x-brand\" viewBox=\"0 0 24 24\"><path d=\"M18.2 2h3.4l-7.4 8.5L23 22h-6.8l-5.3-7-6.1 7H1.4l7.9-9L1 2h7l4.8 6.4L18.2 2zm-1.2 18h1.9L7 3.9H5L17 20z\"/></symbol>\n  <symbol id=\"i-discord\" viewBox=\"0 0 24 24\"><path d=\"M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18.2 18.2 0 0 0-5.6 0L8.6 3a19.6 19.6 0 0 0-4.9 1.4C.6 9-.3 13.6.1 18.1A19.8 19.8 0 0 0 6.2 21l1.3-2.1c-.7-.3-1.4-.6-2-1l.5-.4a14.1 14.1 0 0 0 12 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.7 19.7 0 0 0 6.1-2.9c.5-5.2-.8-9.8-3.6-13.7zM8.3 15.4c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm7.4 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z\"/></symbol>\n  <symbol id=\"i-certificate\" viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M7 8h10M7 12h5\"/><circle cx=\"16\" cy=\"16\" r=\"3\"/><path d=\"m14.5 18.5-1 3.5 2.5-1.2 2.5 1.2-1-3.5\"/></symbol>\n</svg>");
   const page = document.body.dataset.page || 'index';
   const href = (id) => id + '.html';
-  const flat = EPISTULA_PAGES.flatMap(g => g.items.map(([id, title, desc]) => ({ id, title, desc, group: g.group })));
+  const flat = EPISTULA_PAGES.flatMap(g => g.items.map(([id, title, desc, status]) => ({ id, title, desc, status, group: g.group })));
 
   document.getElementById('doc-nav').innerHTML =
     `<a class="doc-nav__home${page === 'index' ? ' is-current' : ''}" href="index.html"${page === 'index' ? ' aria-current="page"' : ''}>Visão geral</a>` +
@@ -189,6 +317,8 @@ const EPISTULA_PAGES = [
       <span class="crumb">${flat[i].group}</span>
       <button class="btn btn--subtle theme-toggle" id="theme-toggle" type="button" aria-label="Alternar tema"></button>
     </div>`);
+    const h1 = main.querySelector('h1');
+    if (h1) h1.insertAdjacentHTML('beforeend', maturityBadge(flat[i].status, ' maturity'));
     const prev = flat[i - 1], next = flat[i + 1];
     main.insertAdjacentHTML('beforeend', `<nav class="pager" aria-label="Paginação">
       ${prev ? `<a class="pager__link" href="${href(prev.id)}"><span>Anterior</span><b>${prev.title}</b></a>` : ''}
@@ -197,10 +327,93 @@ const EPISTULA_PAGES = [
   }
 
   const grid = document.getElementById('overview-grid');
-  if (grid) grid.innerHTML = EPISTULA_PAGES.map(g => `<section class="ov-group"><h2 class="part__title">${g.group}</h2><div class="ov-grid">${g.items.map(([id, title, desc]) =>
-    `<a class="ov-card" href="${href(id)}"><b>${title}</b><span>${desc}</span></a>`).join('')}</div></section>`).join('');
+  if (grid) grid.innerHTML = EPISTULA_PAGES.map(g => `<section class="ov-group"><h2 class="part__title">${g.group}</h2><div class="ov-grid">${g.items.map(([id, title, desc, status]) =>
+    `<a class="ov-card" href="${href(id)}"><span class="ov-card__head"><b>${title}</b>${maturityBadge(status)}</span><span>${desc}</span></a>`).join('')}</div></section>`).join('');
 
   document.body.insertAdjacentHTML('beforeend', '<div class="toast-region" id="toast-region" aria-live="polite"></div>');
+
+  /* ---------------- Ficha do componente (v3 §7) ---------------- */
+  /* Os dados ficam em fichas.js (carregado sob demanda). Camada, status e relacionados vêm do registro acima;
+     os tokens são lidos das regras de components.css que casam com as classes usadas na página. */
+  if (flat.some(p => p.id === page)) {
+    const fichaScript = document.createElement('script');
+    fichaScript.src = 'fichas.js';
+    fichaScript.onload = () => { try { renderFicha(); } catch (e) { /* sem ficha, a página continua inteira */ } };
+    document.head.appendChild(fichaScript);
+  }
+  function renderFicha() {
+    const data = (typeof EPISTULA_FICHAS !== 'undefined') && EPISTULA_FICHAS[page];
+    if (!data) return;
+    const me = flat.find(p => p.id === page);
+    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const li = (items) => items.map(t => `<li>${t}</li>`).join('');
+    const rel = (data.relacionados || []).map(id => flat.find(p => p.id === id)).filter(Boolean)
+      .map(p => `<a href="${href(p.id)}">${esc(p.title)}</a>`).join(', ');
+    const used = data.usadoEm && data.usadoEm.length
+      ? `<details class="ficha__used"><summary>${data.usadoEm.length} ${data.usadoEm.length === 1 ? 'arquivo' : 'arquivos'} em <code>src/</code></summary><ul>${data.usadoEm.map(f => `<li><code>${esc(f)}</code></li>`).join('')}</ul></details>`
+      : 'Só nas páginas deste design system e nos sites; não aparece no app.';
+    const hist = (data.historico || []).concat([['2026-10-28', 'Ficha do componente (v3): camada, status, fazer e não fazer, tokens, testes e relacionados.']])
+      .map(([when, what]) => `<li><b>${esc(when)}</b> ${esc(what)}</li>`).join('');
+    const tokens = tokensOnPage();
+    const section = document.createElement('section');
+    section.className = 'ds-section ficha';
+    section.id = 'ficha';
+    section.innerHTML = `
+      <div class="ds-head"><p class="eyebrow">v3 · Ficha do componente</p><h2>Ficha</h2>
+        <p class="lede">O resumo de como esta peça entra no sistema: onde fica, onde é usada, o que fazer e evitar, e como é verificada.</p></div>
+      <dl class="guidance ficha__meta">
+        <div><dt>Camada</dt><dd>${esc(me.group)}</dd></div>
+        <div><dt>Status</dt><dd>${maturityBadge(me.status)}</dd></div>
+        <div><dt>Usado em</dt><dd>${used}</dd></div>
+        <div><dt>Anatomia e API</dt><dd>As classes e as variantes estão na linha "Classes" ao fim de cada seção; os estados, nos exemplos.</dd></div>
+      </dl>
+      <div class="ficha__dos">
+        <div class="ficha__do"><h3><svg class="i"><use href="#i-check"/></svg>Fazer</h3><ul>${li(data.fazer)}</ul></div>
+        <div class="ficha__dont"><h3><svg class="i"><use href="#i-x"/></svg>Não fazer</h3><ul>${li(data.nao)}</ul></div>
+      </div>
+      <div class="ficha__tokens"><h3>Tokens usados</h3>${tokens}</div>
+      <dl class="guidance">
+        <div><dt>Conteúdo e tradução</dt><dd>${data.conteudo}</dd></div>
+        <div><dt>Testes</dt><dd>${data.testes}</dd></div>
+        <div><dt>Notas de plataforma</dt><dd>${data.plataforma}</dd></div>
+        <div><dt>Relacionados</dt><dd>${rel || 'Nenhum.'}</dd></div>
+        <div><dt>Histórico</dt><dd><ul class="ficha__hist">${hist}</ul></dd></div>
+      </dl>`;
+    const pager = main.querySelector('.pager');
+    if (pager) pager.before(section); else main.appendChild(section);
+    if (location.hash === '#ficha') section.scrollIntoView();
+  }
+  /* Tokens semânticos citados pelas regras de components.css que casam com as classes desta página. */
+  function tokensOnPage() {
+    const classes = new Set();
+    main.querySelectorAll('.ds-section:not(.ficha) [class]').forEach(el => el.classList.forEach(c => classes.add(c)));
+    const sheet = [...document.styleSheets].find(s => (s.href || '').endsWith('components.css'));
+    let rules;
+    try { rules = sheet.cssRules; } catch (e) { return 'Abra o design system por http para ver a lista.'; }
+    const found = new Set();
+    const walk = (list) => {
+      for (const r of list) {
+        if (r.cssRules && !r.selectorText) { walk(r.cssRules); continue; }
+        if (!r.selectorText) continue;
+        const cls = [...r.selectorText.matchAll(/\.([\w-]+)/g)].map(m => m[1]);
+        if (!cls.some(c => classes.has(c))) continue;
+        for (const m of r.cssText.matchAll(/var\((--[\w-]+)/g)) found.add(m[1]);
+      }
+    };
+    walk(rules);
+    const cs = getComputedStyle(document.documentElement);
+    const names = [...found].filter(n => cs.getPropertyValue(n).trim()).sort();   // só os que estão em :root (tokens de verdade)
+    if (!names.length) return 'Nenhum token do :root: usa só valores locais da própria peça.';
+    const groups = [['Cor', /^--color-/], ['Espaço', /^--space-/], ['Tipografia', /^--(font|line-height|letter-spacing)-/], ['Forma e borda', /^--(radius|border)-/],
+      ['Elevação', /^--shadow-/], ['Layout e densidade', /^--(layout|row-height|control-height|input-height)/], ['Foco, opacidade e ícones', /^--(focus|opacity|icon)-/], ['Movimento e camadas', /^--(duration|easing|z-)/], ['Gradientes', /^--gradient-/]];
+    const taken = new Set();
+    const html = groups.map(([label, re]) => {
+      const list = names.filter(n => re.test(n)); list.forEach(n => taken.add(n));
+      return list.length ? `<div class="ficha__tk-group"><b>${label}</b><span class="ficha__tk-list">${list.map(n => `<a class="ficha__tk" href="variaveis.html#tk-${n}"><code>${n}</code></a>`).join('')}</span></div>` : '';
+    }).join('');
+    const rest = names.filter(n => !taken.has(n));
+    return `<p class="ficha__tk-n">${names.length} tokens do sistema aparecem nos exemplos desta página. Clique para ver o valor.</p>${html}${rest.length ? `<div class="ficha__tk-group"><b>Outros</b><span class="ficha__tk-list">${rest.map(n => `<a class="ficha__tk" href="variaveis.html#tk-${n}"><code>${n}</code></a>`).join('')}</span></div>` : ''}`;
+  }
 })();
 
 (() => {
@@ -758,17 +971,114 @@ const EPISTULA_PAGES = [
   }
   $('#swatches')?.addEventListener('click', (e) => { const s = e.target.closest('[data-copy]'); if (s) copy(s.dataset.copy, s.dataset.copy); });
 
+  /* ---------------- Catálogo de tokens (variaveis.html) ---------------- */
+  const TOKEN_BLURBS = {
+    'cor · texto': 'Cor do texto e dos links. O texto comum usa --color-text; subtle e subtlest são para apoio e metadados. Os de estado (perigo, aviso, sucesso) sempre vêm junto de uma palavra, nunca só a cor.',
+    'cor · superfícies': 'Os níveis de profundidade da tela: o fundo afundado, a superfície comum, a elevada e a que flutua sobre as outras (menus e modais). O papel é o fundo claro do corpo de e-mails de terceiros, nos dois temas.',
+    'cor · fundos de componente': 'Fundo de campos, botões, seleção e avisos, com as variações de passar o mouse (hovered) e pressionar (pressed). Use o par do mesmo componente para os estados ficarem coerentes.',
+    'cor · bordas': 'Linhas de campos, divisores e o anel de foco. A borda de foco é a única que marca o teclado e precisa de contraste 3:1.',
+    'cor · ícones': 'Cor dos ícones por significado. O ícone de estado acompanha a cor do texto do mesmo estado.',
+    'cor · etiquetas de e-mail': 'Pares de fundo e texto das cores de etiqueta e dos avatares. Use sempre os dois do mesmo par.',
+    'elevação · sombras': 'Duas sombras: raised para cartões e blocos, overlay para o que flutua sobre a tela.',
+    'tipografia · famílias': 'Inter para a interface e JetBrains Mono para código e chaves. Vêm empacotadas no app, sem pedir nada à internet.',
+    'tipografia · pesos': 'Quatro pesos. O 600 marca ênfase e itens não lidos.',
+    'tipografia · escala': 'Tamanho, altura de linha e espaçamento entre letras de cada estilo, de Hero a Code.',
+    'tipografia · atalhos': 'O estilo completo em uma linha, para usar com font: var(--font-body). Prefira o atalho a combinar tamanho e peso na mão.',
+    'espaçamento': 'Escala de base 8, com meios-passos de 2 e 4. O número é o valor em centésimos de rem: 100 = 8px, 050 = 4px, 200 = 16px.',
+    'forma': 'Raios de borda e larguras de linha. O raio cresce com o tamanho da peça: checkbox pequeno, modal grande, avatar redondo.',
+    'layout do cliente': 'Larguras e alturas da casca do app: colunas, lista, leitura e barras.',
+    'camadas': 'A ordem de sobreposição. Use só estes níveis, nunca um número solto.',
+    'movimento': 'Durações e curvas. Com "reduzir movimento" ligado no sistema, as durações vão a zero.',
+    'densidade': 'Altura das linhas da lista e dos controles. Confortável e Padrão mostram mais linhas por conversa; Compacta mostra uma.',
+    'foco': 'O anel de teclado, igual em todo componente: largura, cor e o quanto ele se afasta da borda.',
+    'opacidade': 'Só estes níveis de opacidade. Nenhum componente usa um valor solto.',
+    'ícones': 'Tamanho do traço dos ícones do sprite, de pequeno (dentro de chips) a extra grande (estados vazios).',
+    'breakpoints': 'Larguras em que o layout muda. CSS não aceita variável dentro de @media; estes valores são a referência, e o pnpm ds:check confere se os @media do components.css batem com eles.',
+    'gradientes': 'Só para o início de páginas de destaque, nunca atrás de texto longo nem no app de e-mail. Acompanham o tema.'
+  };
+  function parseTokens(text) {
+    const out = [], lines = text.split('\n');
+    let inRoot = false, group = '', pending = '';
+    const grad = /\/\* L77 · Gradientes[\s\S]*?\*\/\s*:root\s*\{/.exec(text);
+    const gradLine = grad ? text.slice(0, grad.index).split('\n').length : -1;
+    lines.forEach((line, i) => {
+      if (/^:root\s*\{\s*$/.test(line)) { inRoot = true; pending = ''; if (gradLine > 0 && i + 1 >= gradLine) group = 'Gradientes'; return; }
+      if (inRoot && /^\}/.test(line)) { inRoot = false; return; }
+      if (!inRoot) return;
+      const head = /^\s*\/\*\s*-{3,}\s*(.+?)\s*-{3,}\s*\*\/\s*$/.exec(line);
+      if (head) { group = head[1]; pending = ''; return; }
+      const lone = /^\s*\/\*\s*(.+?)\s*\*\/\s*$/.exec(line);
+      if (lone) { pending = lone[1]; return; }
+      const trailing = /\/\*\s*(.+?)\s*\*\/\s*$/.exec(line);
+      const code = line.replace(/\/\*.*?\*\//g, '');
+      const re = /(--[\w-]+)\s*:\s*([^;]+);/g;
+      let m, any = false;
+      while ((m = re.exec(code))) { any = true; out.push({ name: m[1], raw: m[2].trim(), group, desc: (trailing && trailing[1]) || pending }); }
+      if (any) pending = '';
+    });
+    return out;
+  }
+  function tokenPreview(t) {
+    const n = t.name;
+    if (n.startsWith('--gradient-')) return `<span class="tk-swatch tk-swatch--wide" style="background:var(${n})"></span>`;
+    if (n.startsWith('--color-') && !/-(width|size)$/.test(n)) return `<span class="tk-swatch" style="background:var(${n})"></span>`;
+    if (n.startsWith('--shadow-')) return `<span class="tk-box" style="box-shadow:var(${n})"></span>`;
+    if (n.startsWith('--radius-')) return `<span class="tk-box tk-box--line" style="border-radius:var(${n})"></span>`;
+    if (n.startsWith('--space-')) return `<span class="tk-space" style="width:var(${n})"></span>`;
+    if (n.startsWith('--font-family-')) return `<span class="tk-text" style="font-family:var(${n})">Aa</span>`;
+    if (n.startsWith('--font-weight-')) return `<span class="tk-text" style="font-weight:var(${n})">Aa</span>`;
+    if (n.startsWith('--font-size-')) return `<span class="tk-text" style="font-size:var(${n});line-height:1">Aa</span>`;
+    if (/^--font-(hero|page-title|section|card|body|body-large|body-small|label|code)$/.test(n)) return `<span class="tk-text" style="font:var(${n})">Aa</span>`;
+    return '';
+  }
+  function buildCatalog(text) {
+    const host = $('#token-catalog'); if (!host) return;
+    const tokens = parseTokens(text);
+    if (!tokens.length) { host.innerHTML = '<p class="token-loading">Não foi possível montar o catálogo. Veja o código-fonte abaixo.</p>'; return; }
+    const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const groups = [];
+    tokens.forEach(t => { let g = groups.find(x => x.name === t.group); if (!g) groups.push(g = { name: t.group, items: [] }); g.items.push(t); });
+    const clean = (name) => name.replace(/\s*\(.*$/, '');
+    const blurbOf = (name) => /^paleta/i.test(name) ? 'Nível 1: valor bruto, sem intenção de uso. Só tokens.css usa a paleta; componentes e telas usam os tokens semânticos, que apontam para ela. O sufixo -aNN é a opacidade em %.' : TOKEN_BLURBS[clean(name).toLowerCase()];
+    host.innerHTML = groups.map(g => `<section class="tk-group" data-group>
+      <h3 class="tk-group__title">${esc(clean(g.name))}<span class="tk-group__n">${g.items.length}</span></h3>
+      ${blurbOf(g.name) ? `<p class="tk-group__blurb">${esc(blurbOf(g.name))}</p>` : ''}
+      <table class="tk-table"><thead><tr><th scope="col" class="tk-prev"><span class="visually-hidden">Prévia</span></th><th scope="col">Token</th><th scope="col">Valor agora</th></tr></thead><tbody>
+      ${g.items.map(t => `<tr id="tk-${t.name}" data-token="${t.name}" data-search="${esc((t.name + ' ' + t.desc + ' ' + g.name).toLowerCase())}"><td class="tk-prev">${tokenPreview(t)}</td><td><button class="tk-name" type="button" data-copy-var="${t.name}" title="Copiar var(${t.name})">${t.name}</button>${t.desc ? `<span class="tk-desc">${esc(t.desc)}</span>` : ''}</td><td class="tk-val" data-val="${t.name}"></td></tr>`).join('')}
+      </tbody></table></section>`).join('');
+    refreshCatalog(); filterCatalog();
+    if (location.hash.startsWith('#tk-')) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: 'center' });
+  }
+  function refreshCatalog() {
+    $$('#token-catalog [data-val]').forEach(td => { td.textContent = cssVar(td.dataset.val) || '—'; });
+  }
+  function filterCatalog() {
+    const q = ($('#token-filter')?.value || '').trim().toLowerCase();
+    let shown = 0;
+    $$('#token-catalog [data-group]').forEach(sec => {
+      let any = 0;
+      $$('tr[data-token]', sec).forEach(tr => { const hit = !q || tr.dataset.search.includes(q); tr.hidden = !hit; if (hit) any++; });
+      sec.hidden = !any; shown += any;
+    });
+    const c = $('#token-count'); if (c) c.textContent = q ? (shown ? `${shown} ${shown === 1 ? 'token encontrado' : 'tokens encontrados'}` : 'Nenhum token encontrado') : '';
+  }
+  $('#token-filter')?.addEventListener('input', filterCatalog);
+  $('#token-catalog')?.addEventListener('click', (e) => { const b = e.target.closest('[data-copy-var]'); if (b) copy(`var(${b.dataset.copyVar})`, b.dataset.copyVar); });
+  new MutationObserver(refreshCatalog).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refreshCatalog);
+
   /* ---------------- tokens.css ---------------- */
   const tokensPre = $('#tokens-source');
   let tokensText = '';
   if (tokensPre) {
-  fetch('tokens.css').then(r => { if (!r.ok) throw 0; return r.text(); }).then(t => { tokensText = t; tokensPre.textContent = t; })
+  fetch('tokens.css').then(r => { if (!r.ok) throw 0; return r.text(); }).then(t => { tokensText = t; tokensPre.textContent = t; buildCatalog(t); })
     .catch(() => {
       try {
         const sheet = [...document.styleSheets].find(s => (s.href || '').endsWith('tokens.css'));
         tokensText = [...sheet.cssRules].map(r => r.cssText).join('\n\n');
         tokensPre.textContent = tokensText;
-      } catch (e) { tokensPre.textContent = 'Não foi possível ler tokens.css a partir desta página. Abra o arquivo design-system/tokens.css diretamente.'; }
+        buildCatalog(tokensText);
+      } catch (e) { tokensPre.textContent = 'Não foi possível ler tokens.css a partir desta página. Abra o arquivo design-system/tokens.css diretamente.'; const h = $('#token-catalog'); if (h) h.innerHTML = '<p class="token-loading">O catálogo precisa de um servidor local: abra o design system por http (por exemplo, npx serve design-system), não direto do arquivo.</p>'; }
     });
   $('#copy-tokens').addEventListener('click', () => copy(tokensText || tokensPre.textContent, 'tokens.css'));
   }

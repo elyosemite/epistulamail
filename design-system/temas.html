@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="Claro, escuro, alto contraste, densidade e a cor de destaque da conta.">
+<title>Temas e densidade · Epistula Design System</title>
+<meta name="description" content="Pessoas e contas, com inicial, cor e foto.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="temas">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="temas">
+      <div class="ds-head">
+        <p class="eyebrow">v3 · §5</p>
+        <h1>Temas e densidade</h1>
+        <p class="lede">Tudo o que muda de aparência sem mudar de significado: o tema, o contraste, a densidade e a cor de destaque de cada conta.</p>
+      </div>
+      <h2 id="suportados">Os temas</h2>
+      <table class="tier-table"><thead><tr><th scope="col">Tema</th><th scope="col">Como ativa</th><th scope="col">O que muda</th></tr></thead><tbody><tr><th scope="row">Claro</th><td>Padrão; <code>data-theme="light"</code> força.</td><td>Superfícies claras, texto escuro.</td></tr><tr><th scope="row">Escuro</th><td>Segue o sistema (<code>prefers-color-scheme</code>); <code>data-theme="dark"</code> força.</td><td>Cada token semântico aponta para outro primitivo. As cores de etiqueta e as superfícies têm valores próprios.</td></tr><tr><th scope="row">Alto contraste</th><td>Segue o sistema (<code>prefers-contrast: more</code>); <code>data-contrast="more"</code> força.</td><td>Só reaponta tokens semânticos para outros mais fortes. Nenhum valor novo.</td></tr></tbody></table>
+      <h2 id="alto-contraste">Alto contraste, ao vivo</h2>
+      <p class="demo-hint">O botão abaixo liga o efeito nesta página, como se o sistema pedisse mais contraste. Troque também o tema pelo botão do topo para ver as duas combinações.</p>
+      <div class="stage" id="demo-tema">
+        <div class="stack" style="max-width:34rem">
+          <div class="section-message" role="note"><svg class="i"><use href="#i-info"/></svg><div><p class="section-message__title">Texto de apoio e bordas mudam</p><p>No alto contraste, o texto de apoio vira texto comum, as bordas ficam mais fortes e o anel de foco engrossa.</p></div></div>
+          <div class="field"><label class="field__label" for="tm-1">Campo</label><div class="input"><input id="tm-1" value="Yuri Melo"></div><span class="field__help">Texto de ajuda, em cor subtle.</span></div>
+          <div class="row"><button class="btn btn--primary" type="button">Primário</button><button class="btn" type="button">Padrão</button><button class="btn btn--subtle" type="button">Sutil</button><span class="badge badge--primary">3</span><span class="lozenge lozenge--success">Estável</span></div>
+        </div>
+      </div>
+      <div class="row" role="group" aria-label="Preferência do sistema simulada" id="tema-controles">
+        <button class="btn" type="button" data-contrast="auto" aria-pressed="true">Seguir o sistema</button>
+        <button class="btn" type="button" data-contrast="more" aria-pressed="false">Forçar alto contraste</button>
+      </div>
+      <dl class="guidance">
+        <div><dt>O que muda</dt><dd>As bordas passam para a borda forte; o texto de apoio e o desabilitado sobem um nível; os ícones sutis viram ícones comuns; o anel de foco passa de 2 para 3px.</dd></div>
+        <div><dt>Como funciona</dt><dd>Um bloco no fim de <code>tokens.css</code> reaponta os tokens. Como os componentes só usam tokens semânticos, nenhum precisa saber do alto contraste.</dd></div>
+        <div><dt>Combina com o escuro</dt><dd>O mesmo bloco vale no claro e no escuro, porque aponta para outros tokens, e não para cores.</dd></div>
+      </dl>
+      <h2 id="densidade">Densidade</h2>
+      <dl class="guidance">
+        <div><dt>Linhas da lista</dt><dd>Três: Confortável (3 linhas por conversa), Padrão (2) e Compacta (1). Os tokens são <code>--row-height-default</code> e <code>--row-height-compact</code>. A pessoa escolhe no menu da conta ou em Configurações; vale para todas as contas. Veja <a href="threads.html">Lista de mensagens</a>.</dd></div>
+        <div><dt>Controles</dt><dd>Botões de 32px e de 24px (<code>--control-height</code> e <code>--control-height-compact</code>); campos de 36px (<code>--input-height</code>). Os alvos clicáveis nunca ficam abaixo de 24px.</dd></div>
+        <div><dt>Outras densidades</dt><dd>Não existem e não estão previstas. Se a pesquisa de uso pedir, entram como novos valores desses mesmos tokens, e não como componentes novos.</dd></div>
+      </dl>
+      <h2 id="conta">Cor de destaque da conta</h2>
+      <dl class="guidance">
+        <div><dt>O que é</dt><dd>Cada conta tem uma cor, escolhida entre seis, que aparece no avatar, na coluna de contas e nos chips. Veja <a href="selecao.html">Seleção</a> e <a href="contas.html">Contas</a>.</dd></div>
+        <div><dt>Escopo</dt><dd>A cor da conta é local ao componente que a usa (por exemplo, <code>--av-bg</code> e <code>--av-fg</code> no avatar). Ela não é um token global e nunca troca as cores de sucesso, erro, aviso ou segurança.</dd></div>
+        <div><dt>Tema da janela e cor da conta</dt><dd>São coisas diferentes: o tema vale para a janela toda; a cor da conta só identifica de qual conta é cada item.</dd></div>
+      </dl>
+      <h2 id="verificar">Como cada componente é verificado</h2>
+      <dl class="guidance">
+        <div><dt>Contraste</dt><dd>Medido ao vivo, em cada tema, em <a href="acessibilidade.html">Acessibilidade</a>: texto 4,5:1; ícones, bordas de campo e foco 3:1.</dd></div>
+        <div><dt>Paridade dos temas</dt><dd>O <code>pnpm ds:check</code> confere que o tema escuro do sistema e o forçado têm os mesmos valores, e que todo token escuro tem um claro.</dd></div>
+        <div><dt>Estado sem cor</dt><dd>Foco, seleção, desabilitado, erro e segurança sempre mudam também forma, texto ou peso. Nunca só a cor.</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+<script>
+(() => {
+  const root = document.documentElement;
+  document.querySelectorAll('#tema-controles [data-contrast]').forEach(b => b.addEventListener('click', () => {
+    const more = b.dataset.contrast === 'more';
+    if (more) root.dataset.contrast = 'more'; else delete root.dataset.contrast;
+    document.querySelectorAll('#tema-controles [data-contrast]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+})();
+</script>
+</body>
+</html>

@@ -55,9 +55,22 @@
           </div>
         </div>
         <dl class="guidance">
-          <div><dt>Leitura</dt><dd>Mesma estrutura do <code>.reader</code>: título com <code>.skeleton--title</code>, avatar com <code>.skeleton--avatar</code> e quatro linhas de corpo com <code>.skeleton--line</code>, a última mais curta. Marque o contêiner com <code>aria-busy="true"</code>.</dd></div>
+          <div><dt>Leitura</dt><dd>Mesma estrutura do painel de leitura: título, avatar e quatro linhas de corpo, a última mais curta. Marque o contêiner com <code>aria-busy="true"</code>.</dd></div>
         </dl>
-      </section>
+      <p class="classes"><span>Classes</span> <code>.reader</code> <code>.skeleton--title</code> <code>.skeleton--avatar</code> <code>.skeleton--line</code></p>
+
+      <h2 id="padrao">Como usar: modelo de padrão</h2>
+      <dl class="guidance">
+        <div><dt>Problema</dt><dd>Sem retorno, a pessoa não sabe se o app está trabalhando ou travou. Com retorno falso, perde a confiança.</dd></div>
+        <div><dt>Contexto</dt><dd>Abrir a lista, ler uma conversa, sincronizar, importar, desbloquear. Vale para tudo que leva mais de uma fração de segundo.</dd></div>
+        <div><dt>Composição</dt><dd>Skeleton onde a forma do conteúdo é conhecida, spinner em ações curtas sem forma e barra de progresso quando há quantidade. O <a href="vazios.html">estado vazio</a> cobre o fim da espera sem conteúdo.</dd></div>
+        <div><dt>Fluxo</dt><dd>Mostre o esqueleto na hora; troque pelo conteúdo quando chegar, sem salto de layout. Em ação longa, mostre o progresso com "Cancelar". Depois de um erro, volte ao estado anterior e diga o que fazer.</dd></div>
+        <div><dt>Estados</dt><dd>Carregando inicial, atualizando parte, em andamento com progresso, e falhou.</dd></div>
+        <div><dt>Acessibilidade</dt><dd>O contêiner leva <code>aria-busy="true"</code>. Com "reduzir movimento", o skeleton para. Diga o progresso também em texto, não só na barra.</dd></div>
+        <div><dt>Conteúdo</dt><dd>Texto de espera só quando há ação ("Sincronizando…"). Em espera depois de um erro, mostre a contagem no texto de ajuda.</dd></div>
+        <div><dt>Anti-patterns</dt><dd>Spinner na lista ou no painel de leitura. Bloquear a tela toda por uma ação local. Mostrar progresso falso.</dd></div>
+      </dl>
+    </section>
     <section class="ds-section" id="desbloqueio">
       <div class="ds-head">
         <p class="eyebrow">L53 · US10 · CA2 · CA3</p>
@@ -121,13 +134,14 @@
               </div>
             </div>
           </div>
-          <figcaption><b>Esqueci a senha</b>"Apagar" pede confirmação num <code>.modal</code> de perigo (abaixo)</figcaption>
+          <figcaption><b>Esqueci a senha</b>"Apagar" pede confirmação num modal de perigo (abaixo)</figcaption>
         </figure>
       </div>
       <dl class="guidance">
         <div><dt>Sem conteúdo</dt><dd>Enquanto bloqueado, a sincronização e o download param, a lista não é montada e as notificações mostram só a conta (D3).</dd></div>
         <div><dt>Espera</dt><dd>Depois de cada erro o botão fica desabilitado pela espera, com a contagem no texto de ajuda. A espera não é contada no servidor: é só do computador.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.modal</code></p>
     </section>
   </main>
 </div>

@@ -1,4 +1,4 @@
-// DS: identidade.html · .avatar, tamanhos --xs/--sm/--lg, cores --teal/--green/--purple/--magenta/--orange
+// DS: avatar.html · .avatar, tamanhos --xs/--sm/--lg, cores --teal/--green/--purple/--magenta/--orange
 import { avatarColor, initials } from "../lib/format";
 
 type AvatarSize = "xs" | "sm" | "md" | "lg";

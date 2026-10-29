@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="As regiões da casca, da caixa de entrada, da busca, das configurações e da conta.">
+<title>Layouts · Epistula Design System</title>
+<meta name="description" content="Pessoas e contas, com inicial, cor e foto.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="layouts">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="layouts">
+      <div class="ds-head">
+        <p class="eyebrow">v3 · §2.7</p>
+        <h1>Layouts</h1>
+        <p class="lede">As regiões de cada tela do app, de onde elas vêm e onde estão documentadas.</p>
+      </div>
+      <p class="demo-hint">Um layout organiza as regiões da janela. Compõe peças das outras camadas, mas não cria tokens globais nem redefine estilos do Core. A composição de uma página fica na própria página até aparecer um padrão que se repete.</p>
+      <table class="tier-table"><thead><tr><th scope="col">Layout</th><th scope="col">Regiões</th><th scope="col">Onde ver</th><th scope="col">No app</th></tr></thead><tbody><tr><th scope="row">Casca da aplicação (<code>ApplicationShell</code>)</th><td>Header de 56px, coluna de contas de 64px, pastas de 240px, lista de cerca de 400px (ajustável de 320 a 560px) e leitura. A barra de comandos fica abaixo do header. Em janelas abaixo de 960px, a coluna de contas some e a leitura substitui a lista.</td><td><a href="espacamento.html">Espaçamento e layout</a></td><td><code>src/layout/AppLayout.tsx</code></td></tr><tr><th scope="row">Caixa de entrada</th><td>Pastas, lista de mensagens e leitura, com a janela de resposta dentro da leitura.</td><td><a href="pastas.html">Pastas</a>, <a href="threads.html">Lista</a>, <a href="leitura.html">Leitura</a></td><td><code>src/layout/</code></td></tr><tr><th scope="row">Busca</th><td>O campo com chips no header, a barra de resultados entre os comandos e a lista, e a lista de resultados.</td><td><a href="busca.html">Busca</a>, <a href="padrao-busca.html">padrão</a></td><td><code>src/features/search/</code></td></tr><tr><th scope="row">Configurações</th><td>Uma folha sobre a navegação e a leitura, com a coluna de contas e o header à vista. À esquerda as seções, à direita o painel.</td><td><a href="modais.html">Modais</a></td><td><code>src/features/settings/</code></td></tr><tr><th scope="row">Conta e segurança</th><td>Adicionar conta, abrir arquivo de e-mail, assistentes de chave e tela de desbloqueio.</td><td><a href="arquivos.html">Arquivos</a>, <a href="criptografia.html">Criptografia</a>, <a href="carregamento.html">Carregamento</a></td><td><code>src/features/accounts/</code>, <code>crypto/</code>, <code>lock/</code></td></tr></tbody></table>
+      <dl class="guidance">
+        <div><dt>Regra</dt><dd>Se uma tela precisa de um valor que não existe como token, o caminho é propor o token, e não colocar o valor na tela.</dd></div>
+        <div><dt>Responsivo</dt><dd>O layout responde à área útil da janela, com os breakpoints de <code>tokens.css</code> (960 e 1280px), e não ao tamanho do aparelho.</dd></div>
+        <div><dt>Teclado</dt><dd>A ordem de foco segue a ordem visual das regiões: header, comandos, pastas, lista, leitura.</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

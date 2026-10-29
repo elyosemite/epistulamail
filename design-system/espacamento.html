@@ -42,13 +42,13 @@
             <div class="lm-scale"><span class="lm-measure">240</span><span class="lm-measure">400</span><span class="lm-measure">1fr</span></div>
           </div>
         </div>
-        <h3 class="sub">Casca do cliente <code>.app-shell</code></h3>
+        <h3 class="sub">Casca do cliente</h3>
         <div class="stage stage--flush scroll-x">
           <div class="app-shell app-shell--embedded" style="min-width:60rem">
             <header class="appbar app-shell__header">
               <span class="appbar__brand"><span class="wordmark wordmark--sm"><img class="wordmark__logo" src="images/epistulamail-logo-120.png" alt="">EpistulaMail</span></span>
               <div class="appbar__actions">
-                <div class="appbar__account" role="status"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">YM</span><span class="appbar__account-text">Conectado como <span class="appbar__account-email">yuri@gmail.com</span></span></div>
+                <div class="appbar__account" role="status"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">YM<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="appbar__account-text">Conectado como <span class="appbar__account-email">yuri@gmail.com</span></span></div>
               </div>
             </header>
             <nav class="sidebar app-shell__sidebar" aria-label="Pastas">
@@ -68,21 +68,22 @@
                   <div class="thread" role="listitem" tabindex="0"><span class="star-btn thread__star" aria-hidden="true" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Banco Atlântico</span></div><div class="thread__meta"><span class="thread__date">21 out</span></div><div class="thread__subject"><span class="thread__subject-text">Seu extrato de outubro está disponível</span></div></div>
                 </div>
               </div>
-            </section>
+      <p class="classes"><span>Classes</span> <code>.app-shell</code></p>
+    </section>
             <section class="app-shell__reader" aria-label="Mensagem">
               <article class="reader">
                 <div class="reader__head"><button class="btn btn--subtle btn--icon app-shell__back" type="button" aria-label="Voltar para a lista" data-tip="Voltar"><svg class="i"><use href="#i-chevron-left"/></svg></button><h3 class="reader__subject">Revisão do contrato: Fornecedor Lumen</h3></div>
-                <div class="message"><div class="message__head"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">MC</span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@epistula.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
+                <div class="message"><div class="message__head"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@epistula.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
                 <div class="message__body"><p>Segue a versão 3 do contrato com os ajustes da cláusula 7.2.</p></div></div>
               </article>
             </section>
           </div>
         </div>
         <dl class="guidance">
-          <div><dt>Estrutura</dt><dd><code>.app-shell</code> ocupa a janela inteira (<code>position: fixed</code>) e posiciona os filhos por área: <code>__header</code> (com <code>.appbar</code>), <code>__banner</code> opcional, <code>__sidebar</code> (com <code>.sidebar</code>), <code>__list</code> (toolbar + <code>__list-body</code> rolável) e <code>__reader</code>. Cada painel rola sozinho; a janela nunca rola.</dd></div>
+          <div><dt>Estrutura</dt><dd>A casca ocupa a janela inteira e posiciona os filhos por área: cabeçalho (com a barra do app), aviso opcional, barra lateral, lista (barra de comandos e corpo rolável) e leitura. Cada painel rola sozinho; a janela nunca rola.</dd></div>
           <div><dt>Variações</dt><dd><code>--no-sidebar</code> para conta única sem pastas. <code>--embedded</code> ocupa o contêiner, para documentação e pré-visualizações. <code>__center</code> ocupa tudo abaixo do header, para boas-vindas, conexão de conta e carregamento do app.</dd></div>
-          <div><dt>Lista ajustável</dt><dd>A largura da lista vem de <code>--app-shell-list</code> (padrão <code>--layout-list-width</code>), limitada a 320–560px. O app grava a preferência do usuário nessa variável no <code>.app-shell</code>.</dd></div>
-          <div><dt>Telas estreitas</dt><dd>Com <code>.has-reader</code> no <code>.app-shell</code>, abaixo de 960px a leitura substitui a lista, e <code>.app-shell__back</code> aparece no cabeçalho da leitura. Na sidebar recolhida, todo <code>.nav-item</code> precisa de <code>data-tip</code>; fora da casca, use <code>.sidebar--collapsed</code>.</dd></div>
+          <div><dt>Lista ajustável</dt><dd>A largura da lista vem de <code>--app-shell-list</code> (padrão <code>--layout-list-width</code>), limitada a 320–560px. O app grava a preferência do usuário nessa variável, na casca.</dd></div>
+          <div><dt>Telas estreitas</dt><dd>Abaixo de 960px, com a leitura aberta, ela substitui a lista e um botão de voltar aparece no cabeçalho da leitura. Na barra lateral recolhida, todo item de navegação precisa de <code>data-tip</code>.</dd></div>
         </dl>
         <dl class="guidance">
           <div><dt>Abaixo de 1280px</dt><dd>A sidebar recolhe para 64px, mostrando só os ícones com tooltip.</dd></div>
@@ -90,27 +91,27 @@
           <div><dt>Abaixo de 600px</dt><dd>A lista usa a densidade confortável, e as ações rápidas passam para o gesto de deslizar.</dd></div>
           <div><dt>Densidade</dt><dd>Confortável: 76px, três linhas (remetente, assunto, prévia). Compacta: 36px, uma linha.</dd></div>
         </dl>
-        <h3 class="sub">Com várias contas <code>.app-shell--with-rail</code></h3>
+        <h3 class="sub">Com várias contas</h3>
         <p class="demo-hint">Clique nas contas da coluna para trocar; o header acompanha a conta ativa.</p>
         <div class="stage stage--flush scroll-x">
           <div class="app-shell app-shell--embedded app-shell--with-rail" style="min-width:64rem" data-rail-demo>
             <header class="appbar app-shell__header">
               <span class="appbar__brand"><span class="wordmark wordmark--sm"><img class="wordmark__logo" src="images/epistulamail-logo-120.png" alt="">EpistulaMail</span></span>
               <div class="appbar__actions">
-                <div class="appbar__account" role="status" data-rail-account><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T</span><span class="appbar__account-text"><span class="appbar__account-name">Trabalho</span> · joao.silva.empresa@gmail.com</span></div>
+                <div class="appbar__account" role="status" data-rail-account><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="appbar__account-text"><span class="appbar__account-name">Trabalho</span> · joao.silva.empresa@gmail.com</span></div>
               </div>
             </header>
             <nav class="account-rail app-shell__rail" aria-label="Contas">
               <div class="account-rail__list" role="list">
-                <div role="listitem"><button class="account-rail__item" type="button" data-account="Pessoal|joao.silva@gmail.com|blue|P" aria-label="Pessoal, joao.silva@gmail.com, 4 não lidas" data-tip="Pessoal · joao.silva@gmail.com (Ctrl+1)"><span class="avatar avatar--lg" aria-hidden="true">P</span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
-                <div role="listitem"><button class="account-rail__item" type="button" aria-current="true" data-account="Trabalho|joao.silva.empresa@gmail.com|purple|T" aria-label="Trabalho, joao.silva.empresa@gmail.com, 12 não lidas" data-tip="Trabalho · joao.silva.empresa@gmail.com (Ctrl+2)"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T</span><span class="badge badge--primary account-rail__badge" aria-hidden="true">12</span><span class="account-rail__name" aria-hidden="true">Trabalho</span></button></div>
-                <div role="listitem"><button class="account-rail__item" type="button" data-account="Família|silva.familia@gmail.com|green|F" aria-label="Família, silva.familia@gmail.com, mais de 99 não lidas" data-tip="Família · silva.familia@gmail.com (Ctrl+3)"><span class="avatar avatar--lg avatar--green" aria-hidden="true">F</span><span class="badge badge--primary account-rail__badge" aria-hidden="true">99+</span><span class="account-rail__name" aria-hidden="true">Família</span></button></div>
+                <div role="listitem"><button class="account-rail__item" type="button" data-account="Pessoal|joao.silva@gmail.com|blue|P" aria-label="Pessoal, joao.silva@gmail.com, 4 não lidas" data-tip="Pessoal · joao.silva@gmail.com (Ctrl+1)"><span class="avatar avatar--lg" aria-hidden="true">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
+                <div role="listitem"><button class="account-rail__item" type="button" aria-current="true" data-account="Trabalho|joao.silva.empresa@gmail.com|purple|T" aria-label="Trabalho, joao.silva.empresa@gmail.com, 12 não lidas" data-tip="Trabalho · joao.silva.empresa@gmail.com (Ctrl+2)"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">12</span><span class="account-rail__name" aria-hidden="true">Trabalho</span></button></div>
+                <div role="listitem"><button class="account-rail__item" type="button" data-account="Família|silva.familia@gmail.com|green|F" aria-label="Família, silva.familia@gmail.com, mais de 99 não lidas" data-tip="Família · silva.familia@gmail.com (Ctrl+3)"><span class="avatar avatar--lg avatar--green" aria-hidden="true">F<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">99+</span><span class="account-rail__name" aria-hidden="true">Família</span></button></div>
               </div>
               <div class="account-rail__sep" role="separator"></div>
               <button class="account-rail__add" type="button" aria-label="Adicionar conta" data-tip="Adicionar conta"><svg class="i"><use href="#i-plus"/></svg></button>
             </nav>
             <nav class="sidebar app-shell__sidebar" aria-label="Pastas">
-              <button class="account-switcher" type="button" aria-haspopup="menu" data-tip="Trabalho · joao.silva.empresa@gmail.com"><span class="avatar avatar--purple" aria-hidden="true">T</span><span class="account-switcher__text"><span class="account-switcher__name">Trabalho</span><span class="account-switcher__email">joao.silva.empresa@gmail.com</span></span><svg class="i"><use href="#i-chevron-down"/></svg></button>
+              <button class="account-switcher" type="button" aria-haspopup="menu" data-tip="Trabalho · joao.silva.empresa@gmail.com"><span class="avatar avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="account-switcher__text"><span class="account-switcher__name">Trabalho</span><span class="account-switcher__email">joao.silva.empresa@gmail.com</span></span><svg class="i"><use href="#i-chevron-down"/></svg></button>
               <div class="nav-group">
                 <a class="nav-item has-unread" href="#espacamento" aria-current="page" data-tip="Caixa de entrada"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></a>
                 <a class="nav-item" href="#espacamento" data-tip="Com estrela"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></a>
@@ -131,19 +132,19 @@
             <section class="app-shell__reader" aria-label="Mensagem">
               <article class="reader">
                 <div class="reader__head"><h3 class="reader__subject">Revisão do contrato: Fornecedor Lumen</h3></div>
-                <div class="message"><div class="message__head"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">MC</span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
+                <div class="message"><div class="message__head"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
                 <div class="message__body"><p>Segue a versão 3 do contrato com os ajustes da cláusula 7.2.</p></div></div>
               </article>
             </section>
           </div>
         </div>
         <dl class="guidance">
-          <div><dt>Estrutura</dt><dd><code>--with-rail</code> acrescenta a área <code>__rail</code> (64px) com <code>.account-rail</code> à esquerda da sidebar. Use quando houver pelo menos uma conta conectada: é na coluna que fica o "+" para adicionar outra. <code>__center</code> (adicionar conta, login) ocupa o espaço à direita da coluna.</dd></div>
+          <div><dt>Estrutura</dt><dd>A variante com coluna de contas acrescenta a área da coluna (64px) à esquerda da barra lateral. Use quando houver pelo menos uma conta conectada: é na coluna que fica o "+" para adicionar outra. A área central (adicionar conta, login) ocupa o espaço à direita da coluna.</dd></div>
           <div><dt>Abaixo de 1280px</dt><dd>A sidebar recolhe como sempre; a coluna continua visível.</dd></div>
-          <div><dt>Abaixo de 960px</dt><dd>A coluna sai e o <code>.account-switcher</code>, primeiro filho da sidebar, aparece (só o avatar, com <code>data-tip</code>). Ele abre o menu com a lista de contas.</dd></div>
-          <div><dt>Header</dt><dd><code>.appbar__account</code> mostra a conta ativa: avatar na cor da conta, <code>.appbar__account-name</code> e o e-mail.</dd></div>
+          <div><dt>Abaixo de 960px</dt><dd>A coluna sai e o seletor de contas, primeiro item da barra lateral, aparece (só o avatar, com <code>data-tip</code>). Ele abre o menu com a lista de contas.</dd></div>
+          <div><dt>Header</dt><dd>O trecho "Conectado como" mostra a conta ativa: avatar na cor da conta, nome e e-mail.</dd></div>
         </dl>
-      <h3 class="sub">Com comandos e divisor <code>.app-shell--commands</code></h3>
+      <h3 class="sub">Com comandos e divisor</h3>
       <p class="demo-hint">Arraste o divisor entre a lista e a leitura (ou dê foco nele com Tab e use as setas). A busca acompanha a largura da lista. Duplo clique volta ao padrão.</p>
       <div class="stage stage--flush scroll-x">
         <div class="app-shell app-shell--embedded app-shell--with-rail app-shell--commands" style="min-width:60rem;height:44rem" data-resize-demo>
@@ -151,7 +152,7 @@
             <span class="appbar__brand"><span class="wordmark wordmark--sm"><img class="wordmark__logo" src="images/epistulamail-logo-120.png" alt="">EpistulaMail</span></span>
             <div class="appbar__search"><div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar" aria-label="Buscar e-mails"><kbd>/</kbd></div></div>
             <div class="appbar__actions">
-              <div class="appbar__account" role="status"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T</span><span class="appbar__account-text"><span class="appbar__account-name">Trabalho</span> · joao.silva.empresa@gmail.com</span></div>
+              <div class="appbar__account" role="status"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="appbar__account-text"><span class="appbar__account-name">Trabalho</span> · joao.silva.empresa@gmail.com</span></div>
             </div>
           </header>
           <div class="commandbar app-shell__commands" role="toolbar" aria-label="Ações da mensagem">
@@ -177,8 +178,8 @@
           </div>
           <nav class="account-rail app-shell__rail" aria-label="Contas">
             <div class="account-rail__list" role="list">
-              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Pessoal"><span class="avatar avatar--lg" aria-hidden="true">P</span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
-              <div role="listitem"><button class="account-rail__item" type="button" aria-current="true" aria-label="Trabalho"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T</span><span class="account-rail__name" aria-hidden="true">Trabalho</span></button></div>
+              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Pessoal"><span class="avatar avatar--lg" aria-hidden="true">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
+              <div role="listitem"><button class="account-rail__item" type="button" aria-current="true" aria-label="Trabalho"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="account-rail__name" aria-hidden="true">Trabalho</span></button></div>
             </div>
             <div class="account-rail__sep" role="separator"></div>
             <button class="account-rail__add" type="button" aria-label="Adicionar conta"><svg class="i"><use href="#i-plus"/></svg></button>
@@ -206,14 +207,14 @@
             <article class="reader">
               <div class="reader__head"><h3 class="reader__subject">Revisão do contrato: Fornecedor Lumen</h3></div>
               <div class="message">
-                <div class="message__head"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">MC</span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
+                <div class="message__head"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><div style="min-width:0"><div class="message__from">Marina Couto <span class="message__addr">&lt;marina.couto@lumen.com.br&gt;</span></div></div><div class="message__time">Hoje, 10:42</div></div>
                 <div class="message__body"><p>Segue a versão 3 do contrato com os ajustes da cláusula 7.2. Preciso do retorno até sexta.</p></div>
               </div>
               <form class="compose compose--inline" aria-label="Responder a todos">
                 <div class="compose__bar"><span class="compose__title">Responder a todos</span><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Descartar resposta" data-tip="Descartar"><svg class="i"><use href="#i-trash"/></svg></button></div>
                 <div class="compose__fields">
-                  <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--magenta">MC</span><span class="chip__name">Marina Couto</span></span><span class="chip"><span class="avatar avatar--teal">RD</span><span class="chip__name">Rafael Dias</span></span><input aria-label="Adicionar destinatário"><button class="btn btn--subtle btn--compact compose__toggle" type="button" aria-expanded="true">Cc/Cco</button></div>
-                  <div class="input input--line chip-input"><span class="input__prefix">Cc</span><span class="chip is-external"><span class="avatar avatar--orange">J</span><span class="chip__name">joao@lumen.com.br</span></span><input aria-label="Adicionar em cópia"></div>
+                  <div class="input input--line chip-input"><span class="input__prefix">Para</span><span class="chip"><span class="avatar avatar--magenta">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="chip__name">Marina Couto</span></span><span class="chip"><span class="avatar avatar--teal">RD<img class="avatar__img" alt="" src="images/people/pessoa-3.webp"></span><span class="chip__name">Rafael Dias</span></span><input aria-label="Adicionar destinatário"><button class="btn btn--subtle btn--compact compose__toggle" type="button" aria-expanded="true">Cc/Cco</button></div>
+                  <div class="input input--line chip-input"><span class="input__prefix">Cc</span><span class="chip is-external"><span class="avatar avatar--orange">J<img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span><span class="chip__name">joao@lumen.com.br</span></span><input aria-label="Adicionar em cópia"></div>
                   <div class="input input--line chip-input"><span class="input__prefix">Cco</span><span class="chip is-invalid"><span class="chip__name">financeiro@empresa</span></span><input aria-label="Adicionar em cópia oculta"></div>
                   <label class="input input--line"><span class="input__prefix">Assunto</span><input value="Re: Revisão do contrato: Fornecedor Lumen"></label>
                 </div>
@@ -229,18 +230,18 @@
         </div>
       </div>
       <dl class="guidance">
-        <div><dt>Header</dt><dd><code>.appbar--shell</code> usa <code>subgrid</code>: herda as colunas da casca. Marca sobre a coluna de contas e as pastas, busca exatamente sobre a lista, conta sobre a leitura.</dd></div>
-        <div><dt>Comandos</dt><dd><code>.commandbar</code> numa linha própria, <code>__commands</code>, abaixo do header. "Novo e-mail" é o único botão principal; os grupos são separados por <code>.toolbar__sep</code>.</dd></div>
-        <div><dt>Divisor</dt><dd><code>.app-shell__resizer</code> grava a largura em <code>--app-shell-list</code> (20–35rem). Setas: 16px; Shift+setas: 64px; Home/End: limites; duplo clique: padrão.</dd></div>
-        <div><dt>Resposta</dt><dd><code>.compose--inline</code> abaixo da mensagem (responder) ou acima (encaminhar). "Enviar" desabilitado nesta versão; o rascunho fica no computador.</dd></div>
+        <div><dt>Header</dt><dd>O header usa <code>subgrid</code>: herda as colunas da casca. Marca sobre a coluna de contas e as pastas, busca exatamente sobre a lista, conta sobre a leitura.</dd></div>
+        <div><dt>Comandos</dt><dd>A barra de comandos fica numa linha própria, abaixo do header. "Novo e-mail" é o único botão principal; os grupos são separados por divisores.</dd></div>
+        <div><dt>Divisor</dt><dd>O divisor grava a largura em <code>--app-shell-list</code> (20–35rem). Setas: 16px; Shift+setas: 64px; Home/End: limites; duplo clique: padrão.</dd></div>
+        <div><dt>Resposta</dt><dd>A resposta fica abaixo da mensagem (responder) ou acima (encaminhar). "Enviar" desabilitado nesta versão; o rascunho fica no computador.</dd></div>
       </dl>
 
         <dl class="guidance">
-          <div><dt>Header</dt><dd><code>.appbar--shell</code> usa <code>subgrid</code> e herda as colunas da casca: marca sobre a coluna de contas e as pastas, <code>.appbar__search</code> exatamente sobre a lista, conta sobre a leitura.</dd></div>
-          <div><dt>Comandos</dt><dd><code>--commands</code> acrescenta a linha <code>__commands</code> com <code>.commandbar</code> abaixo do header.</dd></div>
-          <div><dt>Divisor</dt><dd><code>.app-shell__resizer</code> (<code>role="separator"</code>, focável) grava a largura em <code>--app-shell-list</code>, de 20 a 35rem. Setas: 16px; Shift+setas: 64px; Home/End: limites; duplo clique: padrão (25rem).</dd></div>
+          <div><dt>Header</dt><dd>O header usa <code>subgrid</code> e herda as colunas da casca: marca sobre a coluna de contas e as pastas, busca exatamente sobre a lista, conta sobre a leitura.</dd></div>
+          <div><dt>Comandos</dt><dd>A variante com comandos acrescenta a linha da barra de comandos abaixo do header.</dd></div>
+          <div><dt>Divisor</dt><dd>O divisor (<code>role="separator"</code>, focável) grava a largura em <code>--app-shell-list</code>, de 20 a 35rem. Setas: 16px; Shift+setas: 64px; Home/End: limites; duplo clique: padrão (25rem).</dd></div>
         </dl>
-      <h3 class="sub">Divisor <code>.app-shell__resizer</code></h3>
+      <h3 class="sub">Divisor</h3>
       <div class="stage">
         <div class="states">
           <figure class="state"><div style="position:relative;display:grid;grid-template-columns:6rem 6rem;height:5rem;border:1px solid var(--color-border)"><div style="grid-area:1/1;border-right:1px solid var(--color-border)"></div><div class="app-shell__resizer" style="grid-area:1/1"></div></div><figcaption><b>Padrão</b>só a borda da lista</figcaption></figure>
@@ -249,15 +250,15 @@
         </div>
       </div>
 
-      <h3 class="sub">Em blocos <code>.app-shell--blocks</code></h3>
+      <h3 class="sub">Em blocos</h3>
       <p class="demo-hint">A coluna de contas vai do topo ao rodapé sobre o fundo. O header e os comandos formam um bloco; pastas e lista, outro; a leitura, o terceiro. O divisor fica no gap entre a lista e a leitura. Use os dois botões à direita do header (ou <kbd>Ctrl</kbd>+<kbd>B</kbd> e <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>B</kbd>) para esconder as pastas e a leitura, e a foto para abrir o menu da conta.</p>
       <div class="stage stage--flush scroll-x">
         <div class="app-shell app-shell--embedded app-shell--with-rail app-shell--blocks" id="blocks-shell" style="min-width:68rem;height:46rem">
           <nav class="account-rail app-shell__rail" aria-label="Contas">
             <div class="account-rail__list" role="list">
-              <div role="listitem"><button class="account-rail__item" type="button" aria-current="true" aria-label="Trabalho"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%235E4DB2%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23DFD8FD%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23DFD8FD%22/%3E%3C/svg%3E"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">12</span><span class="account-rail__name" aria-hidden="true">Trabalho</span></button></div>
-              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Pessoal"><span class="avatar avatar--lg" aria-hidden="true">P<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%23206A83%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23C6EDFB%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23C6EDFB%22/%3E%3C/svg%3E"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
-              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Família"><span class="avatar avatar--lg avatar--orange" aria-hidden="true">F</span><span class="account-rail__name" aria-hidden="true">Família</span></button></div>
+              <div role="listitem"><button class="account-rail__item" type="button" aria-current="true" aria-label="Trabalho"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">12</span><span class="account-rail__name" aria-hidden="true">Trabalho</span></button></div>
+              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Pessoal"><span class="avatar avatar--lg" aria-hidden="true">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
+              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Família"><span class="avatar avatar--lg avatar--orange" aria-hidden="true">F<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="account-rail__name" aria-hidden="true">Família</span></button></div>
             </div>
             <div class="account-rail__sep" role="separator"></div>
             <button class="account-rail__add" type="button" aria-label="Adicionar conta" data-tip="Adicionar conta"><svg class="i"><use href="#i-plus"/></svg></button>
@@ -269,7 +270,7 @@
               <div class="appbar__search">
                 <div class="input input--search"><svg class="i"><use href="#i-search"/></svg><input placeholder="Buscar em Trabalho" aria-label="Buscar e-mails"><kbd>/</kbd></div>
               </div>
-              <div class="appbar__actions appbar__end"><button class="btn btn--subtle btn--icon" type="button" aria-pressed="true" aria-label="Pastas" data-toggle-column="folders" data-tip="Esconder pastas (Ctrl+B)"><svg class="i"><use href="#i-sidebar-left"/></svg></button><button class="btn btn--subtle btn--icon" type="button" aria-pressed="true" aria-label="Leitura" data-toggle-column="reader" data-tip="Esconder leitura (Ctrl+Alt+B)"><svg class="i"><use href="#i-sidebar-right"/></svg></button><div class="menu-anchor"><button class="account-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="blocks-account-menu" aria-label="Conta: Trabalho" data-tip="Conta (Alt+A)"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%235E4DB2%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23DFD8FD%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23DFD8FD%22/%3E%3C/svg%3E"></span></button><div class="menu account-menu" role="menu" id="blocks-account-menu" aria-label="Conta" hidden><div class="account-menu__head"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%235E4DB2%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2225%22%20r%3D%2212%22%20fill%3D%22%23DFD8FD%22/%3E%3Cpath%20d%3D%22M8%2064c2-14%2012-22%2024-22s22%208%2024%2022z%22%20fill%3D%22%23DFD8FD%22/%3E%3C/svg%3E"></span><div style="min-width:0"><div class="account-menu__name">Trabalho</div><div class="account-menu__email">joao.silva.empresa@gmail.com</div></div></div><div class="account-menu__info"><div class="account-menu__line"><svg class="i i--sm"><use href="#i-refresh"/></svg><span>Sincronizado há 2 min</span><button class="btn btn--subtle btn--compact" type="button">Sincronizar agora</button></div><div class="account-menu__line"><svg class="i i--sm"><use href="#i-mail"/></svg><span>12 não lidas</span></div><div class="account-menu__line"><svg class="i i--sm"><use href="#i-hard-drive"/></svg><span>2.430 mensagens salvas neste computador · 310 MB</span></div></div><div class="menu__sep" role="separator"></div><button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-settings"/></svg><span class="menu-item__text">Configurações</span><kbd>Ctrl+,</kbd></button><div class="account-menu__pref"><span class="account-menu__label" id="blocks-account-menu-theme">Tema</span><div class="segmented segmented--fill" role="radiogroup" aria-labelledby="blocks-account-menu-theme"><button class="btn btn--compact" type="button" role="radio" aria-checked="false"><svg class="i i--sm"><use href="#i-sun"/></svg>Claro</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false"><svg class="i i--sm"><use href="#i-moon"/></svg>Escuro</button><button class="btn btn--compact" type="button" role="radio" aria-checked="true"><svg class="i i--sm"><use href="#i-monitor"/></svg>Sistema</button></div></div><div class="account-menu__pref"><span class="account-menu__label" id="blocks-account-menu-density">Densidade da lista</span><div class="segmented segmented--fill" role="radiogroup" aria-labelledby="blocks-account-menu-density"><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Confortável</button><button class="btn btn--compact" type="button" role="radio" aria-checked="true">Padrão</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Compacta</button></div></div><div class="menu__sep" role="separator"></div><button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-log-out"/></svg><span class="menu-item__text">Sair de Trabalho</span></button></div></div></div>
+              <div class="appbar__actions appbar__end"><button class="btn btn--subtle btn--icon" type="button" aria-pressed="true" aria-label="Pastas" data-toggle-column="folders" data-tip="Esconder pastas (Ctrl+B)"><svg class="i"><use href="#i-sidebar-left"/></svg></button><button class="btn btn--subtle btn--icon" type="button" aria-pressed="true" aria-label="Leitura" data-toggle-column="reader" data-tip="Esconder leitura (Ctrl+Alt+B)"><svg class="i"><use href="#i-sidebar-right"/></svg></button><div class="menu-anchor"><button class="account-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="blocks-account-menu" aria-label="Conta: Trabalho" data-tip="Conta (Alt+A)"><span class="avatar avatar--sm avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span></button><div class="menu account-menu" role="menu" id="blocks-account-menu" aria-label="Conta" hidden><div class="account-menu__head"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><div style="min-width:0"><div class="account-menu__name">Trabalho</div><div class="account-menu__email">joao.silva.empresa@gmail.com</div></div></div><div class="account-menu__info"><div class="account-menu__line"><svg class="i i--sm"><use href="#i-refresh"/></svg><span>Sincronizado há 2 min</span><button class="btn btn--subtle btn--compact" type="button">Sincronizar agora</button></div><div class="account-menu__line"><svg class="i i--sm"><use href="#i-mail"/></svg><span>12 não lidas</span></div><div class="account-menu__line"><svg class="i i--sm"><use href="#i-hard-drive"/></svg><span>2.430 mensagens salvas neste computador · 310 MB</span></div></div><div class="menu__sep" role="separator"></div><button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-settings"/></svg><span class="menu-item__text">Configurações</span><kbd>Ctrl+,</kbd></button><div class="account-menu__pref"><span class="account-menu__label" id="blocks-account-menu-theme">Tema</span><div class="segmented segmented--fill" role="radiogroup" aria-labelledby="blocks-account-menu-theme"><button class="btn btn--compact" type="button" role="radio" aria-checked="false"><svg class="i i--sm"><use href="#i-sun"/></svg>Claro</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false"><svg class="i i--sm"><use href="#i-moon"/></svg>Escuro</button><button class="btn btn--compact" type="button" role="radio" aria-checked="true"><svg class="i i--sm"><use href="#i-monitor"/></svg>Sistema</button></div></div><div class="account-menu__pref"><span class="account-menu__label" id="blocks-account-menu-density">Densidade da lista</span><div class="segmented segmented--fill" role="radiogroup" aria-labelledby="blocks-account-menu-density"><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Confortável</button><button class="btn btn--compact" type="button" role="radio" aria-checked="true">Padrão</button><button class="btn btn--compact" type="button" role="radio" aria-checked="false">Compacta</button></div></div><div class="menu__sep" role="separator"></div><button class="menu-item" role="menuitem" type="button"><svg class="i"><use href="#i-log-out"/></svg><span class="menu-item__text">Sair de Trabalho</span></button></div></div></div>
             </header>
             <div class="commandbar" role="toolbar" aria-label="Ações de 2 conversas selecionadas">
               <button class="btn btn--primary" type="button" data-tip="Novo e-mail (N)"><svg class="i"><use href="#i-pencil"/></svg>Novo e-mail</button>
@@ -329,7 +330,7 @@
               <div class="reader__head"><h3 class="reader__subject">Revisão do contrato: Fornecedor Lumen</h3></div>
               <div class="message">
                 <div class="message__head">
-                  <span class="avatar" aria-hidden="true">MC</span>
+                  <span class="avatar" aria-hidden="true">MC<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span>
                   <div><div class="message__from">Marina Couto <span class="message__addr">&lt;marina@lumen.com.br&gt;</span></div><button class="message__to" type="button">para mim <svg class="i i--sm"><use href="#i-chevron-down"/></svg></button></div>
                   <div class="message__time">10:42</div>
                 </div>
@@ -344,14 +345,14 @@
         </div>
       </div>
       <dl class="guidance">
-        <div><dt>Áreas</dt><dd><code>.app-shell--blocks</code> (com <code>--with-rail</code>) tem cinco colunas: contas, pastas, lista, o gap de 8px e a leitura. Cada bloco é um <code>.app-shell__block</code>: superfície, raio de 8px e <code>--shadow-raised</code>. Os gaps de <code>--space-100</code> mostram o fundo.</dd></div>
-        <div><dt>Header</dt><dd><code>.app-shell__block--header</code> usa <code>subgrid</code>: a marca fica sobre as pastas, a busca sobre a lista e, sobre a leitura, o fim do header (<code>.appbar__end</code>): os botões das colunas e, na extrema direita, a foto da conta (<code>.account-trigger</code>), que abre o menu da conta (menus.html). A <code>.commandbar</code> é a segunda linha do mesmo bloco.</dd></div>
-        <div><dt>Navegação</dt><dd><code>.app-shell__block--nav</code> agrupa <code>.app-shell__sidebar</code> e <code>.app-shell__list</code>, também em <code>subgrid</code>. A leitura (<code>.app-shell__reader.app-shell__block</code>) é o bloco de conteúdo.</dd></div>
+        <div><dt>Áreas</dt><dd>A casca em blocos (com coluna de contas) tem cinco colunas: contas, pastas, lista, o gap de 8px e a leitura. Cada bloco tem superfície, raio de 8px e <code>--shadow-raised</code>. Os gaps de <code>--space-100</code> mostram o fundo.</dd></div>
+        <div><dt>Header</dt><dd>O header em bloco usa <code>subgrid</code>: a marca fica sobre as pastas, a busca sobre a lista e, sobre a leitura, o fim do header: os botões das colunas e, na extrema direita, a foto da conta, que abre o menu da conta (menus.html). A barra de comandos é a segunda linha do mesmo bloco.</dd></div>
+        <div><dt>Navegação</dt><dd>O bloco de navegação agrupa a barra lateral e a lista, também em <code>subgrid</code>. A leitura é o bloco de conteúdo.</dd></div>
         <div><dt>Fundo</dt><dd>A casca pinta <code>var(--app-background, var(--color-canvas))</code>. Tema, cor ou imagem do usuário trocam só <code>--app-background</code>; a coluna de contas não tem superfície própria.</dd></div>
-        <div><dt>Leitura fluida</dt><dd><code>.reader--fluid</code> tira a medida de 672px do corpo, do quadro HTML e da resposta: o conteúdo acompanha a largura do bloco.</dd></div>
-        <div><dt>Telas estreitas</dt><dd>Abaixo de 960px a coluna de contas some, o bloco de navegação ocupa a largura e a leitura entra no lugar dele com <code>.has-reader</code>.</dd></div>
+        <div><dt>Leitura fluida</dt><dd>A leitura fluida tira a medida de 672px do corpo, do quadro HTML e da resposta: o conteúdo acompanha a largura do bloco.</dd></div>
+        <div><dt>Telas estreitas</dt><dd>Abaixo de 960px a coluna de contas some, o bloco de navegação ocupa a largura e a leitura entra no lugar dele quando aberta.</dd></div>
       </dl>
-      <h3 class="sub">Colunas recolhíveis <code>.app-shell--no-folders</code> <code>.app-shell--no-reader</code></h3>
+      <h3 class="sub">Colunas recolhíveis</h3>
       <div class="nav-states">
         <figure class="state" style="justify-items:stretch"><div class="layout-mini" style="grid-template-columns:14px 2fr 3fr 4fr"><span class="is-rail"></span><span></span><span class="is-list"></span><span></span></div><figcaption><b>Tudo visível</b>contas, pastas, lista e leitura</figcaption></figure>
         <figure class="state" style="justify-items:stretch"><div class="layout-mini" style="grid-template-columns:14px 3fr 6fr"><span class="is-rail"></span><span class="is-list"></span><span></span></div><figcaption><b>Sem pastas</b><kbd>Ctrl</kbd>+<kbd>B</kbd>: mais espaço para ler</figcaption></figure>
@@ -360,9 +361,9 @@
       </div>
       <dl class="guidance">
         <div><dt>Botões</dt><dd>No fim do header, antes da foto: <b>Pastas</b> (ícone <code>sidebar-left</code>) e <b>Leitura</b> (<code>sidebar-right</code>), com <code>aria-pressed="true"</code> enquanto a coluna está visível. O tooltip diz "Esconder…" ou "Mostrar…" e traz o atalho.</dd></div>
-        <div><dt>Sem pastas</dt><dd><code>.app-shell--no-folders</code> fecha a coluna das pastas. O header deixa de seguir as colunas e fica em linha: marca, busca e o fim, sempre na extrema direita.</dd></div>
-        <div><dt>Sem leitura</dt><dd><code>.app-shell--no-reader</code> esconde a leitura e o divisor; a lista ocupa o resto da largura. O header vira uma linha (marca na largura das pastas, busca alinhada à lista), para os botões e a foto continuarem na extrema direita. Abrir uma mensagem ou começar um e-mail novo mostra a leitura de novo.</dd></div>
-        <div><dt>Telas estreitas</dt><dd>Abaixo de 960px valem as regras de sempre: a leitura entra no lugar da lista com <code>.has-reader</code>.</dd></div>
+        <div><dt>Sem pastas</dt><dd>Esta variante fecha a coluna das pastas. O header deixa de seguir as colunas e fica em linha: marca, busca e o fim, sempre na extrema direita.</dd></div>
+        <div><dt>Sem leitura</dt><dd>Esta variante esconde a leitura e o divisor; a lista ocupa o resto da largura. O header vira uma linha (marca na largura das pastas, busca alinhada à lista), para os botões e a foto continuarem na extrema direita. Abrir uma mensagem ou começar um e-mail novo mostra a leitura de novo.</dd></div>
+        <div><dt>Telas estreitas</dt><dd>Abaixo de 960px valem as regras de sempre: a leitura entra no lugar da lista quando aberta.</dd></div>
       </dl>
       <h3 class="sub">Barra de rolagem</h3>
       <div class="stage">

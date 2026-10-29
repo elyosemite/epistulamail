@@ -1,4 +1,4 @@
-// Composição de DS: sidebar.html (.sidebar, .nav-group, .nav-heading, .nav-item; grupo "Sinalizadas") dentro de
+// Composição de DS: pastas.html (.sidebar, .nav-group, .nav-heading, .nav-item; grupo "Sinalizadas") dentro de
 // .app-shell__sidebar, no bloco de navegação; arquivos.html (US15): "Arquivo deste computador" no topo e o progresso
 // da importação no fim (.meter com .progress, como o espaço da conta); busca.html "Buscas salvas" (US16):
 // grupo próprio com .nav-item de ícone search e as não lidas

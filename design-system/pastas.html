@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pastas · Epistula Design System</title>
+<meta name="description" content="Pastas, etiquetas, armazenamento, arrastar e sinalizadas.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+</head>
+<body data-page="pastas">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="pastas">
+      <div class="ds-head">
+        <p class="eyebrow">Produto · Árvore de pastas e navegação de e-mail</p>
+        <h1>Pastas</h1>
+        <p class="lede">As pastas do sistema no topo, as etiquetas abaixo e o uso de armazenamento no rodapé. Pastas com mensagens não lidas ficam em negrito e mostram a contagem; a pasta atual usa o fundo selecionado. É composta a partir da <a href="navegacao.html">navegação lateral</a>.</p>
+      </div>
+        <div class="sidebar-demo">
+          <div class="stage stage--flush">
+            <nav class="sidebar" aria-label="Pastas" id="demo-sidebar">
+              <button class="btn btn--primary btn--block" type="button" id="sidebar-compose"><svg class="i"><use href="#i-pencil"/></svg>Escrever</button>
+              <div class="nav-group">
+                <a class="nav-item has-unread" href="#sidebar" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">24</span></a>
+                <a class="nav-item" href="#sidebar"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></a>
+                <a class="nav-item" href="#sidebar"><svg class="i"><use href="#i-clock"/></svg><span class="nav-item__text">Adiados</span><span class="nav-item__count">2</span></a>
+                <a class="nav-item" href="#sidebar"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></a>
+                <a class="nav-item has-unread" href="#sidebar"><svg class="i"><use href="#i-file"/></svg><span class="nav-item__text">Rascunhos</span><span class="nav-item__count">3</span></a>
+                <a class="nav-item" href="#sidebar"><svg class="i"><use href="#i-spam"/></svg><span class="nav-item__text">Spam</span></a>
+                <a class="nav-item" href="#sidebar"><svg class="i"><use href="#i-trash"/></svg><span class="nav-item__text">Lixeira</span></a>
+              </div>
+              <div class="nav-group">
+                <div class="nav-heading">Etiquetas</div>
+                <a class="nav-item" href="#sidebar"><span class="dot" style="--lb-fg:var(--color-label-purple-text)"></span><span class="nav-item__text">Jurídico</span><span class="nav-item__count">5</span></a>
+                <a class="nav-item" href="#sidebar"><span class="dot" style="--lb-fg:var(--color-label-teal-text)"></span><span class="nav-item__text">Dev</span></a>
+                <a class="nav-item" href="#sidebar"><span class="dot" style="--lb-fg:var(--color-label-green-text)"></span><span class="nav-item__text">Financeiro</span></a>
+              </div>
+              <div class="meter"><div class="progress"><span style="width:55%"></span></div>8,2 GB de 15 GB usados</div>
+            </nav>
+          </div>
+      </div>
+      <h2 id="arrastar">Arrastar para uma pasta</h2>
+        <div class="stage">
+          <nav class="sidebar" aria-label="Pastas (exemplo)" style="border:var(--border-width) solid var(--color-border);border-radius:var(--radius-large)">
+            <div class="nav-group">
+              <span class="nav-item is-drop-blocked" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></span>
+              <span class="nav-item"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span>
+              <div class="nav-heading">Marcadores</div>
+              <span class="nav-item is-drop-target" style="position:relative"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Projetos</span>
+                <span class="drag-ghost" style="position:absolute;left:60%;top:70%"><svg class="i"><use href="#i-mail"/></svg>Mover 3 conversas</span></span>
+              <span class="nav-item"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Financeiro</span></span>
+            </div>
+          </nav>
+        </div>
+        <dl class="guidance">
+          <div><dt>Soltar</dt><dd>A pasta sob o cursor ganha destaque (fundo selecionado e contorno azul de 2px). A pasta atual e "Com estrela" não aceitam: mostram o cursor de proibido.</dd></div>
+          <div><dt>Rótulo</dt><dd>O rótulo segue o ponteiro (<code>--x</code>/<code>--y</code>) com o cursor no canto superior esquerdo e diz "Mover 1 conversa" ou "Mover 3 conversas". Durante o arraste, a página mostra a mão fechada. O arraste usa eventos de ponteiro, porque o arrastar nativo não deixa trocar o cursor. Arrastar uma conversa marcada leva todas as marcadas; soltar fora de uma pasta cancela. "Mover para" na barra de comandos continua sendo o caminho pelo teclado.</dd></div>
+        </dl>
+      <h2 id="sinalizadas">Sinalizadas</h2>
+        <div class="stage">
+        <nav class="sidebar" aria-label="Pastas (exemplo)" style="border:var(--border-width) solid var(--color-border);border-radius:var(--radius-large)">
+          <div class="nav-group">
+            <span class="nav-item has-unread" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-send"/></svg><span class="nav-item__text">Enviados</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-trash"/></svg><span class="nav-item__text">Lixeira</span></span>
+          </div>
+          <div class="nav-group">
+            <div class="nav-heading">Marcadores</div>
+            <span class="nav-item"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Projetos</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-folder"/></svg><span class="nav-item__text">Financeiro</span></span>
+          </div>
+          <div class="nav-group">
+            <div class="nav-heading">Sinalizadas</div>
+            <span class="nav-item is-overdue"><svg class="i"><use href="#i-flag"/></svg><span class="nav-item__text">Atrasadas</span><span class="nav-item__count">2</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-flag"/></svg><span class="nav-item__text">Hoje</span><span class="nav-item__count">1</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-flag"/></svg><span class="nav-item__text">Esta semana</span><span class="nav-item__count">3</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-flag"/></svg><span class="nav-item__text">Mais tarde</span><span class="nav-item__count">1</span></span>
+            <span class="nav-item"><svg class="i"><use href="#i-flag"/></svg><span class="nav-item__text">Sem data</span><span class="nav-item__count">4</span></span>
+          </div>
+        </nav>
+        </div>
+        <dl class="guidance">
+          <div><dt>Grupo</dt><dd>"Sinalizadas" fica abaixo dos marcadores e só aparece quando há mensagens sinalizadas e não concluídas. Um item de navegação (ícone <code>flag</code>) por prazo com mensagens: Atrasadas, Hoje, Esta semana, Mais tarde, Sem data. Clicar mostra essas mensagens na lista, com a pasta de cada uma.</dd></div>
+          <div><dt>Atrasadas</dt><dd>O item atrasado: ícone e contador em <code>--color-text-danger</code>, junto com a palavra "Atrasadas" (nunca só a cor).</dd></div>
+        </dl>
+      <p class="classes"><span>Classes</span> <code>.sidebar</code> <code>.nav-item</code> <code>.nav-item__count</code> <code>.has-unread</code> <code>.dot</code> <code>.meter</code> <code>.is-drop-target</code> <code>.is-drop-blocked</code> <code>.drag-ghost</code> <code>.drag-ghost--follow</code> <code>.is-overdue</code></p>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

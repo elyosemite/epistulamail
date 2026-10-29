@@ -21,13 +21,14 @@
       <div class="ds-head">
         <p class="eyebrow">US16 · L73–L75</p>
         <h1>Busca</h1>
-        <p class="lede">Pessoas, período e filtros como chips no próprio campo, busca em todas as contas, ações em lote e regras aplicadas aos resultados. Composição de <code>.input--search</code> com <code>.chip-input</code>, <code>.chip</code>, <code>.menu</code>, <code>.segmented</code>, <code>.toolbar</code>, <code>.thread</code>, <code>.modal</code>, <code>.choice-card</code>, <code>.rule-preview</code>, <code>.nav-item</code> e <code>.empty</code>, mais três peças novas: <b>L73</b> chip de filtro, <b>L74</b> barra dos resultados e <b>L75</b> conta de cada resultado.</p>
+        <p class="lede">Pessoas, período e filtros como chips no próprio campo, busca em todas as contas, ações em lote e regras aplicadas aos resultados. Reúne componentes que já existem, mais três peças novas: <b>L73</b> chip de filtro, <b>L74</b> barra dos resultados e <b>L75</b> conta de cada resultado.</p>
       </div>
       <dl class="guidance">
         <div><dt>Ideia central</dt><dd>O que a pessoa digita vira algo que ela vê: "de: Yuri Melo" vira o chip de Yuri, "últimos 30 dias" vira um chip de período. Cada chip se edita com um clique e sai com o x ou com Backspace.</dd></div>
         <div><dt>Dois jeitos de chegar</dt><dd>Digitando operadores (<code>de:</code>, <code>para:</code>, <code>depois:</code>…) ou escolhendo nas sugestões que aparecem ao focar o campo. Os dois dão o mesmo chip.</dd></div>
         <div><dt>Nada vai para a rede</dt><dd>A busca é nas mensagens guardadas neste computador, em todas as pastas, e funciona sem internet.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.input--search</code> <code>.chip-input</code> <code>.chip</code> <code>.menu</code> <code>.segmented</code> <code>.toolbar</code> <code>.thread</code> <code>.modal</code> <code>.choice-card</code> <code>.rule-preview</code> <code>.nav-item</code> <code>.empty</code></p>
     </section>
 
     <!-- ===================================================================== campo -->
@@ -35,13 +36,13 @@
       <div class="ds-head">
         <p class="eyebrow">CA1 · L73</p>
         <h2>O campo com chips</h2>
-        <p class="lede">O campo de busca do header passa a ser um <code>.input.input--search.chip-input</code>: os chips quebram linha se precisar, e o texto livre fica no fim.</p>
+        <p class="lede">O campo de busca do header passa a ser um campo com chips: os chips quebram linha se precisar, e o texto livre fica no fim.</p>
       </div>
       <div class="stage">
         <div style="display:grid;gap:var(--space-300);max-width:45rem">
           <figure class="state" style="justify-items:stretch">
             <div class="input input--search chip-input is-focus"><svg class="i"><use href="#i-search"/></svg>
-              <span class="chip"><span class="chip__op">De</span><span class="avatar avatar--purple">YM</span><span class="chip__name">Yuri Melo</span><button class="chip__remove" type="button" aria-label="Tirar o filtro De Yuri Melo"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <span class="chip"><span class="chip__op">De</span><span class="avatar avatar--purple">YM<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="chip__name">Yuri Melo</span><button class="chip__remove" type="button" aria-label="Tirar o filtro De Yuri Melo"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
               <span class="chip chip--filter"><svg class="i"><use href="#i-clock"/></svg><span class="chip__name">Últimos 30 dias</span><button class="chip__remove" type="button" aria-label="Tirar o período"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
               <span class="chip chip--filter"><svg class="i"><use href="#i-clip"/></svg><span class="chip__name">Com anexo</span><button class="chip__remove" type="button" aria-label="Tirar o filtro com anexo"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
               <input value="contrato" aria-label="Buscar"><button class="btn btn--subtle btn--icon btn--compact" type="button" aria-label="Limpar a busca"><svg class="i"><use href="#i-x"/></svg></button></div>
@@ -49,8 +50,8 @@
           </figure>
           <figure class="state" style="justify-items:stretch">
             <div class="input input--search chip-input is-focus"><svg class="i"><use href="#i-search"/></svg>
-              <span class="chip"><span class="chip__op">Para</span><span class="avatar avatar--green">AR</span><span class="chip__name">Ana Ribeiro</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
-              <span class="chip is-external"><span class="chip__op">Para</span><span class="avatar avatar--orange">J</span><span class="chip__name">joao@parceiro.com</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <span class="chip"><span class="chip__op">Para</span><span class="avatar avatar--green">AR<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="chip__name">Ana Ribeiro</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <span class="chip is-external"><span class="chip__op">Para</span><span class="avatar avatar--orange">J<img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span><span class="chip__name">joao@parceiro.com</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
               <span class="chip chip--filter"><svg class="i"><use href="#i-folder"/></svg><span class="chip__name">Em Jurídico</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
               <span class="chip chip--filter"><svg class="i"><use href="#i-lock"/></svg><span class="chip__name">Cifradas</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
               <input aria-label="Buscar" placeholder="Buscar"></div>
@@ -58,16 +59,17 @@
           </figure>
           <figure class="state" style="justify-items:stretch">
             <div class="input input--search chip-input"><svg class="i"><use href="#i-search"/></svg>
-              <span class="chip is-selected"><span class="chip__op">De</span><span class="avatar avatar--purple">YM</span><span class="chip__name">Yuri Melo</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
+              <span class="chip is-selected"><span class="chip__op">De</span><span class="avatar avatar--purple">YM<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="chip__name">Yuri Melo</span><button class="chip__remove" type="button" aria-label="Remover"><svg class="i i--sm"><use href="#i-x"/></svg></button></span>
               <input aria-label="Buscar"></div>
             <figcaption><b>Backspace</b>com o campo vazio, o último chip fica selecionado; na segunda vez, sai (como no "Para")</figcaption>
           </figure>
         </div>
       </div>
       <dl class="guidance">
-        <div><dt>Rótulo do chip</dt><dd><code>.chip__op</code> diz o papel da pessoa: De, Para ou Cc. Sem rótulo, a pessoa vale em qualquer campo ("com: Ana").</dd></div>
+        <div><dt>Rótulo do chip</dt><dd>O rótulo diz o papel da pessoa: De, Para ou Cc. Sem rótulo, a pessoa vale em qualquer campo ("com: Ana").</dd></div>
         <div><dt>Nome ou e-mail</dt><dd>"de: Yuri", "de: yuri@exemplo.com" e "de: Yuri Melo" chegam ao mesmo chip quando há um contato só; com mais de um, a sugestão pede para escolher.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.input.input--search.chip-input</code> <code>.chip__op</code></p>
     </section>
 
     <!-- ===================================================================== sugestões -->
@@ -75,7 +77,7 @@
       <div class="ds-head">
         <p class="eyebrow">CA1 · CA2</p>
         <h2>Sugestões</h2>
-        <p class="lede">Um <code>.menu.menu--wide</code> preso ao campo, da largura dele. Setas escolhem, Enter vira chip, Esc fecha.</p>
+        <p class="lede">Um menu largo preso ao campo, da largura dele. Setas escolhem, Enter vira chip, Esc fecha.</p>
       </div>
       <div class="stage stage--sunken">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(22rem,1fr));gap:var(--space-400);align-items:start">
@@ -83,9 +85,9 @@
             <div class="input input--search chip-input is-focus"><svg class="i"><use href="#i-search"/></svg><input value="de: yu" aria-label="Buscar"></div>
             <div class="menu menu--wide" role="listbox" aria-label="Pessoas" style="position:static;margin-top:var(--space-050)">
               <div class="menu__heading">Pessoas</div>
-              <button class="menu-item is-selected" type="button" role="option" aria-selected="true"><span class="avatar avatar--sm avatar--purple">YM</span><span class="menu-item__text">Yuri Melo</span><span class="menu-item__meta">yuri@exemplo.com · 214</span></button>
-              <button class="menu-item" type="button" role="option"><span class="avatar avatar--sm avatar--teal">YS</span><span class="menu-item__text">Yumi Sato</span><span class="menu-item__meta">yumi.sato@lumen.com.br · 9</span></button>
-              <button class="menu-item" type="button" role="option"><span class="avatar avatar--sm">Y</span><span class="menu-item__text">yuri.melo@empresa.com</span><span class="menu-item__meta">3</span></button>
+              <button class="menu-item is-selected" type="button" role="option" aria-selected="true"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="" src="images/people/pessoa-5.webp"></span><span class="menu-item__text">Yuri Melo</span><span class="menu-item__meta">yuri@exemplo.com · 214</span></button>
+              <button class="menu-item" type="button" role="option"><span class="avatar avatar--sm avatar--teal">YS<img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span><span class="menu-item__text">Yumi Sato</span><span class="menu-item__meta">yumi.sato@lumen.com.br · 9</span></button>
+              <button class="menu-item" type="button" role="option"><span class="avatar avatar--sm">Y<img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span><span class="menu-item__text">yuri.melo@empresa.com</span><span class="menu-item__meta">3</span></button>
               <div class="menu__sep" role="separator"></div>
               <button class="menu-item" type="button" role="option"><svg class="i"><use href="#i-search"/></svg><span class="menu-item__text">Buscar "yu" no remetente</span></button>
             </div>
@@ -109,6 +111,7 @@
           </figure>
         </div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.menu.menu--wide</code></p>
     </section>
 
     <!-- ===================================================================== período -->
@@ -116,7 +119,7 @@
       <div class="ds-head">
         <p class="eyebrow">CA3</p>
         <h2>Período</h2>
-        <p class="lede">"Período…" ou clicar no chip de período abre um <code>.menu</code> com atalhos e o intervalo personalizado (<code>.menu__form</code> com dois campos de data).</p>
+        <p class="lede">"Período…" ou clicar no chip de período abre um menu com atalhos e o intervalo personalizado (com dois campos de data).</p>
       </div>
       <div class="stage stage--sunken">
         <div class="menu menu--wide" role="menu" aria-label="Período" style="position:static;max-width:22rem">
@@ -138,6 +141,7 @@
       <dl class="guidance">
         <div><dt>Digitando</dt><dd><code>depois:2026-01-01</code>, <code>antes:31/03/2026</code> e <code>em:2025</code> viram o mesmo chip ("1 jan a 31 mar 2026", "Em 2025").</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.menu</code> <code>.menu__form</code></p>
     </section>
 
     <!-- ===================================================================== resultados -->
@@ -145,7 +149,7 @@
       <div class="ds-head">
         <p class="eyebrow">CA4 · L74 · L75</p>
         <h2>Resultados e onde buscar</h2>
-        <p class="lede">A <b>L74</b> fica entre a barra de comandos e a lista: quantos, "Esta conta | Todas as contas" (<code>.segmented</code>), a ordem e "Salvar busca". Em todas as contas, cada resultado leva o avatar da conta (<b>L75</b>) antes da pasta.</p>
+        <p class="lede">A <b>L74</b> fica entre a barra de comandos e a lista: quantos, "Esta conta | Todas as contas", a ordem e "Salvar busca". Em todas as contas, cada resultado leva o avatar da conta (<b>L75</b>) antes da pasta.</p>
       </div>
       <div class="stage stage--flush">
         <div style="max-width:46rem">
@@ -158,8 +162,8 @@
             </div>
           </div>
           <div class="thread-list thread-list--standard" role="list" aria-label="Resultados">
-            <div class="thread is-unread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Yuri Melo</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="avatar avatar--xs avatar--purple thread__account" aria-label="Conta Trabalho">T</span><span class="label">Caixa de entrada</span><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
-            <div class="thread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Yuri Melo</span></div><div class="thread__meta"><span class="thread__date">2 set</span></div><div class="thread__subject"><span class="avatar avatar--xs thread__account" aria-label="Conta Pessoal">P</span><span class="label label--purple">Jurídico</span><span class="thread__subject-text">Contrato do apartamento assinado</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
+            <div class="thread is-unread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Yuri Melo</span></div><div class="thread__meta"><span class="thread__date">10:42</span></div><div class="thread__subject"><span class="avatar avatar--xs avatar--purple thread__account" aria-label="Conta Trabalho">T<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="label">Caixa de entrada</span><span class="thread__subject-text">Revisão do contrato: Fornecedor Lumen</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
+            <div class="thread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="true"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Yuri Melo</span></div><div class="thread__meta"><span class="thread__date">2 set</span></div><div class="thread__subject"><span class="avatar avatar--xs thread__account" aria-label="Conta Pessoal">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="label label--purple">Jurídico</span><span class="thread__subject-text">Contrato do apartamento assinado</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
             <div class="thread" role="listitem"><input type="checkbox" class="checkbox thread__check" aria-label="Selecionar"><span class="star-btn thread__star" aria-pressed="false"><svg class="i"><use href="#i-star"/></svg></span><div class="thread__from"><span class="thread__from-name">Yuri Melo</span></div><div class="thread__meta"><span class="thread__date">2015</span></div><div class="thread__subject"><span class="avatar avatar--xs avatar--archive thread__account" aria-label="Arquivo Caixa de 2015"><svg class="i"><use href="#i-archive"/></svg></span><span class="label">Enviados</span><span class="thread__subject-text">Minuta do contrato antigo</span><span class="thread__icons"><svg class="i i--sm"><use href="#i-clip"/></svg></span></div></div>
           </div>
         </div>
@@ -167,8 +171,9 @@
       <dl class="guidance">
         <div><dt>Arquivos locais</dt><dd>"Todas as contas" inclui os arquivos de e-mail (US15), com o avatar do arquivo.</dd></div>
         <div><dt>Abrir um resultado</dt><dd>Abre a conversa na conta dele; a conta ativa não muda até a pessoa sair da busca.</dd></div>
-        <div><dt>Sem resultados</dt><dd>"Nenhum resultado nesta conta" com o botão "Buscar em todas as contas" (<code>.empty</code>).</dd></div>
+        <div><dt>Sem resultados</dt><dd>"Nenhum resultado nesta conta" com o botão "Buscar em todas as contas".</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.segmented</code> <code>.empty</code></p>
     </section>
 
     <!-- ===================================================================== seleção e regras -->
@@ -176,7 +181,7 @@
       <div class="ds-head">
         <p class="eyebrow">CA5 · CA6</p>
         <h2>Ações nos resultados e aplicar regra</h2>
-        <p class="lede">Marcar resultados troca a barra pela seleção (<code>.toolbar.is-selecting</code>), com "Selecionar todos os 128". "Aplicar regra…" abre um <code>.modal</code> com as regras da conta (<code>.choice-card</code>) e a prévia (<code>.rule-preview</code>).</p>
+        <p class="lede">Marcar resultados troca a barra pela seleção, com "Selecionar todos os 128". "Aplicar regra…" abre um modal com as regras da conta e a prévia.</p>
       </div>
       <div class="stage stage--flush">
         <div style="max-width:46rem">
@@ -218,6 +223,7 @@
         <div><dt>Várias contas</dt><dd>Com resultados de mais de uma conta, a lista mostra as regras de cada conta separadas, e cada uma só age na conta dela. Arquivos locais não têm regras (D7 da US15).</dd></div>
         <div><dt>Criar regra</dt><dd>"Criar uma regra com esta busca…" abre o editor de regras com De, Para, Assunto e Anexo vindos dos chips.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.toolbar.is-selecting</code> <code>.modal</code> <code>.choice-card</code> <code>.rule-preview</code></p>
     </section>
 
     <!-- ===================================================================== buscas salvas -->
@@ -245,11 +251,12 @@
     <section class="ds-section" id="pecas">
       <div class="ds-head"><h2>Peças</h2></div>
       <dl class="guidance">
-        <div><dt>L73</dt><dd>Chip de filtro <code>.chip--filter</code> (ícone, tom da marca) e o rótulo <code>.chip__op</code> (De, Para, Cc) no chip de pessoa. No header, <code>.appbar__search .chip-input</code> não quebra linha: os nomes encurtam.</dd></div>
-        <div><dt>L74</dt><dd>Barra dos resultados <code>.search-bar</code> (<code>__count</code>, <code>__end</code>): quantos, onde buscar, ordem e salvar.</dd></div>
-        <div><dt>L75</dt><dd>Conta de cada resultado <code>.thread__account</code> (avatar mínimo antes da pasta).</dd></div>
+        <div><dt>L73</dt><dd>Chip de filtro (ícone, tom da marca) e o rótulo (De, Para, Cc) no chip de pessoa. No header, o campo de busca não quebra linha: os nomes encurtam.</dd></div>
+        <div><dt>L74</dt><dd>Barra dos resultados: quantos, onde buscar, ordem e salvar.</dd></div>
+        <div><dt>L75</dt><dd>Conta de cada resultado (avatar mínimo antes da pasta).</dd></div>
         <div><dt>Em aberto</dt><dd>Busca no texto das mensagens (índice de texto completo) e o filtro "Cifradas": não mudam a tela, só o que é encontrado. Ficam como decisão da story.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.chip--filter</code> <code>.chip__op</code> <code>.search-bar</code> <code>.thread__account</code></p>
     </section>
   </main>
 </div>

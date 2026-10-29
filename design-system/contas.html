@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contas · Epistula Design System</title>
+<meta name="description" content="Coluna de contas e troca de conta.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+</head>
+<body data-page="contas">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="contas">
+      <div class="ds-head">
+        <p class="eyebrow">Produto · Coluna de contas e troca de conta</p>
+        <h1>Contas</h1>
+        <p class="lede">A coluna de contas e a troca de conta quando a coluna não cabe. Uma conta por item, na ordem escolhida pela pessoa, reconhecida pela cor, pela inicial e pelo nome que ela deu. É composta a partir da <a href="navegacao.html">navegação lateral</a>, do <a href="avatar.html">avatar</a> e do <a href="badge.html">badge</a>.</p>
+      </div>
+        <h2 id="coluna">Coluna de contas</h2>
+        <p class="demo-hint">Uma conta por item, na ordem escolhida pelo usuário. Cada uma é reconhecida por três sinais ao mesmo tempo: a cor, a inicial e o nome que o usuário deu ("Pessoal", "Trabalho", "Família"). O e-mail aparece no tooltip, porque várias contas podem ter o mesmo domínio.</p>
+        <div class="stage stage--sunken">
+          <div class="states">
+            <figure class="state"><button class="account-rail__item" type="button" style="width:4rem"><span class="avatar avatar--lg avatar--teal" aria-hidden="true">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="account-rail__name">Pessoal</span></button><figcaption><b>Padrão</b>sem não lidas</figcaption></figure>
+            <figure class="state"><button class="account-rail__item is-hover" type="button" style="width:4rem"><span class="avatar avatar--lg avatar--teal" aria-hidden="true">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="account-rail__name">Pessoal</span></button><figcaption><b>Hover</b>barra curta + anel</figcaption></figure>
+            <figure class="state"><button class="account-rail__item" type="button" aria-current="true" style="width:4rem"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="badge badge--primary account-rail__badge">12</span><span class="account-rail__name">Trabalho</span></button><figcaption><b>Ativa</b>com não lidas</figcaption></figure>
+            <figure class="state"><button class="account-rail__item" type="button" style="width:4rem"><span class="avatar avatar--lg avatar--green" aria-hidden="true">F<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="badge badge--primary account-rail__badge">99+</span><span class="account-rail__name">Família</span></button><figcaption><b>Muitas não lidas</b>"99+"</figcaption></figure>
+            <figure class="state"><button class="account-rail__item is-focus" type="button" style="width:4rem"><span class="avatar avatar--lg avatar--orange" aria-hidden="true">C<img class="avatar__img" alt="" src="images/people/pessoa-4.webp"></span><span class="account-rail__name">Clube</span></button><figcaption><b>Foco</b>teclado</figcaption></figure>
+            <figure class="state"><button class="account-rail__item" type="button" style="width:4rem"><span class="avatar avatar--lg avatar--magenta" aria-hidden="true">E<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="account-rail__alert" aria-hidden="true"><svg class="i"><use href="#i-warning"/></svg></span><span class="account-rail__name">Escola</span></button><figcaption><b>Precisa reconectar</b>acesso revogado</figcaption></figure>
+            <figure class="state"><button class="account-rail__item account-rail__item--signed-out" type="button" style="width:4rem"><span class="avatar avatar--lg avatar--purple" aria-hidden="true">A<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="account-rail__name">Antiga</span></button><figcaption><b>Saiu da conta</b>dados mantidos</figcaption></figure>
+            <figure class="state"><div style="width:4rem;display:grid;justify-items:center"><button class="account-rail__add" type="button" aria-label="Adicionar conta"><svg class="i"><use href="#i-plus"/></svg></button></div><figcaption><b>Adicionar</b>fim da coluna</figcaption></figure>
+            <figure class="state"><div style="width:4rem;display:grid;justify-items:center"><button class="account-rail__add is-hover" type="button" aria-label="Adicionar conta"><svg class="i"><use href="#i-plus"/></svg></button></div><figcaption><b>Adicionar</b>hover</figcaption></figure>
+          </div>
+        </div>
+        <div class="sidebar-demo">
+          <div class="stack">
+            <h3 class="sub">Menu da conta</h3>
+            <div class="menu" role="menu" aria-label="Conta Trabalho">
+              <div class="menu__heading">Trabalho</div>
+              <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-pencil"/></svg><span class="menu-item__text">Renomear</span></button>
+              <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-droplet"/></svg><span class="menu-item__text">Mudar cor</span></button>
+              <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-arrow-up"/></svg><span class="menu-item__text">Mover para cima</span></button>
+              <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-arrow-down"/></svg><span class="menu-item__text">Mover para baixo</span></button>
+              <div class="menu__sep" role="separator"></div>
+              <button class="menu-item" type="button" role="menuitem"><svg class="i"><use href="#i-log-out"/></svg><span class="menu-item__text">Sair desta conta</span></button>
+            </div>
+            <span class="tooltip">Trabalho · joao.silva.empresa@gmail.com <span class="kbd">Ctrl+2</span></span>
+          </div>
+          <div class="stack">
+            <h3 class="sub">Troca de conta sem a coluna</h3>
+            <nav class="sidebar" aria-label="Pastas (exemplo)" style="border:1px solid var(--color-border);border-radius:var(--radius-large)">
+              <button class="account-switcher" type="button" aria-haspopup="menu"><span class="avatar avatar--purple" aria-hidden="true">T<img class="avatar__img" alt="" src="images/people/pessoa-6.webp"></span><span class="account-switcher__text"><span class="account-switcher__name">Trabalho</span><span class="account-switcher__email">joao.silva.empresa@gmail.com</span></span><svg class="i"><use href="#i-chevron-down"/></svg></button>
+              <div class="nav-group">
+                <a class="nav-item has-unread" href="#contas" aria-current="page"><svg class="i"><use href="#i-inbox"/></svg><span class="nav-item__text">Caixa de entrada</span><span class="nav-item__count">12</span></a>
+                <a class="nav-item" href="#contas"><svg class="i"><use href="#i-star"/></svg><span class="nav-item__text">Com estrela</span></a>
+              </div>
+            </nav>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="stack">
+            <div class="section-message" role="note"><svg class="i"><use href="#i-info"/></svg><div><p class="section-message__title">Você saiu desta conta</p><p>Estas são as mensagens salvas neste computador. Entre de novo para receber as novas.</p><div class="section-message__actions"><button type="button">Entrar de novo</button></div></div></div>
+            <div class="section-message section-message--warning" role="note"><svg class="i"><use href="#i-warning"/></svg><div><p class="section-message__title">Reconecte esta conta</p><p>O Google encerrou o acesso do Epistula a esta conta. As mensagens salvas continuam disponíveis.</p><div class="section-message__actions"><button type="button">Reconectar</button></div></div></div>
+          </div>
+        </div>
+        <dl class="guidance">
+          <div><dt>Item</dt><dd>Um botão com o avatar grande (inicial do nome da conta), o nome e, se houver não lidas na Caixa de entrada, um badge primário ("99+" acima de 99). Nome acessível: "Trabalho, e-mail, 12 não lidas".</dd></div>
+          <div><dt>Conta ativa</dt><dd><code>aria-current="true"</code>: barra azul à esquerda, avatar com cantos arredondados e anel azul, nome em negrito. O header repete nome e e-mail.</dd></div>
+          <div><dt>Estados da conta</dt><dd>Um alerta quando o acesso precisa ser refeito. O estado "saiu" quando o usuário saiu: os dados salvos continuam legíveis, com a section message "Você saiu desta conta".</dd></div>
+          <div><dt>Teclado</dt><dd><kbd>Ctrl</kbd>+<kbd>1</kbd> a <kbd>9</kbd> trocam de conta pela ordem da coluna; setas movem o foco dentro dela; <kbd>Shift</kbd>+<kbd>F10</kbd> abre o menu da conta. "Sair desta conta" não é perigo: os dados ficam.</dd></div>
+        </dl>
+      <p class="classes"><span>Classes</span> <code>.account-rail</code> <code>.account-rail__item</code> <code>.account-rail__name</code> <code>.account-rail__badge</code> <code>.account-rail__alert</code> <code>.account-rail__item--signed-out</code> <code>.account-rail__add</code> <code>.account-switcher</code> <code>.avatar--lg</code> <code>.badge--primary</code></p>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

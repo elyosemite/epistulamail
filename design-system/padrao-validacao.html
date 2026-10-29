@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="Campos, mensagens de erro e resumo de erros.">
+<title>Validação de formulário · Epistula Design System</title>
+<meta name="description" content="Pessoas e contas, com inicial, cor e foto.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="padrao-validacao">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="padrao-validacao">
+      <div class="ds-head">
+        <p class="eyebrow">Padrão · v3 §2.5</p>
+        <h1>Validação de formulário</h1>
+        <p class="lede">Como avisar de um erro de preenchimento sem culpar a pessoa: no campo, com texto e ícone, e com um resumo quando há mais de um.</p>
+      </div>
+      <div class="stage">
+        <div class="stack" style="max-width:32rem">
+          <div class="section-message section-message--error" role="alert" tabindex="-1"><svg class="i"><use href="#i-error"/></svg><div><p class="section-message__title">2 campos precisam de atenção</p><p>Corrija os itens abaixo para continuar.</p><ul style="margin:var(--space-050) 0 0;padding-inline-start:var(--space-250)"><li><a href="#pv-email">Encaminhar para: inclua o domínio completo</a></li><li><a href="#pv-nome">Nome de exibição: escreva pelo menos uma letra</a></li></ul></div></div>
+          <div class="field"><label class="field__label" for="pv-nome">Nome de exibição <span class="req">*</span></label><div class="input is-invalid"><input id="pv-nome" value="" aria-invalid="true" aria-describedby="pv-nome-msg" aria-required="true"></div><span class="field__help field__help--error" id="pv-nome-msg"><svg class="i i--sm"><use href="#i-error"/></svg>Escreva pelo menos uma letra. Esse nome aparece no campo "De" das suas mensagens.</span></div>
+          <div class="field"><label class="field__label" for="pv-email">Encaminhar para <span class="req">*</span></label><div class="input is-invalid"><input id="pv-email" value="yuri@epistula" aria-invalid="true" aria-describedby="pv-email-msg" aria-required="true"></div><span class="field__help field__help--error" id="pv-email-msg"><svg class="i i--sm"><use href="#i-error"/></svg>Inclua o domínio completo, por exemplo yuri@epistula.com.br.</span></div>
+          <div class="field"><label class="field__label" for="pv-ok">Assinatura</label><div class="input"><input id="pv-ok" value="Yuri Melo"></div><span class="field__help">Opcional.</span></div>
+          <div class="row"><button class="btn btn--primary" type="button">Salvar</button><button class="btn btn--subtle" type="button">Cancelar</button></div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Problema</dt><dd>A pessoa preenche um formulário e erra sem perceber. Quem não vê o erro, ou vê só uma cor, perde tempo e confiança.</dd></div>
+        <div><dt>Contexto</dt><dd>Formulários de configurações, de conta e de chaves. Vale para qualquer lugar com mais de um campo e um botão que conclui.</dd></div>
+        <div><dt>Composição</dt><dd><a href="campos.html">Campo de texto</a> com mensagem de ajuda e de erro, <a href="mensagens.html">aviso em contexto</a> como resumo e <a href="botoes.html">botão primário</a>.</dd></div>
+        <div><dt>Não usar quando</dt><dd>A busca por operadores (ela vira <a href="padrao-busca.html">chips</a>) ou uma ação sem formulário (veja <a href="padrao-confirmacao.html">Confirmação</a>).</dd></div>
+      </dl>
+      <dl class="guidance">
+        <div><dt>Fluxo</dt><dd>1) A pessoa digita sem ser interrompida. 2) Ao sair do campo, ele é validado. 3) O erro aparece no próprio campo, com ícone e texto. 4) Ao salvar com erros, um resumo aparece no topo e o foco vai para ele. 5) Cada item do resumo leva ao campo. 6) Ao corrigir, o erro some na hora.</dd></div>
+        <div><dt>Variações</dt><dd>Erro de um campo: só a mensagem no campo. Vários erros: resumo mais mensagem em cada campo. Erro do servidor: aviso em contexto, sem culpar a pessoa e sem apontar um campo que não tem culpa.</dd></div>
+        <div><dt>Estados</dt><dd>Padrão, foco, inválido, desabilitado e corrigido. O desabilitado explica o motivo na ajuda ("Definida pelo administrador").</dd></div>
+        <div><dt>Acessibilidade</dt><dd>O rótulo está ligado ao campo (<code>for</code>). O campo inválido leva <code>aria-invalid="true"</code> e <code>aria-describedby</code> para a mensagem. O resumo é <code>role="alert"</code> e recebe o foco. Obrigatório aparece como "*" e como atributo, nunca só um símbolo.</dd></div>
+      </dl>
+      <dl class="guidance">
+        <div><dt>Conteúdo</dt><dd>Diga o que corrigir, não só o que deu errado: "Inclua o domínio completo, por exemplo yuri@epistula.com.br", e não "E-mail inválido". Sem código de erro, sem culpar ("você errou"). Monte a frase inteira por idioma; não junte pedaços.</dd></div>
+        <div><dt>Anti-patterns</dt><dd>Validar a cada tecla. Mostrar o erro só em vermelho. Erro só num tooltip. Limpar o campo errado. Bloquear o botão sem dizer por quê. Usar o placeholder como rótulo.</dd></div>
+      </dl>
+      <p class="classes"><span>Composição</span> <code>campos</code> · <code>mensagens</code> · <code>botoes</code></p>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

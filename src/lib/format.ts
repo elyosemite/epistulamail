@@ -28,7 +28,7 @@ export function initials(name: string): string {
   return (first + last).toUpperCase();
 }
 
-/** Cores de avatar disponíveis em identidade.html, escolhidas de forma estável pelo endereço. */
+/** Cores de avatar disponíveis em avatar.html, escolhidas de forma estável pelo endereço. */
 export const AVATAR_COLORS = ["", "teal", "green", "purple", "magenta", "orange"] as const;
 export type AvatarColor = (typeof AVATAR_COLORS)[number];
 

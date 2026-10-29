@@ -113,12 +113,13 @@ html[data-solo] .docs-demo { border-radius: 0; border: 0; min-width: 0; }
           <div class="gradient-swatch" style="background:var(--gradient-potato)">Potato</div>
         </div>
       </div>
-      <dl class="guidance"><div><dt>L78 · brilho do topo</dt><dd><code>.page-glow</code> (com <code>--ocean</code>, <code>--aurora</code>, <code>--sunset</code>, <code>--meadow</code>, <code>--potato</code>): o gradiente desfocado atrás do título, que some antes do conteúdo. <code>.text-gradient</code> pinta só o título principal. Na composição da capa, abaixo.</dd></div><div><dt>Onde usar</dt><dd>Só no início de páginas de destaque (capa da documentação, novidades). Nunca atrás de texto longo nem no app de e-mail.</dd></div></dl>
+      <dl class="guidance"><div><dt>L78 · brilho do topo</dt><dd>O brilho, em cinco cores (ocean, aurora, sunset, meadow e potato): o gradiente desfocado atrás do título, que some antes do conteúdo. O gradiente no texto pinta só o título principal. Na composição da capa, abaixo.</dd></div><div><dt>Onde usar</dt><dd>Só no início de páginas de destaque (capa da documentação, novidades). Nunca atrás de texto longo nem no app de e-mail.</dd></div></dl>
+      <p class="classes"><span>Classes</span> <code>.page-glow</code> <code>.text-gradient</code></p>
     </section>
 
     <!-- ===================================================================== L79 -->
     <section class="ds-section" id="topo">
-      <div class="ds-head"><p class="eyebrow">L79</p><h2>Ícones de marca e idioma</h2><p class="lede">GitHub, X e Discord como <code>.btn--icon</code> com <code>.i--brand</code> (preenchido, não traço). O idioma abre um <code>.menu</code> com os cinco idiomas.</p></div>
+      <div class="ds-head"><p class="eyebrow">L79</p><h2>Ícones de marca e idioma</h2><p class="lede">GitHub, X e Discord como botões de ícone preenchido, não de traço. O idioma abre um menu com os cinco idiomas.</p></div>
       <div class="stage">
         <div style="display:flex;flex-wrap:wrap;gap:var(--space-600);align-items:start">
           <figure class="state">
@@ -144,11 +145,12 @@ html[data-solo] .docs-demo { border-radius: 0; border: 0; min-width: 0; }
           </figure>
         </div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.btn--icon</code> <code>.i--brand</code> <code>.menu</code></p>
     </section>
 
     <!-- ===================================================================== L80 -->
     <section class="ds-section" id="timeline">
-      <div class="ds-head"><p class="eyebrow">L80</p><h2>Timeline</h2><p class="lede"><code>.timeline</code> na vertical (histórico de versões, passos de um processo longo) e <code>.timeline--horizontal</code> (roteiro, etapas curtas). Três estados: <code>.is-done</code>, <code>.is-current</code> e <code>.is-upcoming</code>.</p></div>
+      <div class="ds-head"><p class="eyebrow">L80</p><h2>Timeline</h2><p class="lede">A timeline na vertical (histórico de versões, passos de um processo longo) e na horizontal (roteiro, etapas curtas). Três estados: concluído, atual e próximo.</p></div>
       <div class="stage">
         <div style="display:grid;gap:var(--space-600);align-items:start">
           <figure class="state" style="justify-items:stretch;max-width:36rem">
@@ -170,6 +172,7 @@ html[data-solo] .docs-demo { border-radius: 0; border: 0; min-width: 0; }
           </figure>
         </div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.timeline</code> <code>.timeline--horizontal</code> <code>.is-done</code> <code>.is-current</code> <code>.is-upcoming</code></p>
     </section>
 
     <!-- ===================================================================== capa -->
@@ -369,12 +372,13 @@ html[data-solo] .docs-demo { border-radius: 0; border: 0; min-width: 0; }
     <section class="ds-section" id="pendencias">
       <div class="ds-head"><h2>Peças</h2></div>
       <dl class="guidance">
-        <div><dt>L77 · L78</dt><dd>Os cinco <code>--gradient-*</code> em <code>tokens.css</code>; <code>.page-glow</code> e <code>.text-gradient</code> em <code>components.css</code>.</dd></div>
-        <div><dt>L79</dt><dd><code>.i--brand</code> e os ícones <code>github</code>, <code>x-brand</code> e <code>discord</code> no sprite; <code>.lang-button</code> com o menu de idiomas.</dd></div>
-        <div><dt>L80</dt><dd><code>.timeline</code> (vertical) e <code>.timeline--horizontal</code>, com <code>.is-done</code>, <code>.is-current</code> e <code>.is-upcoming</code>.</dd></div>
+        <div><dt>L77 · L78</dt><dd>Os cinco gradientes em <code>tokens.css</code>; o brilho e o texto em gradiente em <code>components.css</code>.</dd></div>
+        <div><dt>L79</dt><dd>O ícone de marca preenchido e os ícones <code>github</code>, <code>x-brand</code> e <code>discord</code> no sprite; o botão de idioma com o menu.</dd></div>
+        <div><dt>L80</dt><dd>Timeline vertical e horizontal, com os estados concluído, atual e próximo.</dd></div>
         <div><dt>Documentação</dt><dd>Starlight em <code>docs-site/</code>, publicado em <code>docs.epistulamail.com</code> por pipeline próprio. "Comece aqui": Visão geral, Início rápido, Instalação, Primeira configuração (Onboarding), Configuração. "Documentação": Comece aqui, Instalação, Contas e provedores, Ler e escrever, Busca, Regras, Criptografia, Arquivos de e-mail, Privacidade e segurança, MCP, Agentes de IA, Contribuir, Versões, Ajuda.</dd></div>
         <div><dt>A definir</dt><dd>Os endereços do X e do Discord (ainda não existem perfis). MCP e Agentes de IA entram como "em breve" até existirem no app.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.page-glow</code> <code>.text-gradient</code> <code>.i--brand</code> <code>.lang-button</code> <code>.timeline</code> <code>.timeline--horizontal</code> <code>.is-done</code> <code>.is-current</code> <code>.is-upcoming</code></p>
     </section>
   </main>
 </div>

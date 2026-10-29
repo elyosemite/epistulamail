@@ -1,5 +1,5 @@
-// DS: sidebar.html "Coluna de contas" · .account-rail__item ([aria-current], --signed-out), __name, __badge
-//     (.badge.badge--primary), __alert; identidade.html · .avatar--lg com .avatar__img (foto da conta)
+// DS: contas.html "Coluna de contas" · .account-rail__item ([aria-current], --signed-out), __name, __badge
+//     (.badge.badge--primary), __alert; avatar.html · .avatar--lg com .avatar__img (foto da conta)
 import { forwardRef, type KeyboardEvent, type MouseEvent } from "react";
 import { AccountAvatar } from "../ui/AccountAvatar";
 import { Icon } from "../ui/Icon";

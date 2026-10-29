@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="Camadas, regra de classificação, primitives, utilities e a ordem de adoção.">
+<title>Arquitetura · Epistula Design System</title>
+<meta name="description" content="Pessoas e contas, com inicial, cor e foto.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="arquitetura">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="arquitetura">
+      <div class="ds-head">
+        <p class="eyebrow">v3 · §2, §3 e §14</p>
+        <h1>Arquitetura</h1>
+        <p class="lede">Como o design system se organiza: cinco camadas, uma regra para decidir onde cada peça mora e o retrato honesto do que existe hoje em primitives e utilities.</p>
+      </div>
+      <h2 id="camadas">As cinco camadas</h2>
+      <p class="demo-hint">Cada peça fica na camada mais baixa que expressa a sua responsabilidade, sem carregar regra de negócio nem decisão de uma tela.</p>
+      <table class="tier-table"><thead><tr><th scope="col">Camada</th><th scope="col">O que contém</th><th scope="col">O que não contém</th><th scope="col">Nesta documentação</th></tr></thead><tbody><tr><th scope="row">Fundamentos</th><td>Tokens, temas, acessibilidade, tipografia, conteúdo e princípios de layout.</td><td>CSS de um componente, classe de página, lógica de negócio.</td><td><a href="cores.html">Cores</a>, <a href="tipografia.html">Tipografia</a>, <a href="variaveis.html">Variáveis</a>, <a href="temas.html">Temas</a></td></tr><tr><th scope="row">Core</th><td>Componentes genéricos, com API e estados definidos.</td><td>Regra do EpistulaMail ou layout de página.</td><td><a href="botoes.html">Botões</a>, <a href="campos.html">Campos</a>, <a href="modais.html">Modais</a>, <a href="navegacao.html">Navegação lateral</a></td></tr><tr><th scope="row">Padrões</th><td>Composições de dois ou mais componentes Core que resolvem uma tarefa que se repete.</td><td>Um componente genérico novo disfarçado, ou algo de uma tela só.</td><td><a href="padrao-validacao.html">Validação</a>, <a href="padrao-confirmacao.html">Confirmação</a>, <a href="padrao-busca.html">Busca</a>, <a href="padrao-selecao-em-lote.html">Seleção em lote</a></td></tr><tr><th scope="row">Produto</th><td>Conceitos e fluxos do cliente de e-mail.</td><td>Token global e abstração genérica disfarçada.</td><td><a href="contas.html">Contas</a>, <a href="threads.html">Lista de mensagens</a>, <a href="composicao.html">Composição</a>, <a href="criptografia.html">Criptografia</a></td></tr><tr><th scope="row">Layouts e páginas</th><td>A estrutura das telas e a composição dos fluxos.</td><td>Redefinição local de token ou de componente.</td><td><a href="layouts.html">Layouts</a>, <a href="documentacao.html">Documentação</a></td></tr></tbody></table>
+      <h2 id="tres-usos">Regra dos três usos</h2>
+      <dl class="guidance">
+        <div><dt>A regra</dt><dd>Um componente genérico só sobe para o Core depois de três usos reais. Antes disso ele fica no Produto, ou na tela que o usa.</dd></div>
+        <div><dt>Exceções</dt><dd>Fundamentos, acessibilidade, segurança e peças essenciais da plataforma podem entrar antes. A exceção é registrada na user story ou em <code>DECISIONS.md</code>.</dd></div>
+        <div><dt>Por quê</dt><dd>O design system existe para resolver problemas que se repetem no EpistulaMail, não para reproduzir um catálogo de UI kit. Carrossel, avaliação por estrelas e deslizante não entram só porque existem em uma biblioteca.</dd></div>
+      </dl>
+      <h2 id="exemplo">Exemplo: navegação lateral e contas</h2>
+      <p class="demo-hint">Antes havia uma página só, "Sidebar", que misturava a estrutura de navegação, a árvore de pastas e a coluna de contas. O v3 manda separar:</p>
+      <table class="tier-table"><thead><tr><th scope="col">Camada</th><th scope="col">Peça</th><th scope="col">Página</th></tr></thead><tbody><tr><th scope="row">Fundamentos</th><td>Tokens de cor, tipografia, espaço, borda, foco e densidade que a navegação usa.</td><td><a href="variaveis.html">Variáveis</a></td></tr><tr><th scope="row">Core</th><td>Painel e item de navegação, genéricos.</td><td><a href="navegacao.html">Navegação lateral</a></td></tr><tr><th scope="row">Produto</th><td>Coluna de contas e troca de conta: "uma conta por item, na ordem que a pessoa escolheu".</td><td><a href="contas.html">Contas</a></td></tr><tr><th scope="row">Produto</th><td>Pastas, etiquetas, armazenamento, arrastar e sinalizadas.</td><td><a href="pastas.html">Pastas</a></td></tr><tr><th scope="row">Layouts e páginas</th><td>Onde cada região fica na janela.</td><td><a href="layouts.html">Layouts</a></td></tr></tbody></table>
+      <h2 id="primitives">Primitives e utilities</h2>
+      <p class="demo-hint">O v3 manda reutilizar uma biblioteca madura sempre que possível e não criar abstração própria sem lacuna demonstrada. O app não usa biblioteca de componentes: tem só React, e cada tela resolve o que precisa. Este é o retrato de hoje, medido no código em 28 out 2026.</p>
+      <table class="tier-table"><thead><tr><th scope="col">Mecanismo</th><th scope="col">Situação hoje</th><th scope="col">O que fazer</th></tr></thead><tbody><tr><th scope="row">Portal</th><td>Não existe. As camadas usam <code>position: fixed</code> e a escala <code>--z-*</code>.</td><td>Não é necessário agora.</td></tr><tr><th scope="row">Slot e Collection</th><td>Não existem; a composição é direta, com React.</td><td>Não é necessário agora.</td></tr><tr><th scope="row">FocusScope</th><td>Existe no modal: foco inicial, foco preso, devolução do foco ao fechar (<code>src/ui/Modal.tsx</code>).</td><td>Reusar nos outros diálogos antes de criar outro.</td></tr><tr><th scope="row">DismissableLayer</th><td>O Esc fecha o menu e o modal, e o clique fora fecha o menu, cada um com o seu código. Nove arquivos tratam o Esc.</td><td>Candidato a extração: já passa dos três usos.</td></tr><tr><th scope="row">RovingFocus</th><td>Nove arquivos tratam as setas (menu, lista de mensagens, gerenciadores de chaves, regras e seletor de pastas).</td><td>Candidato a extração: já passa dos três usos.</td></tr><tr><th scope="row">VisuallyHidden</th><td>Existe como classe (<code>.visually-hidden</code>) em <code>components.css</code>.</td><td>Manter.</td></tr><tr><th scope="row">Presence</th><td>Não existe.</td><td>Só se uma animação de saída for desejada.</td></tr><tr><th scope="row">Popper</th><td>O menu calcula a posição por conta própria, a partir de um ponto ou de um botão.</td><td>Manter enquanto servir só ao menu e à dica.</td></tr><tr><th scope="row">Utility de classes (<code>cn</code>)</th><td>33 arquivos montam a lista de classes na mão, com <code>filter(Boolean).join(" ")</code>.</td><td>Candidato claro: criar um único helper em <code>src/lib</code>.</td></tr><tr><th scope="row">Movimento reduzido</th><td>Tratado em CSS (<code>@media (prefers-reduced-motion)</code> zera as durações).</td><td>Um hook só se uma animação passar a depender de JavaScript.</td></tr></tbody></table>
+      <p class="demo-hint">Os três candidatos de extração (fechar com Esc, setas e helper de classes) estão no roteiro, em <code>design-system/ROADMAP.md</code>. Refatorar o app é trabalho à parte, com a sua própria user story.</p>
+      <h2 id="adocao">Ordem de adoção</h2>
+      <dl class="guidance">
+        <div><dt>1. Inventário</dt><dd>Feito. O <code>pnpm ds:check --metrics</code> mede páginas, tokens, valores fixos e propriedades físicas, e a seção de métricas da Governança guarda a linha de base.</dd></div>
+        <div><dt>2. Fundamentos</dt><dd>Feito nesta entrega: três níveis de token, tokens de foco, opacidade, ícones, breakpoints e densidade, e os temas claro, escuro e alto contraste.</dd></div>
+        <div><dt>3. Primitives e utilities</dt><dd>Mapeadas acima. Falta extrair as três lacunas reais.</dd></div>
+        <div><dt>4. Core essencial</dt><dd>Os componentes que os fluxos usam já existem. A navegação lateral foi separada do produto.</dd></div>
+        <div><dt>5. Padrões</dt><dd>Quatro padrões novos (validação, confirmação, busca, seleção em lote) e os de vazio e carregamento.</dd></div>
+        <div><dt>6. Produto</dt><dd>Contas, pastas, lista, leitura, composição, destinatários, busca, regras, arquivos e criptografia, com os estados de segurança distintos.</dd></div>
+        <div><dt>7. Layouts e páginas</dt><dd>Descritos em <a href="layouts.html">Layouts</a>. A migração das telas do app para as camadas é gradual, a cada mudança.</dd></div>
+        <div><dt>8. Governança contínua</dt><dd>Métricas, regressões, adoção e duplicações, revistos todo mês (veja a Governança).</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 // Composição de DS: espacamento.html (.app-shell--blocks) + carregamento.html (.skeleton, --avatar, --title, linhas
-// .thread e leitura em skeleton) + sidebar.html (.account-rail). Mesma forma da tela pronta, para não haver salto.
+// .thread e leitura em skeleton) + contas.html (.account-rail). Mesma forma da tela pronta, para não haver salto.
 // O index.html repete esta marcação em HTML puro para aparecer antes do JavaScript.
 import { LIST_DEFAULT } from "../lib/listWidth";
 import { ReaderSkeleton } from "../ui/Reader";

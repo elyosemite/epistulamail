@@ -1,6 +1,6 @@
 // DS: threads.html · .thread-list, .thread (__check, __star, __from, __from-name, __meta, __date, __actions, __subject,
 //     __subject-text), .is-unread, .is-checked (mão aberta para arrastar), .is-open, .star-btn; hover com
-//     --color-bg-neutral-subtle-hovered (US5); sidebar.html · .drag-ghost--follow (US6)
+//     --color-bg-neutral-subtle-hovered (US5); pastas.html · .drag-ghost--follow (US6)
 // DS: carregamento.html · linhas .thread com .skeleton; etiquetas.html · .label (pasta na busca); menus.html · .lozenge de prazo
 // DS: threads.html "Densidade" (US7) · .thread-list (Confortável), --standard (Padrão), --compact; .thread__snippet, .thread__icons
 // DS: threads.html "Lista por conversa" (US8, L48) · .thread__count ao lado dos participantes

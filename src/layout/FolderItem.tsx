@@ -1,4 +1,4 @@
-// DS: sidebar.html · .nav-item (aria-current, .has-unread, __count) e, ao arrastar mensagens, .is-drop-target /
+// DS: pastas.html · .nav-item (aria-current, .has-unread, __count) e, ao arrastar mensagens, .is-drop-target /
 //     .is-drop-blocked (US5, CA3; arraste por ponteiro na US6)
 import { folderIcon } from "../lib/folders";
 import type { Folder } from "../lib/tauri";

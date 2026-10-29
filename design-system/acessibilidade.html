@@ -53,6 +53,15 @@
           <div><dt>Desfazer</dt><dd><kbd>Z</kbd></dd></div>
         </dl>
       </section>
+    <section class="ds-section" id="requisitos">
+      <div class="ds-head">
+        <p class="eyebrow">v3 · §6.1</p>
+        <h2>Requisitos mínimos</h2>
+        <p class="lede">O objetivo é a conformidade com a WCAG 2.2 AA, avaliada continuamente. Estes são os requisitos que toda peça cumpre e onde cada um está resolvido.</p>
+      </div>
+      <table class="tier-table"><thead><tr><th scope="col">Requisito</th><th scope="col">Como o design system cumpre</th><th scope="col">Onde</th></tr></thead><tbody><tr><th scope="row">Fluxos críticos pelo teclado</th><td>Toda ação tem um caminho por teclado; os atalhos estão na tabela desta página.</td><td>Atalhos de teclado, acima</td></tr><tr><th scope="row">Foco visível e previsível</th><td>Anel de 2px (3px em alto contraste), afastado 2px, só em <code>:focus-visible</code>, vindo de tokens.</td><td><a href="variaveis.html">Variáveis</a> (Foco)</td></tr><tr><th scope="row">Nome acessível</th><td>Botão só com ícone leva <code>aria-label</code> e dica; campo leva rótulo.</td><td><a href="botoes.html">Botões</a>, <a href="campos.html">Campos</a></td></tr><tr><th scope="row">Rótulos, descrições e erros ligados ao campo</th><td><code>for</code>, <code>aria-describedby</code> e <code>aria-invalid</code>.</td><td><a href="padrao-validacao.html">Validação</a></td></tr><tr><th scope="row">Foco em diálogos, menus e camadas</th><td>O modal prende o foco e o devolve; o menu fecha com Esc e devolve o foco.</td><td><a href="modais.html">Modais</a>, <a href="menus.html">Menus</a></td></tr><tr><th scope="row">Semântica e leitor de tela</th><td>Papéis corretos (<code>listbox</code>, <code>tablist</code>, <code>dialog</code>, <code>alert</code>) e regiões <code>aria-live</code> nos avisos.</td><td><a href="toasts.html">Toasts</a>, <a href="mensagens.html">Avisos</a></td></tr><tr><th scope="row">Movimento reduzido</th><td><code>prefers-reduced-motion</code> zera as durações e para o skeleton.</td><td><a href="carregamento.html">Carregamento</a></td></tr><tr><th scope="row">Contraste em cada tema</th><td>Medido ao vivo nesta página: texto 4,5:1; ícones, bordas de campo e foco 3:1. O alto contraste sobe os níveis.</td><td><a href="temas.html">Temas e densidade</a></td></tr><tr><th scope="row">Alvos de toque</th><td>Pelo menos 24 × 24px; 32px por padrão e 44px nas ações rápidas.</td><td>Área de toque, acima</td></tr><tr><th scope="row">Nada só por cor, posição ou ícone</th><td>Todo estado muda também forma, texto ou peso: não lido, seleção, erro, segurança.</td><td><a href="criptografia.html">Estados de segurança</a>, <a href="threads.html">Lista</a></td></tr></tbody></table>
+      <p class="demo-hint">Teste automático ajuda, mas não substitui conferir com teclado e leitor de tela. Esta página mede o contraste; o resto do trabalho é manual, e não existe ainda um teste automático de acessibilidade no repositório.</p>
+    </section>
   </main>
 </div>
 <script src="docs.js"></script>

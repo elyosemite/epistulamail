@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Badge · Epistula Design System</title>
+<meta name="description" content="Contagens, como não lidas na pasta.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="badge">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="badge">
+      <div class="ds-head">
+        <p class="eyebrow">ADS · Badge</p>
+        <h1>Badge</h1>
+        <p class="lede">O badge conta coisas, como as mensagens não lidas de uma pasta. É sempre um número, nunca uma palavra: para status use o <a href="lozenge.html">lozenge</a>.</p>
+      </div>
+      <div class="stage">
+        <div class="states">
+          <figure class="state"><div class="row"><span class="badge">12</span><span class="badge badge--primary">3</span><span class="badge badge--important">99+</span><span class="badge badge--added">+2</span></div><figcaption><b>Badge</b>padrão · primário · importante · adicionado</figcaption></figure>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Quando usar</dt><dd>Não lidas na pasta e na conta, anexos de uma conversa e itens de um lote. O primário destaca o que pede atenção; o importante, o que está atrasado ou falhou.</dd></div>
+        <div><dt>Limite</dt><dd>Acima de 99 mostra <code>99+</code>, para o badge não crescer na lista.</dd></div>
+        <div><dt>Acessibilidade</dt><dd>O número não basta sozinho para o leitor de tela: o item que o contém diz o que é contado, por exemplo "Caixa de entrada, 12 não lidas".</dd></div>
+      </dl>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

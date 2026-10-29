@@ -1,4 +1,4 @@
-// DS: identidade.html · .avatar (--sm, --lg, cores da conta) com .avatar__img (foto da conta, US5);
+// DS: avatar.html · .avatar (--sm, --lg, cores da conta) com .avatar__img (foto da conta, US5);
 //     arquivos.html · .avatar--archive, o arquivo local com o ícone no lugar da inicial (L71, US15)
 import { useState } from "react";
 import { Icon } from "./Icon";

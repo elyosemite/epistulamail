@@ -21,13 +21,14 @@
       <div class="ds-head">
         <p class="eyebrow">US15 · L70–L72</p>
         <h1>Abrir arquivos de e-mail</h1>
-        <p class="lede">Backups e arquivos de outros programas, abertos sem conta e sem internet. Composição de <code>.empty</code>, <code>.provider-grid</code>, <code>.modal</code>, <code>.wizard-steps</code>, <code>.setting-list</code>, <code>.meter</code>, <code>.section-message</code>, <code>.lozenge</code>, <code>.account-rail</code>, <code>.sidebar</code>, <code>.menu</code> e <code>.toast</code>, mais três peças próprias: <b>L70</b> área de soltar, <b>L71</b> avatar do arquivo local e <b>L72</b> resumo da importação. Ícones já existentes: <code>archive</code>, <code>upload</code>, <code>folder</code>, <code>hard-drive</code>, <code>lock</code>.</p>
+        <p class="lede">Backups e arquivos de outros programas, abertos sem conta e sem internet. Reúne componentes que já existem, mais três peças próprias: <b>L70</b> área de soltar, <b>L71</b> avatar do arquivo local e <b>L72</b> resumo da importação. Ícones já existentes: <code>archive</code>, <code>upload</code>, <code>folder</code>, <code>hard-drive</code>, <code>lock</code>.</p>
       </div>
       <dl class="guidance">
         <div><dt>Ideia central</dt><dd>Escolher um arquivo é tão fácil quanto conectar uma conta, e está na mesma tela. Depois de importado, o arquivo vira mais um item da coluna de contas, com as pastas de origem.</dd></div>
         <div><dt>Confiança</dt><dd>O app diz o que reconheceu e quanto vai ocupar antes de começar, mostra o progresso com "Cancelar" e, no fim, quantas entraram, quantas eram repetidas e quantas falharam. Nada vai para a internet, e a tela diz isso.</dd></div>
         <div><dt>Nomes</dt><dd>Os programas de origem aparecem só na ajuda de onde achar o backup ("Google Takeout", "Outlook"), porque é o nome que o usuário procura. O resto da interface fala do arquivo, nunca do provedor.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.empty</code> <code>.provider-grid</code> <code>.modal</code> <code>.wizard-steps</code> <code>.setting-list</code> <code>.meter</code> <code>.section-message</code> <code>.lozenge</code> <code>.account-rail</code> <code>.sidebar</code> <code>.menu</code> <code>.toast</code></p>
     </section>
 
     <!-- ===================================================================== CA1 -->
@@ -35,7 +36,7 @@
       <div class="ds-head">
         <p class="eyebrow">CA1</p>
         <h2>Primeira tela, sem conta</h2>
-        <p class="lede">A tela de hoje (<code>AddAccount first</code>) ganha um segundo caminho abaixo dos provedores: um <code>.provider-card</code> com o ícone <code>archive</code>. O título passa a falar dos dois caminhos.</p>
+        <p class="lede">A tela de hoje (<code>AddAccount first</code>) ganha um segundo caminho abaixo dos provedores: um cartão de provedor com o ícone <code>archive</code>. O título passa a falar dos dois caminhos.</p>
       </div>
       <div class="stage stage--sunken">
         <div style="display:grid;gap:var(--space-300);max-width:44rem;margin-inline:auto">
@@ -59,8 +60,8 @@
         <div><dt>Sem a rede</dt><dd>Esse caminho funciona com o computador sem internet e sem o servidor de login do Epistula.</dd></div>
       </dl>
 
-      <h3 class="sub" id="soltar">L70 · Área de soltar <code>.drop-zone</code></h3>
-      <p class="demo-hint">No app, <code>.drop-zone--overlay</code> fica por cima da janela (camada do véu, sem receber cliques) enquanto um arquivo ou uma pasta é arrastado sobre ela, em qualquer tela. Soltar abre o passo 2 direto. Com <code>role="status"</code>, o leitor de tela anuncia o texto.</p>
+      <h3 class="sub" id="soltar">L70 · Área de soltar</h3>
+      <p class="demo-hint">No app, a área de soltar fica por cima da janela (camada do véu, sem receber cliques) enquanto um arquivo ou uma pasta é arrastado sobre ela, em qualquer tela. Soltar abre o passo 2 direto. Com <code>role="status"</code>, o leitor de tela anuncia o texto.</p>
       <div class="stage">
         <div class="drop-zone" role="status">
           <svg class="i" aria-hidden="true"><use href="#i-upload"/></svg>
@@ -68,6 +69,7 @@
           <p class="drop-zone__desc">.mbox, .pst, .msg, .olm, .eml, .emlx, ou uma pasta do Thunderbird, do Apple Mail ou Maildir.</p>
         </div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.provider-card</code> <code>.drop-zone</code> <code>.drop-zone--overlay</code></p>
     </section>
 
     <!-- ===================================================================== CA1 / CA2: assistente -->
@@ -75,7 +77,7 @@
       <div class="ds-head">
         <p class="eyebrow">CA1 · CA2</p>
         <h2>Abrir: escolher o arquivo</h2>
-        <p class="lede">Modal de três passos (<code>.modal--medium</code>, com o corpo rolando; <code>.wizard-steps</code>): escolher, revisar e importar. O passo 1 tem os dois botões e a ajuda de onde achar o backup de cada programa, numa <code>.setting-list</code> sem controles.</p>
+        <p class="lede">Modal de três passos, com o corpo rolando: escolher, revisar e importar. O passo 1 tem os dois botões e a ajuda de onde achar o backup de cada programa, numa lista sem controles.</p>
       </div>
       <div class="stage stage--sunken">
         <div class="modal modal--medium" role="dialog" aria-labelledby="w1-title" style="margin-inline:auto">
@@ -105,13 +107,14 @@
         <div><dt>Reconhecer pelo conteúdo</dt><dd>O formato vem dos primeiros bytes (assinatura do <code>.pst</code>, do OLE do <code>.msg</code>, do ZIP do <code>.olm</code>, a linha <code>From </code> do mbox), não só da extensão: o mbox do Thunderbird nem tem extensão.</dd></div>
         <div><dt>Ícones</dt><dd>Sem logotipos: o L71 com <code>archive</code> para os programas e <code>mail</code> para os formatos soltos.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.modal--medium</code> <code>.wizard-steps</code> <code>.setting-list</code></p>
     </section>
 
     <section class="ds-section" id="revisar">
       <div class="ds-head">
         <p class="eyebrow">CA2 · D6</p>
         <h2>Revisar antes de importar</h2>
-        <p class="lede">Formato reconhecido (<code>.lozenge</code>), tamanho e quantidade, o nome do arquivo local (editável), as pastas encontradas com caixas de marcar (<code>.setting-list</code> com <code>__head</code> e <code>__size</code>) e o espaço no disco (<code>.meter</code>).</p>
+        <p class="lede">Formato reconhecido, tamanho e quantidade, o nome do arquivo local (editável), as pastas encontradas com caixas de marcar e o espaço no disco.</p>
       </div>
       <div class="stage stage--sunken">
         <div class="modal modal--medium" role="dialog" aria-labelledby="w2-title" style="margin-inline:auto">
@@ -155,13 +158,14 @@
       <div class="stage">
         <div class="section-message section-message--error" role="alert" style="max-width:36rem"><svg class="i"><use href="#i-error"/></svg><div><p class="section-message__title">Este arquivo não parece ser de e-mail</p><p>O Epistula abre .mbox, .pst, .msg, .olm, .eml, .emlx e pastas Maildir. Se é um backup compactado (.zip do Takeout), descompacte antes.</p><div class="section-message__actions"><button class="btn btn--link" type="button">Escolher outro arquivo</button></div></div></div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.lozenge</code> <code>.setting-list</code> <code>.meter</code></p>
     </section>
 
     <section class="ds-section" id="importando">
       <div class="ds-head">
         <p class="eyebrow">CA2 · D5</p>
         <h2>Importando</h2>
-        <p class="lede">Passo 3: <code>.meter</code> com a quantidade, a pasta atual e "Cancelar". "Continuar em segundo plano" fecha o modal; o progresso segue no fim da coluna de pastas, como o espaço da conta.</p>
+        <p class="lede">Passo 3: barra de progresso com a quantidade, a pasta atual e "Cancelar". "Continuar em segundo plano" fecha o modal; o progresso segue no fim da coluna de pastas, como o espaço da conta.</p>
       </div>
       <div class="stage stage--sunken">
         <div class="modal" role="dialog" aria-labelledby="w3-title" style="margin-inline:auto">
@@ -183,13 +187,14 @@
       <div class="stage">
         <div class="toast toast--warning" role="status" style="position:static;max-width:26rem"><svg class="i"><use href="#i-warning"/></svg><div><p class="toast__title">A importação de Gmail antigo parou</p><p class="toast__desc">12.480 de 47.130 mensagens entraram.</p><div class="toast__actions"><button class="btn btn--link" type="button">Continuar</button><button class="btn btn--link" type="button">Descartar o que entrou</button></div></div></div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.meter</code></p>
     </section>
 
     <section class="ds-section" id="resumo">
       <div class="ds-head">
         <p class="eyebrow">CA2 · L72</p>
         <h2>Resumo</h2>
-        <p class="lede">Ao terminar: <b>L72</b> <code>.import-summary</code> com três números e, se houve falhas, o porquê agrupado por tipo (nunca o conteúdo).</p>
+        <p class="lede">Ao terminar: <b>L72</b> resumo com três números e, se houve falhas, o porquê agrupado por tipo (nunca o conteúdo).</p>
       </div>
       <div class="stage stage--sunken">
         <div class="modal" role="dialog" aria-labelledby="w4-title" style="margin-inline:auto">
@@ -212,6 +217,7 @@
         <div><dt>Sem falhas</dt><dd>Só os números, com "Falharam 0" no tom normal.</dd></div>
         <div><dt>Repetidas</dt><dd>Mesmo <code>Message-ID</code> e mesmo conteúdo de uma mensagem já guardada neste arquivo local. Importar o mesmo backup duas vezes não duplica nada.</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.import-summary</code></p>
     </section>
 
     <!-- ===================================================================== CA3 -->
@@ -219,13 +225,13 @@
       <div class="ds-head">
         <p class="eyebrow">CA3 · L71</p>
         <h2>O arquivo local no app</h2>
-        <p class="lede">Na coluna de contas, o arquivo local é um <code>.account-rail__item</code> com o <b>L71</b> (<code>.avatar--archive</code>, ícone no lugar da inicial). Na coluna de pastas, as pastas de origem e os marcadores; no lugar do "Escrever", a indicação de que é um arquivo deste computador.</p>
+        <p class="lede">Na coluna de contas, o arquivo local é um item da coluna com o <b>L71</b> (ícone no lugar da inicial). Na coluna de pastas, as pastas de origem e os marcadores; no lugar do "Escrever", a indicação de que é um arquivo deste computador.</p>
       </div>
       <div class="stage stage--flush scroll-x">
         <div style="display:flex;gap:var(--space-100);min-width:34rem;padding:var(--space-100);background:var(--color-canvas)">
           <nav class="account-rail" aria-label="Contas" style="border-radius:var(--radius-large);background:var(--color-surface)">
             <div class="account-rail__list" role="list">
-              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Pessoal"><span class="avatar avatar--lg" aria-hidden="true">P</span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
+              <div role="listitem"><button class="account-rail__item" type="button" aria-label="Pessoal"><span class="avatar avatar--lg" aria-hidden="true">P<img class="avatar__img" alt="" src="images/people/pessoa-2.webp"></span><span class="badge badge--primary account-rail__badge" aria-hidden="true">4</span><span class="account-rail__name" aria-hidden="true">Pessoal</span></button></div>
               <div role="listitem"><button class="account-rail__item" type="button" aria-current="true" aria-label="Gmail antigo, arquivo deste computador"><span class="avatar avatar--lg avatar--archive" aria-hidden="true"><svg class="i"><use href="#i-archive"/></svg></span><span class="account-rail__name" aria-hidden="true">Gmail antigo</span></button></div>
             </div>
             <div class="account-rail__sep" role="separator"></div>
@@ -261,13 +267,14 @@
         <div><dt>Cor</dt><dd>Neutra (<code>--color-bg-neutral</code>), para o arquivo nunca ser confundido com uma conta, que sempre tem uma das seis cores.</dd></div>
         <div><dt>O "+"</dt><dd>Abre a mesma tela da primeira abertura, com os provedores e o "Abrir arquivo de e-mail".</dd></div>
       </dl>
+      <p class="classes"><span>Classes</span> <code>.account-rail__item</code> <code>.avatar--archive</code></p>
     </section>
 
     <section class="ds-section" id="menu-e-remover">
       <div class="ds-head">
         <p class="eyebrow">CA3</p>
         <h2>Menu do arquivo e remover</h2>
-        <p class="lede">O menu da foto (à direita do header) com o arquivo local ativo: renomear, importar mais e remover. Remover usa <code>.btn--danger</code>, porque as mensagens saem de vez do Epistula (o original continua onde está).</p>
+        <p class="lede">O menu da foto (à direita do header) com o arquivo local ativo: renomear, importar mais e remover. Remover usa o botão de perigo, porque as mensagens saem de vez do Epistula (o original continua onde está).</p>
       </div>
       <div class="stage stage--sunken">
         <div class="row" style="align-items:flex-start;gap:var(--space-300);flex-wrap:wrap;justify-content:center">
@@ -286,13 +293,14 @@
           </div>
         </div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.btn--danger</code></p>
     </section>
 
     <section class="ds-section" id="configuracoes">
       <div class="ds-head">
         <p class="eyebrow">CA1</p>
         <h2>Configurações → Geral</h2>
-        <p class="lede">Grupo "Arquivos de e-mail" com os arquivos locais (<code>.setting-list</code> com tamanho) e o botão de abrir outro.</p>
+        <p class="lede">Grupo "Arquivos de e-mail" com os arquivos locais (com tamanho) e o botão de abrir outro.</p>
       </div>
       <div class="stage">
         <div class="settings__group" style="max-width:40rem;margin:0">
@@ -304,6 +312,7 @@
           <div class="row" style="margin-top:var(--space-150)"><button class="btn btn--subtle" type="button"><svg class="i"><use href="#i-plus"/></svg>Abrir arquivo de e-mail…</button></div>
         </div>
       </div>
+      <p class="classes"><span>Classes</span> <code>.setting-list</code></p>
     </section>
 
   </main>
