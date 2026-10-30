@@ -68,7 +68,7 @@ cargo clippy --all-targets -- -D warnings
 
 ## Contributing
 
-Issues and pull requests are welcome in English or Portuguese. Read `AGENT.md` and the threat model before changing credentials, storage or third-party content. For security issues, contact the maintainers privately instead of opening a public issue.
+Issues and pull requests are welcome in English or Portuguese. Read `AGENTS.md` and the threat model before changing credentials, storage or third-party content. For security issues, contact the maintainers privately instead of opening a public issue.
 
 ## License
 

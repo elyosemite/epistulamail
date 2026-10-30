@@ -68,7 +68,7 @@ cargo clippy --all-targets -- -D warnings
 
 ## Contribuindo
 
-Issues e pull requests são bem-vindos em português ou inglês. Leia o `AGENT.md` e o modelo de ameaças antes de mexer em credenciais, armazenamento ou conteúdo de terceiros. Para falhas de segurança, fale com os mantenedores em privado em vez de abrir uma issue pública.
+Issues e pull requests são bem-vindos em português ou inglês. Leia o `AGENTS.md` e o modelo de ameaças antes de mexer em credenciais, armazenamento ou conteúdo de terceiros. Para falhas de segurança, fale com os mantenedores em privado em vez de abrir uma issue pública.
 
 ## Licença
 
