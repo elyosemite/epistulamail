@@ -84,23 +84,20 @@ export function ManualAccount({ onConnected, onBack }: ManualAccountProps) {
   const testedOk = test?.incoming.ok === true && test?.outgoing.ok === true;
 
   return (
-    <form style={{ display: "grid", gap: "var(--space-300)", maxWidth: "56rem" }} onSubmit={(e) => { e.preventDefault(); if (testedOk) void submit(); }}>
+    <form className="settings__group" onSubmit={(e) => { e.preventDefault(); if (testedOk) void submit(); }}>
       <div>
         <h2 className="settings__title">Conectar uma conta</h2>
-        <p style={{ margin: "var(--space-050) 0 0", color: "var(--color-text-subtle)" }}>
+        <p className="setting__desc">
           Informe os servidores de entrada e de saída. Teste os dois antes de conectar; a senha fica no cofre do sistema.
         </p>
       </div>
 
       {error && <SectionMessage appearance="error" title="Não foi possível conectar">{error.message}</SectionMessage>}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 22rem), 1fr))", gap: "var(--space-300)", alignItems: "start" }}>
-        <div className="settings__group">
+      <div className="settings__group">
           <h3 className="settings__group-title">Entrada</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 7rem", gap: "var(--space-150)" }}>
-            <TextField label="Servidor" value={form.incomingHost} error={errors.incomingHost} placeholder="mail.exemplo.com" autoComplete="off" onChange={(e) => update("incomingHost", e.target.value)} />
-            <TextField label="Porta" value={form.incomingPort} error={errors.incomingPort} inputMode="numeric" onChange={(e) => update("incomingPort", e.target.value)} />
-          </div>
+          <TextField label="Servidor" value={form.incomingHost} error={errors.incomingHost} placeholder="mail.exemplo.com" autoComplete="off" onChange={(e) => update("incomingHost", e.target.value)} />
+          <TextField label="Porta" value={form.incomingPort} error={errors.incomingPort} inputMode="numeric" onChange={(e) => update("incomingPort", e.target.value)} />
           <div className="field">
             <span className="field__label">Segurança da conexão</span>
             <Select label="Segurança da conexão de entrada" value={form.incomingSecurity} options={SECURITY_OPTIONS} onChange={(value) => update("incomingSecurity", value as ManualFormState["incomingSecurity"])} />
@@ -118,10 +115,8 @@ export function ManualAccount({ onConnected, onBack }: ManualAccountProps) {
         <div className="settings__group">
           <h3 className="settings__group-title">Saída</h3>
           <label className="choice"><input type="checkbox" className="checkbox" checked={form.sameCredentials} onChange={(e) => update("sameCredentials", e.target.checked)} />Usar as mesmas credenciais da entrada</label>
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 7rem", gap: "var(--space-150)" }}>
-            <TextField label="Servidor" value={form.outgoingHost} error={errors.outgoingHost} placeholder="mail.exemplo.com" autoComplete="off" onChange={(e) => update("outgoingHost", e.target.value)} />
-            <TextField label="Porta" value={form.outgoingPort} error={errors.outgoingPort} inputMode="numeric" onChange={(e) => update("outgoingPort", e.target.value)} />
-          </div>
+          <TextField label="Servidor" value={form.outgoingHost} error={errors.outgoingHost} placeholder="mail.exemplo.com" autoComplete="off" onChange={(e) => update("outgoingHost", e.target.value)} />
+          <TextField label="Porta" value={form.outgoingPort} error={errors.outgoingPort} inputMode="numeric" onChange={(e) => update("outgoingPort", e.target.value)} />
           <div className="field">
             <span className="field__label">Segurança da conexão</span>
             <Select label="Segurança da conexão de saída" value={form.outgoingSecurity} options={SECURITY_OPTIONS} onChange={(value) => update("outgoingSecurity", value as ManualFormState["outgoingSecurity"])} />
@@ -150,7 +145,6 @@ export function ManualAccount({ onConnected, onBack }: ManualAccountProps) {
             onChange={(e) => update("outgoingPassword", e.target.value)}
           />
         </div>
-      </div>
 
       <SectionMessage appearance="warning" title="O envio ainda não aceita todos os métodos">
         Senha normal funciona agora. Senha criptografada, NTLM e Kerberos/GSSAPI entram depois.
@@ -166,9 +160,8 @@ export function ManualAccount({ onConnected, onBack }: ManualAccountProps) {
         </SectionMessage>
       )}
 
-      <div className="row">
+      <div className="row modal__foot--split">
         <Button appearance="subtle" onClick={onBack} disabled={testing || saving}>Cancelar</Button>
-        <span style={{ marginInlineStart: "auto" }} />
         <Button icon="refresh" loading={testing} onClick={() => void runTest()}>Testar conexão</Button>
         <Button appearance="primary" type="submit" loading={saving} disabled={!testedOk}>Conectar</Button>
       </div>
