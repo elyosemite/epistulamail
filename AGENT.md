@@ -14,12 +14,13 @@ EpistulaMail is a desktop email client for Windows 10/11 (Tauri 2 + Rust + React
 | `site/` | Public landing page, epistulamail.com (static, no framework) | Vercel (`site.yml`) |
 | `docs-site/` | User docs, docs.epistulamail.com (Astro Starlight, 5 languages) | Vercel (`docs.yml`) |
 | `docs/` | Architecture and threat model (`arquitetura-e-ameacas.md`) | — |
-| `userstory/` | One file per delivery (`00NN-*.md`): context, acceptance criteria (CA), interface, decisions (D) | — |
+| `userstory/` | Only future, unimplemented proposals; delivered behavior is defined by `src/` and `src-tauri/` | — |
 | `CHANGELOG.md` | Keep a Changelog, in Portuguese; the release notes come from it | — |
 
 ## Language
 
-- **Portuguese (pt-BR)** is the working language: UI strings, error messages, code comments, user stories, the changelog, design-system pages and commit messages. Match it. Write new comments in Portuguese, like the surrounding code.
+- **Portuguese (pt-BR)** is the working language: UI strings, error messages, code comments, the changelog and design-system pages. Match it. Write new comments in Portuguese, like the surrounding code.
+- **Commit messages are always in English**, even when the project is in Portuguese; use Conventional Commits.
 - `README.md` is English, `README.pt-BR.md` is its Portuguese twin: change both together.
 - The docs site is pt-BR by default plus `en`, `es`, `fr`, `it` (see Docs below).
 - This file is in English on purpose.
@@ -27,13 +28,15 @@ EpistulaMail is a desktop email client for Windows 10/11 (Tauri 2 + Rust + React
 
 ## Golden rules
 
-1. **The design system comes first.** No new screen, component or visual change goes straight into `src/`, `site/` or `docs-site/`. It is drafted in `design-system/`, approved, then implemented. See Design system.
-2. **Never commit secrets.** `.env`, `client_secret_*.json`, signing keys and tokens are gitignored and gitleaks scans the full history in CI. Do not print them, paste them into files, or send them anywhere.
-3. **No user content in logs.** No subject, sender, address, body or account email in `tracing` calls, errors or panics. There is a test that fails if markers leak into logs or into the database file in plain text.
-4. **Nothing third-party at runtime.** No CDN, remote fonts, analytics, cookies or trackers in the app, the site or the docs. Fonts come from `@fontsource` packages; icons from the DS sprite.
-5. **Security-sensitive changes cite the threat model.** Touching credentials, storage, crypto, network, HTML rendering or link handling means reading `docs/arquitetura-e-ameacas.md`, saying which threat (by number) is affected, testing it, and updating the doc if the analysis changed.
-6. **Keep the three versions in lockstep.** `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` must have the same version, and `CHANGELOG.md` must have a matching `## [X.Y.Z]` section, or the release fails.
-7. **Commit or push only when asked.** Commits use Conventional Commits in Portuguese without accents in the subject, scoped by area when useful: `feat: docs, ...`, `feat: site, ...`, `feat: US16, ...`, `fix: ...`, `build: ...`, `release: ...`, `docs: ...`. Optional body with `-` bullets explaining what and why.
+1. **The design system comes first for new visual work.** No new screen, component or visual pattern goes straight into `src/`, `site/` or `docs-site/`. It is drafted in `design-system/`, approved, then implemented. Exception: a change that only composes or removes existing DS components, with no new visual pattern, may go directly to the app after the user's explicit OK; do not create a DS page for it.
+2. **Code first; documentation last.** Do not edit `README.md`, `docs/`, `docs-site/`, `CHANGELOG.md`, design-system prose or held proposals in `userstory/` until the user has tested the local implementation and given an explicit OK. Implement, ask them to test, and wait. If they ask for documentation earlier, confirm. `AGENT.md` may be corrected when it contradicts the code.
+3. **The code is the source of truth.** Delivered behavior is defined by `src/` and `src-tauri/`; do not create or maintain user stories for work that already exists. `userstory/` is only for future, unimplemented proposals.
+4. **Never commit secrets.** `.env`, `client_secret_*.json`, signing keys and tokens are gitignored and gitleaks scans the full history in CI. Do not print them, paste them into files, or send them anywhere.
+5. **No user content in logs.** No subject, sender, address, body or account email in `tracing` calls, errors or panics. There is a test that fails if markers leak into logs or into the database file in plain text.
+6. **Nothing third-party at runtime.** No CDN, remote fonts, analytics, cookies or trackers in the app, the site or the docs. Fonts come from `@fontsource` packages; icons from the DS sprite.
+7. **Security-sensitive changes cite the threat model.** Touching credentials, storage, crypto, network, HTML rendering or link handling means reading `docs/arquitetura-e-ameacas.md`, saying which threat (by number) is affected, testing it, and updating the doc if the analysis changed.
+8. **Keep the three versions in lockstep.** `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` must have the same version, and `CHANGELOG.md` must have a matching `## [X.Y.Z]` section, or the release fails.
+9. **Commit or push only when asked.** Commits use Conventional Commits in English, scoped by area when useful: `feat(accounts): ...`, `fix(microsoft): ...`, `docs: ...`, `chore: ...`. Use the commit skill (`caveman-commit`) when available. Optional body with `-` bullets explaining what and why.
 
 ## Design system (`design-system/`)
 
@@ -51,7 +54,7 @@ The DS is based on the Atlassian Design System, adapted to a dense inbox. It tar
 
 ### Layers and maturity (`governanca.html`)
 
-- Every DS page sits in one layer in `EPISTULA_PAGES`: **Fundamentos** (values and rules), **Core** (generic components), **Padrões** (recurring compositions of Core), **Produto** (email concepts) or **Layouts e páginas**. Put a piece in the lowest layer that fits; nothing with email semantics goes to Core. A generic component needs three real uses before it reaches Core (foundations, accessibility and security are exceptions, recorded in the user story).
+- Every DS page sits in one layer in `EPISTULA_PAGES`: **Fundamentos** (values and rules), **Core** (generic components), **Padrões** (recurring compositions of Core), **Produto** (email concepts) or **Layouts e páginas**. Put a piece in the lowest layer that fits; nothing with email semantics goes to Core. A generic component needs three real uses before it reaches Core (foundations, accessibility and security are exceptions, recorded in `DECISIONS.md` or the commit).
 - Each registry entry is `[id, title, description, status]`. `status` is `draft`, `experimental`, `beta`, `stable`, `deprecated` or `removed`; `docs.js` shows it as a lozenge in the overview and next to the page `h1`. New pages start at `beta` or lower; nothing `stable` is removed without a deprecation note (reason, alternative, how to migrate).
 - Tokens have three levels: primitive (`--palette-*`, raw value, only in `tokens.css`), semantic (meaning, what components use) and component (rare, a local custom property such as `--btn-bg` declared in `components.css`, only when no semantic token fits). Opacity, focus ring, icon size and breakpoints have their own tokens; use them instead of loose values. `@media` widths in `components.css` must match a `--breakpoint-*` token.
 - Layout rules use logical properties (`margin-inline-start`, `inset-inline-end`, `text-align: start`) so RTL works. A physical `left`/`right` is allowed only when the line carries a `/* físico: ... */` comment saying why.
@@ -60,16 +63,16 @@ The DS is based on the Atlassian Design System, adapted to a dense inbox. It tar
 
 ### Pieces, numbering and traceability
 
-- New DS pieces get a sequential **L number** (`L58`, `L73`, `L76`, `L80`...). Find the highest one in use (`grep -rn "L[0-9][0-9]" design-system`) and continue from it. Mention it in the DS page, in the user story and in the commit (`peças L77-L80`).
+- New DS pieces get a sequential **L number** (`L58`, `L73`, `L76`, `L80`...). Find the highest one in use (`grep -rn "L[0-9][0-9]" design-system`) and continue from it. Mention it in the DS page and in the commit (`peças L77-L80`).
 - In DS pages, prose (ledes, guidance, captions, headings) describes behaviour in product language and never names CSS classes. Class names go in one `<p class="classes">` line at the end of each section.
-- DS pages reference the user story and acceptance criteria they serve (`US12 · L58–L63`, `CA7`).
+- DS pages may mention the screen or feature they serve; do not depend on user-story files.
 - React components in `src/ui/` start with a comment pointing to their DS source, e.g. `// DS: botoes.html · .btn, .btn--primary, ...`. Keep it accurate when you change the component.
 
 ### Workflow for any visual change
 
 1. **Draft.** Create `design-system/rascunho-<topic>.html` (e.g. `rascunho-us16.html`) using only tokens and existing components, showing every state in both themes. New CSS goes in `components.css` with tokens only.
-2. **Approve.** Show it to the user. Do not implement in the app before approval.
-3. **Incorporate.** Move the pieces into the proper component page (or create one: `<id>.html` with `<body data-page="<id>">`, registered in `EPISTULA_PAGES` in `docs.js`), with the guidance blocks (where to use, accessibility, keyboard). Delete the draft unless the user asks to keep it, and record that in the user story.
+2. **Approve.** Show it to the user. Do not implement in the app before approval. Exception: when the change only composes or removes existing DS components and introduces no new visual pattern, the user may approve applying it directly; in that case, skip the new DS page.
+3. **Incorporate.** Move the pieces into the proper component page (or create one: `<id>.html` with `<body data-page="<id>">`, registered in `EPISTULA_PAGES` in `docs.js`), with the guidance blocks (where to use, accessibility, keyboard). Delete the draft unless the user asks to keep it; record the decision in `DECISIONS.md` or the commit.
 4. **Implement** in the app/site/docs using the same class names.
 
 ### Requirements every piece must meet
@@ -130,26 +133,27 @@ The DS is based on the Atlassian Design System, adapted to a dense inbox. It tar
 - When a feature ships or changes behavior, update the affected docs pages (all languages), `guia/versoes/historico.mdx` and the Timeline on the home page.
 - Deploy: `docs.yml` on changes to `docs-site/**`, `tokens.css` or `components.css`.
 
-## User stories and decisions
+## Sources of truth and future proposals
 
-- A new feature starts as `userstory/00NN-<slug>.md` in Portuguese, following the existing format: story (Como / quero / para que), **1. Contexto**, **2. Critérios de aceite** (`CA1`, `CA2`...), **3. Interface** (draft, approved DS pieces with L numbers), **4. Decisões** (`D1`, `D2`..., marking what is still open).
+- Delivered behavior is defined by `src/` (TypeScript) and `src-tauri/` (Rust). Do not create or update user stories for work that is already implemented.
+- `userstory/` holds only future, unimplemented proposals (for example POP3 and manual OAuth2); they are plans, not the source of truth. Do not create new delivered-work stories.
 - Do not implement an open decision ("Em aberto") without asking the user.
-- Reference stories, criteria and decisions in code comments, tests and commits (`US10, CA5`, `D2 da US14`) the way existing code does.
+- Existing `US`/`CA`/`D` references in code are historical; do not add new ones.
 
 ## Releases
 
 1. Bump the version in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`.
 2. Add `## [X.Y.Z] - YYYY-MM-DD` to `CHANGELOG.md` (sections: Novidades, Mudou, Corrigido, Avisos), written for users.
-3. Update the docs (version history, installer file name in examples) and both READMEs if needed.
+3. After the user's explicit OK, update the docs (version history, installer file name in examples) and both READMEs if needed; do not touch them before the local implementation is tested.
 4. The user pushes the `vX.Y.Z` tag. `release.yml` builds the signed NSIS installer and opens a **draft** release; a human publishes it. Never create tags or publish releases without being asked.
 
 ## Before you finish
 
-- [ ] Visual change? It exists in the DS (draft approved, then incorporated) and uses tokens only.
+- [ ] Visual change? New visual work is in the DS; composition-only changes have the user's OK and use existing tokens/components.
 - [ ] Frontend: `pnpm test` and `pnpm build` pass. Design system: `pnpm ds:check` passes.
 - [ ] Backend: `cargo clippy --all-targets --locked -- -D warnings` and `cargo test --locked` pass.
-- [ ] Docs changed: pt-BR plus `en`, `es`, `fr`, `it`, and `pnpm build` in `docs-site/` passes.
+- [ ] Docs changed? Only after the user tested the local implementation and gave an explicit OK; then pt-BR plus `en`, `es`, `fr`, `it`, and `pnpm build` in `docs-site/` passes. Otherwise, leave them untouched.
 - [ ] Site changed: `node build.mjs` in `site/` passes.
 - [ ] Security-relevant: threat model updated and tests added.
-- [ ] User-visible change: `CHANGELOG.md` (under the next version), docs and READMEs updated.
+- [ ] User-visible change: ask for the OK; after it, update `CHANGELOG.md`, docs and READMEs. Never before.
 - [ ] No secrets, no user content in logs, no third-party requests.
