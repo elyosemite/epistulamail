@@ -1,5 +1,5 @@
 // DS: vazios.html · .empty, .empty__art, .empty__title, .empty__desc, .empty__actions
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 /** Ilustrações publicadas em vazios.html; não crie novas aqui, peça ao DS. */
 const ART = {
@@ -29,11 +29,12 @@ interface EmptyStateProps {
   description?: ReactNode;
   actions?: ReactNode;
   children?: ReactNode;
+  style?: CSSProperties;
 }
 
-export function EmptyState({ art, media, title, description, actions, children }: EmptyStateProps) {
+export function EmptyState({ art, media, title, description, actions, children, style }: EmptyStateProps) {
   return (
-    <div className="empty">
+    <div className="empty" style={style}>
       {art ? ART[art] : media}
       <h2 className="empty__title">{title}</h2>
       {description && <p className="empty__desc">{description}</p>}

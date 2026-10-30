@@ -77,7 +77,7 @@ pub const CATALOG: &[CatalogEntry] = &[
     CatalogEntry {
         id: "outlook",
         name: "Outlook",
-        description: "Outlook.com, Hotmail e Microsoft 365",
+        description: "Outlook.com, Hotmail e Live",
         available: true,
         auth: AuthKind::OAuth2(Provider::Microsoft),
         imap: tls("outlook.office365.com", 993),
@@ -168,6 +168,7 @@ pub struct ProviderView {
 pub fn views() -> Vec<ProviderView> {
     CATALOG
         .iter()
+        .filter(|p| p.available)
         .map(|p| ProviderView {
             id: p.id,
             name: p.name,
@@ -197,5 +198,11 @@ mod tests {
         let ids: Vec<_> = CATALOG.iter().map(|p| p.id).collect();
         assert_eq!(ids, ["gmail", "outlook", "yahoo", "icloud", "zoho", "gmx", "aol", "custom"]);
         assert!(CATALOG.iter().filter(|p| p.id != "custom").all(|p| p.imap.is_some() && p.smtp.is_some()));
+    }
+
+    #[test]
+    fn views_only_show_available_providers() {
+        let ids: Vec<_> = views().iter().map(|p| p.id).collect();
+        assert_eq!(ids, ["gmail", "outlook", "custom"]);
     }
 }

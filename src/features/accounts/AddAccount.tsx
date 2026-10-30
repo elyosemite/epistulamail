@@ -43,20 +43,32 @@ export function AddAccount({ first, onConnected, onCancel, onOpenFile }: AddAcco
     );
   }
 
+  const oauthProviders = providers?.filter((p) => p.id !== "custom") ?? [];
+  const custom = providers?.find((p) => p.id === "custom") ?? null;
+
   return (
     <div style={{ display: "grid", gap: "var(--space-300)" }}>
       <EmptyState
         title={first ? "Conecte seu e-mail ou abra um arquivo" : "Adicionar conta"}
         description="Escolha o serviço do seu e-mail. No Gmail e no Outlook, o login acontece no navegador; em Outro, você informa os servidores."
         actions={first ? undefined : <Button appearance="subtle" onClick={onCancel}>Cancelar</Button>}
+        style={{ padding: 0 }}
       />
-      {providers === null ? <Spinner size="lg" label="Carregando provedores" /> : <ProviderGrid providers={providers} onPick={setPicked} />}
-      <div className="nav-heading" style={{ padding: 0 }}>Sem conta</div>
-      <ProviderGrid
-        providers={[{ id: "archive", name: "Abrir arquivo de e-mail", description: "Um backup ou uma pasta de outro programa. Sem conta e sem internet.", available: true, icon: "archive" }]}
-        wide
-        onPick={onOpenFile}
-      />
+      {providers === null ? <Spinner size="lg" label="Carregando provedores" /> : <ProviderGrid providers={oauthProviders} onPick={setPicked} />}
+      <div style={{ display: "grid", gap: "var(--space-200)" }}>
+        {custom && (
+          <>
+            <div className="nav-heading" style={{ padding: 0 }}>Outro provedor</div>
+            <ProviderGrid providers={[custom]} wide onPick={setPicked} />
+          </>
+        )}
+        <div className="nav-heading" style={{ padding: 0 }}>Sem conta</div>
+        <ProviderGrid
+          providers={[{ id: "archive", name: "Abrir arquivo de e-mail", description: "Um backup ou uma pasta de outro programa. Sem conta e sem internet.", available: true, icon: "archive" }]}
+          wide
+          onPick={onOpenFile}
+        />
+      </div>
     </div>
   );
 }
