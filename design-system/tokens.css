@@ -327,6 +327,7 @@
   --layout-compose-width: 35rem;       /* 560px */
   --layout-modal-small: 25rem;         /* 400px */
   --layout-modal-medium: 37.5rem;      /* 600px */
+  --layout-form-column: 15rem;         /* 240px: largura mínima de cada coluna de formulário */
 
   /* ---------- Densidade (linhas e controles) ---------- */
   /* Confortável e Padrão mostram 3 e 2 linhas por conversa; Compacta mostra 1. Controles seguem a densidade da linha. */

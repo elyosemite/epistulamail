@@ -191,6 +191,9 @@ kbd, .kbd {
    e no app (criptografia, chaves, certificados, regras); antes só existia em docs.css, que o app não carrega. */
 .row { display: flex; flex-wrap: wrap; gap: var(--space-150); align-items: center; }
 
+/* L88 · Formulário em duas colunas: entrada e saída lado a lado, com gap; em telas estreitas, uma coluna. */
+.form-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--layout-form-column)), 1fr)); gap: var(--space-300); align-items: start; }
+
 /* Sugestões clicáveis abaixo de um campo (ex.: nomes de conta) */
 .chip-group { display: flex; flex-wrap: wrap; gap: var(--space-075); }
 

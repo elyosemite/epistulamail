@@ -94,7 +94,8 @@ export function ManualAccount({ onConnected, onBack }: ManualAccountProps) {
 
       {error && <SectionMessage appearance="error" title="Não foi possível conectar">{error.message}</SectionMessage>}
 
-      <div className="settings__group">
+      <div className="form-columns">
+        <div className="settings__group">
           <h3 className="settings__group-title">Entrada</h3>
           <TextField label="Servidor" value={form.incomingHost} error={errors.incomingHost} placeholder="mail.exemplo.com" autoComplete="off" onChange={(e) => update("incomingHost", e.target.value)} />
           <TextField label="Porta" value={form.incomingPort} error={errors.incomingPort} inputMode="numeric" onChange={(e) => update("incomingPort", e.target.value)} />
@@ -145,6 +146,7 @@ export function ManualAccount({ onConnected, onBack }: ManualAccountProps) {
             onChange={(e) => update("outgoingPassword", e.target.value)}
           />
         </div>
+      </div>
 
       <SectionMessage appearance="warning" title="O envio ainda não aceita todos os métodos">
         Senha normal funciona agora. Senha criptografada, NTLM e Kerberos/GSSAPI entram depois.

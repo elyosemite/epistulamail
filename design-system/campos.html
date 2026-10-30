@@ -59,6 +59,33 @@ Engenharia · Epistula</textarea></div></div>
       </dl>
       <p class="classes"><span>Classes</span> <code>.input--password</code> <code>.input</code> <code>.btn--icon.btn--compact</code></p>
     </section>
+    <section class="ds-section" id="duas-colunas">
+      <div class="ds-head">
+        <p class="eyebrow">Composição · L88</p>
+        <h2>Formulário em duas colunas</h2>
+        <p class="lede">Dois lados independentes, como entrada e saída de uma conta, lado a lado com um gap. Cada coluna é um <code>.settings__group</code>; abaixo de <code>--layout-form-column</code> de largura, o formulário passa a uma coluna.</p>
+      </div>
+      <div class="stage">
+        <div class="form-columns" style="max-width:37.5rem">
+          <div class="settings__group">
+            <h3 class="settings__group-title">Entrada</h3>
+            <div class="field"><label class="field__label" for="cols-host">Servidor</label><div class="input"><input id="cols-host" value="mail.exemplo.com"></div></div>
+            <div class="field"><label class="field__label" for="cols-port">Porta</label><div class="input"><input id="cols-port" value="993"></div></div>
+          </div>
+          <div class="settings__group">
+            <h3 class="settings__group-title">Saída</h3>
+            <div class="field"><label class="field__label" for="cols-out-host">Servidor</label><div class="input"><input id="cols-out-host" value="smtp.exemplo.com"></div></div>
+            <div class="field"><label class="field__label" for="cols-out-port">Porta</label><div class="input"><input id="cols-out-port" value="465"></div></div>
+          </div>
+        </div>
+      </div>
+      <dl class="guidance">
+        <div><dt>Quando usar</dt><dd>Quando os dois lados são independentes e precisam ser lidos juntos, como entrada e saída de uma conta. Não use para uma sequência única de campos.</dd></div>
+        <div><dt>Quebra</dt><dd>O grid usa <code>auto-fit</code>: com menos de uma coluna mínima por lado, os grupos ficam um abaixo do outro, sem rolagem horizontal.</dd></div>
+        <div><dt>Gap</dt><dd>O espaço entre as colunas é <code>var(--space-300)</code>; dentro de cada grupo, o gap é o do <code>.settings__group</code>.</dd></div>
+      </dl>
+      <p class="classes"><span>Classes</span> <code>.form-columns</code> <code>.settings__group</code></p>
+    </section>
   </main>
 </div>
 <script src="docs.js"></script>
