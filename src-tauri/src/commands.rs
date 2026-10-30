@@ -1975,8 +1975,20 @@ pub async fn create_folder(state: State<'_, AppState>, account_id: String, name:
         let folder = state.db.call(move |c| crate::archive_store::create_local_folder(c, &id, &name)).await?;
         return Ok(folder_view(&folder));
     }
-    let encoded = mailbox::encode_mailbox_name(&name);
     let handle = state.handle(&id).await?;
+    if crate::graph::applies(&handle) {
+        let created = crate::graph::create_folder(&state, &handle, &name).await?;
+        sync::sync_folder_list(&state, &handle).await?;
+        let remote_id = created.imap_name;
+        let folder = state
+            .db
+            .call(move |c| Ok(store::list_folders(c, &id)?.into_iter().find(|f| f.imap_name == remote_id)))
+            .await?
+            .ok_or(AppError::FolderNotFound)?;
+        tracing::info!("pasta criada");
+        return Ok(folder_view(&folder));
+    }
+    let encoded = mailbox::encode_mailbox_name(&name);
     let to_create = encoded.clone();
     imap_client::with_session(&state, &handle, Lane::Interactive, |s| {
         let to_create = to_create.clone();

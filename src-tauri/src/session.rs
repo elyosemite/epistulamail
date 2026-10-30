@@ -337,8 +337,8 @@ impl AppState {
     }
 
     /// Baixa a foto do perfil em segundo plano (US5, CA5). `force` ignora o limite de uma vez por
-    /// dia (conectar e reconectar). Sem a claim `picture` (escopo `profile` não autorizado), a foto
-    /// salva continua; sem rede, tenta de novo na próxima renovação.
+    /// dia (conectar e reconectar). No Google a URL vem da claim `picture`; na Microsoft a foto é
+    /// buscada no Graph (`User.Read`). Sem foto, a conta continua com a inicial e a cor.
     pub fn update_photo(&self, account_id: &str, id_token: Option<&str>, force: bool) {
         // O nome do titular vem no mesmo token (US7: cabeçalho From do envio).
         if let Some(name) = id_token.and_then(photo::name_from_id_token) {
@@ -347,7 +347,7 @@ impl AppState {
                 let _ = db.call(move |c| store::set_sender_name(c, &id, Some(&name))).await;
             });
         }
-        let Some(url) = id_token.and_then(photo::picture_from_id_token) else { return };
+        let picture = id_token.and_then(photo::picture_from_id_token);
         let app = self.app.clone();
         let id = account_id.to_owned();
         tauri::async_runtime::spawn(async move {
@@ -358,8 +358,20 @@ impl AppState {
                     return;
                 }
             }
-            let photo = match photo::download(&state.http, &url).await {
-                Ok(photo) => Some(photo),
+            let handle = match state.handle(&id).await {
+                Ok(handle) => handle,
+                Err(_) => return,
+            };
+            let fetched = if matches!(handle.provider, Some(Provider::Microsoft)) {
+                crate::graph::photo(&state, &handle).await
+            } else if let Some(url) = picture {
+                photo::download(&state.http, &url).await.map(Some)
+            } else {
+                return;
+            };
+            let photo = match fetched {
+                Ok(Some(photo)) => Some(photo),
+                Ok(None) => None,
                 Err(AppError::ImapConnection) => return,
                 Err(_) => None,
             };

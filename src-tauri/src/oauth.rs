@@ -2,7 +2,7 @@
 //! Nenhum token, código ou `state` é registrado em log.
 
 use std::collections::HashMap;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
@@ -17,7 +17,7 @@ use zeroize::Zeroizing;
 
 use crate::error::AppError;
 use crate::secrets::SecretString;
-use crate::provider::{OAuthClient, Provider};
+use crate::provider::{OAuthClient, Provider, RedirectUri};
 
 const CALLBACK_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 const MAX_REQUEST_BYTES: usize = 16 * 1024;
@@ -68,7 +68,14 @@ pub fn new_state() -> String {
     random_token(16)
 }
 
-pub fn authorize_url(provider: Provider, client_id: &str, redirect_uri: &str, challenge: &str, state: &str) -> Url {
+pub fn authorize_url(
+    provider: Provider,
+    client_id: &str,
+    redirect_uri: &str,
+    challenge: &str,
+    state: &str,
+    nonce: &str,
+) -> Url {
     let mut url = Url::parse(provider.auth_url()).expect("URL de autorização fixa e válida");
     {
         let mut q = url.query_pairs_mut();
@@ -78,7 +85,8 @@ pub fn authorize_url(provider: Provider, client_id: &str, redirect_uri: &str, ch
             .append_pair("scope", provider.scopes())
             .append_pair("code_challenge", challenge)
             .append_pair("code_challenge_method", "S256")
-            .append_pair("state", state);
+            .append_pair("state", state)
+            .append_pair("nonce", nonce);
         for (k, v) in provider.extra_auth_params() {
             q.append_pair(k, v);
         }
@@ -95,34 +103,69 @@ pub async fn authorize(
     open_browser: impl FnOnce(&str) -> Result<(), AppError>,
 ) -> Result<(Tokens, String), AppError> {
     let client = provider.client()?;
-    let listener = TcpListener::bind(("127.0.0.1", 0)).await.map_err(|e| {
-        tracing::error!(error = %e, "não foi possível abrir o listener de loopback");
-        AppError::AuthFailed
-    })?;
-    let port = listener.local_addr().map_err(|_| AppError::AuthFailed)?.port();
-    let redirect_uri = format!("http://127.0.0.1:{port}");
+    let redirect = provider.redirect();
+    let listeners = bind_loopback(&redirect).await?;
+    let port = listeners[0].local_addr().map_err(|_| AppError::AuthFailed)?.port();
+    let redirect_uri = format!("http://{}:{}{}", redirect.host, port, redirect.path);
 
     let pkce = pkce();
     let state = new_state();
-    open_browser(authorize_url(provider, &client.client_id, &redirect_uri, &pkce.challenge, &state).as_str())?;
-    tracing::info!(?provider, port, "aguardando callback OAuth");
+    let nonce = new_state();
+    open_browser(
+        authorize_url(provider, &client.client_id, &redirect_uri, &pkce.challenge, &state, &nonce).as_str(),
+    )?;
+    tracing::info!(?provider, port, path = redirect.path, "aguardando callback OAuth");
 
     let params = tokio::select! {
-        result = tokio::time::timeout(CALLBACK_TIMEOUT, wait_for_callback(&listener)) => match result {
+        result = tokio::time::timeout(CALLBACK_TIMEOUT, wait_for_callback(&listeners, redirect.path)) => match result {
             Ok(params) => params?,
             Err(_) => return Err(AppError::AuthTimeout),
         },
         _ = cancel => return Err(AppError::AuthCancelled),
     };
-    drop(listener);
+    drop(listeners);
 
     let code = validate_callback(&params, &state)?;
     let tokens = exchange_code(http, provider, &client, &code, &pkce.verifier, &redirect_uri).await?;
-    let email = tokens.id_token.as_deref().and_then(email_from_id_token).ok_or_else(|| {
-        tracing::error!(?provider, "id_token sem claim de e-mail");
+    let id_token = tokens.id_token.as_deref().ok_or_else(|| {
+        tracing::error!(?provider, "resposta sem id_token");
+        AppError::AuthFailed
+    })?;
+    let email = validated_email(id_token, provider, &client.client_id, &nonce).ok_or_else(|| {
+        tracing::error!(?provider, "id_token inválido (nonce, aud, iss ou exp)");
         AppError::AuthFailed
     })?;
     Ok((tokens, email))
+}
+
+/// Abre os listeners de loopback. O Google usa uma porta efêmera em `127.0.0.1`; a Microsoft usa
+/// a porta fixa registrada e escuta também em `::1`, porque `localhost` pode resolver para IPv6.
+async fn bind_loopback(redirect: &RedirectUri) -> Result<Vec<TcpListener>, AppError> {
+    // Numa nova tentativa, o fluxo anterior pode ainda estar soltando a porta fixa: espera um pouco.
+    let mut attempts = 0;
+    let v4 = loop {
+        match TcpListener::bind(("127.0.0.1", redirect.port.unwrap_or(0))).await {
+            Ok(listener) => break listener,
+            Err(e) => {
+                if redirect.port.is_some() && attempts < 20 {
+                    attempts += 1;
+                    tokio::time::sleep(Duration::from_millis(25)).await;
+                    continue;
+                }
+                tracing::error!(port = redirect.port, error = %e, "não foi possível abrir o listener de loopback");
+                return Err(AppError::AuthFailed);
+            }
+        }
+    };
+    let port = v4.local_addr().map_err(|_| AppError::AuthFailed)?.port();
+    let mut listeners = vec![v4];
+    if redirect.host == "localhost" {
+        match TcpListener::bind(("::1", port)).await {
+            Ok(v6) => listeners.push(v6),
+            Err(e) => tracing::debug!(port, error = %e, "loopback IPv6 indisponível; seguindo com IPv4"),
+        }
+    }
+    Ok(listeners)
 }
 
 /// Valida o `state` e extrai o `code`; `error=access_denied` significa que o usuário recusou.
@@ -138,10 +181,18 @@ pub fn validate_callback(params: &HashMap<String, String>, expected_state: &str)
     params.get("code").filter(|c| !c.is_empty()).cloned().ok_or(AppError::AuthFailed)
 }
 
-/// Aceita conexões até chegar o GET em `/`; outras rotas (ex.: /favicon.ico) recebem 404.
-async fn wait_for_callback(listener: &TcpListener) -> Result<HashMap<String, String>, AppError> {
+/// Aceita conexões até chegar o GET no caminho configurado; outras rotas (ex.: /favicon.ico)
+/// recebem 404.
+async fn wait_for_callback(listeners: &[TcpListener], path: &str) -> Result<HashMap<String, String>, AppError> {
     loop {
-        let (mut stream, _) = listener.accept().await.map_err(|_| AppError::AuthFailed)?;
+        let (mut stream, _) = match listeners {
+            [one] => one.accept().await.map_err(|_| AppError::AuthFailed)?,
+            [first, second, ..] => tokio::select! {
+                result = first.accept() => result.map_err(|_| AppError::AuthFailed)?,
+                result = second.accept() => result.map_err(|_| AppError::AuthFailed)?,
+            },
+            [] => return Err(AppError::AuthFailed),
+        };
         let mut buf = Vec::with_capacity(1024);
         let mut chunk = [0u8; 1024];
         while !buf.windows(4).any(|w| w == b"\r\n\r\n") && buf.len() < MAX_REQUEST_BYTES {
@@ -159,7 +210,7 @@ async fn wait_for_callback(listener: &TcpListener) -> Result<HashMap<String, Str
             .unwrap_or("");
         let parsed = Url::parse(&format!("http://127.0.0.1{target}")).ok();
         match parsed {
-            Some(url) if url.path() == "/" && url.query().is_some() => {
+            Some(url) if url.path() == path && url.query().is_some() => {
                 let body = CALLBACK_PAGE;
                 let response = format!(
                     "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
@@ -257,21 +308,60 @@ async fn token_request(http: &reqwest::Client, provider: Provider, form: &[(&str
     })
 }
 
-/// Lê o e-mail das claims do `id_token`. A assinatura não é verificada: o token veio direto
-/// do endpoint de token do provedor por TLS (OpenID Connect Core, seção 3.1.3.7).
-pub fn email_from_id_token(id_token: &str) -> Option<String> {
-    #[derive(Deserialize)]
-    struct Claims {
-        email: Option<String>,
-        preferred_username: Option<String>,
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum Audience {
+    One(String),
+    Many(Vec<String>),
+}
+
+#[derive(Deserialize)]
+struct IdTokenClaims {
+    email: Option<String>,
+    preferred_username: Option<String>,
+    nonce: Option<String>,
+    aud: Option<Audience>,
+    iss: Option<String>,
+    exp: Option<i64>,
+}
+
+fn audience_matches(audience: Option<&Audience>, client_id: &str) -> bool {
+    match audience {
+        Some(Audience::One(aud)) => aud == client_id,
+        Some(Audience::Many(list)) => list.iter().any(|aud| aud == client_id),
+        None => false,
     }
+}
+
+fn issuer_matches(provider: Provider, issuer: &str) -> bool {
+    match provider {
+        Provider::Google => issuer == "https://accounts.google.com" || issuer == "accounts.google.com",
+        Provider::Microsoft => issuer.starts_with("https://login.microsoftonline.com/") && issuer.ends_with("/v2.0"),
+    }
+}
+
+/// Lê e valida as claims do `id_token`: `nonce`, `aud`, `iss` e `exp`. A assinatura não é
+/// verificada porque o token veio direto do endpoint de token do provedor por TLS
+/// (OpenID Connect Core, seção 3.1.3.7).
+pub fn validated_email(id_token: &str, provider: Provider, client_id: &str, expected_nonce: &str) -> Option<String> {
     let payload = id_token.split('.').nth(1)?;
     let bytes = URL_SAFE_NO_PAD.decode(payload.trim_end_matches('=')).ok()?;
-    let claims: Claims = serde_json::from_slice(&bytes).ok()?;
-    claims
-        .email
-        .or(claims.preferred_username)
-        .filter(|e| e.contains('@'))
+    let claims: IdTokenClaims = serde_json::from_slice(&bytes).ok()?;
+    let exp = claims.exp?;
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).ok()?.as_secs() as i64;
+    if exp < now - 60 {
+        return None;
+    }
+    if claims.nonce.as_deref() != Some(expected_nonce) {
+        return None;
+    }
+    if !audience_matches(claims.aud.as_ref(), client_id) {
+        return None;
+    }
+    if !claims.iss.as_deref().is_some_and(|issuer| issuer_matches(provider, issuer)) {
+        return None;
+    }
+    claims.email.or(claims.preferred_username).filter(|e| e.contains('@'))
 }
 
 #[cfg(test)]
@@ -299,14 +389,32 @@ mod tests {
 
     #[test]
     fn authorize_url_has_pkce_and_offline_params() {
-        let url = authorize_url(Provider::Google, "cid", "http://127.0.0.1:5000", "chal", "st");
+        let url = authorize_url(Provider::Google, "cid", "http://127.0.0.1:5000", "chal", "st", "non");
         let q: HashMap<_, _> = url.query_pairs().into_owned().collect();
         assert_eq!(q["code_challenge_method"], "S256");
         assert_eq!(q["code_challenge"], "chal");
         assert_eq!(q["state"], "st");
+        assert_eq!(q["nonce"], "non");
         assert_eq!(q["redirect_uri"], "http://127.0.0.1:5000");
         assert_eq!(q["access_type"], "offline");
         assert!(q["scope"].contains("https://mail.google.com/"));
+    }
+
+    #[test]
+    fn microsoft_authorize_url_uses_consumers_scopes_and_nonce() {
+        let url = authorize_url(
+            Provider::Microsoft,
+            "cid",
+            "http://localhost:8400/oauth/callback",
+            "chal",
+            "st",
+            "non",
+        );
+        assert!(url.as_str().starts_with("https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize"));
+        let q: HashMap<_, _> = url.query_pairs().into_owned().collect();
+        assert_eq!(q["scope"], "openid profile email offline_access User.Read Mail.ReadWrite Mail.Send");
+        assert_eq!(q["redirect_uri"], "http://localhost:8400/oauth/callback");
+        assert_eq!(q["nonce"], "non");
     }
 
     fn params(pairs: &[(&str, &str)]) -> HashMap<String, String> {
@@ -329,21 +437,77 @@ mod tests {
         assert_eq!(validate_callback(&params(&[("state", "s"), ("code", "abc")]), "s"), Ok("abc".into()));
     }
 
+    fn id_token(claims: serde_json::Value) -> String {
+        let payload = URL_SAFE_NO_PAD.encode(serde_json::to_vec(&claims).unwrap());
+        format!("h.{payload}.s")
+    }
+
+    fn future() -> i64 {
+        SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64 + 3600
+    }
+
     #[test]
-    fn email_claim_is_read_from_id_token() {
-        let payload = URL_SAFE_NO_PAD.encode(br#"{"email":"ana@gmail.com"}"#);
-        assert_eq!(email_from_id_token(&format!("h.{payload}.s")), Some("ana@gmail.com".into()));
-        let payload = URL_SAFE_NO_PAD.encode(br#"{"preferred_username":"bia@outlook.com"}"#);
-        assert_eq!(email_from_id_token(&format!("h.{payload}.s")), Some("bia@outlook.com".into()));
-        assert_eq!(email_from_id_token("lixo"), None);
+    fn email_claim_is_read_from_a_validated_id_token() {
+        let google = id_token(serde_json::json!({
+            "email": "ana@gmail.com",
+            "nonce": "n",
+            "aud": "cid",
+            "iss": "https://accounts.google.com",
+            "exp": future(),
+        }));
+        assert_eq!(validated_email(&google, Provider::Google, "cid", "n"), Some("ana@gmail.com".into()));
+
+        let microsoft = id_token(serde_json::json!({
+            "preferred_username": "bia@outlook.com",
+            "nonce": "n",
+            "aud": ["cid", "outra"],
+            "iss": "https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0",
+            "exp": future(),
+        }));
+        assert_eq!(
+            validated_email(&microsoft, Provider::Microsoft, "cid", "n"),
+            Some("bia@outlook.com".into())
+        );
+
+        assert_eq!(validated_email(&google, Provider::Google, "cid", "errado"), None);
+        assert_eq!(validated_email(&google, Provider::Google, "outro", "n"), None);
+        assert_eq!(validated_email("lixo", Provider::Google, "cid", "n"), None);
+
+        let expired = id_token(serde_json::json!({
+            "email": "ana@gmail.com", "nonce": "n", "aud": "cid",
+            "iss": "https://accounts.google.com", "exp": 0,
+        }));
+        assert_eq!(validated_email(&expired, Provider::Google, "cid", "n"), None);
+
+        let wrong_issuer = id_token(serde_json::json!({
+            "email": "ana@gmail.com", "nonce": "n", "aud": "cid",
+            "iss": "https://exemplo.invalido", "exp": future(),
+        }));
+        assert_eq!(validated_email(&wrong_issuer, Provider::Google, "cid", "n"), None);
     }
 
     #[tokio::test]
     async fn loopback_ignores_favicon_and_returns_query() {
         let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
         let port = listener.local_addr().unwrap().port();
-        let server = tokio::spawn(async move { wait_for_callback(&listener).await });
+        let server = tokio::spawn(async move { wait_for_callback(&[listener], "/").await });
         for path in ["/favicon.ico", "/?code=abc&state=xyz"] {
+            let mut s = tokio::net::TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+            s.write_all(format!("GET {path} HTTP/1.1\r\nHost: x\r\n\r\n").as_bytes()).await.unwrap();
+            let mut out = Vec::new();
+            s.read_to_end(&mut out).await.unwrap();
+        }
+        let q = server.await.unwrap().unwrap();
+        assert_eq!(q["code"], "abc");
+        assert_eq!(q["state"], "xyz");
+    }
+
+    #[tokio::test]
+    async fn loopback_accepts_only_the_configured_callback_path() {
+        let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let server = tokio::spawn(async move { wait_for_callback(&[listener], "/oauth/callback").await });
+        for path in ["/oauth/callback/errado", "/oauth/callback?code=abc&state=xyz"] {
             let mut s = tokio::net::TcpStream::connect(("127.0.0.1", port)).await.unwrap();
             s.write_all(format!("GET {path} HTTP/1.1\r\nHost: x\r\n\r\n").as_bytes()).await.unwrap();
             let mut out = Vec::new();

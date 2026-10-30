@@ -15,7 +15,7 @@ pub const MAX_PHOTO_BYTES: usize = 256 * 1024;
 const TIMEOUT: Duration = Duration::from_secs(10);
 const ALLOWED_TYPES: &[&str] = &["image/jpeg", "image/png", "image/webp"];
 
-/// Lê a claim `picture` do `id_token` (mesma premissa de `oauth::email_from_id_token`: o token
+/// Lê a claim `picture` do `id_token` (mesma premissa de `oauth::validated_email`: o token
 /// veio direto do endpoint de token por TLS).
 pub fn picture_from_id_token(id_token: &str) -> Option<String> {
     #[derive(Deserialize)]

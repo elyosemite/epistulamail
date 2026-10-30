@@ -7,7 +7,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Novidades
 
 - Contas IMAP e SMTP manuais com senha normal, servidores e portas próprios e teste de conexão.
-- Contas Outlook.com, Hotmail e Microsoft 365: login da Microsoft por OAuth, leitura e envio pelo Microsoft Graph, no Windows e no Linux.
+- Contas pessoais Outlook.com, Hotmail e Live: login da Microsoft por OAuth, leitura e envio pelo Microsoft Graph, no Windows e no Linux.
 
 ### Mudou
 
@@ -18,9 +18,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Avisos
 
 - Nas contas manuais, só a senha normal funciona por enquanto; senha criptografada, NTLM, Kerberos/GSSAPI, OAuth2 manual e POP3 chegam nas próximas atualizações.
-- Em Microsoft 365, o administrador do tenant pode precisar conceder consentimento para as permissões do Microsoft Graph.
-- O app pede ao Microsoft Graph `Mail.ReadWrite` e `Mail.Send`; contas pessoais Outlook.com usam o diretório pessoal, sem tenant de trabalho/escola.
-- Sair de uma conta Microsoft apaga o token local; para revogar o acesso, use account.live.com/consent/Manage ou o administrador do Microsoft 365.
+- O registro do app é só para contas pessoais da Microsoft (Outlook.com, Hotmail e Live); contas de trabalho/escola ficam fora desta entrega.
+- O app pede ao Microsoft Graph `Mail.ReadWrite`, `Mail.Send` e `User.Read`, além de `openid`, `profile`, `email` e `offline_access`; contas pessoais usam o diretório pessoal, sem tenant de trabalho/escola.
+- Sair de uma conta Microsoft apaga o token local; para revogar o acesso, use account.live.com/consent/Manage.
 - As notificações nativas no Linux e o bloqueio junto com a tela continuam na US18.
 
 ## [1.1.0] - 2026-10-28

@@ -5,6 +5,8 @@
 use std::collections::{HashMap, HashSet};
 use std::time::Duration;
 
+use base64::engine::general_purpose::STANDARD;
+use base64::Engine;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::json;
@@ -22,7 +24,9 @@ const PAGE: usize = 200;
 const UID_BASE: u32 = 1_000_000_000;
 const MAX_FOLDER_PAGES: usize = 4;
 const GRAPH_TIMEOUT: Duration = Duration::from_secs(60);
-const MESSAGE_SELECT: &str = "id,internetMessageId,conversationId,subject,from,toRecipients,ccRecipients,receivedDateTime,isRead,flag,hasAttachments,bodyPreview,size,parentFolderId";
+// `size` não existe no tipo `Microsoft.OutlookServices.Message` das contas pessoais: se ele entra
+// no `$select`, o Graph recusa a lista inteira com `RequestBroker--ParseUri`. O tamanho fica 0.
+const MESSAGE_SELECT: &str = "id,internetMessageId,conversationId,subject,from,toRecipients,ccRecipients,receivedDateTime,isRead,flag,hasAttachments,bodyPreview,parentFolderId";
 
 /// A conta usa o backend Graph?
 pub fn applies(handle: &AccountHandle) -> bool {
@@ -262,17 +266,9 @@ async fn well_known(state: &AppState, handle: &AccountHandle) -> Result<HashMap<
 
 async fn skipped_folders(state: &AppState, handle: &AccountHandle) -> HashSet<String> {
     let mut skipped = HashSet::new();
-    for name in [
-        "outbox",
-        "conflicts",
-        "localfailures",
-        "serverfailures",
-        "syncissues",
-        "recoverableitemsdeletions",
-        "searchfolders",
-        "scheduled",
-        "msgfolderroot",
-    ] {
+    // Só as pastas que existem em contas pessoais. As do Exchange (conflicts, localfailures,
+    // serverfailures, syncissues) não existem aqui e o Graph devolve 404 a cada sincronização.
+    for name in ["outbox", "recoverableitemsdeletions", "searchfolders", "scheduled", "msgfolderroot"] {
         let url = format!("{BASE}/me/mailFolders/{name}?$select=id");
         if let Ok(folder) = get_json::<GraphFolder>(state, handle, &url).await {
             skipped.insert(folder.id);
@@ -321,6 +317,23 @@ pub async fn folders(state: &AppState, handle: &AccountHandle) -> Result<Vec<Rem
         }
     }
     Ok(folders)
+}
+
+/// Cria uma pasta de nível superior no Graph.
+pub async fn create_folder(state: &AppState, handle: &AccountHandle, name: &str) -> Result<RemoteFolder, AppError> {
+    let url = format!("{BASE}/me/mailFolders");
+    let response = request(state, handle, reqwest::Method::POST, &url, Some(json!({ "displayName": name })), None).await?;
+    let folder: GraphFolder = response.json().await.map_err(|_| AppError::ImapConnection)?;
+    if folder.id.is_empty() || folder.display_name.trim().is_empty() {
+        return Err(AppError::ImapConnection);
+    }
+    Ok(RemoteFolder {
+        imap_name: folder.id,
+        role: Role::Custom,
+        display_name: folder.display_name.trim().to_owned(),
+        unread: folder.unread.and_then(|n| u32::try_from(n).ok()),
+        total: folder.total.and_then(|n| u32::try_from(n).ok()),
+    })
 }
 
 fn apply_page(conn: &mut rusqlite::Connection, folder_id: i64, page: &Page, older: bool) -> Result<ApplyReport, AppError> {
@@ -446,6 +459,59 @@ pub async fn body(state: &AppState, handle: &AccountHandle, folder_id: i64, uid:
     response.bytes().await.map(|b| b.to_vec()).map_err(|_| AppError::ImapConnection)
 }
 
+/// Foto do perfil da conta Microsoft no tamanho do avatar. `None` quando a conta não tem foto.
+pub async fn photo(state: &AppState, handle: &AccountHandle) -> Result<Option<(Vec<u8>, &'static str)>, AppError> {
+    let url = format!("{BASE}/me/photos/96x96/$value");
+    let mut force_refresh = false;
+    for attempt in 0..2 {
+        let token = state.access(handle, force_refresh).await?;
+        let mut response = state
+            .http
+            .get(&url)
+            .bearer_auth(token.as_str())
+            .timeout(GRAPH_TIMEOUT)
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::warn!(error = %e.without_url(), "falha de rede ao baixar a foto da conta Microsoft");
+                AppError::ImapConnection
+            })?;
+        if response.status() == reqwest::StatusCode::UNAUTHORIZED && attempt == 0 {
+            force_refresh = true;
+            continue;
+        }
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+        if !response.status().is_success() {
+            tracing::warn!(status = %response.status(), "Microsoft Graph recusou a foto da conta");
+            return Ok(None);
+        }
+        let kind = response
+            .headers()
+            .get(reqwest::header::CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .and_then(crate::photo::allowed_type)
+            .ok_or(AppError::InvalidInput)?;
+        if response.content_length().is_some_and(|n| n as usize > crate::photo::MAX_PHOTO_BYTES) {
+            return Ok(None);
+        }
+        let mut bytes = Vec::new();
+        while let Some(chunk) = response.chunk().await.map_err(|_| AppError::ImapConnection)? {
+            if bytes.len() + chunk.len() > crate::photo::MAX_PHOTO_BYTES {
+                return Ok(None);
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        if bytes.is_empty() {
+            return Ok(None);
+        }
+        tracing::info!(bytes = bytes.len(), kind, "foto da conta Microsoft baixada");
+        return Ok(Some((bytes, kind)));
+    }
+    Err(AppError::ImapConnection)
+}
+
 /// Marca a mensagem como lida no Graph.
 pub async fn mark_seen(state: &AppState, handle: &AccountHandle, folder_id: i64, uid: u32) -> Result<(), AppError> {
     let Some(id) = state.db.call(move |c| store::remote_id_for(c, folder_id, uid)).await? else { return Ok(()) };
@@ -509,35 +575,46 @@ pub async fn delete_uids(state: &AppState, handle: &AccountHandle, folder: &Fold
     Ok(())
 }
 
-/// Envia um MIME pronto pelo Graph: cria o rascunho, acrescenta o Cco fora dos cabeçalhos e envia.
-pub async fn send(state: &AppState, handle: &AccountHandle, raw: Vec<u8>, bcc: &[String]) -> Result<(), AppError> {
-    let create = format!("{BASE}/me/messages");
-    let response = request(state, handle, reqwest::Method::POST, &create, None, Some(("text/rfc822", raw))).await.map_err(|e| match e {
+fn as_send_error(error: AppError) -> AppError {
+    match error {
         AppError::ImapConnection => AppError::SmtpConnection,
         other => other,
-    })?;
+    }
+}
+
+/// Cria um rascunho no Graph a partir de um MIME pronto. O Graph espera o MIME em base64 com
+/// `Content-Type: text/plain`; o Cco vai no rascunho, fora dos cabeçalhos.
+pub async fn create_draft(state: &AppState, handle: &AccountHandle, raw: Vec<u8>, bcc: &[String]) -> Result<String, AppError> {
+    let encoded = STANDARD.encode(raw);
+    let create = format!("{BASE}/me/messages");
+    let response = request(state, handle, reqwest::Method::POST, &create, None, Some(("text/plain", encoded.into_bytes())))
+        .await
+        .map_err(as_send_error)?;
     #[derive(Deserialize)]
     struct Created {
         id: String,
     }
     let created: Created = response.json().await.map_err(|_| AppError::SendRejected)?;
-    // O MIME não leva Cco; o Graph recebe os destinatários ocultos no rascunho, fora dos cabeçalhos.
     if !bcc.is_empty() {
         let recipients: Vec<serde_json::Value> = bcc.iter().map(|address| json!({ "emailAddress": { "address": address } })).collect();
         let url = format!("{BASE}/me/messages/{}", created.id);
         request(state, handle, reqwest::Method::PATCH, &url, Some(json!({ "bccRecipients": recipients })), None)
             .await
-            .map_err(|e| match e {
-                AppError::ImapConnection => AppError::SmtpConnection,
-                other => other,
-            })?;
+            .map_err(as_send_error)?;
     }
-    let send = format!("{BASE}/me/messages/{}/send", created.id);
-    request(state, handle, reqwest::Method::POST, &send, None, None).await.map_err(|e| match e {
-        AppError::ImapConnection => AppError::SmtpConnection,
-        other => other,
-    })?;
-    Ok(())
+    Ok(created.id)
+}
+
+/// Envia um rascunho já criado no Graph.
+pub async fn send_draft(state: &AppState, handle: &AccountHandle, id: &str) -> Result<(), AppError> {
+    let send = format!("{BASE}/me/messages/{id}/send");
+    request(state, handle, reqwest::Method::POST, &send, None, None).await.map(|_| ()).map_err(as_send_error)
+}
+
+/// Envia um MIME pronto pelo Graph: cria o rascunho e o envia.
+pub async fn send(state: &AppState, handle: &AccountHandle, raw: Vec<u8>, bcc: &[String]) -> Result<(), AppError> {
+    let id = create_draft(state, handle, raw, bcc).await?;
+    send_draft(state, handle, &id).await
 }
 
 /// Baixa os corpos MIME de uma lista de alvos (download em segundo plano).
@@ -578,6 +655,14 @@ mod tests {
             total: Some(ids.len() as u32),
             unread: Some(ids.len() as u32),
         }
+    }
+
+    #[test]
+    fn message_select_avoids_size_for_personal_accounts() {
+        // `size` não existe em `Microsoft.OutlookServices.Message`; se voltar ao `$select`, a
+        // sincronização inteira falha com `RequestBroker--ParseUri` e o app fica "sem conexão".
+        assert!(!MESSAGE_SELECT.split(',').any(|field| field == "size"));
+        assert!(MESSAGE_SELECT.contains("bodyPreview"));
     }
 
     #[test]
