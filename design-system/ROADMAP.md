@@ -21,7 +21,7 @@ A ordem de trabalho do design system do EpistulaMail, na sequência do v3 (§14)
 
 ## Próximo
 
-Cada item tem uma evidência e pode virar uma user story.
+Cada item tem uma evidência e pode virar uma proposta futura em <code>userstory/</code>.
 
 | # | O quê | Evidência | Camada |
 |---|---|---|---|

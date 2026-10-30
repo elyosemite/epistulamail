@@ -1,6 +1,6 @@
 ## Fatia 08: OAuth2 em conta Gmail manual
 
-**Parent:** `userstory/0022-configuracao-manual-de-servidores.md`
+**Parent:** US22 (contas manuais, já implementadas no código)
 
 **Tipo:** AFK
 
@@ -27,7 +27,6 @@ Inclui:
 - [ ] Nenhum token ou código aparece em log, banco, evento ou WebView.
 - [ ] Modelo de ameaças, docs (pt/en/es/fr/it) e CHANGELOG atualizados.
 
-### Bloqueada por
+### Base já implementada
 
-- `userstory/0022/01-entrada-imap-senha-normal.md`
-- `userstory/0022/02-saida-smtp-senha-normal.md`
+A configuração manual, o cofre de senhas e o envio por SMTP com senha normal já estão no código (`src/` e `src-tauri/`).

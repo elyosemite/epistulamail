@@ -21,7 +21,7 @@ Correção de erro de digitação e ajuste de texto de uma página só não prec
 
 1. **Rascunho.** Crie `design-system/rascunho-<tema>.html` só com tokens e componentes que já existem, mostrando todos os estados nos dois temas. O CSS novo vai em `components.css`, só com tokens.
 2. **Aprovação.** Mostre o rascunho a quem mantém o design system. Nada vai para `src/`, `site/` ou `docs-site/` antes disso.
-3. **Incorporação.** Mova as peças para a página do componente (ou crie `<id>.html` e registre em `EPISTULA_PAGES`, em `docs.js`, com camada e status). Apague o rascunho e registre o que foi decidido na user story.
+3. **Incorporação.** Mova as peças para a página do componente (ou crie `<id>.html` e registre em `EPISTULA_PAGES`, em `docs.js`, com camada e status). Apague o rascunho e registre o que foi decidido em <code>DECISIONS.md</code>.
 4. **Implementação.** Use as mesmas classes no app, no site e nas docs.
 5. **Conferência.** Rode `pnpm ds:check` e deixe tudo sem erro.
 
@@ -45,7 +45,7 @@ Antes de aprovar, responda sim às seis perguntas (ou registre a exceção):
 3. **Tokens e temas.** Usa só tokens semânticos e funciona no claro, no escuro e em alto contraste?
 4. **API e acessibilidade.** Teclado, foco, semântica, leitor de tela e estados foram avaliados?
 5. **Texto e tradução.** O texto pode ser traduzido? Truncamento, plural e RTL foram considerados?
-6. **Documentação e testes.** Há exemplos, a ficha do componente, a conferência e o registro na user story?
+6. **Documentação e testes.** Há exemplos, a ficha do componente, a conferência e o registro em <code>DECISIONS.md</code>/<code>CHANGELOG.md</code>?
 
 ## Definição de pronto
 

@@ -2,7 +2,7 @@
 
 O registro das escolhas com efeito duradouro no design system do EpistulaMail: biblioteca, estratégia de tokens, temas, primitives e compatibilidade. O modelo de proposta está em `CONTRIBUTING.md`. Cada entrada diz o contexto, a decisão e o que muda por causa dela.
 
-As decisões 0001 e 0002 vêm de antes do v3 e estão aqui para o registro ficar completo. As demais são de 28 out 2026, da entrega que aplicou o `EpistulaMailDesignSystem-v3.md` (`userstory/0021-design-system-v3.md`).
+As decisões 0001 e 0002 vêm de antes do v3 e estão aqui para o registro ficar completo. As demais são de 28 out 2026, da entrega que aplicou o `EpistulaMailDesignSystem-v3.md`.
 
 ## 0001 · A base é o Atlassian Design System
 
