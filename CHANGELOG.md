@@ -11,8 +11,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Mudou
 
-- O catálogo de provedores agora mostra Google, Microsoft e "Outro" como disponíveis; Yahoo, iCloud, Zoho, GMX e AOL continuam "em breve".
-- O cartão "Outro" fica disponível para configurar servidores IMAP e SMTP manualmente.
+- A tela de adicionar conta mostra só os provedores disponíveis: Gmail, Outlook e Outro. Yahoo, iCloud, Zoho, GMX e AOL saem da tela até existirem.
+- Gmail e Outlook ficam lado a lado; "Outro" e "Abrir arquivo de e-mail" ganham seções próprias, com o cartão "Outro" disponível para configurar servidores IMAP e SMTP manualmente.
 - O modelo de ameaças, a política de privacidade, o site e a documentação passam a falar das contas Google e Microsoft, com os escopos e os limites de cada uma.
 
 ### Avisos
