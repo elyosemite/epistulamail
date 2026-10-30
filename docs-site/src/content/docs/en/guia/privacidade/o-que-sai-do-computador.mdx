@@ -14,7 +14,7 @@ import Timeline from '~/components/Timeline.astro';
 - **Remote images in an email**: only when you allow them for that message.
 - **GitHub**: the new-version check (the `latest.json` file of the latest release).
 
-On Google, EpistulaMail asks for `https://mail.google.com/`, `openid`, `email` and `profile`. On Microsoft, it asks for `https://graph.microsoft.com/Mail.ReadWrite`, `https://graph.microsoft.com/Mail.Send`, `openid`, `email` and `offline_access`. It does not ask for contacts, calendar, files or OneDrive.
+On Google, EpistulaMail asks for `https://mail.google.com/`, `openid`, `email` and `profile`. On Microsoft, it asks for `Mail.ReadWrite`, `Mail.Send`, `User.Read`, `openid`, `profile`, `email` and `offline_access`. It does not ask for contacts, calendar, files or OneDrive.
 
 On Linux, the app also talks to the Secret Service over the local session bus (D-Bus) to store and read the database key and account tokens. That stays on your computer and is not a network connection.
 

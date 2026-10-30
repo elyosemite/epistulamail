@@ -4,22 +4,19 @@ description: "L'accesso nel browser e le autorizzazioni che EpistulaMail chiede 
 sidebar:
   order: 2
 ---
-import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Steps, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import AppPreview from '~/components/AppPreview.astro';
 import Timeline from '~/components/Timeline.astro';
 
-Quando scegli Outlook, EpistulaMail apre la pagina di accesso di Microsoft nel tuo browser. Accedi, autorizzi e torni all'app. Vale per Outlook.com, Hotmail e Microsoft 365.
+Quando scegli Outlook, EpistulaMail apre la pagina di accesso di Microsoft nel tuo browser. Accedi, autorizzi e torni all'app. Vale per gli account personali Outlook.com, Hotmail e Live.
 
 EpistulaMail chiede solo:
 
-- **`https://graph.microsoft.com/Mail.ReadWrite`**: leggere e organizzare le tue email tramite Microsoft Graph.
-- **`https://graph.microsoft.com/Mail.Send`**: inviare email tramite Microsoft Graph.
-- **`openid`, `email` e `offline_access`**: il tuo indirizzo e nome, per mostrare l'account, e il permesso di mantenere la connessione senza chiedere l'accesso a ogni sincronizzazione.
+- **`Mail.ReadWrite`**: leggere e organizzare le tue email tramite Microsoft Graph.
+- **`Mail.Send`**: inviare email tramite Microsoft Graph.
+- **`User.Read` e `profile`**: il tuo nome, indirizzo e foto del profilo, per mostrare l'account.
+- **`openid`, `email` e `offline_access`**: l'identità dell'account e il permesso di mantenere la connessione senza chiedere l'accesso a ogni sincronizzazione.
 
 Non chiede contatti, calendario, file, OneDrive né un profilo oltre all'indirizzo e al nome. La tua password Microsoft non passa mai da EpistulaMail.
 
-<Aside type="note" title="Account aziendali o scolastici">
-In Microsoft 365, l'amministratore del tenant potrebbe dover concedere il consenso per le autorizzazioni di Microsoft Graph. Se la connessione viene rifiutata, parla con l'amministratore.
-</Aside>
-
-Il refresh token sta nel vault del sistema (Gestione credenziali su Windows, Secret Service su Linux), con la stessa cura degli account Google: mai nel database in chiaro, mai in un file, mai in un log. Per revocare l'accesso, usa [account.live.com/consent/Manage](https://account.live.com/consent/Manage) o la pagina dei consensi di Microsoft 365.
+Il refresh token sta nel vault del sistema (Gestione credenziali su Windows, Secret Service su Linux), con la stessa cura degli account Google: mai nel database in chiaro, mai in un file, mai in un log. Per revocare l'accesso, usa [account.live.com/consent/Manage](https://account.live.com/consent/Manage).

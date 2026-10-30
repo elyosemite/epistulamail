@@ -4,22 +4,19 @@ description: "Browser sign-in and the permissions EpistulaMail asks Microsoft fo
 sidebar:
   order: 2
 ---
-import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Steps, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import AppPreview from '~/components/AppPreview.astro';
 import Timeline from '~/components/Timeline.astro';
 
-When you choose Outlook, EpistulaMail opens Microsoft's sign-in page in your browser. You sign in, authorize and come back to the app. It works for Outlook.com, Hotmail and Microsoft 365.
+When you choose Outlook, EpistulaMail opens Microsoft's sign-in page in your browser. You sign in, authorize and come back to the app. It works for personal Outlook.com, Hotmail and Live accounts.
 
 EpistulaMail asks only for:
 
-- **`https://graph.microsoft.com/Mail.ReadWrite`**: read and organize your email through Microsoft Graph.
-- **`https://graph.microsoft.com/Mail.Send`**: send email through Microsoft Graph.
-- **`openid`, `email` and `offline_access`**: your address and name, to show the account, and permission to keep the connection without asking for sign-in on every sync.
+- **`Mail.ReadWrite`**: read and organize your email through Microsoft Graph.
+- **`Mail.Send`**: send email through Microsoft Graph.
+- **`User.Read` and `profile`**: your name, address and profile photo, to show the account.
+- **`openid`, `email` and `offline_access`**: the account identity and permission to keep the connection without asking for sign-in on every sync.
 
 It does not ask for contacts, calendar, files, OneDrive or a profile beyond the address and name. Your Microsoft password never goes through EpistulaMail.
 
-<Aside type="note" title="Work or school accounts">
-In Microsoft 365, the tenant administrator may need to grant consent for the Microsoft Graph permissions. If the connection is refused, ask your administrator.
-</Aside>
-
-The refresh token lives in the system vault (Windows Credential Manager, Linux Secret Service), with the same care as Google accounts: never in the database in plain text, never in a file, never in a log. To revoke access, use [account.live.com/consent/Manage](https://account.live.com/consent/Manage) or the Microsoft 365 consent page.
+The refresh token lives in the system vault (Windows Credential Manager, Linux Secret Service), with the same care as Google accounts: never in the database in plain text, never in a file, never in a log. To revoke access, use [account.live.com/consent/Manage](https://account.live.com/consent/Manage).
