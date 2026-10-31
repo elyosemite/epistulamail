@@ -1,24 +1,23 @@
-/* Landing page do Epistula (rascunho), no formato da página da Vercel: largura ampla, títulos grandes, seções com
-   uma imagem de 2/3 da largura e uma coluna de texto, uma grade de cartões e o rodapé em colunas. Só tokens do
-   design system; as "fotos" do app vêm de components.css. Peças próprias do site com prefixo site-. Lacunas do
-   DS: tamanhos de destaque maiores que --font-size-hero e o preto puro do tema claro (--site-shade). */
+/* Site do EpistulaMail: um dossiê técnico em volta de um cofre desenhado em caracteres.
+   Só tokens do design system; as "telas" do app são o próprio markup do DS. Peças do site
+   levam o prefixo site-. O fundo de caracteres é gerado no build (build.mjs). */
 
 :root {
   --site-width: 88rem;
-  /* Margem das laterais: cresce com a janela (24 px no celular, até 80 px em telas largas). */
   --site-gutter: clamp(var(--space-300), 6vw, var(--space-1000));
-  --site-gap: var(--space-400);
-  --site-display: clamp(calc(var(--font-size-hero) * 1.3), 4.6vw, calc(var(--font-size-hero) * 2));
-  --site-title: clamp(var(--font-size-hero), 4vw, calc(var(--font-size-hero) * 1.6));
-  --site-header-height: calc(var(--space-800) - var(--space-100));
-  --site-shade: #000000;
+  --site-header-height: var(--space-800);
+  --site-display: clamp(calc(var(--font-size-hero) * 1.4), 5vw, calc(var(--font-size-hero) * 2.1));
+  --site-title: clamp(calc(var(--font-size-hero) * 1.1), 3.2vw, calc(var(--font-size-hero) * 1.6));
+  /* O fundo do recorte: a mesma superfície da página, para o degradê fechar sem faixa preta no claro. */
+  --site-shade: var(--color-surface);
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: var(--site-header-height); }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--site-header-height) + var(--space-300)); }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body { margin: 0; background: var(--color-surface); color: var(--color-text); font: var(--font-body-large); -webkit-font-smoothing: antialiased; }
 a { color: var(--color-link); }
+img { max-width: 100%; }
 .site-container { width: 100%; max-width: var(--site-width); margin-inline: auto; padding-inline: var(--site-gutter); }
 .site-skip { position: absolute; left: var(--space-200); top: calc(-1 * var(--space-1000)); z-index: var(--z-flag); }
 .site-skip:focus { top: var(--space-200); }
@@ -26,150 +25,203 @@ a { color: var(--color-link); }
 /* ---------- Cabeçalho ---------- */
 .site-header { position: sticky; top: 0; z-index: var(--z-navigation); height: var(--site-header-height); background: var(--color-surface); border-bottom: var(--border-width) solid var(--color-border); }
 .site-header__inner { display: flex; align-items: center; gap: var(--space-400); height: 100%; }
-.site-header .wordmark { text-decoration: none; color: var(--color-text); }
-.site-nav { display: flex; gap: var(--space-300); }
-.site-nav a { color: var(--color-text-subtle); text-decoration: none; font: var(--font-weight-medium) var(--font-size-body)/var(--line-height-body) var(--font-family-body); }
-.site-nav a:hover { color: var(--color-text); }
-.site-header__end { display: flex; align-items: center; gap: var(--space-100); margin-left: auto; }
+.site-brand { text-decoration: none; color: var(--color-text); }
+.site-nav { display: flex; align-items: center; gap: var(--space-300); }
+.site-nav > a, .site-nav__trigger { display: inline-flex; align-items: center; gap: var(--space-050); color: var(--color-text-subtle); text-decoration: none; font: var(--font-weight-medium) var(--font-size-body)/var(--line-height-body) var(--font-family-body); }
+.site-nav > a:hover, .site-nav__trigger:hover { color: var(--color-text); }
+.site-nav__docs { color: var(--color-text-brand) !important; }
+.site-nav__docs .i { color: currentColor; }
+.site-header__end { display: flex; align-items: center; gap: var(--space-300); margin-left: auto; }
+@media (max-width: 30rem) { .site-header__inner { gap: var(--space-200); } }
 
 /* L81 · Download com menu do sistema: a ação principal e o chevron dentro do mesmo botão. */
 .site-download { position: relative; display: inline-flex; }
 .site-download__menu { position: absolute; inset-block-start: calc(100% + var(--space-075)); inset-inline-end: 0; z-index: 50; min-width: 16rem; }
 .site-download__menu[hidden] { display: none; }
-@media (max-width: 52rem) { .site-nav { display: none; } }
+/* As seções do topo só aparecem quando cabem sem quebrar linha. */
+@media (max-width: 40rem) { .site-nav { display: none; } }
 
-/* ---------- Títulos ---------- */
-.site-display { margin: 0; font: var(--font-weight-semibold) var(--site-display)/1.02 var(--font-family-heading); letter-spacing: -0.04em; text-wrap: balance; }
-.site-h2 { margin: 0; font: var(--font-weight-semibold) var(--site-title)/1.06 var(--font-family-heading); letter-spacing: -0.035em; text-wrap: balance; }
-/* A frase de destaque: o começo forte, o resto em tom secundário. */
-.site-statement { margin: 0; font: var(--font-weight-medium) calc(var(--font-size-body-large) * 1.25)/1.35 var(--font-family-body); letter-spacing: -0.01em; color: var(--color-text); text-wrap: pretty; }
-.site-statement span { color: var(--color-text-subtlest); }
+/* ---------- Tipografia ---------- */
+.site-eyebrow { margin: 0; font: var(--font-weight-medium) var(--font-size-label)/var(--line-height-label) var(--font-family-code); letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-brand); }
 .site-label { margin: 0; font: var(--font-label); letter-spacing: var(--letter-spacing-label); text-transform: uppercase; color: var(--color-text-subtlest); }
+.site-display { margin: 0; font: var(--font-weight-semibold) var(--site-display)/1.02 var(--font-family-heading); letter-spacing: -0.045em; text-wrap: balance; }
+.site-h2 { margin: 0; font: var(--font-weight-semibold) var(--site-title)/1.06 var(--font-family-heading); letter-spacing: -0.035em; text-wrap: balance; }
+.site-accent { font-family: var(--font-family-code); font-style: italic; font-weight: 400; letter-spacing: -0.045em; color: var(--color-text-brand); }
+.site-accent--sm { letter-spacing: -0.04em; }
+.site-statement { margin: 0; font: var(--font-weight-medium) calc(var(--font-size-body-large) * 1.2)/1.4 var(--font-family-body); letter-spacing: -0.01em; color: var(--color-text); text-wrap: pretty; }
+.site-statement span { color: var(--color-text-subtle); }
+.site-statement a { color: var(--color-link); }
+.site-version { margin: 0; font: var(--font-body-small); color: var(--color-text-subtlest); }
+.site-version a { color: var(--color-link); }
+.site-btn-ghost { --btn-fg: var(--color-text); border: var(--border-width) solid var(--color-border-bold); }
 
-/* ---------- Abertura: título à esquerda, símbolo no centro, três linhas à direita ---------- */
-.site-hero { display: grid; align-content: center; min-height: calc(100svh - var(--site-header-height) - var(--space-1000) * 2); padding-block: var(--space-1000); }
-.site-hero__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--site-gap); align-items: center; }
-.site-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-100); margin-top: var(--space-400); }
-/* No lugar de um ícone: peças do DS (mensagem cifrada, toast de envio) empilhadas, como um recorte do app. */
-.site-hero__stack { position: relative; display: grid; padding-block: var(--space-300) 6rem; pointer-events: none; }
-.site-hero__stack .site-panel { padding: var(--space-250); border: var(--border-width) solid var(--color-border); box-shadow: var(--shadow-raised); }
-.site-hero__stack .message__body { margin-top: var(--space-200); font: var(--font-body); color: var(--color-text-subtle); }
-.site-hero__stack .message__body p { margin: 0 0 var(--space-100); }
-.site-hero__stack .toast { position: absolute; inset-inline-start: calc(var(--space-400) * -1); bottom: 0; width: min(20rem, 90%); box-shadow: var(--shadow-overlay); }
-.site-hero__stack { justify-self: end; width: 100%; max-width: 34rem; }
-@media (max-width: 60rem) {
-  .site-hero__grid { grid-template-columns: minmax(0, 1fr); }
-  .site-hero__stack { justify-self: start; max-width: 30rem; }
-  .site-hero__stack .toast { inset-inline-start: auto; inset-inline-end: 0; }
-}
+/* ---------- Abertura: o cofre em caracteres ---------- */
+.site-hero { position: relative; isolation: isolate; display: grid; place-items: center; min-height: calc(100svh - var(--site-header-height)); overflow: hidden; padding: var(--space-1000) var(--site-gutter); text-align: center; }
+.site-ascii { position: absolute; inset: 0; z-index: 0; color: var(--color-bg-brand-bold); opacity: 0.6; pointer-events: none; mask-image: radial-gradient(ellipse 80% 72% at 50% 34%, #000 42%, transparent 100%); text-shadow: 0 0 14px color-mix(in srgb, var(--color-bg-brand-bold) 55%, transparent); transition: color 320ms var(--easing-standard), opacity 320ms var(--easing-standard), text-shadow 320ms var(--easing-standard); }
+.site-ascii pre { position: absolute; top: 25%; left: 50%; margin: 0; transform: translate(-50%, -50%); font: var(--font-weight-regular) clamp(6px, 0.7vw, 11px)/1 var(--font-family-code); letter-spacing: 0.06em; white-space: pre; }
+.site-hero__content { position: relative; z-index: 1; display: grid; justify-items: center; gap: var(--space-200); max-width: 54rem; }
+/* Uma clareira suave no meio do cofre: o texto fica limpo e os anéis continuam à vista em volta. */
+.site-hero__content::before { content: ""; position: absolute; inset: -18% -16%; z-index: -1; pointer-events: none; background: radial-gradient(ellipse 58% 58% at 50% 46%, var(--color-surface) 0 34%, color-mix(in srgb, var(--color-surface) 72%, transparent) 56%, transparent 78%); }
+.site-hero__mark { width: var(--space-800); height: var(--space-800); object-fit: contain; }
+.site-hero__lede { max-width: 46rem; margin: 0; font: var(--font-body-large); color: var(--color-text-subtle); text-wrap: pretty; }
+.site-hero__ownership { margin: 0; font: var(--font-body-small); color: var(--color-text-subtlest); }
+.site-hero__ownership span { color: var(--color-text); }
+.site-hero__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-100); margin-top: var(--space-100); }
+.site-hero .site-version { margin-top: var(--space-050); }
+/* No claro o desenho é sólido e sem brilho; no escuro ele vira um halo luminoso. */
+@media (prefers-color-scheme: light) { html:not([data-theme="dark"]) .site-ascii { opacity: 0.95; text-shadow: none; } }
+html[data-theme="light"] .site-ascii { opacity: 0.95; text-shadow: none; }
 
-/* ---------- Faixa dos programas ---------- */
-.site-strip { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-300) var(--space-600); align-items: center; padding-block: var(--space-600); }
-.site-strip__name { display: flex; align-items: center; gap: var(--space-100); font: var(--font-weight-semibold) calc(var(--font-size-body-large) * 1.15)/1 var(--font-family-heading); letter-spacing: -0.02em; color: var(--color-text-subtle); }
-.site-strip__name .i { color: var(--color-icon-subtle); }
+/* ---------- O trilho do dossiê ---------- */
+.site-rail { width: 100%; max-width: var(--site-width); margin-inline: auto; border-inline: var(--border-width) solid var(--color-border); }
+.site-quickstart { padding: var(--space-600) var(--space-1000) var(--space-800); border-bottom: var(--border-width) solid var(--color-border); }
+.site-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-300); }
+.site-section-link { display: inline-flex; align-items: center; gap: var(--space-050); color: var(--color-text-subtle); text-decoration: none; font: var(--font-weight-medium) var(--font-size-body-small)/var(--line-height-body-small) var(--font-family-code); }
+.site-section-link:hover { color: var(--color-text); }
+.site-downloads { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-200); margin-top: var(--space-400); }
+.site-download-card { display: grid; align-content: start; gap: var(--space-100); padding: var(--space-300); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: var(--color-surface-raised); }
+.site-download-card--primary { border-color: var(--color-border-selected); }
+.site-download-card .site-eyebrow { color: var(--color-text-subtlest); letter-spacing: 0.1em; }
+.site-download-card__title { margin: 0; font: var(--font-weight-semibold) var(--font-card)/var(--line-height-card) var(--font-family-heading); letter-spacing: var(--letter-spacing-card); }
+.site-download-card__meta { margin: 0 0 var(--space-100); font: var(--font-body-small); color: var(--color-text-subtlest); }
+.site-download-card .btn { margin-top: auto; }
+.site-quickstart__note { margin: var(--space-200) 0 0; font: var(--font-body-small); color: var(--color-text-subtle); }
+.site-quickstart__note a { color: var(--color-link); }
 
-/* ---------- Seções grandes: título, imagem de 2/3 e a coluna de texto ---------- */
-.site-section { padding-block: var(--space-1000); }
-.site-feature { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-600) var(--site-gap); align-items: center; }
-.site-feature > .site-h2 { grid-column: 1 / -1; max-width: 18ch; }
-.site-feature--flip { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
-.site-feature--flip > .site-h2 { grid-column: 2 / -1; }
-.site-feature--flip .site-visual { order: 2; }
-.site-side { display: grid; gap: var(--space-400); align-content: center; }
+/* ---------- Capítulos ---------- */
+.site-chapter { padding: var(--space-800) var(--space-1000); border-bottom: var(--border-width) solid var(--color-border); }
+.site-chapter:last-child { border-bottom: 0; }
+.site-chapter__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-300); margin-bottom: var(--space-500); }
+.site-chapter__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--space-600) var(--space-800); align-items: center; }
+.site-chapter__body { display: grid; gap: var(--space-200); align-content: start; max-width: 38rem; }
+.site-chapter__body h2 { margin: 0; font: var(--font-weight-semibold) var(--site-title)/1.06 var(--font-family-heading); letter-spacing: -0.035em; text-wrap: balance; }
 .site-list { display: grid; gap: var(--space-100); margin: 0; padding: 0; list-style: none; }
-.site-list li { font: var(--font-body); color: var(--color-text); }
-@media (max-width: 56rem) {
-  .site-feature, .site-feature--flip { grid-template-columns: minmax(0, 1fr); }
-  .site-feature--flip > .site-h2 { grid-column: 1; }
-  .site-feature--flip .site-visual { order: 0; }
-}
+.site-list li { font: var(--font-body); color: var(--color-text-subtle); }
+.site-list a { color: var(--color-link); }
+.site-chapter:nth-child(even) .site-chapter__grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+.site-chapter:nth-child(even) .site-chapter__visual { order: -1; }
+.site-chapter__visual { margin: 0; min-width: 0; }
+.site-note { margin-top: var(--space-100); }
 
-/* A imagem: proporção de vídeo (16:9), recortada e sumindo embaixo. */
-.site-visual { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: var(--color-canvas); }
-.site-visual::after { content: ""; position: absolute; inset: auto 0 0 0; height: 35%; pointer-events: none; background: linear-gradient(to bottom, transparent, var(--color-surface)); }
-.site-visual--shade::after { height: 60%; background: linear-gradient(to top, var(--site-shade), color-mix(in srgb, var(--site-shade) 55%, transparent) 40%, transparent); }
-.site-visual__img { display: block; width: 100%; height: auto; }
-.site-visual__stage { padding: var(--space-400); transform: scale(1.08); transform-origin: top left; pointer-events: none; }
-.site-visual__stage--center { display: grid; place-items: center; height: 100%; padding: var(--space-300); transform: none; }
-.site-panel { border-radius: var(--radius-large); background: var(--color-surface); overflow: hidden; }
-
-/* ---------- Grade de cartões (um alto à esquerda, dois à direita) ---------- */
-.site-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-200); margin-top: var(--space-600); }
-.site-tile { position: relative; display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 20rem; overflow: hidden; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: var(--color-surface-sunken); }
-.site-tile--tall { grid-row: span 2; min-height: 42rem; }
-/* No cartão alto, a imagem ocupa a altura toda, ampliada. */
-.site-tile--tall .site-tile__visual > * { zoom: 1.3; }
-.site-tile__visual { position: relative; overflow: hidden; padding: var(--space-300) var(--space-300) 0; pointer-events: none; }
-.site-tile__visual::after { content: ""; position: absolute; inset: auto 0 0 0; height: 40%; background: linear-gradient(to bottom, transparent, var(--color-surface-sunken)); }
-.site-tile__text { display: grid; gap: var(--space-050); padding: var(--space-300); max-width: 34ch; }
-.site-tile__text h3 { margin: 0; font: var(--font-weight-semibold) calc(var(--font-size-body-large) * 1.375)/1.2 var(--font-family-heading); letter-spacing: -0.02em; }
-.site-tile__text p { margin: 0; font: var(--font-body); color: var(--color-text-subtle); }
-@media (max-width: 56rem) {
-  .site-tiles { grid-template-columns: minmax(0, 1fr); }
-  .site-tile--tall { grid-row: auto; min-height: 30rem; }
-}
-
-/* ---------- Para onde vamos ---------- */
-.site-roadmap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--site-gap); margin-top: var(--space-600); }
-.site-roadmap article { display: grid; gap: var(--space-100); align-content: start; padding-top: var(--space-200); border-top: var(--border-width) solid var(--color-border); }
-.site-roadmap h3 { margin: 0; font: var(--font-card); letter-spacing: var(--letter-spacing-card); }
-.site-roadmap p { margin: 0; font: var(--font-body); color: var(--color-text-subtle); }
-.site-roadmap .lozenge { justify-self: start; }
-@media (max-width: 56rem) { .site-roadmap { grid-template-columns: minmax(0, 1fr); } }
+/* ---------- As telas do app dentro do dossiê ---------- */
+.site-panel { border-radius: var(--radius-large); background: var(--color-surface-raised); overflow: hidden; }
+.site-stage { display: grid; align-items: center; padding: var(--space-300); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: var(--color-surface-sunken); }
+.site-stage--center { place-items: center; }
+.site-stack { position: relative; display: grid; width: 100%; max-width: 34rem; justify-self: center; padding-block: var(--space-200) var(--space-500); }
+.site-stack .site-panel { padding: var(--space-250); border: var(--border-width) solid var(--color-border); box-shadow: var(--shadow-raised); }
+.site-stack .message__body { margin-top: var(--space-200); font: var(--font-body); color: var(--color-text-subtle); }
+.site-stack .message__body p { margin: 0 0 var(--space-100); }
+.site-stack .toast { position: absolute; inset-inline-start: calc(var(--space-400) * -1); bottom: 0; width: min(20rem, 90%); box-shadow: var(--shadow-overlay); }
+.site-shot { display: grid; gap: var(--space-100); }
+.site-shot__frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: var(--color-surface-sunken); }
+.site-shot__frame::after { content: ""; position: absolute; inset: auto 0 0 0; height: 35%; pointer-events: none; background: linear-gradient(to bottom, transparent, var(--site-shade)); }
+.site-shot__img { display: block; width: 100%; height: auto; }
+.site-shot figcaption { font: var(--font-body-small); color: var(--color-text-subtlest); }
+.site-accounts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-200); align-items: start; }
+.site-accounts .account-rail { width: 5rem; padding: var(--space-100); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: var(--color-surface-raised); }
+.site-accounts .site-panel { padding: var(--space-200); border: var(--border-width) solid var(--color-border); }
+.site-search { display: grid; gap: var(--space-150); padding: var(--space-200); }
+.site-results { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); overflow: hidden; }
+.site-rule-visual { padding: var(--space-250); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-large); background: var(--color-surface-raised); }
+.site-crypto { display: grid; gap: var(--space-200); padding: var(--space-200); }
+.site-import { width: 100%; max-width: 34rem; }
+.site-timeline { width: 100%; max-width: 34rem; justify-self: center; }
+.site-code { width: 100%; }
+.site-code .pem-box { max-height: none; padding: var(--space-300); font-size: var(--font-size-code); }
 
 /* ---------- Chamada final ---------- */
-.site-cta { display: grid; justify-items: center; gap: var(--space-400); padding-block: calc(var(--space-1000) * 2); text-align: center; }
-.site-cta .pem-box, .site-contribute .pem-box { max-height: none; padding: var(--space-300); text-align: left; font-size: var(--font-size-code); }
+.site-cta { display: grid; justify-items: center; gap: var(--space-300); padding-block: calc(var(--space-1000) * 2) var(--space-1000); border-top: var(--border-width) solid var(--color-border); text-align: center; }
 .site-cta__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-100); }
+.site-cta .site-version { max-width: 42rem; text-align: center; }
 
-/* ---------- Rodapé em colunas ---------- */
+/* ---------- Rodapé ---------- */
 .site-footer { padding-block: var(--space-800) var(--space-600); border-top: var(--border-width) solid var(--color-border); }
-.site-footer__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-600) var(--site-gap); }
+.site-footer__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-600) var(--site-gutter); }
 .site-footer h4 { margin: 0 0 var(--space-200); font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); color: var(--color-text); }
 .site-footer ul { display: grid; gap: var(--space-100); margin: 0; padding: 0; list-style: none; }
 .site-footer a { color: var(--color-text-subtle); text-decoration: none; font: var(--font-body); }
 .site-footer a:hover { color: var(--color-text); }
 .site-footer__legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-200); margin-top: var(--space-800); color: var(--color-text-subtlest); font: var(--font-body-small); }
-@media (max-width: 48rem) { .site-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-/* Entrada ao rolar (sem animação para quem pediu menos movimento). */
-.js .site-reveal { opacity: 0; transform: translateY(var(--space-300)); transition: opacity 500ms ease-out, transform 500ms ease-out; }
-.js .site-reveal.is-visible { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .js .site-reveal { opacity: 1; transform: none; transition: none; } }
-
-@media (max-width: 30rem) { :root { --site-gutter: var(--space-250); } .site-section { padding-block: var(--space-800); } }
-/* Em telas estreitas, o topo fica só com o tema e o download (o GitHub continua no rodapé). */
-@media (max-width: 30rem) { .site-header__end .btn:not(.btn--primary):not(.btn--icon) { display: none; } }
-
-/* Páginas de texto: política de privacidade e termos de uso. */
+/* ---------- Páginas de texto: privacidade e termos ---------- */
 .site-doc { display: grid; gap: var(--space-200); max-width: 46rem; padding-block: var(--space-800) var(--space-1000); }
+.site-doc h1 { margin: 0; }
 .site-doc h2 { margin: var(--space-300) 0 0; font: var(--font-weight-semibold) var(--font-size-section)/1.3 var(--font-family-heading); color: var(--color-text); }
 .site-doc p, .site-doc li { margin: 0; font: var(--font-body); color: var(--color-text-subtle); }
 .site-doc ul { display: grid; gap: var(--space-100); margin: 0; padding-inline-start: var(--space-300); }
 .site-doc b { color: var(--color-text); }
 .site-doc a { color: var(--color-link); }
 .site-doc__lede { font-size: var(--font-size-body-large) !important; line-height: 1.5 !important; }
-
-/* Versão da última release, abaixo do botão de download. */
-.site-version { margin: var(--space-200) 0 0; font: var(--font-body-small); color: var(--color-text-subtlest); }
-.site-version a { color: var(--color-link); }
-.site-cta .site-version { max-width: 40rem; margin-top: 0; text-align: center; }
-/* Contribuir: texto e os comandos do git clone lado a lado. */
-.site-contribute { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--site-gap); align-items: center; }
-@media (max-width: 860px) { .site-contribute { grid-template-columns: minmax(0, 1fr); } }
-
-/* Logo do EpistulaMail (sem fundo) no lugar do glifo do wordmark, no topo e no rodapé. */
 .site-logo { display: block; flex: none; width: 1.75rem; height: 1.75rem; object-fit: contain; }
 
-.site-hero__lede { max-width: 34rem; margin: var(--space-300) 0 0; font: var(--font-body-large); color: var(--color-text-subtle); }
-/* Como o app usa a conta Google (pedido da verificação do OAuth): texto à esquerda, permissões à direita. */
-.site-google { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: var(--space-600) var(--site-gap); }
-.site-google__list { display: grid; gap: var(--space-300); }
-.site-google__list article { display: grid; gap: var(--space-100); padding-bottom: var(--space-300); border-bottom: var(--border-width) solid var(--color-border); }
-.site-google__list h3 { display: flex; align-items: center; gap: var(--space-100); margin: 0; font: var(--font-weight-semibold) var(--font-size-body-large)/1.4 var(--font-family-body); color: var(--color-text); }
-.site-google__list h3 .i { color: var(--color-icon-brand); }
-.site-google__list p { margin: 0; font: var(--font-body); color: var(--color-text-subtle); }
-.site-google__legal { font: var(--font-body-small) !important; color: var(--color-text-subtlest) !important; }
-.site-google a, .site-statement a { color: var(--color-link); }
-@media (max-width: 56rem) { .site-google { grid-template-columns: minmax(0, 1fr); } }
+/* ---------- Telas menores ---------- */
+@media (max-width: 72rem) {
+  .site-quickstart, .site-chapter { padding-inline: var(--space-600); }
+  .site-chapter__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--space-500) var(--space-600); }
+  .site-chapter:nth-child(even) .site-chapter__grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  .site-downloads { grid-template-columns: minmax(0, 1fr); }
+  .site-download-card { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .site-download-card .site-eyebrow, .site-download-card__title, .site-download-card__meta { grid-column: 1; }
+  .site-download-card .btn { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; }
+}
+@media (max-width: 56rem) {
+  .site-rail { border-inline: 0; }
+  .site-quickstart, .site-chapter { padding-inline: var(--site-gutter); }
+  .site-chapter__grid, .site-chapter:nth-child(even) .site-chapter__grid { grid-template-columns: minmax(0, 1fr); }
+  .site-chapter__body { max-width: none; }
+  .site-chapter__head { align-items: start; flex-direction: column; gap: var(--space-100); }
+  .site-download-card { grid-template-columns: minmax(0, 1fr); }
+  .site-download-card .btn { grid-column: 1; grid-row: auto; margin-top: var(--space-100); }
+  .site-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .site-hero { padding-block: var(--space-800); }
+  .site-hero__mark { width: var(--space-600); height: var(--space-600); }
+  .site-ascii { opacity: 0.42; }
+  html[data-theme="light"] .site-ascii { opacity: 0.8; text-shadow: none; }
+}
+@media (max-width: 56rem) and (prefers-color-scheme: light) {
+  html:not([data-theme="dark"]) .site-ascii { opacity: 0.8; text-shadow: none; }
+}
+@media (max-width: 40rem) {
+  /* Na largura do celular, o ID da chave é o primeiro a sair; o nome e a situação cabem. */
+  .site-crypto .key-table th:nth-child(2),
+  .site-crypto .key-table td:nth-child(2) { display: none; }
+}
+@media (max-width: 30rem) {
+  :root { --site-gutter: var(--space-250); }
+  .site-header__end .btn:not(.btn--primary):not(.btn--icon) { display: none; }
+  .site-accounts { grid-template-columns: minmax(0, 1fr); }
+  .site-accounts .account-rail { display: none; }
+  .site-cta { padding-block: var(--space-1000) var(--space-800); }
+}
 
+
+
+/* ---------- Recursos: menu do topo ---------- */
+.site-nav__group { position: relative; display: inline-flex; align-items: center; }
+.site-nav__trigger .i { transition: transform var(--duration-fast) var(--easing-standard); }
+.site-nav__group:hover .site-nav__trigger .i,
+.site-nav__group:focus-within .site-nav__trigger .i { transform: rotate(180deg); }
+.site-nav__menu {
+  position: absolute; top: calc(100% + var(--space-100)); right: 0; z-index: var(--z-tooltip);
+  min-width: 13rem; opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity var(--duration-fast) var(--easing-standard), transform var(--duration-fast) var(--easing-standard), visibility var(--duration-fast);
+}
+.site-nav__group:hover .site-nav__menu,
+.site-nav__group:focus-within .site-nav__menu { opacity: 1; visibility: visible; transform: none; }
+.site-nav__menu .menu-item { text-decoration: none; }
+
+/* ---------- Quem está por trás ---------- */
+.site-about { padding-block: var(--space-1000) var(--space-800); border-top: var(--border-width) solid var(--color-border); }
+.site-about__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: var(--space-600) var(--space-800); align-items: start; }
+.site-about__lead { display: grid; gap: var(--space-200); }
+.site-about__title { font-size: var(--site-title); }
+.site-about__copy { display: grid; gap: var(--space-200); font: var(--font-body-large); color: var(--color-text-subtle); }
+.site-about__copy p { margin: 0; }
+.site-about__person { display: flex; align-items: center; gap: var(--space-150); }
+.site-about__person b { display: block; color: var(--color-text); font: var(--font-weight-semibold) var(--font-size-body)/var(--line-height-body) var(--font-family-body); }
+.site-about__role { display: block; font: var(--font-body-small); color: var(--color-text-subtlest); }
+.site-about__copy .site-section-link { justify-self: start; }
+
+@media (max-width: 56rem) {
+  .site-about__grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-400); }
+}

@@ -20,18 +20,23 @@
 
 <header class="site-header">
   <div class="site-container site-header__inner">
-    <a class="wordmark wordmark--sm" href="./#topo" aria-label="EpistulaMail, início"><img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail</a>
-    <nav class="site-nav" aria-label="Seções">
-      <a href="./#recursos">Recursos</a>
-      <a href="./#seguranca">Segurança</a>
-      <a href="./#para-onde">Para onde vamos</a>
-      <a href="https://www.epistulamail.com/conta-google">Conta Google</a>
-      <a href="https://www.epistulamail.com/privacidade">Privacidade</a>
-    </nav>
+    <a class="wordmark wordmark--sm site-brand" href="./#topo" aria-label="EpistulaMail, início">
+      <img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail
+    </a>
     <div class="site-header__end">
+      <nav class="site-nav" aria-label="Seções">
+        <div class="site-nav__group">
+          <a class="site-nav__trigger" href="./#recursos" aria-haspopup="true">Recursos <svg class="i i--sm"><use href="#i-chevron-down"/></svg></a>
+          <div class="site-nav__menu menu" role="menu" aria-label="Recursos">
+            <a class="menu-item" role="menuitem" href="blog.html">Blog</a>
+            <a class="menu-item" role="menuitem" href="./#sobre">Quem está por trás</a>
+          </div>
+        </div>
+        <a href="./#seguranca">Segurança</a>
+        <a href="./#roadmap">Roadmap</a>
+        <a class="site-nav__docs" href="https://docs.epistulamail.com">Docs <svg class="i i--sm"><use href="#i-link"/></svg></a>
+      </nav>
       <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
-      <a class="btn" href="https://github.com/elyosemite/epistulamail">GitHub</a>
-      <div class="site-download" data-download><div class="btn-split"><a class="btn btn--primary" href="{{release.windows}}" data-download-main download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a><button class="btn btn--primary" type="button" aria-label="Escolher o sistema" aria-haspopup="menu" aria-expanded="false" data-download-toggle><svg class="i"><use href="#i-chevron-down"/></svg></button></div><div class="menu site-download__menu" role="menu" aria-label="Escolher o sistema" hidden data-download-menu><a class="menu-item" role="menuitem" href="{{release.windows}}" data-download-windows download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Windows 10 e 11 (64 bits)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxAppImage}}" data-download-linux-appimage download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (AppImage)</span></a><a class="menu-item" role="menuitem" href="{{release.linuxDeb}}" data-download-linux-deb download><svg class="i"><use href="#i-download"/></svg><span class="menu-item__text">Linux (Debian/Ubuntu, .deb)</span></a></div></div>
     </div>
   </div>
 </header>
@@ -74,24 +79,24 @@
     <div class="site-footer__grid">
       <div>
         <h4>Produto</h4>
-        <ul><li><a href="./#recursos">Recursos</a></li><li><a href="./#seguranca">Segurança</a></li><li><a href="./#para-onde">Para onde vamos</a></li><li><a href="./#comecar">Download</a></li><li><a href="./#contribuir">Contribuir</a></li></ul>
+        <ul><li><a href="./#recursos">Recursos</a></li><li><a href="./#seguranca">Segurança</a></li><li><a href="./#roadmap">Roadmap</a></li><li><a href="./#comecar">Download</a></li><li><a href="./#contribuir">Contribuir</a></li></ul>
+      </div>
+      <div>
+        <h4>Documentação</h4>
+        <ul><li><a href="https://docs.epistulamail.com">Documentação</a></li><li><a href="https://docs.epistulamail.com/instalacao/">Instalação</a></li><li><a href="https://docs.epistulamail.com/guia/contas/">Contas e provedores</a></li><li><a href="https://docs.epistulamail.com/guia/busca/">Busca</a></li><li><a href="https://docs.epistulamail.com/guia/privacidade/">Privacidade</a></li></ul>
       </div>
       <div>
         <h4>Projeto</h4>
-        <ul><li><a href="https://docs.epistulamail.com">Documentação</a></li><li><a href="https://github.com/elyosemite/epistulamail">Código no GitHub</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/design-system">Design system</a></li></ul>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail">Código no GitHub</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/design-system">Design system</a></li><li><a href="https://docs.epistulamail.com/guia/versoes/historico/">Versões</a></li><li><a href="https://github.com/elyosemite/epistulamail/issues">Issues</a></li></ul>
       </div>
       <div>
         <h4>Segurança</h4>
         <ul><li><a href="https://github.com/elyosemite/epistulamail/blob/main/docs/arquitetura-e-ameacas.md">Modelo de ameaças</a></li><li><a href="https://github.com/elyosemite/epistulamail/security">Relatar um problema</a></li><li><a href="https://www.epistulamail.com/conta-google">Sua conta Google</a></li><li><a href="https://www.epistulamail.com/privacidade">Política de privacidade</a></li><li><a href="https://www.epistulamail.com/termos">Termos de uso</a></li></ul>
       </div>
-      <div>
-        <h4>Contribuir</h4>
-        <ul><li><a href="https://github.com/elyosemite/epistulamail/issues">Issues</a></li><li><a href="https://github.com/elyosemite/epistulamail/pulls">Pull requests</a></li></ul>
-      </div>
     </div>
     <div class="site-footer__legal">
       <a class="wordmark wordmark--sm" href="./#topo" style="text-decoration:none;color:var(--color-text)"><img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail</a>
-      <span>Licença a definir. Sem cookies, sem rastreamento, nada de terceiros.</span>
+      <span>Sem cookies, sem rastreamento, nada de terceiros. As mensagens ficam no seu computador.</span>
     </div>
   </div>
 </footer>

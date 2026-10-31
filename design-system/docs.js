@@ -177,6 +177,12 @@ const EPISTULA_PAGES = [
         "beta"
       ],
       [
+        "padrao-blog",
+        "Blog e artigos",
+        "Índice com filtros, destaque e cards, e o artigo de leitura longa.",
+        "beta"
+      ],
+      [
         "padrao-selecao-em-lote",
         "Seleção em lote",
         "Marcar itens, contador, ações em lote e limpar a seleção.",

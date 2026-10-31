@@ -15,9 +15,9 @@ node build.mjs --serve   # http://localhost:4321
 
 ## Estrutura
 
-- `index.html`: a página. As "fotos" do app são o próprio markup do DS (as mesmas classes do app), dentro de `.site-shot`.
+- `index.html`: a página. As "fotos" do app são o próprio markup do DS (as mesmas classes do app), dentro de `.site-panel`; a captura da caixa de entrada vem de `images/epistula-janela.webp`.
 - `site.css`: só o que é do site (cabeçalho, hero, faixas, linhas de recurso alternadas, cartões, rodapé), sempre com tokens do DS. Prefixo `site-`.
-- `site.js`: a entrada das linhas ao rolar e a troca de tema. `theme.js`: aplica o tema salvo antes de desenhar.
+- `site.js`: o download com o menu do sistema e a troca de tema. `theme.js`: aplica o tema salvo antes de desenhar.
 
 ## Publicação (Vercel)
 

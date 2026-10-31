@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EpistulaMail 1.1.0: chega a versão para Linux. | EpistulaMail</title>
+<meta name="description" content="AppImage e pacote .deb, com o mesmo banco cifrado e as chaves no Secret Service.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="images/logo/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" href="images/logo/epistulamail-192.png" sizes="192x192">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="ds/tokens.css">
+<link rel="stylesheet" href="ds/components.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<!-- ds-icons -->
+<a class="btn btn--primary site-skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="site-header">
+  <div class="site-container site-header__inner">
+    <a class="wordmark wordmark--sm site-brand" href="./#topo" aria-label="EpistulaMail, início">
+      <img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail
+    </a>
+    <div class="site-header__end">
+      <nav class="site-nav" aria-label="Seções">
+        <div class="site-nav__group">
+          <a class="site-nav__trigger" href="./#recursos" aria-haspopup="true">Recursos <svg class="i i--sm"><use href="#i-chevron-down"/></svg></a>
+          <div class="site-nav__menu menu" role="menu" aria-label="Recursos">
+            <a class="menu-item" role="menuitem" href="blog.html">Blog</a>
+            <a class="menu-item" role="menuitem" href="./#sobre">Quem está por trás</a>
+          </div>
+        </div>
+        <a href="./#seguranca">Segurança</a>
+        <a href="./#roadmap">Roadmap</a>
+        <a class="site-nav__docs" href="https://docs.epistulamail.com">Docs <svg class="i i--sm"><use href="#i-link"/></svg></a>
+      </nav>
+      <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo">
+  <article class="post">
+    <div class="post__main">
+      <a class="post__back" href="blog.html">← Todos os posts</a>
+
+      <header class="post__head">
+        <p class="post__label">Versões · 28 de outubro de 2026</p>
+        <h1 class="post__title">EpistulaMail 1.1.0: chega a versão para Linux.</h1>
+        <p class="post__lede">AppImage e pacote .deb, com o mesmo banco cifrado e as chaves no Secret Service.</p>
+        <div class="post__meta">
+          <span class="post__author"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="Yuri Melo" src="images/yuri-melo.jpg"></span> Yuri Melo</span>
+          <span>28 de outubro de 2026</span>
+          <span>3 min de leitura</span>
+        </div>
+      </header>
+
+      <div class="post__body">
+        <p>A versão 1.1.0 traz o EpistulaMail para o Linux. Há duas formas de instalar: o AppImage e o pacote .deb. Por dentro é o mesmo app: as mensagens ficam no mesmo banco cifrado e as chaves ficam no Secret Service, o cofre do sistema (GNOME Keyring ou KWallet).</p>
+        <h2 id="o-que-muda-no-uso">O que muda no uso</h2>
+        <p>No Linux, o app usa o espaço livre do disco e as raízes de confiança do sistema, e avisa quando o disco não está cifrado (LUKS). O AppImage se atualiza sozinho; o .deb é atualizado pelo gerenciador de pacotes. O site ganhou um botão de download com menu para Windows e Linux.</p>
+        <h2 id="o-que-ainda-falta">O que ainda falta</h2>
+        <p>Sem o Secret Service o app não abre: ele avisa e não altera os dados. As notificações nativas no Linux e o bloqueio junto com a tela chegam numa próxima versão. Os pacotes ainda não têm assinatura de código, então confira o SHA-256 nas notas da versão antes de instalar.</p>
+        <p>Os textos do app, do site e da documentação passaram a falar em “sistema” onde o comportamento vale para os dois. Se você usa Linux e encontrar algo estranho, abra uma issue: é assim que a próxima versão melhora.</p>
+
+        <p class="post__sign">Yuri Melo</p>
+
+        <div class="post__actions">
+          <a class="btn btn--primary" href="{{release.windows}}" download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
+          <a class="btn btn--subtle site-btn-ghost" href="https://docs.epistulamail.com">Ler a documentação</a>
+        </div>
+      </div>
+    </div>
+
+    <aside class="post__aside" aria-label="Nesta página">
+      <div>
+        <p class="post__label">Nesta página</p>
+        <nav class="post__toc"><a href="#o-que-muda-no-uso">O que muda no uso</a><a href="#o-que-ainda-falta">O que ainda falta</a></nav>
+      </div>
+      <div class="post__related">
+        <p class="post__label">Continue lendo</p>
+        <a href="blog-anuncio.html">Uma pessoa, um cliente de e-mail.</a><a href="blog-contas-microsoft-e-imap.html">Outlook, Hotmail e contas IMAP manuais estão a caminho.</a><a href="blog-banco-cifrado.html">Seus e-mails num banco cifrado, com a chave no cofre do sistema.</a>
+      </div>
+    </aside>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="site-container">
+    <div class="site-footer__grid">
+      <div>
+        <h4>Produto</h4>
+        <ul><li><a href="./#recursos">Recursos</a></li><li><a href="./#seguranca">Segurança</a></li><li><a href="./#roadmap">Roadmap</a></li><li><a href="./#comecar">Download</a></li><li><a href="./#contribuir">Contribuir</a></li></ul>
+      </div>
+      <div>
+        <h4>Documentação</h4>
+        <ul><li><a href="https://docs.epistulamail.com">Documentação</a></li><li><a href="https://docs.epistulamail.com/instalacao/">Instalação</a></li><li><a href="https://docs.epistulamail.com/guia/contas/">Contas e provedores</a></li><li><a href="https://docs.epistulamail.com/guia/busca/">Busca</a></li><li><a href="https://docs.epistulamail.com/guia/privacidade/">Privacidade</a></li></ul>
+      </div>
+      <div>
+        <h4>Projeto</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail">Código no GitHub</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/design-system">Design system</a></li><li><a href="https://docs.epistulamail.com/guia/versoes/historico/">Versões</a></li><li><a href="https://github.com/elyosemite/epistulamail/issues">Issues</a></li></ul>
+      </div>
+      <div>
+        <h4>Segurança</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail/blob/main/docs/arquitetura-e-ameacas.md">Modelo de ameaças</a></li><li><a href="https://github.com/elyosemite/epistulamail/security">Relatar um problema</a></li><li><a href="https://www.epistulamail.com/conta-google">Sua conta Google</a></li><li><a href="https://www.epistulamail.com/privacidade">Política de privacidade</a></li><li><a href="https://www.epistulamail.com/termos">Termos de uso</a></li></ul>
+      </div>
+    </div>
+    <div class="site-footer__legal">
+      <a class="wordmark wordmark--sm" href="./#topo" style="text-decoration:none;color:var(--color-text)"><img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail</a>
+      <span>Sem cookies, sem rastreamento, nada de terceiros. As mensagens ficam no seu computador.</span>
+    </div>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

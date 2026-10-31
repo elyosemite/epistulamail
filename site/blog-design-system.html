@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Um design system para um cliente de e-mail denso. | EpistulaMail</title>
+<meta name="description" content="Por que o app, o site e a documentação compartilham os mesmos tokens e componentes.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="images/logo/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" href="images/logo/epistulamail-192.png" sizes="192x192">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="ds/tokens.css">
+<link rel="stylesheet" href="ds/components.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<!-- ds-icons -->
+<a class="btn btn--primary site-skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="site-header">
+  <div class="site-container site-header__inner">
+    <a class="wordmark wordmark--sm site-brand" href="./#topo" aria-label="EpistulaMail, início">
+      <img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail
+    </a>
+    <div class="site-header__end">
+      <nav class="site-nav" aria-label="Seções">
+        <div class="site-nav__group">
+          <a class="site-nav__trigger" href="./#recursos" aria-haspopup="true">Recursos <svg class="i i--sm"><use href="#i-chevron-down"/></svg></a>
+          <div class="site-nav__menu menu" role="menu" aria-label="Recursos">
+            <a class="menu-item" role="menuitem" href="blog.html">Blog</a>
+            <a class="menu-item" role="menuitem" href="./#sobre">Quem está por trás</a>
+          </div>
+        </div>
+        <a href="./#seguranca">Segurança</a>
+        <a href="./#roadmap">Roadmap</a>
+        <a class="site-nav__docs" href="https://docs.epistulamail.com">Docs <svg class="i i--sm"><use href="#i-link"/></svg></a>
+      </nav>
+      <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo">
+  <article class="post">
+    <div class="post__main">
+      <a class="post__back" href="blog.html">← Todos os posts</a>
+
+      <header class="post__head">
+        <p class="post__label">Design · 28 de outubro de 2026</p>
+        <h1 class="post__title">Um design system para um cliente de e-mail denso.</h1>
+        <p class="post__lede">Por que o app, o site e a documentação compartilham os mesmos tokens e componentes.</p>
+        <div class="post__meta">
+          <span class="post__author"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="Yuri Melo" src="images/yuri-melo.jpg"></span> Yuri Melo</span>
+          <span>28 de outubro de 2026</span>
+          <span>4 min de leitura</span>
+        </div>
+      </header>
+
+      <div class="post__body">
+        <p>O app, o site e a documentação do EpistulaMail usam a mesma fonte visual: o design system do repositório. Ele é baseado no Atlassian Design System, adaptado a uma caixa de entrada densa, e mira a WCAG 2.2 AA nos temas claro e escuro.</p>
+        <h2 id="tokens-em-vez-de-valores-soltos">Tokens em vez de valores soltos</h2>
+        <p>Cores, tipografia, espaços e movimento vivem em tokens semânticos. Os componentes só usam esses tokens, nunca um valor cru. O site e a documentação copiam os mesmos arquivos na hora do build, então uma mudança de cor é uma mudança em um lugar só.</p>
+        <h2 id="quatro-princpios-em-ordem">Quatro princípios, em ordem</h2>
+        <p>Quando dois componentes discordam, valem estes princípios: densidade com respiro; leitura em primeiro lugar; um gesto por ação, com Desfazer em toda ação destrutiva; e estado sempre visível. Um e-mail não lido, por exemplo, muda peso, ponto e data, não só a cor.</p>
+        <h2 id="acessibilidade-como-requisito">Acessibilidade como requisito</h2>
+        <p>Texto com contraste de 4,5:1, foco visível de 2 px, alvos de pelo menos 24×24 px, respeito a prefers-reduced-motion e tudo acessível pelo teclado. Uma verificação automática (ds:check) roda no CI e impede tokens soltos.</p>
+        <p>O design system é público, no diretório design-system do repositório. Se você mexe com interface, pode ler, criticar e propor mudanças.</p>
+
+        <p class="post__sign">Yuri Melo</p>
+
+        <div class="post__actions">
+          <a class="btn btn--primary" href="{{release.windows}}" download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
+          <a class="btn btn--subtle site-btn-ghost" href="https://docs.epistulamail.com">Ler a documentação</a>
+        </div>
+      </div>
+    </div>
+
+    <aside class="post__aside" aria-label="Nesta página">
+      <div>
+        <p class="post__label">Nesta página</p>
+        <nav class="post__toc"><a href="#tokens-em-vez-de-valores-soltos">Tokens em vez de valores soltos</a><a href="#quatro-princpios-em-ordem">Quatro princípios, em ordem</a><a href="#acessibilidade-como-requisito">Acessibilidade como requisito</a></nav>
+      </div>
+      <div class="post__related">
+        <p class="post__label">Continue lendo</p>
+        <a href="blog-anuncio.html">Uma pessoa, um cliente de e-mail.</a><a href="blog-contas-microsoft-e-imap.html">Outlook, Hotmail e contas IMAP manuais estão a caminho.</a><a href="blog-banco-cifrado.html">Seus e-mails num banco cifrado, com a chave no cofre do sistema.</a>
+      </div>
+    </aside>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="site-container">
+    <div class="site-footer__grid">
+      <div>
+        <h4>Produto</h4>
+        <ul><li><a href="./#recursos">Recursos</a></li><li><a href="./#seguranca">Segurança</a></li><li><a href="./#roadmap">Roadmap</a></li><li><a href="./#comecar">Download</a></li><li><a href="./#contribuir">Contribuir</a></li></ul>
+      </div>
+      <div>
+        <h4>Documentação</h4>
+        <ul><li><a href="https://docs.epistulamail.com">Documentação</a></li><li><a href="https://docs.epistulamail.com/instalacao/">Instalação</a></li><li><a href="https://docs.epistulamail.com/guia/contas/">Contas e provedores</a></li><li><a href="https://docs.epistulamail.com/guia/busca/">Busca</a></li><li><a href="https://docs.epistulamail.com/guia/privacidade/">Privacidade</a></li></ul>
+      </div>
+      <div>
+        <h4>Projeto</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail">Código no GitHub</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/design-system">Design system</a></li><li><a href="https://docs.epistulamail.com/guia/versoes/historico/">Versões</a></li><li><a href="https://github.com/elyosemite/epistulamail/issues">Issues</a></li></ul>
+      </div>
+      <div>
+        <h4>Segurança</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail/blob/main/docs/arquitetura-e-ameacas.md">Modelo de ameaças</a></li><li><a href="https://github.com/elyosemite/epistulamail/security">Relatar um problema</a></li><li><a href="https://www.epistulamail.com/conta-google">Sua conta Google</a></li><li><a href="https://www.epistulamail.com/privacidade">Política de privacidade</a></li><li><a href="https://www.epistulamail.com/termos">Termos de uso</a></li></ul>
+      </div>
+    </div>
+    <div class="site-footer__legal">
+      <a class="wordmark wordmark--sm" href="./#topo" style="text-decoration:none;color:var(--color-text)"><img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail</a>
+      <span>Sem cookies, sem rastreamento, nada de terceiros. As mensagens ficam no seu computador.</span>
+    </div>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

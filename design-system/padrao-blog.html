@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blog e artigos · Epistula Design System</title>
+<meta name="description" content="Índice com filtros, destaque e cards, e o artigo de leitura longa.">
+<script>try{var t=localStorage.getItem('epistula-ds-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body data-page="padrao-blog">
+<div class="doc">
+  <nav class="doc-nav" id="doc-nav" aria-label="Índice"></nav>
+  <main>
+    <section class="ds-section" id="padrao-blog">
+      <div class="ds-head">
+        <p class="eyebrow">Padrão · L89 e L90</p>
+        <h1>Blog e artigos</h1>
+        <p class="lede">Como listar textos longos e como lê-los: um índice com filtro por categoria, um post em destaque e cards; e uma página de leitura com sumário ao lado.</p>
+      </div>
+
+      <h2 class="sub">Índice</h2>
+      <div class="stage stage--sunken">
+        <div class="blog">
+          <header class="blog__head">
+            <p class="post__label">Blog</p>
+            <h3 class="blog__title">Blog do EpistulaMail</h3>
+            <p class="blog__tagline">O que estamos construindo, corrigindo e aprendendo.</p>
+          </header>
+          <div class="blog__filters" role="group" aria-label="Filtrar por categoria">
+            <button class="btn btn--subtle blog__filter" type="button" aria-pressed="true">Todos</button>
+            <button class="btn btn--subtle blog__filter" type="button" aria-pressed="false">Segurança</button>
+            <button class="btn btn--subtle blog__filter" type="button" aria-pressed="false">Versões</button>
+          </div>
+          <a class="blog__feature" href="#">
+            <span class="blog__feature-img"><span style="display:grid;place-items:center;aspect-ratio:16/10;background:var(--color-surface-sunken);border:var(--border-width) solid var(--color-border);border-radius:var(--radius-medium)"><svg class="i i--xl"><use href="#i-image"/></svg></span></span>
+            <span class="blog__main">
+              <span class="blog__meta"><span class="lozenge">Anúncio</span><time datetime="2026-10-30">30 de outubro de 2026</time></span>
+              <span class="blog__feature-title">Uma pessoa, um cliente de e-mail.</span>
+              <span class="blog__excerpt">A história de por que o projeto existe e do que ele não abre mão.</span>
+              <span class="blog__by"><span class="avatar avatar--sm"><img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span> Autor · 5 min de leitura</span>
+            </span>
+          </a>
+          <ul class="blog__grid">
+            <li><a class="blog__card" href="#">
+              <span class="blog__meta"><span class="lozenge">Segurança</span><time datetime="2026-10-29">29 de outubro de 2026</time></span>
+              <span class="blog__item-title">Seus e-mails num banco cifrado.</span>
+              <span class="blog__excerpt">Onde as mensagens ficam e como o banco é protegido.</span>
+              <span class="blog__by"><span class="avatar avatar--sm"><img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span> Autor · 4 min de leitura</span>
+            </a></li>
+            <li><a class="blog__card" href="#">
+              <span class="blog__meta"><span class="lozenge">Versões</span><time datetime="2026-10-28">28 de outubro de 2026</time></span>
+              <span class="blog__item-title">Chega a versão para Linux.</span>
+              <span class="blog__excerpt">AppImage e pacote .deb, com o mesmo banco cifrado.</span>
+              <span class="blog__by"><span class="avatar avatar--sm"><img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span> Autor · 3 min de leitura</span>
+            </a></li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 class="sub">Artigo</h2>
+      <div class="stage stage--sunken">
+        <article class="post">
+          <div class="post__main">
+            <a class="post__back" href="#">← Todos os posts</a>
+            <header class="post__head">
+              <p class="post__label">Segurança · 29 de outubro de 2026</p>
+              <h3 class="post__title">Título do artigo.</h3>
+              <p class="post__lede">Uma frase que diz o que o texto entrega.</p>
+              <div class="post__meta">
+                <span class="post__author"><span class="avatar avatar--sm"><img class="avatar__img" alt="" src="images/people/pessoa-1.webp"></span> Autor</span>
+                <span>29 de outubro de 2026</span>
+                <span>4 min de leitura</span>
+              </div>
+            </header>
+            <div class="post__body">
+              <h2>Um subtítulo</h2>
+              <p>O corpo usa texto maior que o da interface, com entrelinha folgada, porque aqui a leitura vem primeiro.</p>
+              <blockquote class="post__quote">Uma frase que merece destaque.</blockquote>
+              <p class="post__sign">Autor</p>
+            </div>
+          </div>
+          <aside class="post__aside" aria-label="Nesta página">
+            <div><p class="post__label">Nesta página</p><nav class="post__toc"><a href="#">Um subtítulo</a><a href="#">Outro subtítulo</a></nav></div>
+            <div class="post__related"><p class="post__label">Continue lendo</p><a href="#">Outro artigo</a></div>
+          </aside>
+        </article>
+      </div>
+
+      <dl class="guidance">
+        <div><dt>Problema</dt><dd>Textos longos pedem outro ritmo que a caixa de entrada: linha confortável, títulos que separam sem peso e um jeito de achar o que interessa entre vários posts.</dd></div>
+        <div><dt>Composição</dt><dd><a href="botoes.html">Botões</a> sutis como filtros (o pressionado tem fundo de seleção), <a href="lozenge.html">lozenge</a> para a categoria, <a href="avatar.html">avatar</a> para o autor e o sumário como lista de links.</dd></div>
+        <div><dt>Fluxo</dt><dd>A pessoa chega ao índice, filtra por categoria, abre um post pelo destaque ou por um card e volta pelo link "Todos os posts". O filtro não recarrega a página.</dd></div>
+        <div><dt>Variações</dt><dd>Índice sem destaque quando só há um post. Artigo sem sumário em telas estreitas.</dd></div>
+      </dl>
+      <dl class="guidance">
+        <div><dt>Estados</dt><dd>Filtro: normal, ao passar o mouse, com foco e pressionado. Card e destaque: o título muda de cor ao passar o mouse.</dd></div>
+        <div><dt>Acessibilidade</dt><dd>Os filtros são botões com <code>aria-pressed</code> dentro de um grupo rotulado, alcançáveis por teclado. O card inteiro é um único link. O sumário some abaixo de 960 px. O texto do artigo segue contraste 4,5:1 nos dois temas.</dd></div>
+        <div><dt>Conteúdo</dt><dd>Título que diz o assunto, resumo de uma ou duas frases, data por extenso e tempo de leitura. Sem travessão no meio das frases: prefira vírgula ou ponto.</dd></div>
+        <div><dt>Anti-patterns</dt><dd>Imagem de terceiros ou carregada de CDN. Filtro que recarrega a página. Linha horizontal entre todos os parágrafos. Cor como única diferença entre filtro ativo e inativo.</dd></div>
+      </dl>
+      <p class="classes"><span>Classes</span> <code>.blog</code> · <code>.blog__filters</code> · <code>.blog__filter</code> · <code>.blog__feature</code> · <code>.blog__grid</code> · <code>.blog__card</code> · <code>.post</code> · <code>.post__aside</code> · <code>.post__toc</code> · <code>.post__quote</code></p>
+    </section>
+  </main>
+</div>
+<script src="docs.js"></script>
+</body>
+</html>

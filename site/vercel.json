@@ -16,6 +16,14 @@
     {
       "source": "/conta-google",
       "destination": "/conta-google.html"
+    },
+    {
+      "source": "/blog",
+      "destination": "/blog.html"
+    },
+    {
+      "source": "/blog/anuncio",
+      "destination": "/blog-anuncio.html"
     }
   ],
   "headers": [

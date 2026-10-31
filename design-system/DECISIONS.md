@@ -74,3 +74,9 @@ As decisões 0001 e 0002 vêm de antes do v3 e estão aqui para o registro ficar
 
 - **Decisão:** a lista tem três densidades (Confortável, Padrão, Compacta) e os controles têm duas alturas. O v3 diz "se a pesquisa de uso justificar"; não há pesquisa que peça outra.
 - **Efeito:** uma densidade nova entraria como valor novo dos tokens `--row-height-*` e `--control-height*`, e não como componente.
+
+## 0014 · Blog e artigos entram como padrão, sem token novo
+
+- **Contexto:** o site ganhou um índice de blog e uma página de artigo, feitos primeiro no `site.css`.
+- **Decisão:** as duas composições viraram o padrão "Blog e artigos" (L89 e L90), em beta, na camada Padrões. A categoria usa o lozenge e o filtro usa o botão sutil com `aria-pressed`; não há componente novo para isso.
+- **Efeito:** nenhum token novo. Os multiplicadores do corpo de leitura (1,125) e dos títulos grandes ficam como valores locais de `.post` e `.blog`; viram tokens se aparecerem em mais de um padrão.

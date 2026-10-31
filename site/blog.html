@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blog | EpistulaMail</title>
+<meta name="description" content="Anúncios, notas de versão, segurança e bastidores do EpistulaMail, um cliente de e-mail feito por uma pessoa só.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="images/logo/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" href="images/logo/epistulamail-192.png" sizes="192x192">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="ds/tokens.css">
+<link rel="stylesheet" href="ds/components.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<!-- ds-icons -->
+<a class="btn btn--primary site-skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="site-header">
+  <div class="site-container site-header__inner">
+    <a class="wordmark wordmark--sm site-brand" href="./#topo" aria-label="EpistulaMail, início">
+      <img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail
+    </a>
+    <div class="site-header__end">
+      <nav class="site-nav" aria-label="Seções">
+        <div class="site-nav__group">
+          <a class="site-nav__trigger" href="./#recursos" aria-haspopup="true">Recursos <svg class="i i--sm"><use href="#i-chevron-down"/></svg></a>
+          <div class="site-nav__menu menu" role="menu" aria-label="Recursos">
+            <a class="menu-item" role="menuitem" href="blog.html">Blog</a>
+            <a class="menu-item" role="menuitem" href="./#sobre">Quem está por trás</a>
+          </div>
+        </div>
+        <a href="./#seguranca">Segurança</a>
+        <a href="./#roadmap">Roadmap</a>
+        <a class="site-nav__docs" href="https://docs.epistulamail.com">Docs <svg class="i i--sm"><use href="#i-link"/></svg></a>
+      </nav>
+      <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo">
+  <div class="site-container blog">
+    <header class="blog__head">
+      <p class="post__label">Blog</p>
+      <h1 class="blog__title">Blog do EpistulaMail</h1>
+      <p class="blog__tagline">O que estamos construindo, corrigindo e aprendendo.</p>
+      <p class="blog__lede">Anúncios, notas de versão, segurança e bastidores de um cliente de e-mail feito por uma pessoa só.</p>
+    </header>
+
+    <div class="blog__filters" role="group" aria-label="Filtrar por categoria">
+      <button class="btn btn--subtle blog__filter" type="button" data-filter="Todos" aria-pressed="true">Todos</button>
+      <button class="btn btn--subtle blog__filter" type="button" data-filter="Anúncio" aria-pressed="false">Anúncio</button>
+      <button class="btn btn--subtle blog__filter" type="button" data-filter="Design" aria-pressed="false">Design</button>
+      <button class="btn btn--subtle blog__filter" type="button" data-filter="Novidades" aria-pressed="false">Novidades</button>
+      <button class="btn btn--subtle blog__filter" type="button" data-filter="Privacidade" aria-pressed="false">Privacidade</button>
+      <button class="btn btn--subtle blog__filter" type="button" data-filter="Segurança" aria-pressed="false">Segurança</button>
+      <button class="btn btn--subtle blog__filter" type="button" data-filter="Versões" aria-pressed="false">Versões</button>
+    </div>
+
+    <a class="blog__feature" href="blog-anuncio.html" data-tag="Anúncio">
+      <span class="blog__feature-img"><img src="images/epistula-janela.webp" width="2183" height="1282" decoding="async" alt=""></span>
+      <span class="blog__main">
+        <span class="blog__meta"><span class="lozenge">Anúncio</span><time datetime="2026-10-30">30 de outubro de 2026</time></span>
+        <span class="blog__feature-title">Uma pessoa, um cliente de e-mail.</span>
+        <span class="blog__excerpt">Sou Yuri Melo. O EpistulaMail é feito só por mim, sem fins lucrativos, e cresce com a comunidade. Esta é a história de por que ele existe, e do que ele não abre mão.</span>
+        <span class="blog__by"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="" src="images/yuri-melo.jpg"></span> Yuri Melo · 5 min de leitura</span>
+      </span>
+    </a>
+
+    <ul class="blog__grid">
+      <li data-tag="Novidades">
+        <a class="blog__card" href="blog-contas-microsoft-e-imap.html">
+          <span class="blog__meta"><span class="lozenge">Novidades</span><time datetime="2026-10-30">30 de outubro de 2026</time></span>
+          <span class="blog__item-title">Outlook, Hotmail e contas IMAP manuais estão a caminho.</span>
+          <span class="blog__excerpt">O que já está no código para a próxima versão, com os escopos pedidos e os limites de cada conta.</span>
+          <span class="blog__by"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="" src="images/yuri-melo.jpg"></span> Yuri Melo · 4 min de leitura</span>
+        </a>
+      </li>
+      <li data-tag="Segurança">
+        <a class="blog__card" href="blog-banco-cifrado.html">
+          <span class="blog__meta"><span class="lozenge">Segurança</span><time datetime="2026-10-29">29 de outubro de 2026</time></span>
+          <span class="blog__item-title">Seus e-mails num banco cifrado, com a chave no cofre do sistema.</span>
+          <span class="blog__excerpt">Onde as mensagens ficam, como o banco é protegido e o que acontece quando você apaga algo.</span>
+          <span class="blog__by"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="" src="images/yuri-melo.jpg"></span> Yuri Melo · 4 min de leitura</span>
+        </a>
+      </li>
+      <li data-tag="Privacidade">
+        <a class="blog__card" href="blog-imagens-remotas.html">
+          <span class="blog__meta"><span class="lozenge">Privacidade</span><time datetime="2026-10-29">29 de outubro de 2026</time></span>
+          <span class="blog__item-title">Por que as imagens de um e-mail ficam bloqueadas até você liberar.</span>
+          <span class="blog__excerpt">Uma imagem remota pode avisar quem enviou que você abriu a mensagem. Veja o que o EpistulaMail faz a respeito.</span>
+          <span class="blog__by"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="" src="images/yuri-melo.jpg"></span> Yuri Melo · 4 min de leitura</span>
+        </a>
+      </li>
+      <li data-tag="Versões">
+        <a class="blog__card" href="blog-linux.html">
+          <span class="blog__meta"><span class="lozenge">Versões</span><time datetime="2026-10-28">28 de outubro de 2026</time></span>
+          <span class="blog__item-title">EpistulaMail 1.1.0: chega a versão para Linux.</span>
+          <span class="blog__excerpt">AppImage e pacote .deb, com o mesmo banco cifrado e as chaves no Secret Service.</span>
+          <span class="blog__by"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="" src="images/yuri-melo.jpg"></span> Yuri Melo · 3 min de leitura</span>
+        </a>
+      </li>
+      <li data-tag="Design">
+        <a class="blog__card" href="blog-design-system.html">
+          <span class="blog__meta"><span class="lozenge">Design</span><time datetime="2026-10-28">28 de outubro de 2026</time></span>
+          <span class="blog__item-title">Um design system para um cliente de e-mail denso.</span>
+          <span class="blog__excerpt">Por que o app, o site e a documentação compartilham os mesmos tokens e componentes.</span>
+          <span class="blog__by"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="" src="images/yuri-melo.jpg"></span> Yuri Melo · 4 min de leitura</span>
+        </a>
+      </li>
+      <li data-tag="Versões">
+        <a class="blog__card" href="blog-atualizacao-automatica.html">
+          <span class="blog__meta"><span class="lozenge">Versões</span><time datetime="2026-10-27">27 de outubro de 2026</time></span>
+          <span class="blog__item-title">Atualização automática, sem abrir mão da assinatura.</span>
+          <span class="blog__excerpt">Como o app avisa de uma versão nova, o que ele confere antes de instalar e por que você decide.</span>
+          <span class="blog__by"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="" src="images/yuri-melo.jpg"></span> Yuri Melo · 3 min de leitura</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="site-container">
+    <div class="site-footer__grid">
+      <div>
+        <h4>Produto</h4>
+        <ul><li><a href="./#recursos">Recursos</a></li><li><a href="./#seguranca">Segurança</a></li><li><a href="./#roadmap">Roadmap</a></li><li><a href="./#comecar">Download</a></li><li><a href="./#contribuir">Contribuir</a></li></ul>
+      </div>
+      <div>
+        <h4>Documentação</h4>
+        <ul><li><a href="https://docs.epistulamail.com">Documentação</a></li><li><a href="https://docs.epistulamail.com/instalacao/">Instalação</a></li><li><a href="https://docs.epistulamail.com/guia/contas/">Contas e provedores</a></li><li><a href="https://docs.epistulamail.com/guia/busca/">Busca</a></li><li><a href="https://docs.epistulamail.com/guia/privacidade/">Privacidade</a></li></ul>
+      </div>
+      <div>
+        <h4>Projeto</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail">Código no GitHub</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/design-system">Design system</a></li><li><a href="https://docs.epistulamail.com/guia/versoes/historico/">Versões</a></li><li><a href="https://github.com/elyosemite/epistulamail/issues">Issues</a></li></ul>
+      </div>
+      <div>
+        <h4>Segurança</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail/blob/main/docs/arquitetura-e-ameacas.md">Modelo de ameaças</a></li><li><a href="https://github.com/elyosemite/epistulamail/security">Relatar um problema</a></li><li><a href="https://www.epistulamail.com/conta-google">Sua conta Google</a></li><li><a href="https://www.epistulamail.com/privacidade">Política de privacidade</a></li><li><a href="https://www.epistulamail.com/termos">Termos de uso</a></li></ul>
+      </div>
+    </div>
+    <div class="site-footer__legal">
+      <a class="wordmark wordmark--sm" href="./#topo" style="text-decoration:none;color:var(--color-text)"><img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail</a>
+      <span>Sem cookies, sem rastreamento, nada de terceiros. As mensagens ficam no seu computador.</span>
+    </div>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

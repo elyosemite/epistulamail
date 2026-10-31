@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Outlook, Hotmail e contas IMAP manuais estão a caminho. | EpistulaMail</title>
+<meta name="description" content="O que já está no código para a próxima versão, com os escopos pedidos e os limites de cada conta.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="images/logo/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" href="images/logo/epistulamail-192.png" sizes="192x192">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="ds/tokens.css">
+<link rel="stylesheet" href="ds/components.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<!-- ds-icons -->
+<a class="btn btn--primary site-skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="site-header">
+  <div class="site-container site-header__inner">
+    <a class="wordmark wordmark--sm site-brand" href="./#topo" aria-label="EpistulaMail, início">
+      <img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail
+    </a>
+    <div class="site-header__end">
+      <nav class="site-nav" aria-label="Seções">
+        <div class="site-nav__group">
+          <a class="site-nav__trigger" href="./#recursos" aria-haspopup="true">Recursos <svg class="i i--sm"><use href="#i-chevron-down"/></svg></a>
+          <div class="site-nav__menu menu" role="menu" aria-label="Recursos">
+            <a class="menu-item" role="menuitem" href="blog.html">Blog</a>
+            <a class="menu-item" role="menuitem" href="./#sobre">Quem está por trás</a>
+          </div>
+        </div>
+        <a href="./#seguranca">Segurança</a>
+        <a href="./#roadmap">Roadmap</a>
+        <a class="site-nav__docs" href="https://docs.epistulamail.com">Docs <svg class="i i--sm"><use href="#i-link"/></svg></a>
+      </nav>
+      <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo">
+  <article class="post">
+    <div class="post__main">
+      <a class="post__back" href="blog.html">← Todos os posts</a>
+
+      <header class="post__head">
+        <p class="post__label">Novidades · 30 de outubro de 2026</p>
+        <h1 class="post__title">Outlook, Hotmail e contas IMAP manuais estão a caminho.</h1>
+        <p class="post__lede">O que já está no código para a próxima versão, com os escopos pedidos e os limites de cada conta.</p>
+        <div class="post__meta">
+          <span class="post__author"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="Yuri Melo" src="images/yuri-melo.jpg"></span> Yuri Melo</span>
+          <span>30 de outubro de 2026</span>
+          <span>4 min de leitura</span>
+        </div>
+      </header>
+
+      <div class="post__body">
+        <p>A próxima versão adiciona duas formas de conectar uma conta. Este texto descreve o que já está implementado; ele não é uma data de lançamento.</p>
+        <h2 id="contas-pessoais-da-microsoft">Contas pessoais da Microsoft</h2>
+        <p>Outlook.com, Hotmail e Live entram por login da Microsoft com OAuth, no Windows e no Linux. A leitura e o envio passam pelo Microsoft Graph. O app pede Mail.ReadWrite, Mail.Send e User.Read, além de openid, profile, email e offline_access. Contas de trabalho ou escola ficam de fora desta entrega.</p>
+        <h2 id="servidores-imap-e-smtp-mo">Servidores IMAP e SMTP à mão</h2>
+        <p>Para quem tem um provedor próprio, o cartão “Outro” permite informar servidores e portas, com senha normal e teste de conexão. Por enquanto só a senha normal funciona: senha criptografada, NTLM, Kerberos, OAuth2 manual e POP3 chegam depois.</p>
+        <h2 id="sair-de-uma-conta">Sair de uma conta</h2>
+        <p>Sair de uma conta Microsoft apaga o token local. Para revogar o acesso também do lado da Microsoft, use account.live.com/consent/Manage.</p>
+        <p>A tela de adicionar conta passou a mostrar só o que existe: Gmail, Outlook e Outro. Yahoo, iCloud, Zoho, GMX e AOL saíram da tela até serem de fato suportados.</p>
+
+        <p class="post__sign">Yuri Melo</p>
+
+        <div class="post__actions">
+          <a class="btn btn--primary" href="{{release.windows}}" download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
+          <a class="btn btn--subtle site-btn-ghost" href="https://docs.epistulamail.com">Ler a documentação</a>
+        </div>
+      </div>
+    </div>
+
+    <aside class="post__aside" aria-label="Nesta página">
+      <div>
+        <p class="post__label">Nesta página</p>
+        <nav class="post__toc"><a href="#contas-pessoais-da-microsoft">Contas pessoais da Microsoft</a><a href="#servidores-imap-e-smtp-mo">Servidores IMAP e SMTP à mão</a><a href="#sair-de-uma-conta">Sair de uma conta</a></nav>
+      </div>
+      <div class="post__related">
+        <p class="post__label">Continue lendo</p>
+        <a href="blog-anuncio.html">Uma pessoa, um cliente de e-mail.</a><a href="blog-banco-cifrado.html">Seus e-mails num banco cifrado, com a chave no cofre do sistema.</a><a href="blog-imagens-remotas.html">Por que as imagens de um e-mail ficam bloqueadas até você liberar.</a>
+      </div>
+    </aside>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="site-container">
+    <div class="site-footer__grid">
+      <div>
+        <h4>Produto</h4>
+        <ul><li><a href="./#recursos">Recursos</a></li><li><a href="./#seguranca">Segurança</a></li><li><a href="./#roadmap">Roadmap</a></li><li><a href="./#comecar">Download</a></li><li><a href="./#contribuir">Contribuir</a></li></ul>
+      </div>
+      <div>
+        <h4>Documentação</h4>
+        <ul><li><a href="https://docs.epistulamail.com">Documentação</a></li><li><a href="https://docs.epistulamail.com/instalacao/">Instalação</a></li><li><a href="https://docs.epistulamail.com/guia/contas/">Contas e provedores</a></li><li><a href="https://docs.epistulamail.com/guia/busca/">Busca</a></li><li><a href="https://docs.epistulamail.com/guia/privacidade/">Privacidade</a></li></ul>
+      </div>
+      <div>
+        <h4>Projeto</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail">Código no GitHub</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/design-system">Design system</a></li><li><a href="https://docs.epistulamail.com/guia/versoes/historico/">Versões</a></li><li><a href="https://github.com/elyosemite/epistulamail/issues">Issues</a></li></ul>
+      </div>
+      <div>
+        <h4>Segurança</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail/blob/main/docs/arquitetura-e-ameacas.md">Modelo de ameaças</a></li><li><a href="https://github.com/elyosemite/epistulamail/security">Relatar um problema</a></li><li><a href="https://www.epistulamail.com/conta-google">Sua conta Google</a></li><li><a href="https://www.epistulamail.com/privacidade">Política de privacidade</a></li><li><a href="https://www.epistulamail.com/termos">Termos de uso</a></li></ul>
+      </div>
+    </div>
+    <div class="site-footer__legal">
+      <a class="wordmark wordmark--sm" href="./#topo" style="text-decoration:none;color:var(--color-text)"><img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail</a>
+      <span>Sem cookies, sem rastreamento, nada de terceiros. As mensagens ficam no seu computador.</span>
+    </div>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

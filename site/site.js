@@ -1,5 +1,4 @@
-// Landing page: o botão de download escolhe o pacote do sistema, as linhas de recurso aparecem ao
-// chegar à tela, e o botão do cabeçalho troca o tema.
+// Landing page: o botão de download escolhe o pacote do sistema e o botão do cabeçalho troca o tema.
 (() => {
   // Download (L81): a ação principal baixa o pacote do sistema; o chevron abre o menu com as opções.
   const downloads = document.querySelectorAll("[data-download]");
@@ -62,22 +61,6 @@
 
   const root = document.documentElement;
 
-  // Entrada ao rolar. Sem IntersectionObserver (ou com menos movimento pedido), tudo já aparece.
-  const items = document.querySelectorAll(".site-reveal");
-  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (still || !("IntersectionObserver" in window)) {
-    items.forEach((el) => el.classList.add("is-visible"));
-  } else {
-    const seen = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        entry.target.classList.add("is-visible");
-        seen.unobserve(entry.target);
-      }
-    }, { rootMargin: "0px 0px -12% 0px" });
-    items.forEach((el) => seen.observe(el));
-  }
-
   // Tema: segue o sistema até a pessoa escolher; a escolha fica só neste navegador.
   const button = document.getElementById("site-theme");
   if (!button) return;
@@ -95,4 +78,18 @@
   });
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", sync);
   sync();
+})();
+
+// Blog: filtro por categoria no índice (sem recarregar a página).
+(() => {
+  const buttons = document.querySelectorAll(".site-blog__filter");
+  if (!buttons.length) return;
+  const items = document.querySelectorAll(".site-blog [data-tag]");
+  for (const button of buttons) {
+    button.addEventListener("click", () => {
+      const tag = button.dataset.filter;
+      for (const other of buttons) other.setAttribute("aria-pressed", String(other === button));
+      for (const item of items) item.hidden = tag !== "Todos" && item.dataset.tag !== tag;
+    });
+  }
 })();

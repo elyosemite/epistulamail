@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atualização automática, sem abrir mão da assinatura. | EpistulaMail</title>
+<meta name="description" content="Como o app avisa de uma versão nova, o que ele confere antes de instalar e por que você decide.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="images/logo/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" href="images/logo/epistulamail-192.png" sizes="192x192">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="ds/tokens.css">
+<link rel="stylesheet" href="ds/components.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<!-- ds-icons -->
+<a class="btn btn--primary site-skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="site-header">
+  <div class="site-container site-header__inner">
+    <a class="wordmark wordmark--sm site-brand" href="./#topo" aria-label="EpistulaMail, início">
+      <img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail
+    </a>
+    <div class="site-header__end">
+      <nav class="site-nav" aria-label="Seções">
+        <div class="site-nav__group">
+          <a class="site-nav__trigger" href="./#recursos" aria-haspopup="true">Recursos <svg class="i i--sm"><use href="#i-chevron-down"/></svg></a>
+          <div class="site-nav__menu menu" role="menu" aria-label="Recursos">
+            <a class="menu-item" role="menuitem" href="blog.html">Blog</a>
+            <a class="menu-item" role="menuitem" href="./#sobre">Quem está por trás</a>
+          </div>
+        </div>
+        <a href="./#seguranca">Segurança</a>
+        <a href="./#roadmap">Roadmap</a>
+        <a class="site-nav__docs" href="https://docs.epistulamail.com">Docs <svg class="i i--sm"><use href="#i-link"/></svg></a>
+      </nav>
+      <button class="btn btn--subtle btn--icon" id="site-theme" type="button" aria-label="Trocar o tema"><svg class="i"><use href="#i-moon"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="conteudo">
+  <article class="post">
+    <div class="post__main">
+      <a class="post__back" href="blog.html">← Todos os posts</a>
+
+      <header class="post__head">
+        <p class="post__label">Versões · 27 de outubro de 2026</p>
+        <h1 class="post__title">Atualização automática, sem abrir mão da assinatura.</h1>
+        <p class="post__lede">Como o app avisa de uma versão nova, o que ele confere antes de instalar e por que você decide.</p>
+        <div class="post__meta">
+          <span class="post__author"><span class="avatar avatar--sm avatar--purple">YM<img class="avatar__img" alt="Yuri Melo" src="images/yuri-melo.jpg"></span> Yuri Melo</span>
+          <span>27 de outubro de 2026</span>
+          <span>3 min de leitura</span>
+        </div>
+      </header>
+
+      <div class="post__body">
+        <p>A partir da versão 1.0.2, o EpistulaMail avisa quando sai uma versão nova. O aviso aparece no sino; um clique mostra o que mudou.</p>
+        <h2 id="voc-confirma-o-app-confere">Você confirma, o app confere</h2>
+        <p>Nada é instalado sem a sua confirmação. Se você aceitar, o app baixa a versão nova, confere a assinatura dela, instala e abre de novo. As contas e as mensagens continuam onde estavam.</p>
+        <h2 id="uma-ressalva-honesta">Uma ressalva honesta</h2>
+        <p>A assinatura que o app confere é a das atualizações. O instalador do Windows ainda não tem assinatura de código, então o sistema pode estranhar o primeiro download. Por isso cada release publica o SHA-256 do instalador, e vale conferir antes de executar.</p>
+        <p>Para chegar à atualização automática, instale a 1.0.2 por cima uma vez. Daí em diante, as próximas chegam pelo sino.</p>
+
+        <p class="post__sign">Yuri Melo</p>
+
+        <div class="post__actions">
+          <a class="btn btn--primary" href="{{release.windows}}" download><svg class="i"><use href="#i-download"/></svg>Download EpistulaMail</a>
+          <a class="btn btn--subtle site-btn-ghost" href="https://docs.epistulamail.com">Ler a documentação</a>
+        </div>
+      </div>
+    </div>
+
+    <aside class="post__aside" aria-label="Nesta página">
+      <div>
+        <p class="post__label">Nesta página</p>
+        <nav class="post__toc"><a href="#voc-confirma-o-app-confere">Você confirma, o app confere</a><a href="#uma-ressalva-honesta">Uma ressalva honesta</a></nav>
+      </div>
+      <div class="post__related">
+        <p class="post__label">Continue lendo</p>
+        <a href="blog-anuncio.html">Uma pessoa, um cliente de e-mail.</a><a href="blog-contas-microsoft-e-imap.html">Outlook, Hotmail e contas IMAP manuais estão a caminho.</a><a href="blog-banco-cifrado.html">Seus e-mails num banco cifrado, com a chave no cofre do sistema.</a>
+      </div>
+    </aside>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="site-container">
+    <div class="site-footer__grid">
+      <div>
+        <h4>Produto</h4>
+        <ul><li><a href="./#recursos">Recursos</a></li><li><a href="./#seguranca">Segurança</a></li><li><a href="./#roadmap">Roadmap</a></li><li><a href="./#comecar">Download</a></li><li><a href="./#contribuir">Contribuir</a></li></ul>
+      </div>
+      <div>
+        <h4>Documentação</h4>
+        <ul><li><a href="https://docs.epistulamail.com">Documentação</a></li><li><a href="https://docs.epistulamail.com/instalacao/">Instalação</a></li><li><a href="https://docs.epistulamail.com/guia/contas/">Contas e provedores</a></li><li><a href="https://docs.epistulamail.com/guia/busca/">Busca</a></li><li><a href="https://docs.epistulamail.com/guia/privacidade/">Privacidade</a></li></ul>
+      </div>
+      <div>
+        <h4>Projeto</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail">Código no GitHub</a></li><li><a href="https://github.com/elyosemite/epistulamail/tree/main/design-system">Design system</a></li><li><a href="https://docs.epistulamail.com/guia/versoes/historico/">Versões</a></li><li><a href="https://github.com/elyosemite/epistulamail/issues">Issues</a></li></ul>
+      </div>
+      <div>
+        <h4>Segurança</h4>
+        <ul><li><a href="https://github.com/elyosemite/epistulamail/blob/main/docs/arquitetura-e-ameacas.md">Modelo de ameaças</a></li><li><a href="https://github.com/elyosemite/epistulamail/security">Relatar um problema</a></li><li><a href="https://www.epistulamail.com/conta-google">Sua conta Google</a></li><li><a href="https://www.epistulamail.com/privacidade">Política de privacidade</a></li><li><a href="https://www.epistulamail.com/termos">Termos de uso</a></li></ul>
+      </div>
+    </div>
+    <div class="site-footer__legal">
+      <a class="wordmark wordmark--sm" href="./#topo" style="text-decoration:none;color:var(--color-text)"><img class="site-logo" src="images/logo/epistulamail-96.png" width="28" height="28" alt="">EpistulaMail</a>
+      <span>Sem cookies, sem rastreamento, nada de terceiros. As mensagens ficam no seu computador.</span>
+    </div>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

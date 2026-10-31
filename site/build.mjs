@@ -27,12 +27,14 @@ function iconSprite() {
 }
 
 const FONTS = [
-  ["@fontsource/inter/files/inter-latin-400-normal.woff2", "Inter", 400],
-  ["@fontsource/inter/files/inter-latin-500-normal.woff2", "Inter", 500],
-  ["@fontsource/inter/files/inter-latin-600-normal.woff2", "Inter", 600],
-  ["@fontsource/inter/files/inter-latin-700-normal.woff2", "Inter", 700],
-  ["@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2", "JetBrains Mono", 400],
-  ["@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2", "JetBrains Mono", 500],
+  ["@fontsource/inter/files/inter-latin-400-normal.woff2", "Inter", 400, "normal"],
+  ["@fontsource/inter/files/inter-latin-500-normal.woff2", "Inter", 500, "normal"],
+  ["@fontsource/inter/files/inter-latin-600-normal.woff2", "Inter", 600, "normal"],
+  ["@fontsource/inter/files/inter-latin-700-normal.woff2", "Inter", 700, "normal"],
+  ["@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2", "JetBrains Mono", 400, "normal"],
+  ["@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2", "JetBrains Mono", 500, "normal"],
+  // O acento editorial do herói: a mesma mono, em itálico. Já vem no pacote; nada de fonte remota.
+  ["@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-italic.woff2", "JetBrains Mono", 400, "italic"],
 ];
 
 const REPO = "elyosemite/epistulamail";
@@ -95,20 +97,22 @@ async function build() {
   for (const file of ["tokens.css", "components.css"]) copyFileSync(join(ds, file), join(dist, "ds", file));
 
   const faces = [];
-  for (const [path, family, weight] of FONTS) {
+  for (const [path, family, weight, style] of FONTS) {
     const from = join(root, "node_modules", path);
     if (!existsSync(from)) fail(`fonte ${path} não encontrada: rode "pnpm install" na raiz do repositório`);
     const name = path.split("/").pop();
     copyFileSync(from, join(dist, "fonts", name));
-    faces.push(`@font-face { font-family: "${family}"; font-style: normal; font-weight: ${weight}; font-display: swap; src: url("${name}") format("woff2"); }`);
+    faces.push(`@font-face { font-family: "${family}"; font-style: ${style}; font-weight: ${weight}; font-display: swap; src: url("${name}") format("woff2"); }`);
   }
   writeFileSync(join(dist, "fonts", "fonts.css"), faces.join("\n") + "\n");
 
-  for (const file of ["site.css", "site.js", "theme.js"]) copyFileSync(join(here, file), join(dist, file));
+  for (const file of ["site.css", "site.js", "ascii.js", "theme.js"]) copyFileSync(join(here, file), join(dist, file));
 
   // A janela do app recortada da captura do README (docs/images), sem o papel de parede.
   mkdirSync(join(dist, "images"), { recursive: true });
   copyFileSync(join(root, "docs", "images", "epistula-janela.webp"), join(dist, "images", "epistula-janela.webp"));
+  // Retrato do Yuri, enviado por ele para o anúncio e a seção "Quem está por trás".
+  copyFileSync(join(here, "images", "yuri-melo.jpg"), join(dist, "images", "yuri-melo.jpg"));
 
   // A logo do EpistulaMail (favicon, marca no topo e no rodapé), gerada da mesma imagem dos ícones do app.
   mkdirSync(join(dist, "images", "logo"), { recursive: true });
@@ -122,7 +126,7 @@ async function build() {
 
   // A página inicial, a política de privacidade, os termos de uso e como o app usa a conta Google (verificação do OAuth).
   const sprite = `<div hidden>${iconSprite()}</div>`;
-  for (const file of ["index.html", "privacidade.html", "termos.html", "conta-google.html"]) {
+  for (const file of ["index.html", "privacidade.html", "termos.html", "conta-google.html", "blog.html", "blog-anuncio.html", "blog-banco-cifrado.html", "blog-imagens-remotas.html", "blog-linux.html", "blog-atualizacao-automatica.html", "blog-contas-microsoft-e-imap.html", "blog-design-system.html"]) {
     const page = readFileSync(join(here, file), "utf8");
     if (!page.includes("<!-- ds-icons -->")) fail(`${file} sem o marcador <!-- ds-icons -->`);
     const html = withRelease(page.replace("<!-- ds-icons -->", sprite), release);
