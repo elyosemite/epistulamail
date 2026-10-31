@@ -4,6 +4,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+## [1.2.0] - 2026-10-31
+
 ### Novidades
 
 - Contas IMAP e SMTP manuais com senha normal, servidores e portas próprios e teste de conexão.
