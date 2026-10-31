@@ -1,0 +1,32 @@
+---
+title: "Concepts"
+description: "The path of an email from the server to your screen, and where your data lives."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## How EpistulaMail works
+
+EpistulaMail is a desktop program built with Tauri (Rust and React). It talks straight to your email server, using the usual protocols:
+
+- **IMAP** to download and organize messages;
+- **SMTP** to send;
+- **OAuth** to sign in, without your password going through the app.
+
+What arrives is stored in a local database (SQLCipher, encrypted with AES-256). The list, the reader and the search read from that database, so they open fast and work offline. The changes you make (move, archive, mark as read) are then sent to the server.
+
+There is no EpistulaMail server in the middle: no message, subject or address goes through us.
+
+<AppPreview name="conversation" />
+
+## Where your data lives
+
+| What | Where |
+|---|---|
+| The program | Windows: `%LOCALAPPDATA%\EpistulaMail`; Linux: the AppImage or the `.deb` package |
+| Message database and settings | Windows: `%APPDATA%\br.com.epistula.desktop`; Linux: `~/.local/share/br.com.epistula.desktop` |
+| Database key and account access | System vault: Windows Credential Manager, Linux Secret Service (GNOME Keyring or KWallet), `epistula` items |
+
+The database is encrypted: a copied file, a lost laptop or a discarded drive reveals nothing without the key. The key lives in the system vault, protected by your session; with the EpistulaMail password on, it also depends on the password.
+

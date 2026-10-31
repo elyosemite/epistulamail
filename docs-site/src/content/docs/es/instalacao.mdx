@@ -10,10 +10,12 @@ EpistulaMail se distribuye como instalador para Windows y como AppImage y `.deb`
 
 ## Requisitos
 
-- Windows 10 u 11, 64 bits, o Linux, 64 bits.
+- Windows 10 u 11, 64 bits, o Linux, 64 bits. macOS todavía no tiene instalador.
 - En Windows, WebView2, que ya viene con Windows 11. En Windows 10, el instalador lo descarga si falta.
 - En Linux, el Secret Service (GNOME Keyring o KWallet), que guarda la clave de la base de datos y los tokens de las cuentas.
 - Unos 100 MB libres para la app, más el espacio de los mensajes que guardes.
+
+Para compilar desde el código, consulta [Compilar](/es/guia/contribuir/compilar/).
 
 ## Instalar en Windows
 
@@ -72,4 +74,30 @@ En Linux, el cofre del sistema es el Secret Service. Allí quedan la clave de la
 
 ## Versiones nuevas
 
-Desde la 1.0.2, cuando sale una versión nueva aparece un aviso en la campana de notificaciones. Un clic muestra qué cambió y, si confirmas, EpistulaMail la descarga, comprueba la firma de la actualización, la instala y se abre de nuevo. En Linux, el AppImage se actualiza así; el `.deb` lo actualiza el gestor de paquetes de tu distribución. Consulta [Actualizaciones](/es/guia/instalacao/atualizacoes/).
+Desde la 1.0.2, EpistulaMail comprueba si hay una versión nueva al abrirse y cada 6 horas.
+
+1. Cuando la hay, aparece **una vez** en la campana: "Nova versão do EpistulaMail" (nueva versión de EpistulaMail).
+2. El clic abre la confirmación con lo que cambió.
+3. Con **Atualizar e reiniciar** (actualizar y reiniciar), la app descarga la versión nueva, comprueba su firma, se cierra, la instala y se abre de nuevo.
+
+<AppPreview name="update" />
+
+Las cuentas, los mensajes y la configuración se mantienen. Un archivo sin la firma correcta se rechaza, así que solo se instalan versiones publicadas por el proyecto.
+
+En Linux, el AppImage se actualiza del mismo modo. El `.deb` lo actualiza el gestor de paquetes de tu distribución, no la campana de la app.
+
+Si estás en la 1.0.0 o la 1.0.1, instala la 1.0.2 a mano una vez.
+
+## Desinstalar
+
+En Windows, desinstálalo en **Configuración → Aplicaciones → EpistulaMail**.
+
+En Linux, borra el AppImage o quita el paquete `.deb` con el gestor de paquetes de tu distribución (por ejemplo, `sudo apt remove epistulamail`).
+
+El desinstalador quita el programa. Para borrar también los datos:
+
+1. Borra la carpeta de datos: en Windows, `%APPDATA%\br.com.epistula.desktop`; en Linux, `~/.local/share/br.com.epistula.desktop`.
+2. En el cofre del sistema, quita los elementos del servicio `epistula`: en Windows, **Administrador de credenciales → Credenciales de Windows**; en Linux, GNOME Keyring o KWallet.
+3. Si quieres, quita el acceso de EpistulaMail en [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
+
+Los mensajes siguen en el servidor de tu correo.

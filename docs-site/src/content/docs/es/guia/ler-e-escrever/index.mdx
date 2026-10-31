@@ -1,0 +1,30 @@
+---
+title: "Leer y escribir"
+description: "Conversaciones, escritura, envío y lectura sin conexión."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Conversaciones
+
+Una conversación aparece como una fila en la lista. Al abrirla, cada respuesta es una tarjeta; las no leídas quedan abiertas y el texto citado queda detrás de un "…".
+
+<AppPreview name="conversation" />
+
+El HTML de los mensajes se limpia antes de mostrarse, sin scripts. Las imágenes externas quedan bloqueadas hasta que las permitas en ese mensaje, porque le avisarían al remitente que abriste el correo.
+
+## Escribir y enviar
+
+Escribe un correo nuevo, responde, responde a todos o reenvía. Los borradores se guardan cifrados.
+
+Después de **Enviar**, tienes unos segundos para **Desfazer** (deshacer): el correo solo sale cuando termina el tiempo.
+
+<AppPreview name="undo" />
+
+## Lectura sin conexión
+
+Después de cada sincronización, los mensajes del período elegido en **Configurações → Geral** (Configuración → General) se descargan en segundo plano, sin marcarlos como leídos: *Últimos 30 dias* (últimos 30 días), *Últimos 90 dias* (últimos 90 días), *Tudo* (todo) o *Só ao abrir* (solo al abrir).
+
+Sin internet, la bandeja de entrada, la lectura y la búsqueda siguen funcionando con lo guardado.
+

@@ -1,0 +1,32 @@
+---
+title: "Conceptos"
+description: "El camino de un correo desde el servidor hasta tu pantalla y dónde están tus datos."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Cómo funciona EpistulaMail
+
+EpistulaMail es un programa de escritorio hecho con Tauri (Rust y React). Habla directamente con el servidor de tu correo, con los protocolos de siempre:
+
+- **IMAP** para descargar y organizar los mensajes;
+- **SMTP** para enviar;
+- **OAuth** para iniciar sesión, sin que tu contraseña pase por la app.
+
+Lo que llega se guarda en una base de datos local (SQLCipher, cifrada con AES-256). La lista, la lectura y la búsqueda leen de esa base, por eso se abren rápido y funcionan sin internet. Los cambios que haces (mover, archivar, marcar como leído) se envían después al servidor.
+
+No hay un servidor de EpistulaMail en medio: ningún mensaje, asunto o dirección pasa por nosotros.
+
+<AppPreview name="conversation" />
+
+## Dónde quedan tus datos
+
+| Qué | Dónde |
+|---|---|
+| El programa | Windows: `%LOCALAPPDATA%\EpistulaMail`; Linux: el AppImage o el paquete `.deb` |
+| Base de mensajes y configuración | Windows: `%APPDATA%\br.com.epistula.desktop`; Linux: `~/.local/share/br.com.epistula.desktop` |
+| Clave de la base y acceso a las cuentas | Cofre del sistema: Administrador de credenciales en Windows, Secret Service en Linux (GNOME Keyring o KWallet), elementos `epistula` |
+
+La base de datos está cifrada: un archivo copiado, una laptop perdida o un disco desechado no revelan nada sin la clave. La clave queda en el cofre del sistema, protegida por tu sesión; con la contraseña de EpistulaMail activada, también depende de ella.
+

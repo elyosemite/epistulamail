@@ -1,0 +1,70 @@
+---
+title: "Accounts and providers"
+description: "Connect Gmail, Outlook and other providers; multiple accounts and how to sign out."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Connect Gmail
+
+When you choose Gmail, EpistulaMail opens Google's sign-in page in your browser. You sign in there, authorize, and go back to the app.
+
+EpistulaMail asks for:
+
+- **`https://mail.google.com/`**: read, send and organize your emails over IMAP and SMTP. It is the only Google permission that grants access to those protocols.
+- **`openid`, `email` and `profile`**: your address, name and photo, to show the account.
+
+Details in [How EpistulaMail uses your Google account](https://www.epistulamail.com/conta-google) (in Portuguese).
+
+## Connect Outlook
+
+When you choose Outlook, EpistulaMail opens Microsoft's sign-in page in your browser. You sign in, authorize and come back to the app. It works for personal Outlook.com, Hotmail and Live accounts.
+
+EpistulaMail asks only for:
+
+- **`Mail.ReadWrite`**: read and organize your email through Microsoft Graph.
+- **`Mail.Send`**: send email through Microsoft Graph.
+- **`User.Read` and `profile`**: your name, address and profile photo, to show the account.
+- **`openid`, `email` and `offline_access`**: the account identity and permission to keep the connection without asking for sign-in on every sync.
+
+It does not ask for contacts, calendar, files, OneDrive or a profile beyond the address and name. Your Microsoft password never goes through EpistulaMail.
+
+The refresh token lives in the system vault (Windows Credential Manager, Linux Secret Service), with the same care as Google accounts: never in the database in plain text, never in a file, never in a log. To revoke access, use [account.live.com/consent/Manage](https://account.live.com/consent/Manage).
+
+## Connect another email (IMAP)
+
+Use this option when your email is not Gmail or Outlook, or when you want to enter the servers yourself. EpistulaMail uses IMAP to receive and SMTP to send.
+
+<Steps>
+
+1. In **Add account**, choose **Other**.
+2. Fill in **Incoming**: server, port, connection security, authentication, username and password. The most common values are `993` with SSL/TLS or `143` with STARTTLS.
+3. Fill in **Outgoing** with the SMTP server. The most common values are `465` with SSL/TLS or `587` with STARTTLS. If the credentials are the same as incoming, leave **Use the incoming credentials** on.
+4. Click **Test connection**. The app signs in to incoming, checks the Inbox and signs in to outgoing without sending a message.
+5. Once both tests pass, click **Connect**.
+
+</Steps>
+
+The account is only saved after both incoming and outgoing pass the test. If the server rejects the username or password, the message says which side failed and the configuration is not saved.
+
+<Aside type="note" title="App password">
+Some providers require an app password instead of the normal account password, especially when two-step verification is on. Generate the app password on the provider's website and use it here. Gmail and Outlook should be connected through their own cards, with OAuth.
+</Aside>
+
+EpistulaMail only accepts **SSL/TLS** or **STARTTLS**; there is no “no security” option. The certificate is always validated. The password lives in the system vault (Windows Credential Manager, Linux Secret Service), never in the database in plain text, in a file or in a log. With the Epistula password on, it is encrypted by it too.
+
+In this version, a manual account receives and sends with a **normal password**. Encrypted password (CRAM-MD5), Kerberos/GSSAPI, NTLM, OAuth2 for manual accounts and POP3 are coming in later updates.
+
+## Multiple accounts
+
+Each account shows up in the left column, with its own name, color and photo. One click switches account; so does <kbd>Ctrl</kbd> + number. Email archives opened without an account appear in the same column, with the archive icon.
+
+<AppPreview name="accounts" />
+
+Search can look at one account or all at once. Rules and sync belong to each account.
+
+## Sign out of an account
+
+From the account menu, **Sair** (sign out) deletes the local token and revokes the access with Google. For Microsoft accounts, the local token is deleted; revoke access at [account.live.com/consent/Manage](https://account.live.com/consent/Manage). You choose whether the messages already downloaded stay on your computer (so you can keep reading and searching) or are erased.
+

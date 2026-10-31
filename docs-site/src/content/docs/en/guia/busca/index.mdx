@@ -1,0 +1,43 @@
+---
+title: "Search"
+description: "Chips, all accounts and saved searches."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Search with chips
+
+Press <kbd>/</kbd> to jump to search. What you type turns into chips you can edit and remove. The operators are in Portuguese, like the app's interface:
+
+<AppPreview name="search" />
+
+| Type | Becomes |
+|---|---|
+| `de: Ana` | who sent it (also `from:`) |
+| `para:`, `cc:`, `com:` | recipient, copy, any of those (also `to:`) |
+| `depois:2026-01-01`, `antes:31/03/2026`, `em:2025` | date range |
+| `tem:anexo` | with attachment |
+| `é:não-lida`, `é:estrela` | unread, starred |
+| `na: Arquivo` | in a folder |
+
+Two chips with the same role add up ("from Ana or from Bruno"); different roles apply together. <kbd>Backspace</kbd> in an empty field selects the last chip; pressing it again removes it.
+
+Search runs on the messages stored on your computer, in every folder, and works offline.
+
+## All accounts
+
+In the results bar, switch **Esta conta** (this account) to **Todas as contas** (all accounts). Each result shows the account's avatar, and opening a result shows the message in its own account.
+
+<AppPreview name="results" />
+
+Bulk actions (archive, move, delete) work when the selected results belong to the same account.
+
+## Saved searches
+
+With **Salvar busca** (save search), give it a name. The search appears in the folder column, in its own group, with the unread count. Right-click deletes it.
+
+<AppPreview name="saved" width={18} />
+
+In the results, **Aplicar regra…** (apply rule) applies one of your rules to the selected messages, with a preview first and Undo afterwards.
+

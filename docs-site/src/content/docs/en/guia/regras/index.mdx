@@ -1,0 +1,23 @@
+---
+title: "Rules"
+description: "Create rules, see the history and undo."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Create a rule
+
+A rule reads as a sentence: "If **From** contains `@shop.com` → **Move to** Shopping".
+
+<AppPreview name="rules" />
+
+- **Conditions**: sender, domain, To and Cc, "sent only to me", subject, text snippet, mailing list, attachments, size, read and starred; with "all" or "any" and exceptions.
+- **Actions**: move, archive, delete (always to the Trash), label, mark as read, star, flag with a due date, don't notify and always notify.
+
+Before saving, the preview shows how many and which emails the rule would catch. You can start from a template or from a message ("Criar regra…", create rule).
+
+## History and undo
+
+The history keeps 30 days of what each rule did, with **Desfazer** (undo) on each batch. Rules run while EpistulaMail is open (including in the tray); mail that arrived while the app was closed goes through them on the next sync.
+

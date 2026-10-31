@@ -1,0 +1,12 @@
+---
+title: "S/MIME"
+description: "Certificats S/MIME dans EpistulaMail."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+La paire de clés est créée sur votre ordinateur ; seule la demande part vers l'autorité de certification. Importez ensuite le certificat émis, ou un `.p12` que vous avez déjà.
+
+Les certificats des personnes qui vous envoient des messages signés sont conservés. La confiance suit les racines du système.
+

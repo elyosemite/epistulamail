@@ -28,8 +28,66 @@
   --sl-color-hairline-light: transparent;
   --sl-color-hairline-shade: transparent;
 
-  --sl-content-width: 46rem;
-  --sl-sidebar-width: 17rem;
+  /* Medida de leitura do design system (42rem ≈ 70 caracteres em Body Large). */
+  --sl-content-width: var(--layout-reading-measure);
+  --sl-sidebar-width: 16rem;
+  /* Coluna do índice, como no docs do OpenClaw. */
+  --ds-docs-toc-width: 12.5rem;
+  /* Escala de leitura do docs: título, seção e subtítulo do design system. */
+  --sl-text-h1: var(--font-size-hero);
+  --sl-text-h2: var(--font-size-page-title);
+  --sl-text-h3: var(--font-size-section);
+  --sl-text-h4: var(--font-size-card);
+  --sl-text-h5: var(--font-size-card);
+  --sl-line-height: 1.65;
+}
+
+/* ---------- Layout de leitura ---------- */
+
+/* Título sem margem extra; sidebar e painéis com o mesmo respiro lateral. */
+h1#_top { margin-top: 0; }
+.content-panel { padding-block: var(--space-200); }
+.sidebar-content { padding-top: var(--space-300); }
+footer .meta { margin-top: var(--space-400); }
+
+/* Ritmo dos títulos: 48px antes de uma seção, 32px antes de um subtítulo. */
+.sl-markdown-content :not(h1, h2, h3, h4, h5, h6) + h2:not(:where(.not-content *)) { margin-top: var(--space-600); }
+.sl-markdown-content :not(h1, h2, h3, h4, h5, h6) + h3:not(:where(.not-content *)) { margin-top: var(--space-400); }
+
+/* Três colunas como no docs do OpenClaw: sidebar | leitura | índice. */
+@media (min-width: 72rem) {
+  main > .content-panel:first-of-type { padding-top: var(--space-600); }
+
+  .main-frame > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--ds-docs-toc-width);
+    padding-inline-end: var(--space-300);
+  }
+
+  .main-pane {
+    grid-column: 1;
+    width: 100%;
+    --sl-content-margin-inline: auto;
+  }
+
+  .right-sidebar-container {
+    grid-column: 2;
+    width: var(--ds-docs-toc-width);
+    margin-inline-start: 0;
+  }
+
+  .right-sidebar {
+    position: sticky;
+    top: var(--sl-nav-height);
+    height: auto;
+    max-height: calc(100vh - var(--sl-nav-height));
+    padding-top: var(--space-600);
+    border-inline-start: 0;
+  }
+
+  .right-sidebar-panel { padding: 0 var(--space-200); }
+  .right-sidebar-panel .sl-container { width: 100%; max-width: none; }
+  .right-sidebar-panel a { font-size: var(--sl-text-sm); }
 }
 
 /* Títulos com a fonte e o espaçamento do DS. */
@@ -56,10 +114,11 @@ h1#_top { letter-spacing: -0.03em; }
   padding: 0.5rem 0.875rem; border: 1px solid var(--color-border); border-radius: 0.75rem;
   background: var(--color-surface); color: var(--color-text-subtle); font-size: 0.8125rem; line-height: 1.4;
 }
-.release-banner b { color: var(--color-text); }
-.release-banner a { margin-left: auto; font-weight: 500; color: var(--color-text); text-decoration: none; }
+.release-banner b { flex: none; color: var(--color-text); }
+.release-banner > span:not(.badge-new) { flex: 1 1 14rem; min-width: 0; }
+.release-banner a { flex: none; margin-left: auto; font-weight: 500; color: var(--color-text); text-decoration: none; white-space: nowrap; }
 .release-banner .badge-new {
-  padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600;
+  flex: none; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.04em;
   background: var(--color-bg-success); color: var(--color-text-success);
 }

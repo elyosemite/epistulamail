@@ -1,0 +1,30 @@
+---
+title: "Reading and writing"
+description: "Conversations, writing, sending and offline reading."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Conversations
+
+A conversation shows up as one row in the list. When opened, each reply becomes a card; unread ones stay open and quoted text hides behind a "…".
+
+<AppPreview name="conversation" />
+
+Message HTML is cleaned before being shown, with no scripts. Remote images stay blocked until you allow them for that message, because they would tell the sender you opened the email.
+
+## Write and send
+
+Write a new email, reply, reply all or forward. Drafts are saved encrypted.
+
+After **Enviar** (send), you have a few seconds to **Desfazer** (undo): the email only leaves when the time is up.
+
+<AppPreview name="undo" />
+
+## Offline reading
+
+After each sync, the messages in the period chosen in **Configurações → Geral** (Settings → General) are downloaded in the background, without marking them as read: *Últimos 30 dias* (last 30 days), *Últimos 90 dias* (last 90 days), *Tudo* (everything) or *Só ao abrir* (only when opened).
+
+Without internet, the inbox, the reader and the search keep working with what is stored.
+

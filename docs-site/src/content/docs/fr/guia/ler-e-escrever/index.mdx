@@ -1,0 +1,30 @@
+---
+title: "Lire et écrire"
+description: "Conversations, écriture, envoi et lecture hors ligne."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Conversations
+
+Une conversation apparaît comme une ligne dans la liste. Ouverte, chaque réponse devient une carte ; les non lues restent ouvertes et le texte cité se cache derrière un « … ».
+
+<AppPreview name="conversation" />
+
+Le HTML des messages est nettoyé avant d'être affiché, sans scripts. Les images externes restent bloquées jusqu'à ce que vous les autorisiez pour ce message, car elles indiqueraient à l'expéditeur que vous avez ouvert l'e-mail.
+
+## Écrire et envoyer
+
+Écrivez un nouvel e-mail, répondez, répondez à tous ou transférez. Les brouillons sont enregistrés chiffrés.
+
+Après **Enviar** (envoyer), vous avez quelques secondes pour **Desfazer** (annuler) : l'e-mail ne part qu'à la fin du délai.
+
+<AppPreview name="undo" />
+
+## Lecture hors ligne
+
+Après chaque synchronisation, les messages de la période choisie dans **Configurações → Geral** (Paramètres → Général) sont téléchargés en arrière-plan, sans être marqués comme lus : *Últimos 30 dias* (30 derniers jours), *Últimos 90 dias* (90 derniers jours), *Tudo* (tout) ou *Só ao abrir* (seulement à l'ouverture).
+
+Sans internet, la boîte de réception, la lecture et la recherche continuent de fonctionner avec ce qui est stocké.
+

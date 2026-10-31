@@ -1,0 +1,37 @@
+---
+title: "Privacy e sicurezza"
+description: "Cosa esce dal computer, password e blocco."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Cosa esce dal computer
+
+- **Il tuo provider di posta (Google o Microsoft)**: accesso; IMAP e SMTP su Google; Microsoft Graph su Microsoft; e la revoca dell'accesso quando esci.
+- **Il server che indichi**: negli account manuali, EpistulaMail comunica con i server IMAP e SMTP che configuri.
+- **Server di chiavi OpenPGP**: solo quando chiedi di cercare una chiave.
+- **Immagini esterne di un'email**: solo quando le consenti per quel messaggio.
+- **GitHub**: il controllo di nuova versione (il file `latest.json` dell'ultima versione).
+
+Su Google, EpistulaMail chiede `https://mail.google.com/`, `openid`, `email` e `profile`. Su Microsoft, chiede `Mail.ReadWrite`, `Mail.Send`, `User.Read`, `openid`, `profile`, `email` e `offline_access`. Non chiede contatti, calendario, file né OneDrive.
+
+Su Linux, l'app parla anche con il Secret Service tramite il bus di sessione locale (D-Bus) per conservare e leggere la chiave del database e i token degli account. Questo resta sul tuo computer e non è una connessione di rete.
+
+Non c'è telemetria, né segnalazione degli errori, né un server di EpistulaMail. L'[informativa sulla privacy](https://www.epistulamail.com/privacidade) (in portoghese) ha i dettagli.
+
+## Password e blocco
+
+In **Configurações → Privacidade** (Impostazioni → Privacy):
+
+- **Password di EpistulaMail**: la chiave del database dipende da lei (Argon2id). La password non viene salvata da nessuna parte; se la dimentichi, i messaggi di questo computer non si aprono, ma restano sul server.
+- **Blocca dopo**: l'app chiude il database dopo un periodo di inattività.
+- **Blocca insieme a Windows** (solo su Windows; su Linux, il blocco per inattività continua e il blocco insieme allo schermo arriverà in una prossima versione).
+- **Conservare meno**: cancellare dal computer ciò che è fuori dal periodo scelto.
+
+<AppPreview name="unlock" width={26} />
+
+<Aside type="note" title="Su Linux">
+Il blocco per inattività funziona come su Windows. Il blocco insieme allo schermo non esiste ancora su Linux.
+</Aside>
+

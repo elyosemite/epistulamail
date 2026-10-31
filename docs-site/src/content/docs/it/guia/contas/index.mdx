@@ -1,0 +1,70 @@
+---
+title: "Account e provider"
+description: "Collega Gmail, Outlook e altri provider; più account e come uscire."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Collegare Gmail
+
+Quando scegli Gmail, EpistulaMail apre la pagina di accesso di Google nel tuo browser. Accedi lì, autorizzi e torni all'app.
+
+EpistulaMail chiede:
+
+- **`https://mail.google.com/`**: leggere, inviare e organizzare le tue email tramite IMAP e SMTP. È l'unico permesso di Google che dà accesso a questi protocolli.
+- **`openid`, `email` e `profile`**: indirizzo, nome e foto, per mostrare l'account.
+
+Dettagli in [Come EpistulaMail usa il tuo account Google](https://www.epistulamail.com/conta-google) (in portoghese).
+
+## Collegare Outlook
+
+Quando scegli Outlook, EpistulaMail apre la pagina di accesso di Microsoft nel tuo browser. Accedi, autorizzi e torni all'app. Vale per gli account personali Outlook.com, Hotmail e Live.
+
+EpistulaMail chiede solo:
+
+- **`Mail.ReadWrite`**: leggere e organizzare le tue email tramite Microsoft Graph.
+- **`Mail.Send`**: inviare email tramite Microsoft Graph.
+- **`User.Read` e `profile`**: il tuo nome, indirizzo e foto del profilo, per mostrare l'account.
+- **`openid`, `email` e `offline_access`**: l'identità dell'account e il permesso di mantenere la connessione senza chiedere l'accesso a ogni sincronizzazione.
+
+Non chiede contatti, calendario, file, OneDrive né un profilo oltre all'indirizzo e al nome. La tua password Microsoft non passa mai da EpistulaMail.
+
+Il refresh token sta nel vault del sistema (Gestione credenziali su Windows, Secret Service su Linux), con la stessa cura degli account Google: mai nel database in chiaro, mai in un file, mai in un log. Per revocare l'accesso, usa [account.live.com/consent/Manage](https://account.live.com/consent/Manage).
+
+## Connettere un'altra e-mail (IMAP)
+
+Usa questa opzione quando la tua e-mail non è Gmail o Outlook, o quando vuoi inserire i server manualmente. EpistulaMail usa IMAP per ricevere e SMTP per inviare.
+
+<Steps>
+
+1. In **Aggiungi account**, scegli **Altro**.
+2. Compila **In entrata**: server, porta, sicurezza della connessione, autenticazione, nome utente e password. I valori più comuni sono `993` con SSL/TLS o `143` con STARTTLS.
+3. Compila **In uscita** con il server SMTP. I valori più comuni sono `465` con SSL/TLS o `587` con STARTTLS. Se le credenziali sono le stesse dell'entrata, lascia attivo **Usa le credenziali dell'entrata**.
+4. Fai clic su **Testa connessione**. L'app accede all'entrata, controlla la Posta in arrivo e accede all'uscita senza inviare messaggi.
+5. Dopo che entrambi i test sono riusciti, fai clic su **Connetti**.
+
+</Steps>
+
+L'account viene salvato solo dopo che entrata e uscita superano il test. Se il server rifiuta utente o password, il messaggio indica quale lato ha fallito e la configurazione non viene salvata.
+
+<Aside type="note" title="Password per le app">
+Alcuni provider richiedono una password per le app invece della password normale, soprattutto con la verifica in due passaggi attiva. Generala sul sito del provider e usala qui. Gmail e Outlook vanno connessi dalle rispettive schede, con OAuth.
+</Aside>
+
+EpistulaMail accetta solo **SSL/TLS** o **STARTTLS**; non esiste l'opzione "senza sicurezza". Il certificato viene sempre verificato. La password resta nel caveau di sistema (Gestione credenziali su Windows, Secret Service su Linux), mai nel database in chiaro, in un file o in un log. Con la password di Epistula attiva, viene cifrata anche con quella.
+
+In questa versione, l'account manuale riceve e invia con **password normale**. Password cifrata (CRAM-MD5), Kerberos/GSSAPI, NTLM, OAuth2 per gli account manuali e POP3 arriveranno nei prossimi aggiornamenti.
+
+## Più account
+
+Ogni account compare nella colonna di sinistra, con nome, colore e foto propri. Un clic cambia account; anche la scorciatoia <kbd>Ctrl</kbd> + numero. Gli archivi di posta aperti senza account compaiono nella stessa colonna, con l'icona dell'archivio.
+
+<AppPreview name="accounts" />
+
+La ricerca può guardare un account o tutti insieme. Regole e sincronizzazione sono di ogni account.
+
+## Uscire da un account
+
+Dal menu dell'account, **Sair** (esci) cancella il token locale e revoca l'accesso presso Google. Per gli account Microsoft, il token locale viene cancellato; revoca l'accesso su [account.live.com/consent/Manage](https://account.live.com/consent/Manage). Scegli tu se i messaggi già scaricati restano sul computer (per continuare a leggere e cercare) o vengono cancellati.
+

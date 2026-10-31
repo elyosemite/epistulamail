@@ -1,0 +1,32 @@
+---
+title: "OpenPGP"
+description: "Crea la tua chiave e usa le chiavi degli altri."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Creare una chiave
+
+In **Configurações → Criptografia** (Impostazioni → Crittografia), crea una chiave per l'account. Ci sono tre tipi:
+
+- **Curve25519**: veloce, piccola e accettata dalla maggior parte dei programmi. È quella consigliata.
+- **RSA 4096**: per chi scambia email con programmi più vecchi.
+- **Post-quantistica (sperimentale)**: ML-KEM-768 con X25519. Pochi programmi la leggono ancora.
+
+<Aside type="caution" title="Fai il backup">
+Senza backup, un computer perso porta via la chiave, e i messaggi cifrati per lei non si aprono più. Usa il backup con password e conserva il file fuori dal computer.
+</Aside>
+
+## Le chiavi degli altri
+
+Per cifrare per qualcuno ti serve la sua chiave pubblica. Può arrivare:
+
+- **allegata a un'email** o tramite l'intestazione **Autocrypt**: entra come "non ancora accettata";
+- **da un file** o dagli appunti;
+- **da internet**, solo quando lo chiedi: EpistulaMail interroga il dominio della persona e `keys.openpgp.org`.
+
+<AppPreview name="keys" />
+
+L'accettazione segue lo stile di Thunderbird: non ancora, accettata, verificata o rifiutata.
+

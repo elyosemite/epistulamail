@@ -1,0 +1,32 @@
+---
+title: "OpenPGP"
+description: "Create your key and use other people's keys."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Create a key
+
+In **Configurações → Criptografia** (Settings → Encryption), create a key for the account. There are three types:
+
+- **Curve25519**: fast, small and accepted by most programs. It is the recommended one.
+- **RSA 4096**: for people who exchange email with older programs.
+- **Post-quantum (experimental)**: ML-KEM-768 with X25519. Few programs can read it yet.
+
+<Aside type="caution" title="Back it up">
+Without a backup, a lost computer takes the key with it, and the messages encrypted to it can no longer be opened. Use the password-protected backup and keep the file off the computer.
+</Aside>
+
+## Other people's keys
+
+To encrypt for someone, you need their public key. It can arrive:
+
+- **attached to an email** or through the **Autocrypt** header: it comes in as "not yet accepted";
+- **from a file** or the clipboard;
+- **from the internet**, only when you ask: EpistulaMail asks the person's domain and `keys.openpgp.org`.
+
+<AppPreview name="keys" />
+
+Acceptance follows Thunderbird's style: not yet, accepted, verified or rejected.
+

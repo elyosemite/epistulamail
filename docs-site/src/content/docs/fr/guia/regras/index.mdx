@@ -1,0 +1,23 @@
+---
+title: "Règles"
+description: "Créer des règles, voir l'historique et annuler."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Créer une règle
+
+Une règle se lit comme une phrase : « Si **De** contient `@boutique.com` → **Déplacer vers** Achats ».
+
+<AppPreview name="rules" />
+
+- **Conditions** : expéditeur, domaine, À et Cc, « envoyé seulement à moi », objet, extrait du texte, liste de diffusion, pièces jointes, taille, lu et suivi ; avec « toutes » ou « n'importe laquelle » et des exceptions.
+- **Actions** : déplacer, archiver, supprimer (toujours vers la Corbeille), libellé, marquer comme lu, suivre, signaler avec une échéance, ne pas notifier et toujours notifier.
+
+Avant d'enregistrer, l'aperçu montre combien d'e-mails la règle attraperait, et lesquels. Vous pouvez partir d'un modèle ou d'un message (« Criar regra… », créer une règle).
+
+## Historique et annulation
+
+L'historique conserve 30 jours de ce que chaque règle a fait, avec **Desfazer** (annuler) sur chaque lot. Les règles s'exécutent quand EpistulaMail est ouvert (y compris dans la zone de notification) ; ce qui est arrivé pendant que l'app était fermée passe par elles à la synchronisation suivante.
+

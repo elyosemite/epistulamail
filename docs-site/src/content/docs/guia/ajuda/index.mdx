@@ -1,0 +1,27 @@
+---
+title: "Ajuda"
+description: "Problemas comuns e onde pedir ajuda."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Problemas comuns
+
+**O Windows não deixa abrir o instalador.** É o SmartScreen avisando sobre um programa sem assinatura. Confira o SHA-256 e use **Mais informações → Executar assim mesmo**.
+
+**O AppImage não abre no Linux.** Dê permissão de execução com `chmod +x EpistulaMail_<versão>_amd64.AppImage` e abra de novo.
+
+**O EpistulaMail avisa que o cofre não está disponível no Linux.** Instale ou inicie o Secret Service (GNOME Keyring ou KWallet), destrave-o e abra o app de novo. Nenhuma mensagem foi apagada.
+
+**O Google diz que o app não foi verificado.** A verificação do Google ainda está em andamento. Veja o aviso no [Início rápido](/inicio-rapido/).
+
+**O ícone antigo continua na barra de tarefas.** É o cache de ícones do Windows. Desafixe e fixe de novo, ou reinicie o Windows Explorer.
+
+**Esqueci a senha do EpistulaMail.** Ela não fica gravada em lugar nenhum. Na tela de bloqueio, "Esqueceu a senha?" apaga os dados deste computador para você entrar de novo nas contas; as mensagens continuam no servidor.
+
+## Contato
+
+- **Dúvida ou problema**: abra uma [issue no GitHub](https://github.com/elyosemite/epistulamail/issues) ou fale no [Discord](https://discord.gg/5NsPCnAUE).
+- **Problema de segurança**: use a [página de segurança](https://github.com/elyosemite/epistulamail/security), que é privada.
+

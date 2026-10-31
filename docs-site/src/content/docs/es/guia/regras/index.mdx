@@ -1,0 +1,23 @@
+---
+title: "Reglas"
+description: "Crear reglas, ver el historial y deshacer."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Crear una regla
+
+Una regla se lee como una frase: "Si **De** contiene `@tienda.com` → **Mover a** Compras".
+
+<AppPreview name="rules" />
+
+- **Condiciones**: remitente, dominio, Para y Cc, "enviado solo a mí", asunto, fragmento del texto, lista de correo, adjuntos, tamaño, leído y destacado; con "todas" o "cualquiera" y excepciones.
+- **Acciones**: mover, archivar, eliminar (siempre a la Papelera), etiqueta, marcar como leído, destacar, marcar con plazo, no notificar y notificar siempre.
+
+Antes de guardar, la vista previa muestra cuántos y cuáles correos atraparía la regla. Puedes empezar desde una plantilla o desde un mensaje ("Criar regra…", crear regla).
+
+## Historial y deshacer
+
+El historial guarda 30 días de lo que hizo cada regla, con **Desfazer** (deshacer) en cada lote. Las reglas se ejecutan con EpistulaMail abierto (también en la bandeja); lo que llegó con la app cerrada pasa por ellas en la siguiente sincronización.
+

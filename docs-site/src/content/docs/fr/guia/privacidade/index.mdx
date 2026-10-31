@@ -1,0 +1,37 @@
+---
+title: "Confidentialité et sécurité"
+description: "Ce qui quitte votre ordinateur, mot de passe et verrouillage."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Ce qui sort de votre ordinateur
+
+- **Votre fournisseur de messagerie (Google ou Microsoft)** : connexion ; IMAP et SMTP chez Google ; Microsoft Graph chez Microsoft ; et révocation de l'accès à la déconnexion.
+- **Le serveur que vous indiquez** : pour les comptes manuels, EpistulaMail communique avec les serveurs IMAP et SMTP que vous configurez.
+- **Serveurs de clés OpenPGP** : seulement quand vous demandez à chercher une clé.
+- **Images externes d'un e-mail** : seulement quand vous les autorisez pour ce message.
+- **GitHub** : la vérification de nouvelle version (le fichier `latest.json` de la dernière version).
+
+Sur Google, EpistulaMail demande `https://mail.google.com/`, `openid`, `email` et `profile`. Sur Microsoft, il demande `Mail.ReadWrite`, `Mail.Send`, `User.Read`, `openid`, `profile`, `email` et `offline_access`. Il ne demande ni contacts, ni calendrier, ni fichiers, ni OneDrive.
+
+Sous Linux, l'app parle aussi au Secret Service par le bus de session local (D-Bus) pour garder et lire la clé de la base et les jetons des comptes. Cela reste sur votre ordinateur et n'est pas une connexion réseau.
+
+Il n'y a ni télémétrie, ni rapport d'erreur, ni serveur EpistulaMail. La [politique de confidentialité](https://www.epistulamail.com/privacidade) (en portugais) donne les détails.
+
+## Mot de passe et verrouillage
+
+Dans **Configurações → Privacidade** (Paramètres → Confidentialité) :
+
+- **Mot de passe d'EpistulaMail** : la clé de la base dépend désormais de lui (Argon2id). Le mot de passe n'est stocké nulle part ; oublié, les messages de cet ordinateur ne s'ouvrent plus, mais ils restent sur le serveur.
+- **Verrouiller après** : l'app ferme la base après un certain temps d'inactivité.
+- **Verrouiller avec Windows** (Windows uniquement ; sous Linux, le verrouillage par inactivité continue et le verrouillage avec l'écran arrivera dans une prochaine version).
+- **Garder moins** : effacer de l'ordinateur ce qui est hors de la période choisie.
+
+<AppPreview name="unlock" width={26} />
+
+<Aside type="note" title="Sous Linux">
+Le verrouillage par inactivité fonctionne comme sous Windows. Le verrouillage avec l'écran n'existe pas encore sous Linux.
+</Aside>
+

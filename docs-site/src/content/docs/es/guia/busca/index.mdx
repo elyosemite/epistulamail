@@ -1,0 +1,43 @@
+---
+title: "Búsqueda"
+description: "Chips, todas las cuentas y búsquedas guardadas."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Buscar con chips
+
+Pulsa <kbd>/</kbd> para ir a la búsqueda. Lo que escribes se convierte en chips que puedes editar y quitar. Los operadores están en portugués, como la interfaz de la app:
+
+<AppPreview name="search" />
+
+| Escribe | Se convierte en |
+|---|---|
+| `de: Ana` | quién lo envió (también `from:`) |
+| `para:`, `cc:`, `com:` | destinatario, copia, cualquiera de ellos (también `to:`) |
+| `depois:2026-01-01`, `antes:31/03/2026`, `em:2025` | período |
+| `tem:anexo` | con adjunto |
+| `é:não-lida`, `é:estrela` | no leídos, destacados |
+| `na: Arquivo` | en una carpeta |
+
+Dos chips del mismo papel se suman ("de Ana o de Bruno"); papeles distintos valen juntos. <kbd>Retroceso</kbd> con el campo vacío selecciona el último chip; la segunda vez lo quita.
+
+La búsqueda se hace en los mensajes guardados en tu computadora, en todas las carpetas, y funciona sin internet.
+
+## Todas las cuentas
+
+En la barra de resultados, cambia **Esta conta** (esta cuenta) por **Todas as contas** (todas las cuentas). Cada resultado muestra el avatar de la cuenta, y abrir un resultado muestra el mensaje en su cuenta.
+
+<AppPreview name="results" />
+
+Las acciones en lote (archivar, mover, eliminar) valen cuando los resultados marcados son de la misma cuenta.
+
+## Búsquedas guardadas
+
+Con **Salvar busca** (guardar búsqueda), dale un nombre. La búsqueda aparece en la columna de carpetas, en su propio grupo, con los no leídos. El clic derecho la elimina.
+
+<AppPreview name="saved" width={18} />
+
+En los resultados, **Aplicar regra…** (aplicar regla) aplica una de tus reglas a los mensajes marcados, con vista previa antes y "Deshacer" después.
+

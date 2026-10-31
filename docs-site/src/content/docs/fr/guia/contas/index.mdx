@@ -1,0 +1,70 @@
+---
+title: "Comptes et fournisseurs"
+description: "Connecter Gmail, Outlook et d'autres fournisseurs ; plusieurs comptes et comment se déconnecter."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Connecter Gmail
+
+Quand vous choisissez Gmail, EpistulaMail ouvre la page de connexion de Google dans votre navigateur. Vous vous y connectez, autorisez l'accès et revenez à l'app.
+
+EpistulaMail demande :
+
+- **`https://mail.google.com/`** : lire, envoyer et organiser vos e-mails par IMAP et SMTP. C'est la seule autorisation Google qui donne accès à ces protocoles.
+- **`openid`, `email` et `profile`** : votre adresse, votre nom et votre photo, pour afficher le compte.
+
+Détails dans [Comment EpistulaMail utilise votre compte Google](https://www.epistulamail.com/conta-google) (en portugais).
+
+## Connecter Outlook
+
+Quand vous choisissez Outlook, EpistulaMail ouvre la page de connexion de Microsoft dans votre navigateur. Vous vous connectez, vous autorisez et vous revenez à l'app. Cela vaut pour les comptes personnels Outlook.com, Hotmail et Live.
+
+EpistulaMail demande seulement :
+
+- **`Mail.ReadWrite`** : lire et organiser vos e-mails par Microsoft Graph.
+- **`Mail.Send`** : envoyer des e-mails par Microsoft Graph.
+- **`User.Read` et `profile`** : votre nom, votre adresse et votre photo de profil, pour afficher le compte.
+- **`openid`, `email` et `offline_access`** : l'identité du compte et l'autorisation de garder la connexion sans redemander de connexion à chaque synchronisation.
+
+Il ne demande ni contacts, ni calendrier, ni fichiers, ni OneDrive, ni profil au-delà de l'adresse et du nom. Votre mot de passe Microsoft ne passe jamais par EpistulaMail.
+
+Le refresh token se trouve dans le coffre du système (Gestionnaire d'identification sous Windows, Secret Service sous Linux), avec le même soin que les comptes Google : jamais dans la base en clair, jamais dans un fichier, jamais dans un journal. Pour révoquer l'accès, utilisez [account.live.com/consent/Manage](https://account.live.com/consent/Manage).
+
+## Connecter une autre adresse e-mail (IMAP)
+
+Utilisez cette option si votre adresse n'est pas Gmail ou Outlook, ou si vous voulez saisir les serveurs vous-même. EpistulaMail utilise IMAP pour recevoir et SMTP pour envoyer.
+
+<Steps>
+
+1. Dans **Ajouter un compte**, choisissez **Autre**.
+2. Remplissez l'**Entrée** : serveur, port, sécurité de la connexion, authentification, utilisateur et mot de passe. Les valeurs les plus courantes sont `993` avec SSL/TLS ou `143` avec STARTTLS.
+3. Remplissez la **Sortie** avec le serveur SMTP. Les valeurs les plus courantes sont `465` avec SSL/TLS ou `587` avec STARTTLS. Si les identifiants sont ceux de l'entrée, laissez **Utiliser les identifiants de l'entrée** activé.
+4. Cliquez sur **Tester la connexion**. L'application se connecte à l'entrée, vérifie la Boîte de réception et se connecte à la sortie sans envoyer de message.
+5. Une fois les deux tests réussis, cliquez sur **Connecter**.
+
+</Steps>
+
+Le compte n'est enregistré qu'après la réussite des tests d'entrée et de sortie. Si le serveur refuse l'utilisateur ou le mot de passe, le message indique quel côté a échoué et la configuration n'est pas enregistrée.
+
+<Aside type="note" title="Mot de passe d'application">
+Certains fournisseurs exigent un mot de passe d'application au lieu du mot de passe normal, surtout lorsque la validation en deux étapes est activée. Générez-le sur le site du fournisseur et utilisez-le ici. Gmail et Outlook doivent être connectés via leurs propres cartes, avec OAuth.
+</Aside>
+
+EpistulaMail n'accepte que **SSL/TLS** ou **STARTTLS** ; il n'y a pas d'option « sans sécurité ». Le certificat est toujours vérifié. Le mot de passe est conservé dans le coffre du système (Gestionnaire d'identifiants sous Windows, Secret Service sous Linux), jamais dans la base en clair, dans un fichier ou dans un journal. Avec le mot de passe Epistula activé, il est aussi chiffré par celui-ci.
+
+Dans cette version, le compte manuel reçoit et envoie avec un **mot de passe normal**. Le mot de passe chiffré (CRAM-MD5), Kerberos/GSSAPI, NTLM, OAuth2 pour les comptes manuels et POP3 arriveront dans de prochaines mises à jour.
+
+## Plusieurs comptes
+
+Chaque compte apparaît dans la colonne de gauche, avec son nom, sa couleur et sa photo. Un clic change de compte ; le raccourci <kbd>Ctrl</kbd> + chiffre aussi. Les archives d'e-mails ouvertes sans compte apparaissent dans la même colonne, avec l'icône d'archive.
+
+<AppPreview name="accounts" />
+
+La recherche peut porter sur un compte ou sur tous à la fois. Les règles et la synchronisation sont propres à chaque compte.
+
+## Se déconnecter d'un compte
+
+Depuis le menu du compte, **Sair** (se déconnecter) supprime le jeton local et révoque l'accès auprès de Google. Pour les comptes Microsoft, le jeton local est supprimé ; révoquez l'accès sur [account.live.com/consent/Manage](https://account.live.com/consent/Manage). Vous choisissez si les messages déjà téléchargés restent sur l'ordinateur (pour continuer à lire et chercher) ou sont effacés.
+

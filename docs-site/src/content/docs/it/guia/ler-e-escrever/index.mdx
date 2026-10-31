@@ -1,0 +1,30 @@
+---
+title: "Leggere e scrivere"
+description: "Conversazioni, scrittura, invio e lettura offline."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Conversazioni
+
+Una conversazione compare come una riga nell'elenco. Aperta, ogni risposta diventa una scheda; quelle non lette restano aperte e il testo citato sta dietro un "…".
+
+<AppPreview name="conversation" />
+
+L'HTML dei messaggi viene ripulito prima di essere mostrato, senza script. Le immagini esterne restano bloccate finché non le consenti per quel messaggio, perché avviserebbero il mittente che hai aperto l'email.
+
+## Scrivere e inviare
+
+Scrivi una nuova email, rispondi, rispondi a tutti o inoltra. Le bozze vengono salvate cifrate.
+
+Dopo **Enviar** (invia), hai qualche secondo per **Desfazer** (annulla): l'email parte solo allo scadere del tempo.
+
+<AppPreview name="undo" />
+
+## Lettura offline
+
+Dopo ogni sincronizzazione, i messaggi del periodo scelto in **Configurações → Geral** (Impostazioni → Generale) vengono scaricati in background, senza segnarli come letti: *Últimos 30 dias* (ultimi 30 giorni), *Últimos 90 dias* (ultimi 90 giorni), *Tudo* (tutto) o *Só ao abrir* (solo all'apertura).
+
+Senza internet, la posta in arrivo, la lettura e la ricerca continuano a funzionare con ciò che è salvato.
+

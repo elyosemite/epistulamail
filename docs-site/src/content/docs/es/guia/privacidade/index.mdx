@@ -1,0 +1,37 @@
+---
+title: "Privacidad y seguridad"
+description: "Qué sale de tu computadora, contraseña y bloqueo."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Qué sale de tu computadora
+
+- **Tu proveedor de correo (Google o Microsoft)**: inicio de sesión; IMAP y SMTP en Google; Microsoft Graph en Microsoft; y la revocación del acceso al salir.
+- **El servidor que indiques**: en las cuentas manuales, EpistulaMail habla con los servidores IMAP y SMTP que configures.
+- **Servidores de claves OpenPGP**: solo cuando pides buscar una clave.
+- **Imágenes externas de un correo**: solo cuando las permites en ese mensaje.
+- **GitHub**: la comprobación de versión nueva (el archivo `latest.json` de la última versión).
+
+En Google, EpistulaMail pide `https://mail.google.com/`, `openid`, `email` y `profile`. En Microsoft, pide `Mail.ReadWrite`, `Mail.Send`, `User.Read`, `openid`, `profile`, `email` y `offline_access`. No pide contactos, calendario, archivos ni OneDrive.
+
+En Linux, la app también habla con el Secret Service por el bus de sesión local (D-Bus) para guardar y leer la clave de la base y los tokens de las cuentas. Eso queda en tu computadora y no es una conexión de red.
+
+No hay telemetría, informes de errores ni servidor de EpistulaMail. La [política de privacidad](https://www.epistulamail.com/privacidade) (en portugués) tiene los detalles.
+
+## Contraseña y bloqueo
+
+En **Configurações → Privacidade** (Configuración → Privacidad):
+
+- **Contraseña de EpistulaMail**: la clave de la base pasa a depender de ella (Argon2id). La contraseña no se guarda en ningún sitio; si la olvidas, los mensajes de esta computadora no se abren, pero siguen en el servidor.
+- **Bloquear después de**: la app cierra la base tras un tiempo sin uso.
+- **Bloquear junto con Windows** (solo en Windows; en Linux, el bloqueo por inactividad sigue funcionando y el bloqueo junto con la pantalla llegará en una próxima versión).
+- **Guardar menos**: borrar de la computadora lo que está fuera del período elegido.
+
+<AppPreview name="unlock" width={26} />
+
+<Aside type="note" title="En Linux">
+El bloqueo por inactividad funciona como en Windows. El bloqueo junto con la pantalla todavía no existe en Linux.
+</Aside>
+

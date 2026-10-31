@@ -1,0 +1,43 @@
+---
+title: "Recherche"
+description: "Puces, tous les comptes et recherches enregistrées."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Chercher avec des puces
+
+Appuyez sur <kbd>/</kbd> pour aller à la recherche. Ce que vous tapez devient des puces que vous pouvez modifier et retirer. Les opérateurs sont en portugais, comme l'interface de l'app :
+
+<AppPreview name="search" />
+
+| Tapez | Devient |
+|---|---|
+| `de: Ana` | l'expéditeur (aussi `from:`) |
+| `para:`, `cc:`, `com:` | destinataire, copie, n'importe lequel (aussi `to:`) |
+| `depois:2026-01-01`, `antes:31/03/2026`, `em:2025` | période |
+| `tem:anexo` | avec pièce jointe |
+| `é:não-lida`, `é:estrela` | non lus, suivis |
+| `na: Arquivo` | dans un dossier |
+
+Deux puces du même rôle s'additionnent (« de Ana ou de Bruno ») ; des rôles différents s'appliquent ensemble. <kbd>Retour arrière</kbd> dans un champ vide sélectionne la dernière puce ; une seconde fois la retire.
+
+La recherche porte sur les messages stockés sur votre ordinateur, dans tous les dossiers, et fonctionne hors ligne.
+
+## Tous les comptes
+
+Dans la barre des résultats, passez de **Esta conta** (ce compte) à **Todas as contas** (tous les comptes). Chaque résultat affiche l'avatar du compte, et ouvrir un résultat affiche le message dans son compte.
+
+<AppPreview name="results" />
+
+Les actions groupées (archiver, déplacer, supprimer) fonctionnent quand les résultats sélectionnés appartiennent au même compte.
+
+## Recherches enregistrées
+
+Avec **Salvar busca** (enregistrer la recherche), donnez-lui un nom. La recherche apparaît dans la colonne des dossiers, dans son propre groupe, avec le nombre de non lus. Le clic droit la supprime.
+
+<AppPreview name="saved" width={18} />
+
+Dans les résultats, **Aplicar regra…** (appliquer une règle) applique une de vos règles aux messages sélectionnés, avec un aperçu avant et « Annuler » après.
+

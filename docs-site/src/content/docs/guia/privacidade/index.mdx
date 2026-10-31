@@ -1,0 +1,37 @@
+---
+title: "Privacidade e segurança"
+description: "O que sai do computador, senha e bloqueio."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## O que sai do computador
+
+- **O seu provedor de e-mail (Google ou Microsoft)**: login; IMAP e SMTP no Google; Microsoft Graph na Microsoft; e o cancelamento do acesso ao sair.
+- **O servidor que você informar**: nas contas manuais, o EpistulaMail fala com o servidor IMAP e o servidor SMTP configurados por você.
+- **Servidores de chaves OpenPGP**: só quando você pede para buscar uma chave.
+- **Imagens externas de um e-mail**: só quando você libera naquela mensagem.
+- **GitHub**: a verificação de versão nova (o arquivo `latest.json` da última release).
+
+No Google, o EpistulaMail pede `https://mail.google.com/`, `openid`, `email` e `profile`. Na Microsoft, pede `Mail.ReadWrite`, `Mail.Send`, `User.Read`, `openid`, `profile`, `email` e `offline_access`. Não pede contatos, calendário, arquivos nem OneDrive.
+
+No Linux, o app também conversa com o Secret Service pela sessão local (D-Bus), para guardar e ler a chave do banco e os tokens das contas. Isso fica no seu computador e não é uma conexão de rede.
+
+Não há telemetria, relatório de erro nem servidor do EpistulaMail. A [política de privacidade](https://www.epistulamail.com/privacidade) tem os detalhes.
+
+## Senha e bloqueio
+
+Em **Configurações → Privacidade**:
+
+- **Senha do EpistulaMail**: a chave do banco passa a depender dela (Argon2id). A senha não é guardada em lugar nenhum; esquecida, as mensagens deste computador não abrem, mas continuam no servidor.
+- **Bloquear depois de**: o app fecha o banco depois de um tempo sem uso.
+- **Bloquear junto com o Windows** (só no Windows; no Linux, o bloqueio por inatividade continua e o bloqueio junto com a tela chega numa próxima versão).
+- **Guardar menos**: apagar do computador o que está fora do período escolhido.
+
+<AppPreview name="unlock" width={26} />
+
+<Aside type="note" title="No Linux">
+O bloqueio por inatividade funciona como no Windows. O bloqueio junto com a tela ainda não existe no Linux.
+</Aside>
+

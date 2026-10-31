@@ -1,0 +1,27 @@
+---
+title: "Help"
+description: "Common problems and where to get help."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Common problems
+
+**Windows won't let me open the installer.** That is SmartScreen warning about an unsigned program. Check the SHA-256 and use **More info → Run anyway**.
+
+**The AppImage won't open on Linux.** Give it execution permission with `chmod +x EpistulaMail_<version>_amd64.AppImage` and open it again.
+
+**EpistulaMail says the vault is not available on Linux.** Install or start the Secret Service (GNOME Keyring or KWallet), unlock it and open the app again. No message was deleted.
+
+**Google says the app is not verified.** Google's verification is still in progress. See the warning in the [Quickstart](/en/inicio-rapido/).
+
+**The old icon is still in the taskbar.** That is Windows' icon cache. Unpin and pin again, or restart Windows Explorer.
+
+**I forgot the EpistulaMail password.** It is not stored anywhere. On the lock screen, "Esqueceu a senha?" (forgot the password?) erases the data on this computer so you can sign in to your accounts again; the messages stay on the server.
+
+## Contact
+
+- **Question or problem**: open a [GitHub issue](https://github.com/elyosemite/epistulamail/issues) or talk to us on [Discord](https://discord.gg/5NsPCnAUE).
+- **Security problem**: use the [security page](https://github.com/elyosemite/epistulamail/security), which is private.
+

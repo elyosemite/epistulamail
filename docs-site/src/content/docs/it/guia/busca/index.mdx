@@ -1,0 +1,43 @@
+---
+title: "Ricerca"
+description: "Chip, tutti gli account e ricerche salvate."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Cercare con i chip
+
+Premi <kbd>/</kbd> per andare alla ricerca. Quello che scrivi diventa chip che puoi modificare e togliere. Gli operatori sono in portoghese, come l'interfaccia dell'app:
+
+<AppPreview name="search" />
+
+| Scrivi | Diventa |
+|---|---|
+| `de: Ana` | chi l'ha inviata (anche `from:`) |
+| `para:`, `cc:`, `com:` | destinatario, copia, uno qualsiasi (anche `to:`) |
+| `depois:2026-01-01`, `antes:31/03/2026`, `em:2025` | periodo |
+| `tem:anexo` | con allegato |
+| `é:não-lida`, `é:estrela` | non lette, speciali |
+| `na: Arquivo` | in una cartella |
+
+Due chip con lo stesso ruolo si sommano ("da Ana o da Bruno"); ruoli diversi valgono insieme. <kbd>Backspace</kbd> nel campo vuoto seleziona l'ultimo chip; la seconda volta lo toglie.
+
+La ricerca avviene sui messaggi salvati sul tuo computer, in tutte le cartelle, e funziona offline.
+
+## Tutti gli account
+
+Nella barra dei risultati, passa da **Esta conta** (questo account) a **Todas as contas** (tutti gli account). Ogni risultato mostra l'avatar dell'account, e aprire un risultato mostra il messaggio nel suo account.
+
+<AppPreview name="results" />
+
+Le azioni di gruppo (archiviare, spostare, eliminare) valgono quando i risultati selezionati sono dello stesso account.
+
+## Ricerche salvate
+
+Con **Salvar busca** (salva ricerca), dalle un nome. La ricerca compare nella colonna delle cartelle, in un gruppo proprio, con le non lette. Il clic destro la elimina.
+
+<AppPreview name="saved" width={18} />
+
+Nei risultati, **Aplicar regra…** (applica regola) applica una delle tue regole ai messaggi selezionati, con anteprima prima e "Annulla" dopo.
+

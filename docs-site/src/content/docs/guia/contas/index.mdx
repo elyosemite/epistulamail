@@ -1,0 +1,70 @@
+---
+title: "Contas e provedores"
+description: "Conectar Gmail, Outlook e outros provedores; várias contas e como sair."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Conectar o Gmail
+
+Ao escolher o Gmail, o EpistulaMail abre a página de login do Google no seu navegador. Você entra lá, autoriza e volta para o app.
+
+O EpistulaMail pede:
+
+- **`https://mail.google.com/`**: ler, enviar e organizar os seus e-mails por IMAP e SMTP. É a única permissão do Google que dá acesso a esses protocolos.
+- **`openid`, `email` e `profile`**: o seu endereço, nome e foto, para mostrar a conta.
+
+Detalhes em [Como o EpistulaMail usa a sua conta Google](https://www.epistulamail.com/conta-google).
+
+## Conectar o Outlook
+
+Ao escolher o Outlook, o EpistulaMail abre a página de login da Microsoft no seu navegador. Você entra, autoriza e volta para o app. Vale para contas pessoais Outlook.com, Hotmail e Live.
+
+O EpistulaMail pede só:
+
+- **`Mail.ReadWrite`**: ler e organizar os seus e-mails pelo Microsoft Graph.
+- **`Mail.Send`**: enviar e-mails pelo Microsoft Graph.
+- **`User.Read` e `profile`**: o seu nome, o endereço e a foto do perfil, para mostrar a conta.
+- **`openid`, `email` e `offline_access`**: a identidade da conta e a permissão para manter a conexão sem pedir login a cada sincronização.
+
+O app não pede contatos, calendário, arquivos, OneDrive nem perfil além do endereço e do nome. A senha da Microsoft nunca passa pelo EpistulaMail.
+
+O refresh token fica no cofre do sistema (Gerenciador de Credenciais no Windows, Secret Service no Linux), com o mesmo cuidado das contas Google: nunca no banco em texto, nunca em arquivo, nunca no log. Para revogar o acesso, use [account.live.com/consent/Manage](https://account.live.com/consent/Manage).
+
+## Conectar outro e-mail (IMAP)
+
+Use esta opção quando o seu e-mail não estiver no Gmail nem no Outlook, ou quando você quiser informar os servidores manualmente. O EpistulaMail fala IMAP para receber e SMTP para enviar.
+
+<Steps>
+
+1. Em **Adicionar conta**, escolha **Outro**.
+2. Preencha a **Entrada**: servidor, porta, segurança da conexão, autenticação, usuário e senha. Os valores mais comuns são `993` com SSL/TLS ou `143` com STARTTLS.
+3. Preencha a **Saída** com o servidor SMTP. Os valores mais comuns são `465` com SSL/TLS ou `587` com STARTTLS. Se forem as mesmas credenciais da entrada, deixe **Usar as mesmas credenciais da entrada** ligado.
+4. Clique em **Testar conexão**. O app autentica na entrada, confere a Caixa de entrada e autentica na saída, sem enviar mensagem.
+5. Depois que os dois testes passarem, clique em **Conectar**.
+
+</Steps>
+
+A conta só é salva depois que a entrada e a saída passam no teste. Se o servidor recusar o usuário ou a senha, a mensagem diz qual lado falhou e a configuração não é gravada.
+
+<Aside type="note" title="Senha de app">
+Alguns provedores exigem uma senha de app em vez da senha normal da conta, principalmente quando a verificação em duas etapas está ligada. Gere a senha de app no site do provedor e use-a aqui. O Gmail e o Outlook devem ser conectados pelos cartões próprios, com OAuth.
+</Aside>
+
+O EpistulaMail só aceita **SSL/TLS** ou **STARTTLS**; não existe a opção “sem segurança”. O certificado é sempre validado. A senha fica no cofre do sistema (Gerenciador de Credenciais no Windows, Secret Service no Linux), nunca no banco em texto, em arquivo ou no log. Com a senha do Epistula ligada, ela também é cifrada por ela.
+
+Nesta versão, a conta manual recebe e envia com **senha normal**. Senha criptografada (CRAM-MD5), Kerberos/GSSAPI, NTLM, OAuth2 para conta manual e POP3 chegam nas próximas atualizações.
+
+## Várias contas
+
+Cada conta aparece na coluna da esquerda, com nome, cor e foto próprios. Um clique troca de conta; o atalho <kbd>Ctrl</kbd> + número também. Os arquivos de e-mail abertos sem conta aparecem na mesma coluna, com o ícone de arquivo.
+
+<AppPreview name="accounts" />
+
+A busca pode olhar uma conta ou todas de uma vez. As regras e a sincronização são de cada conta.
+
+## Sair de uma conta
+
+Pelo menu da conta, **Sair** apaga o token local e cancela o acesso junto ao Google. Na Microsoft, o token local também é apagado; a revogação do acesso é feita em [account.live.com/consent/Manage](https://account.live.com/consent/Manage). Você escolhe se as mensagens já baixadas ficam no computador (para continuar lendo e buscando) ou se são apagadas.
+

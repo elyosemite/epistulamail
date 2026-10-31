@@ -1,0 +1,56 @@
+/* Proposta de tema escuro em teste no docs. Quando aprovada, os tokens de superfície
+   vão para design-system/tokens.css e este arquivo fica só com o que é do docs. */
+:root[data-theme='dark'] {
+  /* Superfícies: quase preto, como no docs do OpenClaw, com degraus discretos de elevação. */
+  --color-canvas: #030304;
+  --color-surface-sunken: #090A0C;
+  --color-surface: #0E1013;
+  --color-surface-raised: #15181C;
+  --color-surface-overlay: #1B1F24;
+  --color-border: #FFFFFF1F;
+  --color-bg-selected: #14305A;
+  --color-bg-selected-hovered: #09326C;
+
+  /* Código no mesmo degrau do design system, sem a paleta própria do Expressive Code. */
+  --ec-codeBg: var(--color-surface-sunken);
+  --ec-codeFg: var(--color-text);
+  --ec-brdCol: var(--color-border);
+  --ec-frm-edBg: var(--color-surface-sunken);
+  --ec-frm-trmBg: var(--color-surface-sunken);
+  --ec-frm-edTabBg: var(--color-surface-sunken);
+  --ec-frm-edTabBarBg: var(--color-surface-sunken);
+  --ec-frm-trmTtbBg: var(--color-surface-sunken);
+  --ec-gtrFg: var(--color-text-subtlest);
+}
+
+/* Cartões e o aviso de versão sobem um degrau no escuro. */
+:root[data-theme='dark'] :where(.card, .sl-link-card),
+:root[data-theme='dark'] .release-banner {
+  background-color: var(--color-surface-raised);
+}
+
+/* Asides: tinta discreta da cor do DS, com o título e o filete já coloridos. */
+:root[data-theme='dark'] .starlight-aside {
+  background-color: color-mix(in srgb, var(--sl-color-asides-border) 14%, var(--color-surface-raised));
+  border-inline-start-width: 2px;
+}
+
+/* As cores de categoria do Starlight passam a ser as do design system nos dois temas. */
+:root,
+:root[data-theme='light'] {
+  --sl-color-blue-low: var(--color-bg-information);
+  --sl-color-blue: var(--color-text-information);
+  --sl-color-blue-high: var(--color-text-information);
+  --sl-color-purple-low: var(--color-bg-discovery);
+  --sl-color-purple: var(--color-text-discovery);
+  --sl-color-purple-high: var(--color-text-discovery);
+  --sl-color-orange-low: var(--color-bg-warning);
+  --sl-color-orange: var(--color-text-warning);
+  --sl-color-orange-high: var(--color-text-warning);
+  --sl-color-red-low: var(--color-bg-danger);
+  --sl-color-red: var(--color-text-danger);
+  --sl-color-red-high: var(--color-text-danger);
+  --sl-color-green-low: var(--color-bg-success);
+  --sl-color-green: var(--color-text-success);
+  --sl-color-green-high: var(--color-text-success);
+}

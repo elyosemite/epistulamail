@@ -1,0 +1,27 @@
+---
+title: "Ayuda"
+description: "Problemas comunes y dónde pedir ayuda."
+---
+import { Steps, Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import AppPreview from '~/components/AppPreview.astro';
+import Timeline from '~/components/Timeline.astro';
+
+## Problemas comunes
+
+**Windows no me deja abrir el instalador.** Es SmartScreen avisando de un programa sin firma. Comprueba el SHA-256 y usa **Más información → Ejecutar de todas formas**.
+
+**El AppImage no se abre en Linux.** Dale permiso de ejecución con `chmod +x EpistulaMail_<versión>_amd64.AppImage` y ábrelo de nuevo.
+
+**EpistulaMail avisa de que el cofre no está disponible en Linux.** Instala o inicia el Secret Service (GNOME Keyring o KWallet), desbloquéalo y abre la app de nuevo. No se borró ningún mensaje.
+
+**Google dice que la app no está verificada.** La verificación de Google todavía está en curso. Consulta el aviso en el [Inicio rápido](/es/inicio-rapido/).
+
+**El icono antiguo sigue en la barra de tareas.** Es la caché de iconos de Windows. Desancla y vuelve a anclar, o reinicia el Explorador de Windows.
+
+**Olvidé la contraseña de EpistulaMail.** No se guarda en ningún sitio. En la pantalla de bloqueo, "Esqueceu a senha?" (¿olvidaste la contraseña?) borra los datos de esta computadora para que vuelvas a entrar en las cuentas; los mensajes siguen en el servidor.
+
+## Contacto
+
+- **Duda o problema**: abre un [issue en GitHub](https://github.com/elyosemite/epistulamail/issues) o escríbenos en [Discord](https://discord.gg/5NsPCnAUE).
+- **Problema de seguridad**: usa la [página de seguridad](https://github.com/elyosemite/epistulamail/security), que es privada.
+
